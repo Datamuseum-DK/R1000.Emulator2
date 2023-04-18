@@ -1,0 +1,196 @@
+(symbol
+  "F04"
+  (pin_numbers hide)
+  (pin_names hide)
+  (in_bom yes)
+  (on_board yes)
+  (property
+    "Reference"
+    "U"
+    (id 0)
+    (at 0 0 0)
+    (effects
+      (font
+        (size 1.27 1.27)
+      )
+    )
+  )
+  (property
+    "Value"
+    "F04"
+    (id 1)
+    (at 1.27 -5.08 0)
+    (effects
+      (font
+        (size 2.54 2.54)
+      )
+      (justify left)
+    )
+  )
+  (property
+    "Footprint"
+    ""
+    (id 2)
+    (at 0 0 0)
+    (effects
+      (font
+        (size 1.27 1.27)
+      )
+      hide
+    )
+  )
+  (property
+    "Datasheet"
+    ""
+    (id 3)
+    (at 0 0 0)
+    (effects
+      (font
+        (size 1.27 1.27)
+      )
+      hide
+    )
+  )
+  (property
+    "Location"
+    "___"
+    (id 4)
+    (at -12.7 -5.08 0)
+    (effects
+      (font
+        (size 2.54 2.54)
+      )
+      (justify left)
+    )
+  )
+  (property
+    "Name"
+    "______"
+    (id 5)
+    (at 0 5.08 0)
+    (effects
+      (font
+        (size 2.54 2.54)
+      )
+      (justify bottom)
+    )
+  )
+  (symbol
+    "F04_0_1"
+    (polyline
+      (pts
+        (xy -7.62 0)
+        (xy -5.08 0)
+      )
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+    (polyline
+      (pts
+        (xy -5.08 5.08)
+        (xy -5.08 -5.08)
+      )
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+    (polyline
+      (pts
+        (xy 5.08 0)
+        (xy -5.08 -5.08)
+      )
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+    (polyline
+      (pts
+        (xy 5.08 0)
+        (xy -5.08 5.08)
+      )
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+    (circle
+      (center 6.35 0)
+      (radius 1.27)
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+  )
+  (symbol
+    "F04_1_1"
+    (pin
+      input
+      line
+      (at -10.16 0 0)
+      (length 2.54)
+      (name
+        "D0"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+      (number
+        "1"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+    )
+    (pin
+      output
+      line
+      (at 10.16 0 180)
+      (length 2.54)
+      (name
+        "Q"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+      (number
+        "2"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+    )
+  )
+)

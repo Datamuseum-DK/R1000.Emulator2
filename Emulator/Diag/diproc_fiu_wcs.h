@@ -1,0 +1,48 @@
+/*
+ * Download order for LOAD_CONTROL_STORE_200.FIU
+ */
+
+#define FIU_WCS_OFFS_LIT_0()	BITPOS(0, 0, 0)
+#define FIU_WCS_OFFS_LIT_1()	BITPOS(0, 1, 0)
+#define FIU_WCS_OFFS_LIT_2()	BITPOS(0, 2, 0)
+#define FIU_WCS_OFFS_LIT_3()	BITPOS(0, 3, 0)
+#define FIU_WCS_OFFS_LIT_4()	BITPOS(0, 4, 0)
+#define FIU_WCS_OFFS_LIT_5()	BITPOS(0, 5, 0)
+#define FIU_WCS_OFFS_LIT_6()	BITPOS(0, 6, 0)
+#define FIU_WCS_LFL_0()		BITPOS(0, 7, 0)
+
+#define FIU_WCS_LFL_1()		BITPOS(1, 0, 0)
+#define FIU_WCS_LFL_2()		BITPOS(1, 1, 0)
+#define FIU_WCS_LFL_3()		BITPOS(1, 2, 0)
+#define FIU_WCS_LFL_4()		BITPOS(1, 3, 0)
+#define FIU_WCS_LFL_5()		BITPOS(1, 4, 0)
+#define FIU_WCS_LFL_6()		BITPOS(1, 5, 0)
+#define FIU_WCS_LFREG_CNTL_0()	BITPOS(1, 6, 0)
+#define FIU_WCS_LFREG_CNTL_1()	BITPOS(1, 7, 0)
+
+#define FIU_WCS_OP_SEL_0()	BITPOS(2, 0, 0)
+#define FIU_WCS_OP_SEL_1()	BITPOS(2, 1, 0)
+#define FIU_WCS_VMUX_SEL_0()	BITPOS(2, 2, 0)
+#define FIU_WCS_VMUX_SEL_1()	BITPOS(2, 3, 0)
+#define FIU_WCS_FILL_MODE_SRC()	BITPOS(2, 4, 0)
+#define FIU_WCS_OREG_SRC()	BITPOS(2, 5, 0)
+
+#define FIU_WCS_TIVI_SRC_0()	BITPOS(3, 0, 0)
+#define FIU_WCS_TIVI_SRC_1()	BITPOS(3, 1, 0)
+#define FIU_WCS_TIVI_SRC_2()	BITPOS(3, 2, 0)
+#define FIU_WCS_TIVI_SRC_3()	BITPOS(3, 3, 0)
+#define FIU_WCS_LOAD_OREG()	BITPOS(3, 4, 0)
+#define FIU_WCS_LOAD_VAR()	BITPOS(3, 5, 0)
+#define FIU_WCS_LOAD_TAR()	BITPOS(3, 6, 0)
+#define FIU_WCS_LOAD_MDR()	BITPOS(3, 7, 0)
+
+#define FIU_WCS_MEM_START_0()	BITPOS(4, 0, 0)
+#define FIU_WCS_MEM_START_1()	BITPOS(4, 1, 0)
+#define FIU_WCS_MEM_START_2()	BITPOS(4, 2, 0)
+#define FIU_WCS_MEM_START_3()	BITPOS(4, 3, 0)
+#define FIU_WCS_MEM_START_4()	BITPOS(4, 4, 0)
+#define FIU_WCS_RDATA_SRC()	BITPOS(4, 5, 0)
+#define FIU_WCS_PARITY()	BITPOS(4, 7, 0)
+
+#define FIU_WCS_LENGTH_SRC()	BITPOS(5, 0, 0)
+#define FIU_WCS_OFFS_SRC()	BITPOS(5, 1, 0)

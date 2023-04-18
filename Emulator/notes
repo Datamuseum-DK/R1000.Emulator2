@@ -1,0 +1,249 @@
+Various notes about hardware/software interface gleaned from schematics
+=======================================================================
+
+For mapping of I/O devices into M68k memory space, see:
+
+	PyReveng3/examples/R1000_400/ioc_hardware.py
+
+
+Control registers on RESHA p1:
+------------------------------
+
+	{RX_U_C1, AD_XCVR~EN}
+	{RX_UA01,RX_UA_02,RX_UA03}
+		Y0 SCA_ADR~WR
+		Y1 SCA_SEG~WR
+		Y2 SCB_ADR~WR
+		Y3 SCB_SEG~WR
+		Y4 VME_SHT~WR
+		Y5 VME_STD~WR
+		Y6
+		Y7
+	{RX_U_C1~, AD_XCVR~EN}
+	{RX_UA01,RX_UA_02,RX_UA03}
+		ditto ~RD
+
+	{RX_U_C1, REG_SET2~}
+	{RX_UA01,RX_UA_02,RX_UA03}
+		Y0 SCA_CTL~WR
+		Y1 SCB_CTL~WR
+		Y2 ETH_CTL~WR
+		Y3 VME_CTL~WR
+		Y4 RES_CTL~WR
+		Y5 EEPROM_ADR~WR        0x9303e00a 
+		Y6
+		Y7
+
+	{RX_U_C1~, REG_SET2~}
+	{uRX_UA01,RX_UA_02,RX_UA03}
+		Y0 STATUS1_RD~
+		Y1 STATUS2_RD~
+		Y2 
+		Y3 
+		Y4 V_IACK~RD
+		Y5 EEPROM_ADR~RD        0x9303e00a 
+		Y6
+		Y7
+
+Interrupts/vectors in software:
+-------------------------------
+
+	KERNEL          vector          SelfTest @      What
+	---------------------------------------------------------------
+	00009fe4        VECTOR_0x40:                    	(POWER LOW)
+	0000836a        VECTOR_0x41:                    PANIC
+	00002b82        VECTOR_0x42:    0x8000126e      CONSOLE.BREAK
+
+	0000370c        VECTOR_0x44:    0x80001346      	(DUART_DIAG_STATUS/DATA)
+	00002ada        VECTOR_0x45:    0x80001318      CONSOLE.RXRDY
+	0000263e        VECTOR_0x46:    0x800012ba      	(DUART MODEM STATUS)
+	00004120        VECTOR_0x47:                    	(EXT MODEM)
+	000036b0        VECTOR_0x48:    0x800014c4      DIAG_BUS.TXRDY
+	00002ab0        VECTOR_0x49:    0x80001496      CONSOLE.TXRDY
+	00002694        VECTOR_0x4a:    0x8000145e      	(DUART_ACR_IPCR)
+	0000314c        VECTOR_0x4b:    0x80001424      	(DUART_MODEM_DATA)
+	00003b3e        VECTOR_0x4c:    0x800013c4      	(via 1438 MODEM)
+
+	00008c3c        VECTOR_0x4e:    0x800013f6      	(IO_CPU_REQUEST)
+	00009e30        VECTOR_0x4f:    0x80001396      	(SCSI_T?)
+	00002be2        VECTOR_0x50:    0x800011f0      	(NOP or PANIC)
+			VECTOR_0x51:    0x8000128c
+			VECTOR_0x52:    0x80001368
+
+	00005a02        VECTOR_0x91                     	(SCSI_D)
+	000098aa        VECTOR_0x92                     	(SCSI_T)
+	000098aa        VECTOR_0x93
+	00007ede        VECTOR_0x94                     (?)
+	00007ede        VECTOR_0x95
+	00007ede        VECTOR_0x96
+	00007ede        VECTOR_0x97
+
+	0000825c        VECTOR_ADDRESS_ERROR:
+	00008274        VECTOR_BUS_ERROR:
+	00008250        VECTOR_CHK:
+	00008370        VECTOR_LINE_A:
+	00008268        VECTOR_PRIV_VIOLATION:
+	00008040        VECTOR_RESET:
+	0000824c        VECTOR_SPURIOUS_IRQ:
+	00008264        VECTOR_TRACE:
+	0000a090        VECTOR_TRAPV:
+
+Interrupts/vectors in hardware:
+-------------------------------
+
+	IOC schematic p16
+
+	level6or7:
+		CONSOLE.BREAK           UART pin 25 (BKDET) IOCp20
+		MAP_PERR~		IOCp21
+		PS.AC_PF                IOCp24
+		EXT_LEVEL_7~            IOCp26
+		CONSOLE.RXRDY~          UART pin 14 (RxRDY) IOCp20
+		MODEM.RXRDY~            DUART pin 27 (OP4) IOCp21
+		DIAG_BUS.RXRDY~         DUART pin 14 (OP5) IOCp21
+		EXT_LEVEL_6~            p26
+
+	level1:
+		CONSOLE.TXRDY~          UART pin15 (TxRDY) IOCp20)
+		MODEM.TXRDY~            DUART pin 26 (OP2) IOCp21
+		MODEM.DSCHG~            DUART pin 21 (INTRN) IOCp21
+		DIAG_BUS.TXRDY~         DUART pin 15 (OP7) IOCp21
+		REQUEST_INTR~           p25
+		RESPONSE_INTR~          p25
+		PITINT~                 DUART pin 13 (OP3) IOCp21
+		EXT_LEVEL_1~            p26
+
+	level2 -> IOINT3~
+	level3 -> IOINT2~
+	level4 -> IOINT1~
+	level5 -> IOINT0~
+
+	IOP::LEVEL[2-5].EN~ (p16->p28)
+
+	p24: IPL[012]~ -> FFFFF?03::D[29-31]
+
+Fri Dec 31 06:01:09 UTC 2021
+============================
+
+	CLI command "snapshot"
+		snapshot auto [-t <seconds>] <filename>
+		snapshot suspend <filename>
+		snapshot resume <filename>
+		snapshot reset
+		snapshot stop
+		snapshot continue
+
+	snapshot file is sequence of (gzip'ed):
+		[header][ident][bytes]
+
+		header = lengths + who
+		ident = owned by `who`
+		bytes = payload
+
+	`who` can for instance be SCSI disk which writes modified
+	sectors relative to reference image.
+
+	who'ers register a struct with name + function pointers,
+	get back global state flag.
+
+	to `stop`:
+		sn_state = SN_STOP
+		all who'ers notice this (eventually) call
+			sn_check_in(SN_STOP)
+		wait for everybody to check in
+
+	to `continue`
+		sn_status = SN_CONTINUE
+		sn_check_in()'s return
+
+	to `suspend`:
+		{stop}
+		sn_status = SN_SUSPEND
+		sn_check_in()'s return
+		who'ers call
+			sn_record(ptr, len, fmt, ...)
+		as needed, then
+			sn_check_in(SN_SUSPEND)
+
+	to `reset`:
+		{stop}
+		sn_status = SN_RESET
+		sn_check_in()'s return
+		who'ers clean their state
+		who'ers call
+			sn_check_in(SN_RESET)
+
+	to `resume`:
+		{reset}
+		for all records:
+			call whoer->receive(ident, ptr, len)
+		{continue}
+
+TODO
+====
+
+	regression test scripts
+	CLI control of diagproc "turbo" mode
+	Experiment flag fields, see: TEST_EXTRACT_MERGE.FIU
+
+SOURCE STRUCTURE
+================
+
+	Ioc
+		SystemC
+			[branches]
+				Makefile
+				ioc_*.{cc|hh}
+				lib_r1000_ioc.so.1
+					exposes
+		ioc_cli.c
+	Fiu
+		SystemC
+			[branches]
+				[...]
+		fiu_cli.c
+	Seq
+		SystemC
+			[branches]
+	Val
+		SystemC
+			[branches]
+	Typ
+		SystemC
+			[branches]
+	Mem32
+		SystemC
+			[branches]
+	(Resha)
+		SystemC
+			[branches]
+	Planes
+		planes.pub.hh
+		planes.hh
+		planes.cc
+		planes_cli.c
+
+	Infra
+	Musashi
+	I8052
+
+CLI
+===
+
+	In sequence:
+
+		boards {ioc|fiu|typ|val|seq|mem0|mem2} ...
+
+		<board> branch <name>
+		<board> feature [+|-]<name> ...
+
+		disk {0|1|2|3} {type <type>|image <image>}
+
+		power
+
+	Any time:
+		operator <elastic>
+		console <elastic>
+		key {interactive|automatic|protected|enabled}
+		tape <tap_file>
+		<tracing/debugging>

@@ -1,0 +1,303 @@
+(symbol
+  "F40"
+  (pin_numbers hide)
+  (pin_names hide)
+  (in_bom yes)
+  (on_board yes)
+  (property
+    "Reference"
+    "U"
+    (id 0)
+    (at 12.7 2.54 0)
+    (effects
+      (font
+        (size 1.27 1.27)
+      )
+    )
+  )
+  (property
+    "Value"
+    "F40"
+    (id 1)
+    (at 1.905 -2.54 0)
+    (effects
+      (font
+        (size 2.54 2.54)
+      )
+    )
+  )
+  (property
+    "Footprint"
+    ""
+    (id 2)
+    (at 0 0 0)
+    (effects
+      (font
+        (size 1.27 1.27)
+      )
+      hide
+    )
+  )
+  (property
+    "Datasheet"
+    ""
+    (id 3)
+    (at 0 0 0)
+    (effects
+      (font
+        (size 1.27 1.27)
+      )
+      hide
+    )
+  )
+  (property
+    "Location"
+    "___"
+    (id 4)
+    (at 1.905 2.54 0)
+    (effects
+      (font
+        (size 2.54 2.54)
+      )
+    )
+  )
+  (property
+    "Name"
+    "______"
+    (id 5)
+    (at 7.62 -10.16 0)
+    (effects
+      (font
+        (size 2.54 2.54)
+      )
+      (justify bottom)
+    )
+  )
+  (symbol
+    "F40_0_0"
+    (polyline
+      (pts
+        (xy -2.54 -5.08)
+        (xy 5.08 -5.08)
+      )
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+    (polyline
+      (pts
+        (xy -2.54 5.08)
+        (xy 5.08 5.08)
+      )
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+    (arc
+      (start 5.08 -5.08)
+      (mid 8.6721 -3.5921)
+      (end 10.16 0)
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+    (arc
+      (start 10.16 0)
+      (mid 8.6721 3.5921)
+      (end 5.08 5.08)
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+    (circle
+      (center 11.43 0)
+      (radius 1.27)
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+  )
+  (symbol
+    "F40_0_1"
+    (polyline
+      (pts
+        (xy -2.54 -5.08)
+        (xy -2.54 -7.62)
+      )
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+    (polyline
+      (pts
+        (xy -2.54 5.08)
+        (xy -2.54 -5.08)
+      )
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+    (polyline
+      (pts
+        (xy -2.54 7.62)
+        (xy -2.54 5.08)
+      )
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+  )
+  (symbol
+    "F40_1_1"
+    (pin
+      input
+      line
+      (at -7.62 7.62 0)
+      (length 5.08)
+      (name
+        "D0"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+      (number
+        "1"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+    )
+    (pin
+      input
+      line
+      (at -7.62 2.54 0)
+      (length 5.08)
+      (name
+        "D3"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+      (number
+        "2"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+    )
+    (pin
+      input
+      line
+      (at -7.62 -2.54 0)
+      (length 5.08)
+      (name
+        "D4"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+      (number
+        "4"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+    )
+    (pin
+      input
+      line
+      (at -7.62 -7.62 0)
+      (length 5.08)
+      (name
+        "D5"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+      (number
+        "5"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+    )
+    (pin
+      output
+      line
+      (at 15.24 0 180)
+      (length 2.54)
+      (name
+        "Q"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+      (number
+        "6"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+    )
+  )
+)

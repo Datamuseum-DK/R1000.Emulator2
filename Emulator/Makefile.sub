@@ -1,0 +1,64 @@
+
+
+
+R1000BIN = ${WORKDIR}/_obj/r1000sim.${BRANCH}
+
+OBJDIR = ${WORKDIR}/_obj
+
+r1000sim: ${R1000BIN}
+	@echo "WORKDIR ${WORKDIR}"
+	@echo "BRANCH ${BRANCH}"
+	@echo "OPTIMIZE ${OPTIMIZE}"
+	ln -sf ${R1000BIN} r1000sim
+
+-include Makefile.local
+
+include ${WORKDIR}/_obj/Makefile.flags
+
+include Infra/Makefile.inc
+include Dfs/Makefile.inc
+include Diag/Makefile.inc
+include Makefile.musashi.inc
+include Iop/Makefile.inc
+include Chassis/Makefile.inc
+include Components/Makefile.inc
+
+include ${WORKDIR}/Emu/Makefile.inc
+include ${WORKDIR}/Fiu/Makefile.inc
+include ${WORKDIR}/Ioc/Makefile.inc
+include ${WORKDIR}/Mem32/Makefile.inc
+include ${WORKDIR}/Seq/Makefile.inc
+include ${WORKDIR}/Typ/Makefile.inc
+include ${WORKDIR}/Val/Makefile.inc
+include ${WORKDIR}/Chassis/Makefile.inc
+
+
+CFLAGSMINUSI += -I.
+CFLAGSMINUSD += -DMUSASHI_CNF='"Iop/musashi_conf.h"'
+
+CFLAGS += -std=c17 ${OPTIMIZE} -pthread
+CFLAGS += ${CFLAGSMINUSD}
+CFLAGS += ${CFLAGSMINUSI}
+CFLAGS += ${PARANOIA}
+
+SC_API ?= -std=c++14
+SC_I ?= -I/usr/local/include -I.
+SC_L ?= -L/usr/local/lib -lsystemc
+
+SC_CFLAGS += ${SC_API} ${OPTIMIZE} ${PARANOIA} ${PARANOIAXX} -pthread 
+SC_CC = ${CXX} ${SC_CFLAGS} -I. ${SC_I} -c
+
+
+${R1000BIN}:	${OBJS}
+	@echo Linking ${R1000BIN}
+	@${CXX} -o ${R1000BIN} ${R1000SIM} ${SC_CFLAGS} ${LDFLAGS} ${OBJS} ${SC_L}
+
+
+flint: ${OBJS}
+	flexelint flint.lnt \
+		${R1000SIM} ${CFLAGSMINUSI} ${CFLAGSMINUSD} \
+		Dfs/*.c \
+		Diag/*.c \
+		Infra/*.c \
+		Iop/*.c \
+		Chassis/*.c \

@@ -1,0 +1,102 @@
+(symbol
+  "GF"
+  (pin_numbers hide)
+  (pin_names
+    (offset 0)
+    hide
+  )
+  (in_bom yes)
+  (on_board yes)
+  (property
+    "Reference"
+    "GF"
+    (id 0)
+    (at 3.81 0 0)
+    (effects
+      (font
+        (size 2.54 2.54)
+      )
+      (justify left)
+    )
+  )
+  (property
+    "Value"
+    "GF"
+    (id 1)
+    (at 0 0 0)
+    (effects
+      (font
+        (size 1.27 1.27)
+      )
+      hide
+    )
+  )
+  (property
+    "Footprint"
+    ""
+    (id 2)
+    (at 0 0 0)
+    (effects
+      (font
+        (size 1.27 1.27)
+      )
+      hide
+    )
+  )
+  (property
+    "Datasheet"
+    ""
+    (id 3)
+    (at 0 0 0)
+    (effects
+      (font
+        (size 1.27 1.27)
+      )
+      hide
+    )
+  )
+  (symbol
+    "GF_0_1"
+    (polyline
+      (pts
+        (xy 2.54 0)
+        (xy 3.81 1.27)
+        (xy 3.81 -1.27)
+        (xy 2.54 0)
+      )
+      (stroke
+        (width 0.1524)
+        (type default)
+        (color 0 0 0 0)
+      )
+      (fill
+        (type none)
+      )
+    )
+  )
+  (symbol
+    "GF_1_1"
+    (pin
+      bidirectional
+      line
+      (at 0 0 0)
+      (length 2.54)
+      (name
+        ""
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+      (number
+        "1"
+        (effects
+          (font
+            (size 2.54 2.54)
+          )
+        )
+      )
+    )
+  )
+)

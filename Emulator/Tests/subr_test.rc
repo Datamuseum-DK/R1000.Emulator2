@@ -1,0 +1,164 @@
+
+set -e
+R1K_TESTNAME=`basename $0 .sh`
+
+R1K_WORKDIR=`make workdir`
+
+R1K_PFX=${R1K_WORKDIR}/_${R1K_TESTNAME}
+
+rm -f ${R1K_PFX}.*
+
+R1K_CLIFILE=${R1K_PFX}.cli
+
+standard_patches() {
+
+	# Set the cluster id to 408459 (= PAM's machine)
+	cli firmware patch IOC_EEPROM 0x7e84 0x00 0x06 0x3b 0x8b
+
+	# Dont use "CR ESC [ 2 K" to hide experiment names
+	cli dfs patch FS_0.M200 0x8fb7 0x20
+	cli dfs patch FS_0.M200 0x8fbd 0x20
+	cli dfs patch FS_0.M200 0x827e 0x40 0x0a 0x0d
+
+	# Poll experiment completion four times more often
+	cli 'dfs patch FS_0.M200 0x93c6 0x00 0x14'
+
+	# Allow operator to enter CLI immediately [N] ? y
+	# cli dfs patch STANDARD.M200_CONFIG 0x3 0x1
+
+	# Allow operator to enter CLI prior to starting the cluster [N] ? y
+	# cli dfs patch STANDARD.M200_CONFIG 0x5 0x1
+
+	# Wait for remote debugging on kernel crashes [Y] ? n
+	cli dfs patch STANDARD.M200_CONFIG 0x2a 0x0
+
+	# Call Rational on kernel crash [Y] ? n
+	cli dfs patch STANDARD.M200_CONFIG 0x2d 0x0
+
+	# Single MEM32 board
+	cli dfs patch HARDWARE.M200_CONFIG 0x05 0x0
+}
+
+cli() {
+	echo "$*" >> ${R1K_CLIFILE}
+}
+
+cli '# => Standard prefix'
+
+make diskcli | while read i
+do
+	cli "$i"
+done
+
+cli 'console >' ${R1K_PFX}.console
+standard_patches
+
+sc_boards() {
+	cli '# => sc_all_boards'
+	cli trace +systemc
+	cli sc launch $*
+	for brd in ioc fiu mem0 mem1 mem2 mem3 seq typ val
+	do
+	    echo "$*" | grep -q -i ${brd} || cli diproc dummy -TIMEOUT ${brd}
+	done
+	cli 'sc watchdog -dont_bite 5' 
+	# cli sc trace UTRACE 1
+}
+
+cli_prompt() {
+	cli "iop syscall internal"  
+
+	cli 'sc wait .00001'
+	cli '# => cli_prompt'
+	cli iop reset
+	cli 'console match expect "Boot from (Tn or Dn)  [D0] : "'
+	cli 'console << ""'
+	cli 'console match expect "Kernel program (0,1,2) [0] : "'
+	cli 'console << ""'
+	cli 'console match expect "File system    (0,1,2) [0] : "'
+	cli 'console << ""'
+	cli 'console match expect "User program   (0,1,2) [0] : "'
+	cli 'console << ""'
+	cli 'console match expect "Enter option [enter CLI] : "'
+	cli 'console << "1"'
+	cli 'console match expect "CLI>"'
+}
+
+expmon_cmd() {
+	cli '# => expmon_cmd'
+	cli 'console <<' "\"$*\""
+	cli 'console match expect "EM>"'
+}
+
+expmon_prompt() {
+	cli '# => expmon_prompt'
+	cli_prompt
+	cli 'console << "x expmon"'
+	cli 'console match expect "EM>"'
+	expmon_cmd '[set FIRST_PASS true]'
+	expmon_cmd '[set num_fails 0]'
+}
+
+fru_prompt() {
+	cli_prompt
+	cli '# => fru_prompt'
+	cli 'console << "x fru"'
+	cli 'console match expect "Please enter option : "'
+	for i in $*
+	do
+		cli "console << $i"
+		cli 'console match expect " : "'
+	done
+}
+
+run_with_cli() {
+	cli 'sc wait 1e-6'
+	cli sc rate
+	./r1000sim \
+		-T ${R1K_WORKDIR}/_r1000 \
+		"include ${R1K_CLIFILE}" 2>&1 | tee ${R1K_PFX}.log
+}
+
+run() {
+	cli 'sc wait 1e-6'
+	cli sc rate
+	cli exit
+	echo "exit" | ./r1000sim \
+		-T ${R1K_WORKDIR}/_r1000 \
+		"include ${R1K_CLIFILE}" 2>&1 | tee ${R1K_PFX}.log
+	python3 Context/context.py ${R1K_WORKDIR}/_r1000.ctx > ${R1K_PFX}.ctx
+	python3 Context/utrace.py ${R1K_WORKDIR}/_r1000.ctx > ${R1K_PFX}.utrace
+}
+
+single() {
+	single_brd=$1
+	shift
+
+        if [ "x${single_brd}" = "xmem0" ] ; then
+		single_suff="m32"
+		cli 'sc trace DFSM 1'
+	else
+		single_suff="${single_brd}"
+		cli 'sc trace DUIRG 1'
+	fi
+
+
+	if [ "x$1" == "x" ] ; then
+		EXP=TEST_WCS_ADDRESS
+	else
+		EXP=$1
+	fi
+
+	cli 'sc trace DI*PROC 0x14'
+
+	cli 'sc quota add 60'
+	cli 'sc quota exit'
+
+	cli "dfs read ${EXP}.${single_suff} ${R1K_PFX}.exp"
+
+	cli "diproc experiment ${single_brd} ${R1K_PFX}.exp"
+	cli "diproc wait ${single_brd}"
+	cli "diproc status ${single_brd}"
+
+	run
+}

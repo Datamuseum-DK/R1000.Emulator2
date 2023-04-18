@@ -1,0 +1,463 @@
+{
+  "board": {
+    "3dviewports": [],
+    "layer_presets": [],
+    "viewports": []
+  },
+  "boards": [],
+  "cvpcb": {
+    "equivalence_files": []
+  },
+  "erc": {
+    "erc_exclusions": [],
+    "meta": {
+      "version": 0
+    },
+    "pin_map": [
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      [
+        0,
+        2,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        2,
+        2,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        2
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        2,
+        1,
+        1,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      [
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        2
+      ],
+      [
+        0,
+        2,
+        1,
+        2,
+        0,
+        0,
+        1,
+        0,
+        2,
+        2,
+        2,
+        2
+      ],
+      [
+        0,
+        2,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0,
+        2
+      ],
+      [
+        0,
+        2,
+        1,
+        1,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0,
+        2
+      ],
+      [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2
+      ]
+    ],
+    "rule_severities": {
+      "bus_definition_conflict": "error",
+      "bus_entry_needed": "error",
+      "bus_to_bus_conflict": "error",
+      "bus_to_net_conflict": "error",
+      "conflicting_netclasses": "error",
+      "different_unit_footprint": "error",
+      "different_unit_net": "error",
+      "duplicate_reference": "error",
+      "duplicate_sheet_names": "error",
+      "endpoint_off_grid": "warning",
+      "extra_units": "error",
+      "global_label_dangling": "warning",
+      "hier_label_mismatch": "error",
+      "label_dangling": "error",
+      "lib_symbol_issues": "error",
+      "missing_bidi_pin": "warning",
+      "missing_input_pin": "warning",
+      "missing_power_pin": "error",
+      "missing_unit": "warning",
+      "multiple_net_names": "error",
+      "net_not_bus_member": "error",
+      "no_connect_connected": "error",
+      "no_connect_dangling": "error",
+      "pin_not_connected": "error",
+      "pin_not_driven": "warning",
+      "pin_to_pin": "error",
+      "power_pin_not_driven": "error",
+      "similar_labels": "error",
+      "simulation_model_issue": "error",
+      "unannotated": "error",
+      "unit_value_mismatch": "error",
+      "unresolved_variable": "error",
+      "wire_dangling": "error"
+    }
+  },
+  "libraries": {
+    "pinned_footprint_libs": [],
+    "pinned_symbol_libs": []
+  },
+  "meta": {
+    "filename": "TYP.kicad_pro",
+    "version": 1
+  },
+  "net_settings": {
+    "classes": [
+      {
+        "bus_width": 50,
+        "clearance": 0.2,
+        "diff_pair_gap": 0.25,
+        "diff_pair_via_gap": 0.25,
+        "diff_pair_width": 0.2,
+        "line_style": 0,
+        "microvia_diameter": 0.3,
+        "microvia_drill": 0.1,
+        "name": "Default",
+        "pcb_color": "rgba(0, 0, 0, 0.000)",
+        "schematic_color": "rgba(0, 0, 0, 0.000)",
+        "track_width": 0.25,
+        "via_diameter": 0.8,
+        "via_drill": 0.4,
+        "wire_width": 20
+      }
+    ],
+    "meta": {
+      "version": 3
+    },
+    "net_colors": null,
+    "netclass_assignments": null,
+    "netclass_patterns": []
+  },
+  "pcbnew": {
+    "last_paths": {
+      "gencad": "",
+      "idf": "",
+      "netlist": "",
+      "specctra_dsn": "",
+      "step": "",
+      "vrml": ""
+    },
+    "page_layout_descr_file": ""
+  },
+  "schematic": {
+    "annotate_start_num": 0,
+    "drawing": {
+      "dashed_lines_dash_length_ratio": 12.0,
+      "dashed_lines_gap_length_ratio": 3.0,
+      "default_bus_thickness": 12.0,
+      "default_line_thickness": 6.0,
+      "default_text_size": 100.0,
+      "default_wire_thickness": 6.0,
+      "field_names": [],
+      "intersheets_ref_own_page": false,
+      "intersheets_ref_prefix": "{",
+      "intersheets_ref_short": false,
+      "intersheets_ref_show": true,
+      "intersheets_ref_suffix": "}",
+      "junction_size_choice": 3,
+      "label_size_ratio": 0.375,
+      "pin_symbol_size": 25.0,
+      "text_offset_ratio": 0.15
+    },
+    "legacy_lib_dir": "",
+    "legacy_lib_list": [],
+    "meta": {
+      "version": 1
+    },
+    "net_format_name": "KiCad",
+    "ngspice": {
+      "fix_include_paths": true,
+      "fix_passive_vals": false,
+      "meta": {
+        "version": 0
+      },
+      "model_mode": 0,
+      "workbook_filename": ""
+    },
+    "page_layout_descr_file": "../R1000.kicad_wks",
+    "plot_directory": "",
+    "spice_adjust_passive_values": false,
+    "spice_external_command": "spice \"%I\"",
+    "spice_save_all_currents": false,
+    "spice_save_all_voltages": false,
+    "subpart_first_id": 65,
+    "subpart_id_separator": 0
+  },
+  "sheets": [
+    [
+      "20011966-7b12-533f-4d20-457d979e0ec9",
+      ""
+    ],
+    [
+      "20011966-6856-269d-74ec-43d2328f4df3",
+      "Page 13"
+    ],
+    [
+      "20011966-3952-4e7b-7873-6c23b3e23b81",
+      "Page 15"
+    ],
+    [
+      "20011966-76be-7c3b-3a3d-7e16a26b2745",
+      "Page 16"
+    ],
+    [
+      "20011966-6093-0166-3ebf-469e1480cbaa",
+      "Page 17"
+    ],
+    [
+      "20011966-30a0-7f45-29d0-31f0db7e8d6d",
+      "Page 20"
+    ],
+    [
+      "20011966-2133-46c6-78b1-1186163d59a2",
+      "Page 21"
+    ],
+    [
+      "20011966-4ac6-594b-43ee-7b364efa6298",
+      "Page 22"
+    ],
+    [
+      "20011966-3ebb-21ec-39ff-002ca176feb2",
+      "Page 23"
+    ],
+    [
+      "20011966-5f02-263a-4e60-7af6111deb56",
+      "Page 24"
+    ],
+    [
+      "20011966-1aeb-643d-7b35-6c449c8c5b38",
+      "Page 25"
+    ],
+    [
+      "20011966-7d3e-5a6b-474d-551be75a8f81",
+      "Page 26"
+    ],
+    [
+      "20011966-0357-5d22-6abb-07ff75536248",
+      "Page 27"
+    ],
+    [
+      "20011966-703b-1aa8-32a5-00da0f3050fb",
+      "Page 28"
+    ],
+    [
+      "20011966-0492-7c01-58ab-27bdb6879fb2",
+      "Page 30"
+    ],
+    [
+      "20011966-6dee-548a-5fed-12ff692c4d01",
+      "Page 31"
+    ],
+    [
+      "20011966-581f-5556-62c6-2ce928452d6b",
+      "Page 32"
+    ],
+    [
+      "20011966-79c2-70ff-1dc2-6fa5e09f65e1",
+      "Page 33"
+    ],
+    [
+      "20011966-6f05-71d3-2e1f-57f299661511",
+      "Page 34"
+    ],
+    [
+      "20011966-25a7-3b09-27d5-199f734546e6",
+      "Page 35"
+    ],
+    [
+      "20011966-5b0e-2f20-79a9-3e604f7e3b03",
+      "Page 36"
+    ],
+    [
+      "20011966-33a5-5647-0607-364ab59d6882",
+      "Page 37"
+    ],
+    [
+      "20011966-0ba5-12d7-17ec-25639cf29a65",
+      "Page 39"
+    ],
+    [
+      "20011966-18af-582f-5ec7-3d99daedc6f5",
+      "Page 40"
+    ],
+    [
+      "20011966-7034-5dba-3952-227d004c4b75",
+      "Page 41"
+    ],
+    [
+      "20011966-3f52-71c4-512b-4c3877881ecd",
+      "Page 43"
+    ],
+    [
+      "20011966-6a6f-19e5-5bd5-681e450e1e47",
+      "Page 45"
+    ],
+    [
+      "20011966-230c-6b42-03b3-70dc36c967cc",
+      "Page 46"
+    ],
+    [
+      "20011966-09d8-15a4-613a-4f02c72d1122",
+      "Page 47"
+    ],
+    [
+      "20011966-5e2e-6ccd-2488-1a40125b3978",
+      "Page 49"
+    ],
+    [
+      "20011966-01c4-551d-3512-6408c9ac20e0",
+      "Page 54"
+    ],
+    [
+      "20011966-18ce-35b6-5f53-0eb70e4116ae",
+      "Page 55"
+    ],
+    [
+      "20011966-0ce1-4b44-788c-2a3a538fdf29",
+      "Page 56"
+    ],
+    [
+      "20011966-18b8-42d5-75b4-6e5ed6173b82",
+      "Page 57"
+    ],
+    [
+      "20011966-46d0-39bd-3ba1-4bb50b0bdd41",
+      "Page 58"
+    ],
+    [
+      "20011966-358f-194b-4396-6d8c8f8ee5f6",
+      "Page 59"
+    ],
+    [
+      "20011966-443d-749e-3fc8-06f3b63e3426",
+      "Page 60"
+    ]
+  ],
+  "text_variables": {}
+}

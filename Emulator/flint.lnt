@@ -1,0 +1,125 @@
+
++fan
+
++libh(memspace.h)
++libh(vsb.h)
+
+-sem(callout_insert_locked, custodial(1))
+-sem(callout_insert, custodial(1))
+-sem(elastic_subscribe, custodial(3))
+-sem(mem_peg_register, custodial(4))
+-sem(ioc_breakpoint, custodial(3))
+
+-efile(451, "Ioc/interrupts.h")	// Header file 'Ioc/interrupts.h' repeatedly included but does not have a standard include guard
+
+
+// 506 constant value boolean
+-emacro(506, assert)
+-emacro(506, VTAILQ_FOREACH_SAFE)
+
+// 527     Unreachable code at token '___'
+-emacro(527, WRONG)
+-esym(527, break)
+
+// 534 Ignoring return value of our own functions
+-esym(534, cli_error)
+-esym(534, m68k_disassemble)
+-esym(534, VSB_printf)
+-esym(534, VSB_vprintf)
+-esym(534, VSB_tofile)
+-esym(534, VSB_cat)
+-esym(534, VSB_bcat)
+-esym(534, VSB_putc)
+-esym(534, printf)
+-esym(534, sprintf)
+-esym(534, strcpy)
+-esym(534, strcat)
+-esym(534, fprintf)
+-esym(534, vsnprintf)
+-esym(534, vfprintf)
+-esym(534, memset)
+-esym(534, memcpy)
+-esym(534, usleep)
+-esym(534, rpn_error)
+
+// 641 Converting enum 'sfr_e' to 'int'
+-esym(641, sfr_e)
+
+// 740 Unusual pointer cast (incompatible indirect types)
+-emacro((740), VTAILQ_LAST)
+
+// external '___' (___) could be made static
+-esym(765, memdesc::*)
+-esym(765, *_space)
+-esym(765, *_mdesc)
+
+// global struct member '___' (___) not referenced
+-esym(768, memdesc::*)
+-esym(768, *_space)
+-esym(768, *_mdesc)
+
+// 750     local macro '___' (___) not referenced
+-esym(750, REG_*)
+
+// 762     Redundantly declared symbol '___' previously declared at ___
+-esym(762, irq_getvector)
+-esym(762, m68k_write_memory_8)
+-esym(762, m68k_read_memory_8)
+-esym(762, m68k_write_memory_16)
+-esym(762, m68k_read_memory_16)
+-esym(762, m68k_write_memory_32)
+-esym(762, m68k_read_memory_32)
+
+// 767
+-esym(767, SCSI_CMD)
+
+// 714 Symbol '___' (___) not referenced
+-esym(714, elastic_*)
+
+// Vqueue extras
+-esym(755, VLIST_*)     // Global macro not ref.
+-esym(755, VSLIST_*)
+-esym(755, VSTAILQ_*)
+-esym(755, VTAILQ_*)
+
+// 759 header declaration for symbol '___' defined at (___) could be moved from header to module
+-esym(759, elastic_*)
+
+// 765 external '___' (___) could be made static
+-esym(765, elastic_*)
+
+// 785 Too few initializers for aggregate '___' of type '___'
+-e785
+
+// 826 Suspicious pointer-to-pointer conversion (area too small)
+-emacro((826), VTAILQ_LAST)
+
+// 835     A zero has been given as ___ argument to operator '___'
+-emacro(835,TRACE_68K)
+
+// 123: Macro 'BOARD' defined with arguments at line 23 -- this is just a warning
+-esym(123, BOARD)
+-esym(123, RESPONSE)
+
+///////////////////////////////////////////////////////////////////////
+
+// Stylistic Disagreements
+-e663		// Suspicious array to pointer conversion
+-e716		// while(1) ...
+
+-e726		// Extraneous comma ignored
+-e786		// String concatenation within initializer
+
+// Threads/Locking
+-e457		// Function '___' of thread '___' has an unprotected write access to variable '___' which is used by function '___' of thread '___'
+-e458		// Function '___' of thread '___' has an unprotected read access to variable '___' which is used by function '___' of thread '___'
+-e459		// Function '___' whose address was taken has an unprotected access to variable '___'
+
+// To Be Reviewed
+-e712		// Loss of precision (___) (___ to ___)
+-e713		// Loss of precision (___) (___ to ___)
+-e732		// Loss of sign (___) (___ to ___)
+-e734		// Loss of precision (___) (___ bits to ___ bits)
+-e737		// Loss of sign in promotion from ___ to ___
+-e747		// Significant prototype coercion (___) ___ to ___
+-e679		// Suspicious Truncation in arithmetic expression combining with pointer

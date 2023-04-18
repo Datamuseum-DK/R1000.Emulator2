@@ -1,0 +1,51 @@
+/*
+ * Download order for LOAD_CONTROL_STORE_200.SEQ
+ */
+
+#define SEQ_WCS_BRANCH_ADR_13()	BITPOS(0, 0, 0)
+#define SEQ_WCS_BRANCH_ADR_12()	BITPOS(0, 1, 0)
+#define SEQ_WCS_BRANCH_ADR_11()	BITPOS(0, 2, 0)
+#define SEQ_WCS_BRANCH_ADR_10()	BITPOS(0, 3, 0)
+#define SEQ_WCS_BRANCH_ADR_9()	BITPOS(0, 4, 0)
+#define SEQ_WCS_BRANCH_ADR_8()	BITPOS(0, 5, 0)
+#define SEQ_WCS_BRANCH_ADR_7()	BITPOS(0, 6, 0)
+#define SEQ_WCS_BRANCH_ADR_6()	BITPOS(0, 7, 0)
+
+#define SEQ_WCS_BRANCH_ADR_5()	BITPOS(1, 0, 0)
+#define SEQ_WCS_BRANCH_ADR_4()	BITPOS(1, 1, 0)
+#define SEQ_WCS_BRANCH_ADR_3()	BITPOS(1, 2, 0)
+#define SEQ_WCS_BRANCH_ADR_2()	BITPOS(1, 3, 0)
+#define SEQ_WCS_BRANCH_ADR_1()	BITPOS(1, 4, 0)
+#define SEQ_WCS_BRANCH_ADR_0()	BITPOS(1, 5, 0)
+#define SEQ_WCS_COND_SEL_6()	BITPOS(1, 6, 0)
+#define SEQ_WCS_COND_SEL_5()	BITPOS(1, 7, 0)
+
+#define SEQ_WCS_COND_SEL_2()	BITPOS(2, 0, 0)
+#define SEQ_WCS_COND_SEL_3()	BITPOS(2, 1, 0)
+#define SEQ_WCS_COND_SEL_4()	BITPOS(2, 2, 0)
+#define SEQ_WCS_COND_SEL_1()	BITPOS(2, 3, 0)
+#define SEQ_WCS_COND_SEL_0()	BITPOS(2, 4, 0)
+#define SEQ_WCS_BR_TYPE_0()	BITPOS(2, 5, 0)
+#define SEQ_WCS_BR_TYPE_1()	BITPOS(2, 6, 0)
+#define SEQ_WCS_LATCH()		BITPOS(2, 7, 0)
+
+#define SEQ_WCS_INT_READS_0()	BITPOS(3, 0, 0)
+#define SEQ_WCS_BR_TIMING_0()	BITPOS(3, 1, 0)
+#define SEQ_WCS_BR_TIMING_1()	BITPOS(3, 2, 0)
+#define SEQ_WCS_EN_MICRO()	BITPOS(3, 3, 0)
+#define SEQ_WCS_BR_TYPE_2()	BITPOS(3, 4, 0)
+#define SEQ_WCS_BR_TYPE_3()	BITPOS(3, 5, 0)
+#define SEQ_WCS_INT_READS_1()	BITPOS(3, 6, 0)
+#define SEQ_WCS_INT_READS_2()	BITPOS(3, 7, 0)
+
+#define SEQ_WCS_LEX_ADR_0()	BITPOS(5, 0, 0)
+#define SEQ_WCS_LEX_ADR_1()	BITPOS(5, 1, 0)
+#define SEQ_WCS_PARITY()	BITPOS(5, 2, 0)
+#define SEQ_WCS_RANDOM_6()	BITPOS(5, 3, 0)
+#define SEQ_WCS_RANDOM_4()	BITPOS(5, 4, 0)
+#define SEQ_WCS_RANDOM_5()	BITPOS(5, 5, 0)
+#define SEQ_WCS_RANDOM_2()	BITPOS(5, 6, 0)
+#define SEQ_WCS_RANDOM_3()	BITPOS(5, 7, 0)
+
+#define SEQ_WCS_RANDOM_0()	BITPOS(6, 0, 0)
+#define SEQ_WCS_RANDOM_1()	BITPOS(6, 1, 0)
