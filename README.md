@@ -23,8 +23,8 @@ This produces netlists from the schematics
 
 This clones the Musashi 68k emulator into the tree.
 
-5. Create a `Emulator/Makefile.local`:
-
+5. Create a `Emulator/Makefile.local`::
+```
    # Which schematics, "Hw" or "Optimized" ?
    SCHEM=Hw
    SCHEM=Optimized
@@ -33,7 +33,7 @@ This clones the Musashi 68k emulator into the tree.
    
    DISK0_IMAGE = "${WORKDIR}/../DiskImages/20230105_snap08.0.bin"
    DISK1_IMAGE = "${WORKDIR}/../DiskImages/20230105_snap08.1.bin"
-
+```
 6. Download diskimages, they are 1GB each, so they are not checked in.
    Ask phk@freebsd.org where to find them.
 
@@ -46,14 +46,14 @@ There is quite a bit to compile, expect this some part of an hour.
 This should take a minute or two and produces a file named
 `_work/Optimized/_expmon_test_ioc.console` where the last couple
 of lines should be:
-
+```
    […]
    TRACE RAM CELL TEST                                        PASSED
    
    END OF IOC BOARD TESTING
    
    IOC BOARD                                                  PASSED
-
+```
 NB: This file contains ANSI escape-sequences.
 
 # THINGS YOU CAN DO
