@@ -2,7 +2,7 @@
 
 . Tests/subr_test.rc
 
-if [ "x$1" = "x-quick" ] ; then
+if [ "x$1" = "x--quick" ] ; then
 	cli 'dfs neuter TEST_WCS_BITS.IOC'
 	cli 'dfs neuter TEST_WCS_ADDRESSING.IOC'
 	cli 'dfs neuter TEST_TRACE_DATA.IOC'
