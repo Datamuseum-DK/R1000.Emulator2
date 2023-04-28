@@ -448,7 +448,7 @@ class NetBus():
                 file.write("MUX has pintype " + node.pin.type.name + "\n")
                 good = False
 
-        if not good or width == 1:
+        if 1 or not good or width == 1:
             self.create_as_bus(file)
         else:
             MuxBus(self, width, file)

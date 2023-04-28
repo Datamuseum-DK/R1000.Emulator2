@@ -378,7 +378,7 @@
       "pin_to_pin": "error",
       "power_pin_not_driven": "error",
       "similar_labels": "error",
-      "simulation_model_issue": "error",
+      "simulation_model_issue": "ignore",
       "unannotated": "error",
       "unit_value_mismatch": "error",
       "unresolved_variable": "error",
@@ -469,7 +469,9 @@
     "page_layout_descr_file": "../R1000.kicad_wks",
     "plot_directory": "",
     "spice_adjust_passive_values": false,
+    "spice_current_sheet_as_root": false,
     "spice_external_command": "spice \"%I\"",
+    "spice_model_current_sheet_as_root": true,
     "spice_save_all_currents": false,
     "spice_save_all_voltages": false,
     "subpart_first_id": 65,
@@ -489,10 +491,6 @@
       "Page 13"
     ],
     [
-      "20011966-7d26-7c3a-12b1-2f7c2b075977",
-      "Page 14"
-    ],
-    [
       "20011966-2453-072c-20ee-3263d9c05690",
       "Page 16"
     ],
@@ -507,10 +505,6 @@
     [
       "20011966-3b0a-23bc-0ff6-2883593a33c5",
       "Page 19"
-    ],
-    [
-      "20011966-3dad-3623-77b2-6423b7eeb892",
-      "Page 20"
     ],
     [
       "20011966-22a2-2ccc-2c73-6b6bb25e646f",
