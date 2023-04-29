@@ -34,8 +34,6 @@
 
 '''
 
-from part import PartModel, PartFactory
-
 CBITS = '''
            TYP:0                                                     TYP:63 VAL:0                                                     VAL:63 CHECKBIT
     ECCG16 --------------------------------++++++++++++++++++++++++++++++++ --------------------------------++++++++++++++++++++++++++++++++ +--------
@@ -49,6 +47,103 @@ CBITS = '''
     ECCG62 ---++----+++-++--+-+++-+-+-+++++---++----+++-++--+-+++-+-+-+++++ ++++----++-+-+--++-+-------++--+++++++++-+-++---+-------+-----+- --------+
 '''
 
+
+from part import PartModel, PartFactory
+
+class XECC(PartFactory):
+    ''' IOC Full ECC/Parity implementation '''
+
+    def getmasks(self):
+        invert = [0, 0, 0, 0, 1, 1, 1, 0, 0]
+        for i in CBITS.split("\n"):
+            if not "ECCG" in i:
+                continue
+            j = i.split()
+            tmask = int(j[1].replace("-", "0").replace("+", "1"), 2)
+            vmask = int(j[2].replace("-", "0").replace("+", "1"), 2)
+            yield tmask, vmask, invert.pop(0)
+
+    def xsensitive(self):
+        yield "PIN_CLK.pos()"
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
+
+        super().doit(file)
+
+        file.fmt('''
+		|	uint64_t typ, val, tmp, tpar = 0, vpar = 0, cbo = 0, cbi;
+		|
+		|	BUS_T_READ(typ);
+		|	BUS_V_READ(val);
+		|
+		|	if (!PIN_GEN=>) {
+		|		BUS_CBI_READ(cbi);
+		|		cbi ^= BUS_CBI_MASK;
+		|	} else {
+		|		cbi = 0;
+		|	}
+		|
+		|	tmp = (typ ^ (typ >> 4)) & 0x0f0f0f0f0f0f0f0f;
+		|	tmp = (tmp ^ (tmp >> 2)) & 0x0303030303030303;
+		|	tmp = (tmp ^ (tmp >> 1)) & 0x0101010101010101;
+		|	tmp ^= 0x0101010101010101;
+		|	if (tmp & (1ULL<<56)) tpar |= 0x80;
+		|	if (tmp & (1ULL<<48)) tpar |= 0x40;
+		|	if (tmp & (1ULL<<40)) tpar |= 0x20;
+		|	if (tmp & (1ULL<<32)) tpar |= 0x10;
+		|	if (tmp & (1ULL<<24)) tpar |= 0x8;
+		|	if (tmp & (1ULL<<16)) tpar |= 0x4;
+		|	if (tmp & (1ULL<<8)) tpar |= 0x2;
+		|	if (tmp & (1ULL<<0)) tpar |= 0x1;
+		|	BUS_PT_WRITE(tpar);
+		|
+		|	tmp = (val ^ (val >> 4)) & 0x0f0f0f0f0f0f0f0f;
+		|	tmp = (tmp ^ (tmp >> 2)) & 0x0303030303030303;
+		|	tmp = (tmp ^ (tmp >> 1)) & 0x0101010101010101;
+		|	tmp ^= 0x0101010101010101;
+		|	if (tmp & (1ULL<<56)) vpar |= 0x80;
+		|	if (tmp & (1ULL<<48)) vpar |= 0x40;
+		|	if (tmp & (1ULL<<40)) vpar |= 0x20;
+		|	if (tmp & (1ULL<<32)) vpar |= 0x10;
+		|	if (tmp & (1ULL<<24)) vpar |= 0x8;
+		|	if (tmp & (1ULL<<16)) vpar |= 0x4;
+		|	if (tmp & (1ULL<<8)) vpar |= 0x2;
+		|	if (tmp & (1ULL<<0)) vpar |= 0x1;
+		|	BUS_PV_WRITE(vpar);
+		|
+		|''')
+
+        for tmask, vmask, invert in self.getmasks():
+            file.fmt('\n\ttmp = (typ & 0x%016xULL) ^ (val & 0x%016xULL);\n' % (tmask, vmask))
+            file.fmt('''
+		|	tmp = (tmp ^ (tmp >> 32)) & 0xffffffffULL;
+		|	tmp = (tmp ^ (tmp >> 16)) & 0xffffULL;
+		|	tmp = (tmp ^ (tmp >> 8)) & 0xffULL;
+		|	tmp = (tmp ^ (tmp >> 4)) & 0xfULL;
+		|	tmp = (tmp ^ (tmp >> 2)) & 0x3ULL;
+		|	tmp = (tmp ^ (tmp >> 1)) & 0x1ULL;
+		|	cbo <<= 1;
+		|	cbo |= tmp;
+		|''')
+            if invert:
+                file.fmt('\tcbo ^= 1;\n')
+
+        file.fmt('''
+		|	BUS_CBO_WRITE(cbo ^ cbi);
+		|	PIN_ERR<=(cbo != cbi);
+		|
+		|	TRACE(
+		|	    << " t " << BUS_T_TRACE()
+		|	    << " v " << BUS_V_TRACE()
+		|	    << " cbi " << BUS_CBI_TRACE()
+		|	    << " gen " << PIN_GEN?
+		|	    << " - "
+		|	    << " tp " << std::hex << tpar
+		|	    << " vp " << std::hex << vpar
+		|	    << " cbo " << std::hex << cbo
+		|	);
+		|''')
 
 class XECC64(PartFactory):
 
@@ -124,3 +219,4 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("XECC64", PartModel("XECC64", XECC64))
+    part_lib.add_part("XECC", PartModel("XECC", XECC))
