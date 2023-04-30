@@ -3,6 +3,7 @@
 . Tests/subr_test.rc
 
 if [ "x$1" = "x--quick" ] ; then
+	true
 fi
 
 sc_boards ioc fiu mem0 seq typ val
