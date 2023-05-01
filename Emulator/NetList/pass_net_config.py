@@ -41,6 +41,8 @@ from node import Node
 from pin import Pin
 from scmod import ScSignal
 
+USE_MUXBUS = True
+
 MIN_BUS_WIDTH = 4
 
 class MuxBus():
@@ -448,7 +450,7 @@ class NetBus():
                 file.write("MUX has pintype " + node.pin.type.name + "\n")
                 good = False
 
-        if 1 or not good or width == 1:
+        if not good or width == 1 or not USE_MUXBUS:
             self.create_as_bus(file)
         else:
             MuxBus(self, width, file)
