@@ -17,6 +17,6 @@ cli 'sc quota add 280'
 
 expmon_prompt
 
-expmon_cmd "$1"
+expmon_cmd "[set BOARD_NUM 0]$1"
 
 run
