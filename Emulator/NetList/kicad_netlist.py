@@ -62,7 +62,7 @@ class KiCadNetList():
         # self.board.add_ctor_arg("struct planes", "planes", is_ptr=True)
 
         self.build_sheets(cpu)
-        self.build_components()
+        self.build_components(cpu)
         self.build_nets()
 
     def build_parts(self, cpu):
@@ -79,7 +79,7 @@ class KiCadNetList():
             name = sexp.find_first("name")[0].name
             self.board.add_sheet(self.path_to_sheet(name))
 
-    def build_components(self):
+    def build_components(self, cpu):
         ''' Build sheets '''
 
         for sexp in self.sexp.find("components.comp"):
@@ -89,6 +89,8 @@ class KiCadNetList():
             comp = ComponentSexp(sexp)
             sheet.add_component(comp)
             self.comps[comp.ref] = comp
+            if comp.location[0] == 'z':
+                cpu.add_z_code(comp, comp.location)
 
     def build_nets(self):
         ''' Build nets '''
