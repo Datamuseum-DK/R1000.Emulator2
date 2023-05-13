@@ -70,6 +70,7 @@ def register():
     yield XMUX(6)
     yield XMUX(7)
     yield XMUX(8)
+    yield XMUX(9)
     yield XMUX(10)
     yield XMUX(12)
     yield XMUX(16)

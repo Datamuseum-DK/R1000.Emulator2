@@ -212,7 +212,7 @@
       "pin_to_pin": "error",
       "power_pin_not_driven": "error",
       "similar_labels": "error",
-      "simulation_model_issue": "error",
+      "simulation_model_issue": "ignore",
       "unannotated": "error",
       "unit_value_mismatch": "error",
       "unresolved_variable": "error",
@@ -304,7 +304,9 @@
     "page_layout_descr_file": "../R1000.kicad_wks",
     "plot_directory": "SVG",
     "spice_adjust_passive_values": false,
+    "spice_current_sheet_as_root": false,
     "spice_external_command": "spice \"%I\"",
+    "spice_model_current_sheet_as_root": true,
     "spice_save_all_currents": false,
     "spice_save_all_voltages": false,
     "subpart_first_id": 65,
@@ -354,10 +356,6 @@
     [
       "20011966-21a9-4cad-1d35-4a33855ab820",
       "Page 23"
-    ],
-    [
-      "20011966-7637-78ce-235d-28b4b5cf9bd0",
-      "Page 24"
     ],
     [
       "20011966-2971-5234-08f7-2a455a4e949c",
@@ -432,28 +430,12 @@
       "Page 50"
     ],
     [
-      "20011966-1cf6-1ead-154b-4b82463ab9cb",
-      "Page 51"
-    ],
-    [
       "20011966-0564-36fa-289d-43af1661dea8",
       "Page 52"
     ],
     [
-      "20011966-722e-17db-2dbc-77d4e83de3ad",
-      "Page 53"
-    ],
-    [
-      "20011966-3dd2-025f-6513-2c0d83998bfa",
-      "Page 54"
-    ],
-    [
       "20011966-6892-3d9d-7ae5-0d63dc2dba2e",
       "Page 55"
-    ],
-    [
-      "20011966-6b51-5027-7695-1e8ce3712e9c",
-      "Page 58"
     ],
     [
       "20011966-4c12-1177-623e-41ff72151692",
@@ -476,16 +458,8 @@
       "Page 68"
     ],
     [
-      "20011966-3d7b-1511-48f4-7bdd10652f77",
-      "Page 70"
-    ],
-    [
       "20011966-7c3b-0859-16c6-413c8fb379a6",
       "Page 74"
-    ],
-    [
-      "20011966-0d2a-0ae6-1ebd-3cca63f47db7",
-      "Page 75"
     ],
     [
       "20011966-72ee-6410-6df1-6734d99f9b2c",

@@ -46,6 +46,7 @@ class XBUF(Chip):
         file.write("#endif\n")
            
 def register():
+    yield XBUF(3)
     yield XBUF(4)
     yield XBUF(6)
     yield XBUF(8)

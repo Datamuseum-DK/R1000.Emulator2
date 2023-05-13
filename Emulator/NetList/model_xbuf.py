@@ -225,6 +225,7 @@ def register(part_lib):
 
     part_lib.add_part("F244", ModelXbuf(False))
     part_lib.add_part("F240", ModelXbuf(True))
+    part_lib.add_part("XBUF3", ModelXbuf(False))
     part_lib.add_part("XBUF4", ModelXbuf(False))
     part_lib.add_part("XBUF6", ModelXbuf(False))
     part_lib.add_part("XBUF8", ModelXbuf(False))

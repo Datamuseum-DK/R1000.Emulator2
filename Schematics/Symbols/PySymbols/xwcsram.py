@@ -87,5 +87,5 @@ def register():
     yield XWCSRAM(16)
     yield XWCSRAM2(39)
     yield XWCSRAM(40)
-    yield XWCSRAM(42)
+    yield XWCSRAM2(42)
     yield XWCSRAM(47)
