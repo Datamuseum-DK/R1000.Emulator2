@@ -104,6 +104,7 @@ PIN_NAMES = {
     "SETPAL": {
         6: "h1", 8: "ae_hit", 9: "al_hit", 10: "be_hit", 11: "bl_hit", 13: "drive_hit",
         16: "bhit_456", 17: "ahit_012", 18: "hit_0246", 19: "hit_0145",
+        20: "bhit_5", 21: "bhit_4", 22: "ahit_1", 23: "ahit_0",
     },
     "TAGAPAL": {
         1: "clk", 2: "cmd0", 3: "cmd1", 4: "cmd2", 5: "cmd3", 6: "h1", 7: "mcyc2_nxt", 8: "mcyc2",
