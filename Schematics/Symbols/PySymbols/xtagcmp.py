@@ -12,8 +12,8 @@ class XTAGCMP(FChip):
 
     def __init__(self):
         super().__init__()
-        self.sig_left(ChipSig("-->+", "TA",0, 44))
-        self.sig_left(ChipSig("-->+", "TS",0, 2))
+        self.sig_left(ChipSig("-->+", "TA",0, 63))
+        # self.sig_left(ChipSig("-->+", "TS",0, 2))
 
         self.sig_right(ChipSig("+<--", "CLK"))
         self.sig_right(ChipSig("+<--", "EQ"))

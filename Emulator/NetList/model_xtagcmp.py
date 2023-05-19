@@ -61,7 +61,8 @@ class XTAGCMP(PartFactory):
 		|	bool name, offset;
 		|
 		|	BUS_TA_READ(ta);
-		|	BUS_TS_READ(ts);
+		|	ts = ta & 0x7;
+		|	ta = ta >> 19;
 		|	BUS_NM_READ(nm);
 		|	BUS_PG_READ(pg);
 		|	BUS_SP_READ(sp);
@@ -79,7 +80,6 @@ class XTAGCMP(PartFactory):
 		|	    << " e " << PIN_E?
 		|	    << " eq " << PIN_EQ?
 		|	    << " ta " << BUS_TA_TRACE()
-		|	    << " ts " << BUS_TS_TRACE()
 		|	    << " nm " << BUS_NM_TRACE()
 		|	    << " pg " << BUS_PG_TRACE()
 		|	    << " sp " << BUS_SP_TRACE()
