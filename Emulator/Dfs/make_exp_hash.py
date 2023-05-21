@@ -78,8 +78,9 @@ def main():
         start_adr = exp.octets[0]
         hashkey = koopman32(exp.octets[start_adr - 0x10:])
         lst.append((hashkey, dirent.name))
-    print('#!/bin/env python3')
-    print('# NB: Machine generated, see .../Emulator/Dfs/make_exp_hash.py')
+    print('/*')
+    print(' * NB: Machine generated, see .../Emulator/Dfs/make_exp_hash.py')
+    print(' */')
     print('')
     for hashkey, filename in sorted(lst):
         txt = "#define " + filename.replace(".", "_") + "_HASH"

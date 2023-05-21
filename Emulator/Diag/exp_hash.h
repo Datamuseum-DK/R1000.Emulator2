@@ -1,5 +1,6 @@
-#!/bin/env python3
-# NB: Machine generated, see .../Emulator/Dfs/make_exp_hash.py
+/*
+ * NB: Machine generated, see .../Emulator/Dfs/make_exp_hash.py
+ */
 
 #define ASSERT_SEQ_CKSTOP_SEQ_HASH		0x000001cc
 #define TEST_PAUSE_SEQ_HASH			0x00000b2c
