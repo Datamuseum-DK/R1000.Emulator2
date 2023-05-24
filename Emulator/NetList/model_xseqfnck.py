@@ -29,73 +29,36 @@
 # SUCH DAMAGE.
 
 '''
-   SEQ Macro PC adder
-   ==================
+   SEQ Field Num Check
+   ===================
 
 '''
 
 from part import PartModel, PartFactory
 
-class XMPCADD(PartFactory):
-    ''' SEQ Macro PC adder '''
+class XSEQFNCK(PartFactory):
+    ''' SEQ Field Num Check '''
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         super().doit(file)
-        file.fmt('''
-		|	bool wdisp, mibmt, oper;
-		|	unsigned a, b, boff = 0;
-		|
-		|	wdisp = PIN_WDISP;
-		|	mibmt = PIN_MIBMT;
-		|	BUS_MPC_READ(b);
-		|	if (!wdisp && !mibmt) {
-		|		a = 0;
-		|		oper = true;
-		|	} else if (!wdisp && mibmt) {
-		|		BUS_DISP_READ(a);
-		|		oper = false;
-		|	} else if (wdisp && !mibmt) {
-		|		BUS_CURI_READ(a);
-		|		a |= 0xf800;
-		|		oper = true;
-		|	} else {
-		|		BUS_CURI_READ(a);
-		|		a |= 0xf800;
-		|		oper = true;
-		|	}
-		|	a &= 0x7ff;
-		|	if (a & 0x400)
-		|		a |= 0x7800;
-		|	a ^= 0x7fff;
-		|	b &= 0x7fff;
-		|	if (oper) {
-		|		if (wdisp)
-		|			a += 1;
-		|		a &= 0x7fff;
-		|		boff = a + b;
-		|	} else {
-		|		if (!wdisp)
-		|			a += 1;
-		|		boff = b - a;
-		|	}
-		|	boff &= 0x7fff;
-		|	BUS_BOFF_WRITE(boff);
-		|	TRACE(
-		|	    << " wdisp " << PIN_WDISP
-		|	    << " mibmt " << PIN_MIBMT
-		|	    << " disp " << BUS_DISP_TRACE()
-		|	    << " curi " << BUS_CURI_TRACE()
-		|	    << " mpc " << BUS_MPC_TRACE()
-		|	    << " - boff " << std::hex << boff
-		|	    << " a " << std::hex << a
-		|	    << " b " << std::hex << b
-		|	);
-		''')
 
+        file.fmt('''
+		|	unsigned val, cur_instr;
+		|
+		|	BUS_VAL_READ(val);
+		|	BUS_CURI_READ(cur_instr);
+		|
+		|	unsigned tmp = (val >> 7) ^ cur_instr;
+		|	tmp &= 0x3ff;
+		|	bool fner = tmp != 0x3ff;
+		|	PIN_FNER<=(fner);
+		|	bool ferr = !(fner && !(PIN_FCHR=> || PIN_ENFU=>));
+		|	PIN_FERR<=(ferr);
+		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XMPCADD", PartModel("XMPCADD", XMPCADD))
+    part_lib.add_part("XSEQFNCK", PartModel("XSEQFNCK", XSEQFNCK))

@@ -37,6 +37,10 @@
 
 
 from part import PartModel, PartFactory
+from node import Node
+from pin import Pin
+from net import Net
+from component import Component
 
 class F299(PartFactory):
 
@@ -49,8 +53,7 @@ class F299(PartFactory):
 
     def sensitive(self):
         yield "PIN_CLK.pos()"
-        yield "PIN_G1"
-        yield "PIN_G2"
+        yield "PIN_OE"
         if not self.comp.nodes["CLR"].net.is_pu():
             yield "PIN_CLR"
 
@@ -68,7 +71,7 @@ class F299(PartFactory):
 		|	if (mode == 0) {
 		|		next_trigger(
 		|		    BUS_S_EVENTS() |
-		|		    PIN_G1.default_event() | PIN_G2.default_event()
+		|		    PIN_OE.default_event()
 		|		);
 		|	}
 		|
@@ -87,7 +90,7 @@ class F299(PartFactory):
 		|		switch (mode) {
 		|		case 3:
 		|			what = "load ";
-		|			BUS_DQ_READ(state->reg);
+		|			BUS_D_READ(state->reg);
 		|			break;
 		|		case 2:
 		|			what = "<< ";
@@ -97,24 +100,24 @@ class F299(PartFactory):
 		|		case 1:
 		|			what = ">> ";
 		|			state->reg >>= 1;
-		|			state->reg &= (BUS_DQ_MASK >> 1);
-		|			if (PIN_RSI=>) state->reg |= (1 << (BUS_DQ_WIDTH-1));
+		|			state->reg &= (BUS_D_MASK >> 1);
+		|			if (PIN_RSI=>) state->reg |= (1 << (BUS_D_WIDTH-1));
 		|			break;
 		|		default:
 		|			break;
 		|		}
 		|	}
-		|	if ((PIN_G1=> || PIN_G2=>) || (mode == 3)) {
+		|	if (PIN_OE=> || (mode == 3)) {
 		|		if (what == NULL && (state->ctx.do_trace & 2))
 		|			what = "Z ";
-		|		BUS_DQ_Z();
+		|		BUS_Y_Z();
 		|	} else {
 		|		if (what == NULL && (state->ctx.do_trace & 2))
 		|			what = "out ";
-		|		BUS_DQ_WRITE(state->reg);
+		|		BUS_Y_WRITE(state->reg);
 		|	}
-		|	PIN_Q0<=((state->reg & (1 << (BUS_DQ_WIDTH-1))) != 0);
-		|#if BUS_DQ_WIDTH == 8
+		|	PIN_Q0<=((state->reg & (1 << (BUS_Y_WIDTH-1))) != 0);
+		|#if BUS_Y_WIDTH == 8
 		|	PIN_Q7<=((state->reg & 0x01) != 0);
 		|#else
 		|	PIN_Q15<=((state->reg & 0x01) != 0);
@@ -125,7 +128,7 @@ class F299(PartFactory):
 		|		    << what
 		|		    << "clk " << PIN_CLK.posedge()
 		|		    << " s " << BUS_S_TRACE()
-		|		    << " g " << PIN_G1? << PIN_G2?
+		|		    << " oe " << PIN_OE?
 		|''')
 
         if "CLR" in self.comp:
@@ -136,7 +139,7 @@ class F299(PartFactory):
         file.fmt('''
 		|		    << " rsi " << PIN_RSI?
 		|		    << " lsi " << PIN_LSI?
-		|		    << " dq " << BUS_DQ_TRACE()
+		|		    << " d " << BUS_D_TRACE()
 		|		    << " | " << std::hex << (unsigned)state->reg
 		|		);
 		|	}
@@ -154,8 +157,7 @@ class F299X8(PartFactory):
 
     def sensitive(self):
         yield "PIN_CLK.pos()"
-        yield "PIN_G1"
-        yield "PIN_G2"
+        yield "PIN_OE"
         if not self.comp.nodes["CLR"].net.is_pu():
             yield "PIN_CLR"
 
@@ -173,7 +175,7 @@ class F299X8(PartFactory):
 		|	if (mode == 0) {
 		|		next_trigger(
 		|		    BUS_S_EVENTS() |
-		|		    PIN_G1.default_event() | PIN_G2.default_event()
+		|		    PIN_OE.default_event()
 		|		);
 		|	}
 		|
@@ -192,7 +194,7 @@ class F299X8(PartFactory):
 		|		switch (mode) {
 		|		case 3:
 		|			what = "load ";
-		|			BUS_DQ_READ(state->reg);
+		|			BUS_D_READ(state->reg);
 		|			break;
 		|		case 2:
 		|			what = "<< ";
@@ -226,14 +228,14 @@ class F299X8(PartFactory):
 		|			break;
 		|		}
 		|	}
-		|	if ((PIN_G1=> || PIN_G2=>) || (mode == 3)) {
+		|	if (PIN_OE=> || (mode == 3)) {
 		|		if (what == NULL && (state->ctx.do_trace & 2))
 		|			what = "Z ";
-		|		BUS_DQ_Z();
+		|		BUS_Y_Z();
 		|	} else {
 		|		if (what == NULL && (state->ctx.do_trace & 2))
 		|			what = "out ";
-		|		BUS_DQ_WRITE(state->reg);
+		|		BUS_Y_WRITE(state->reg);
 		|	}
 		|	tmp = 0;
 		|	if (state->reg & (1ULL << 56)) tmp |= 0x80;
@@ -251,7 +253,7 @@ class F299X8(PartFactory):
 		|		    << what
 		|		    << "clk " << PIN_CLK.posedge()
 		|		    << " s " << BUS_S_TRACE()
-		|		    << " g " << PIN_G1? << PIN_G2?
+		|		    << " oe " << PIN_OE?
 		|''')
 
         if "CLR" in self.comp:
@@ -262,16 +264,70 @@ class F299X8(PartFactory):
         file.fmt('''
 		|		    << " ri " << BUS_RI_TRACE()
 		|		    << " li " << BUS_LI_TRACE()
-		|		    << " dq " << BUS_DQ_TRACE()
+		|		    << " d " << BUS_D_TRACE()
 		|		    << " q " << std::hex << tmp
 		|		    << " | " << std::hex << state->reg
 		|		);
 		|	}
 		|''')
 
+class ModelF299(PartModel):
+    ''' F299 registers '''
+
+    def assign(self, comp, part_lib):
+
+        for node in comp:
+            if node.pin.name[:2] == 'DQ':
+                pn = node.pin.name[2:]
+                new_pin = Pin("D" + pn, "D" + pn, "input")
+                Node(node.net, comp, new_pin)
+                new_pin = Pin("Y" + pn, "Y" + pn, "tri_state")
+                Node(node.net, comp, new_pin)
+                node.remove()
+
+        print("CC", comp)
+        g1_node = comp["G1"]
+        g2_node = comp["G2"]
+        print("  G1", g1_node)
+        print("  G2", g2_node)
+        if g1_node.net == g2_node.net:
+            oe_net = g1_node.net
+        elif g1_node.net.is_pd():
+            oe_net = g2_node.net
+        elif g2_node.net.is_pd():
+            oe_net = g1_node.net
+        else:
+            or_comp = Component(
+                compref = comp.ref + "_" + "_OR",
+                compvalue = comp.value,
+                comppart = "F32"
+            )
+            print("  OR", or_comp)
+            comp.scm.add_component(or_comp)
+            or_comp.name = comp.name + "_" + "_OR"
+            or_comp.part = part_lib[or_comp.partname]
+
+            oe_net = Net(self.name + "_" + "_OE")
+            comp.scm.add_net(oe_net)
+
+            Node(oe_net, or_comp, Pin("Q", "Q", "output"))
+            Node(g1_node.net, or_comp, Pin("D0", "D0", "input"))
+            Node(g2_node.net, or_comp, Pin("D1", "D1", "input"))
+
+        new_pin = Pin("OE", "OE", "input")
+        new_node = Node(oe_net, comp, new_pin)
+        print("  NP", new_pin)
+        print("  NN", new_node)
+        print("  N", comp["OE"])
+        g1_node.remove()
+        g2_node.remove()
+
+        super().assign(comp, part_lib)
+
+
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("F299", PartModel("F299", F299))
-    part_lib.add_part("F299X2", PartModel("F299X2", F299))
-    part_lib.add_part("F299X8", PartModel("F299X8", F299X8))
+    part_lib.add_part("F299", ModelF299("F299", F299))
+    part_lib.add_part("F299X2", ModelF299("F299X2", F299))
+    part_lib.add_part("F299X8", ModelF299("F299X8", F299X8))

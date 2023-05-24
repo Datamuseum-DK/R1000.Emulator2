@@ -10,8 +10,8 @@ cli 'sc quota exit'
 
 # 3 => Execute diagnostics
 # 4 => Run a specific test
-# 29 => P3UCODE
+# 26 => P2UCODE
 # 1 => All
-fru_prompt 3 4 29 1
+fru_prompt 3 4 26 1
 
-run
+run_with_cli

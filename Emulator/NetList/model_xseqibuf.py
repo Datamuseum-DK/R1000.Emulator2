@@ -29,73 +29,70 @@
 # SUCH DAMAGE.
 
 '''
-   SEQ Macro PC adder
-   ==================
+   SEQ Instruction buffer
+   ======================
 
 '''
 
 from part import PartModel, PartFactory
 
-class XMPCADD(PartFactory):
-    ''' SEQ Macro PC adder '''
+class XSEQIBUF(PartFactory):
+    ''' SEQ Instruction buffer '''
+
+    def state(self, file):
+        file.fmt('''
+		|	uint64_t typ, val;
+		|''')
+
+    def sensitive(self):
+        yield "PIN_CLK.pos()"
+        yield "BUS_IBOE_SENSITIVE()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         super().doit(file)
-        file.fmt('''
-		|	bool wdisp, mibmt, oper;
-		|	unsigned a, b, boff = 0;
-		|
-		|	wdisp = PIN_WDISP;
-		|	mibmt = PIN_MIBMT;
-		|	BUS_MPC_READ(b);
-		|	if (!wdisp && !mibmt) {
-		|		a = 0;
-		|		oper = true;
-		|	} else if (!wdisp && mibmt) {
-		|		BUS_DISP_READ(a);
-		|		oper = false;
-		|	} else if (wdisp && !mibmt) {
-		|		BUS_CURI_READ(a);
-		|		a |= 0xf800;
-		|		oper = true;
-		|	} else {
-		|		BUS_CURI_READ(a);
-		|		a |= 0xf800;
-		|		oper = true;
-		|	}
-		|	a &= 0x7ff;
-		|	if (a & 0x400)
-		|		a |= 0x7800;
-		|	a ^= 0x7fff;
-		|	b &= 0x7fff;
-		|	if (oper) {
-		|		if (wdisp)
-		|			a += 1;
-		|		a &= 0x7fff;
-		|		boff = a + b;
-		|	} else {
-		|		if (!wdisp)
-		|			a += 1;
-		|		boff = b - a;
-		|	}
-		|	boff &= 0x7fff;
-		|	BUS_BOFF_WRITE(boff);
-		|	TRACE(
-		|	    << " wdisp " << PIN_WDISP
-		|	    << " mibmt " << PIN_MIBMT
-		|	    << " disp " << BUS_DISP_TRACE()
-		|	    << " curi " << BUS_CURI_TRACE()
-		|	    << " mpc " << BUS_MPC_TRACE()
-		|	    << " - boff " << std::hex << boff
-		|	    << " a " << std::hex << a
-		|	    << " b " << std::hex << b
-		|	);
-		''')
 
+        file.fmt('''
+		|
+		|	unsigned iboe, disp;
+		|
+		|	if (PIN_CLK.posedge()) {
+		|		BUS_TYP_READ(state->typ);
+		|		BUS_VAL_READ(state->val);
+		|	} 
+		|
+		|	BUS_IBOE_READ(iboe);
+		|
+		|	if (!(iboe & 0x80))
+		|		disp = state->typ >> 48;
+		|	else if (!(iboe & 0x40))
+		|		disp = state->typ >> 32;
+		|	else if (!(iboe & 0x20))
+		|		disp = state->typ >> 16;
+		|	else if (!(iboe & 0x10))
+		|		disp = state->typ >> 0;
+		|	else if (!(iboe & 0x08))
+		|		disp = state->val >> 48;
+		|	else if (!(iboe & 0x04))
+		|		disp = state->val >> 32;
+		|	else if (!(iboe & 0x02))
+		|		disp = state->val >> 16;
+		|	else if (!(iboe & 0x01))
+		|		disp = state->val >> 0;
+		|	else
+		|		disp = 0xffff;
+		|	BUS_DISP_WRITE(disp);
+		|	TRACE(
+		|		<< " clk^ " << PIN_CLK.posedge()
+		|		<< " iboe " << BUS_IBOE_TRACE()
+		|		<< " disp " << std::hex << disp
+		|	);
+		|
+		|
+		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XMPCADD", PartModel("XMPCADD", XMPCADD))
+    part_lib.add_part("XSEQIBUF", PartModel("XSEQIBUF", XSEQIBUF))

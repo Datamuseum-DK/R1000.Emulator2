@@ -43,7 +43,7 @@ class SRAM2149(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint8_t ram[1024];
+		|	uint16_t ram[1024];
 		|	bool writing;
 		|''')
 
@@ -106,3 +106,4 @@ def register(part_lib):
 
     part_lib.add_part("2149", PartModel("2149", SRAM2149))
     part_lib.add_part("2149X2", PartModel("2149X2", SRAM2149))
+    part_lib.add_part("2149X4", PartModel("2149X4", SRAM2149))
