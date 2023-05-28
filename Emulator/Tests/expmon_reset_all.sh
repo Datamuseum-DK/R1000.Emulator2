@@ -4,7 +4,6 @@
 
 sc_boards fiu ioc mem0 seq typ val
 
-cli 'sc trace DI*PROC 4'
 cli 'sc quota add 1'
 
 expmon_prompt

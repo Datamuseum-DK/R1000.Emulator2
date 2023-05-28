@@ -4,11 +4,8 @@
 
 sc_boards ioc fiu mem0 seq typ val
 
-cli 'sc trace DI*PROC 4'
-cli 'sc trace DPINV0D 1'
 cli 'sc quota add 2000'
 cli 'sc quota exit'
-cli 'trace +diagbus'
 
 # 8 => Initialize processor state
 # 3 => Execute diagnostics

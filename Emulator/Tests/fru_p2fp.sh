@@ -1,7 +1,5 @@
 #!/bin/sh
 
-make -j 3 || make
-
 . Tests/subr_test.rc
 
 sc_boards ioc fiu mem0 seq typ val

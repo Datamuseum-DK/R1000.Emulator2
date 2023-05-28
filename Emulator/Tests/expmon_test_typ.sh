@@ -14,7 +14,6 @@ fi
 
 sc_boards typ
 
-cli 'sc trace DI*PROC 4'
 cli 'sc quota add 23'
 
 expmon_prompt
