@@ -163,7 +163,7 @@ class PinBus():
 
         file.write("\n")
         file.write("#define BUS_%s_WIDTH %d\n" % (self.name, self.width))
-	file.write("#define BUS_%s_LSB(lsb) (%d - (lsb))\n" % (self.name, self.width - 1))
+        file.write("#define BUS_%s_LSB(lsb) (%d - (lsb))\n" % (self.name, self.width - 1))
         file.write("#define BUS_%s_MASK 0x%xULL\n" % (self.name, (1 << self.width) - 1))
 
         for pin in self.pins:
