@@ -1,9 +1,63 @@
+#!/usr/local/bin/python3
+#
+# Copyright (c) 2021 Poul-Henning Kamp
+# All rights reserved.
+#
+# Author: Poul-Henning Kamp <phk@phk.freebsd.dk>
+#
+# SPDX-License-Identifier: BSD-2-Clause
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+
+'''
+   Pull activation counts out of shared memory
+   -------------------------------------------
+
+   Can be used as a class to build tools or stand alone.
+
+   Standalone usage is:
+
+      python3 Context/context.py <name of _r1000.ctx file> [delta-t]
+
+   If delta-t is specified, only activations during that many seconds
+   are reported, otherwise activations from start of simulation is reported.
+
+   The three numeric columns are:
+
+       * Average activations per micro-cycle
+       * Activations
+       * Fraction of total activations
+
+'''
+
 import sys
+import time
 
 import re
 import struct
 
 class Context():
+
+    ''' Pull context records out of shared memory '''
 
     def __init__(self, file=None):
         self.ident = None
@@ -17,6 +71,7 @@ class Context():
         return self.ident < other.ident
 
     def from_file(self, file):
+        ''' return the next activation record '''
         buf = file.read(128)
         if len(buf) != 128:
             raise EOFError
@@ -35,9 +90,10 @@ class Context():
         return self.ident
 
 def contexts(filename=None, regex=None):
+    ''' Filter activation records by regexp '''
     if filename is None:
         filename = sys.argv[1]
-    if regex != None:
+    if regex is not None:
         regex = re.compile(regex)
     with open(filename, "rb") as file:
         while True:
@@ -49,14 +105,27 @@ def contexts(filename=None, regex=None):
                 yield ctx
 
 def main():
+    ''' Default main function '''
     nact = 0
     lines = []
     summ = {}
-    clkgen = None
-    for ctx in contexts():
+    ucycles = None
+    filename = sys.argv[1]
+    snapshot = {}
+
+    if len(sys.argv) > 2:
+        duration = int(sys.argv[2])
+        for ctx in contexts(filename=filename):
+            snapshot[ctx.ident] = ctx.activations
+        time.sleep(duration)
+
+    for ctx in contexts(filename=filename):
         i = ctx.activations
-        if clkgen is None and "CLKGEN" in ctx.ident:
-            clkgen = ctx
+        delta = snapshot.get(ctx.ident)
+        if delta:
+            i -= delta
+        if ucycles is None and "CLKGEN" in ctx.ident:
+            ucycles = i / 14
         nact += i
         lines.append((i, str(ctx)))
         j = "page " + ctx.ident.split(".")[1]
@@ -64,24 +133,25 @@ def main():
         j = "board " + ctx.ident.split(".")[1].split('_')[0]
         summ[j] = summ.get(j, 0) + i
 
-    print("CLKGEN", clkgen)
 
     for i, j in summ.items():
         lines.append((j, i))
 
     for i, ctx in sorted(lines):
-        print(
-            "%8.3f" % (14 * i / clkgen.activations),
-            "%12d" % i,
-            "%7.4f" % (i / nact),
-            ctx
-        )
+        if i:
+            print(
+                "%8.3f" % (i / ucycles),
+                "%12d" % i,
+                "%7.4f" % (i / nact),
+                ctx
+            )
     print(
-        "%8.3f" % (14 * nact / clkgen.activations),
+        "%8.3f" % (nact / ucycles),
         "%12d" % nact,
         "%7.4f" % (nact / nact),
         "Total"
     )
+    print("UCYCLES %.1f" % ucycles)
 
 if __name__ == "__main__":
     main()
