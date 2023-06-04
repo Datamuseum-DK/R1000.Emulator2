@@ -76,7 +76,12 @@ def main():
             continue
         exp = Experiment(dirent)
         start_adr = exp.octets[0]
-        hashkey = koopman32(exp.octets[start_adr - 0x10:])
+        # Hash the length (as downloaded), start address, and program part
+        hashdata = bytearray()
+        hashdata.append(len(exp.octets) + 1)
+        hashdata.append(exp.octets[0])
+        hashdata += exp.octets[start_adr - 0x10:]
+        hashkey = koopman32(hashdata)
         lst.append((hashkey, dirent.name))
     print('/*')
     print(' * NB: Machine generated, see .../Emulator/Dfs/make_exp_hash.py')

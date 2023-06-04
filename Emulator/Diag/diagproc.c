@@ -51,6 +51,7 @@ struct diagproc_priv {
 	uint8_t dl_ptr;
 	uint8_t dl_cnt;
 	uint8_t dl_sum;
+	uint64_t dl_hash;
 };
 
 static void
@@ -198,9 +199,16 @@ diagproc_bitfunc(struct mcs51 *mcs51, uint8_t bit_adr, int what)
 	return (retval);
 }
 
+#define UPDATE_KOOPMAN32(hashvar, newbyte) \
+	do { \
+		hashvar = (((hashvar) << 32) + (newbyte)) % 0xFFFFFFFB; \
+	} while (0)
+
 static void
 diagproc_fast_dload(struct diagproc_priv *dp, const uint8_t *ptr)
 {
+	uint8_t pc;
+
 	if (dp->dl_cnt == 0 && dp->dl_ptr == 0 && dp->dl_sum == 0) {
 		assert(ptr[0] == 1);
 		assert((ptr[1] & 0xe0) == 0xa0);
@@ -210,16 +218,19 @@ diagproc_fast_dload(struct diagproc_priv *dp, const uint8_t *ptr)
 		dp->download_len = ptr[1];
 		dp->dl_ptr = 0x10;
 		dp->dl_sum += ptr[1];
+		UPDATE_KOOPMAN32(dp->dl_hash, ptr[1]);
 	} else if (dp->dl_cnt > 1 && dp->dl_ptr > 0) {
 		dp->dl_sum += ptr[1];
 		dp->mcs51->iram[dp->dl_ptr] = ptr[1];
+		pc = dp->mcs51->iram[0x10];
+		if (dp->dl_ptr == 0x10 ||
+		    (dp->dl_ptr >= pc && dp->dl_cnt > 2)) {
+			UPDATE_KOOPMAN32(dp->dl_hash, ptr[1]);
+		}
 		dp->dl_cnt--;
 		dp->dl_ptr++;
 	} else if (dp->dl_ptr > 0) {
 		assert(dp->dl_sum == ptr[1]);
-		dp->dl_cnt = 0;
-		dp->dl_ptr = 0;
-		dp->dl_sum = 0;
 
 		if (dp->mcs51->iram[0x11] & 0x01)
 			dp->mcs51->sfr[SFR_IP] |= 0x01;
@@ -231,12 +242,18 @@ diagproc_fast_dload(struct diagproc_priv *dp, const uint8_t *ptr)
 		else
 			dp->mcs51->sfr[SFR_IP] &= ~0x02;
 
+		UPDATE_KOOPMAN32(dp->dl_hash, 0);
+		sc_tracef(dp->name, "Download hash 0x%08jx", dp->dl_hash);
 		if ((dp->mod & 0x10) && diagproc_exp_download(dp->exp, dp->download_len, dp->mcs51->iram, &dp->mcs51->sfr[SFR_IP])) {
 			// pass
 		} else {
 			dp->pc0 = dp->mcs51->iram[0x10];
 			dp->mcs51->iram[0x04] = 0x06;
 		}
+		dp->dl_cnt = 0;
+		dp->dl_ptr = 0;
+		dp->dl_sum = 0;
+		dp->dl_hash = 0;
 	}
 }
 
