@@ -243,7 +243,7 @@ diagproc_fast_dload(struct diagproc_priv *dp, const uint8_t *ptr)
 			dp->mcs51->sfr[SFR_IP] &= ~0x02;
 
 		UPDATE_KOOPMAN32(dp->dl_hash, 0);
-		sc_tracef(dp->name, "Download hash 0x%08jx", dp->dl_hash);
+		sc_tracef(dp->name, "Download hash 0x%08jx", (uintmax_t)dp->dl_hash);
 		if ((dp->mod & 0x10) && diagproc_exp_download(dp->exp, dp->download_len, dp->mcs51->iram, &dp->mcs51->sfr[SFR_IP])) {
 			// pass
 		} else {
