@@ -65,6 +65,19 @@ class Component():
     def __iter__(self):
         yield from list(sorted(self.nodes.values()))
 
+    def ctx(self):
+        ''' Context name '''
+        board = self.scm.scm_parent.scm_uname
+        if board == "MEM32":   # XXX Hack
+            board = "MEM0"
+        return ".".join(
+            [
+                board,
+                self.scm.scm_basename,
+                self.name
+            ]
+        )
+
     def eliminate(self):
         ''' Eliminate this component '''
         for node in self:

@@ -128,7 +128,7 @@ class R1000Cpu():
         self.part_lib.add_part(name, part)
 
     def add_z_code(self, comp, zcode):
-        self.z_codes.append((comp, zcode))
+        self.z_codes.append((zcode, comp))
 
     def sc_mod(self, basename):
         ''' Create SCM for parts '''
@@ -203,12 +203,17 @@ class R1000Cpu():
 
         z_codes = SrcFile(self.cdir + "/z_codes.h")
 
-        z_codes.write("\n#define Z_CODES \\\n")
+        z_codes.write("\n#define Z_CODES(MACRO) \\\n")
 
-        for comp, z_code in sorted(self.z_codes):
-            z_codes.write('\tZ_CODE(' + z_code + ', "' + str(comp) + '") \\\n')
+        for z_code, comp in sorted(self.z_codes):
+            z_codes.write('\tMACRO(' + z_code + ', "' + comp.ctx() + '") \\\n')
 
         z_codes.write('\n')
+
+        for z_code, comp in sorted(self.z_codes):
+            print(z_code, comp.ctx())
+            z_codes.write('#define HAS_' + z_code.upper() + ' 1\n')
+            z_codes.write('#define COMP_' + z_code.upper() + ' "%s"\n' % comp.ctx())
 
         z_codes.commit()
 
