@@ -41,7 +41,7 @@ from node import Node
 from pin import Pin
 from scmod import ScSignal
 
-USE_MUXBUS = False
+USE_MUXBUS = True
 
 MIN_BUS_WIDTH = 4
 

@@ -71,6 +71,7 @@ class XClkGen(PartFactory):
 		|	case 5:
 		|		PIN_2XE<=(1); PIN_2XEnot<=(0);
 		|		state->when = 10;
+		|		PIN_Q4E<=(0);
 		|		break;
 		|	case 10:
 		|		PIN_2X<=(1); PIN_2Xnot<=(0);
@@ -122,6 +123,7 @@ class XClkGen(PartFactory):
 		|	case 155:
 		|		PIN_2XE<=(0); PIN_2XEnot<=(1);
 		|		state->when = 160;
+		|		PIN_Q4E<=(1);
 		|		break;
 		|	case 160:
 		|		PIN_2X<=(0); PIN_2Xnot<=(1);

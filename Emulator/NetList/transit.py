@@ -60,6 +60,7 @@ GB = {
     "CLK_Q2_": "GB312",
     "CLK_Q3_": "GB313",
     "CLK_Q4_": "GB314",
+    "CLK_Q4E": "GB318",
 
     "RESET": "GB244",
     "CLOCK_DISABLE": "GB296",

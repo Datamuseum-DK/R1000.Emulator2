@@ -3445,7 +3445,7 @@
   (symbol (lib_id "r1000:PD") (at 391.16 256.54 0) (unit 1)
     (in_bom no) (on_board yes) (dnp no)
     (uuid 7af0d44c-3244-4166-b0dd-eeaae8631699)
-    (property "Reference" "#PWR021" (at 391.16 256.54 0)
+    (property "Reference" "#PWR01401" (at 391.16 256.54 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Value" "PD" (at 391.16 256.54 0)
@@ -3460,9 +3460,6 @@
     (pin "1" (uuid 7f5474a0-0ebe-4329-9fcb-a919c88ba85f))
     (instances
       (project "SEQ"
-        (path "/20011966-1ffc-24d7-1b4b-436a182362c4/20011966-5571-39d5-648e-37d47e791dcd"
-          (reference "#PWR021") (unit 1)
-        )
         (path "/20011966-1ffc-24d7-1b4b-436a182362c4/20011966-72c5-4df6-61a4-1c0f58e9678c"
           (reference "#PWR01401") (unit 1)
         )
@@ -3626,7 +3623,7 @@
   (symbol (lib_id "r1000:XBUF16") (at 401.32 345.44 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid ff8ffd97-2b5f-4f61-8010-cbf1ac4d1f3b)
-    (property "Reference" "U55" (at 403.86 340.36 0)
+    (property "Reference" "U1428" (at 403.86 340.36 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "XBUF16" (at 397.51 350.52 0)
@@ -3680,9 +3677,6 @@
     (pin "9" (uuid 8a8ac528-7294-4cc7-ad8f-6dd0a1508a9f))
     (instances
       (project "SEQ"
-        (path "/20011966-1ffc-24d7-1b4b-436a182362c4/20011966-5571-39d5-648e-37d47e791dcd"
-          (reference "U55") (unit 1)
-        )
         (path "/20011966-1ffc-24d7-1b4b-436a182362c4/20011966-72c5-4df6-61a4-1c0f58e9678c"
           (reference "U1428") (unit 1)
         )

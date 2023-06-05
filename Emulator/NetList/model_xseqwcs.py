@@ -53,6 +53,7 @@ class XSEQWCS(PartFactory):
         yield "PIN_WE.pos()"
         yield "PIN_OE"
         yield "PIN_CLR"
+        yield "PIN_DSP0"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -200,13 +201,13 @@ class XSEQWCS(PartFactory):
 		|		PIN_MDSP<=state->ff0;
 		|		state->ff1 = ((tmp >> 12) & 0x1);
 		|		state->ff2 = ((tmp >> 11) & 0x3) == 0;
-		|		PIN_RAS0<=!(
-		|			(state->ff0 && !PIN_DSP0=>) ||
-		|			(state->ff1)
-		|		);
 		|		PIN_RAS1<=(!state->ff2);
 		|		PIN_LEXI<=!(state->ff1 || state->ff2);
 		|	}
+		|	PIN_RAS0<=(
+		|		(state->ff0 && !PIN_DSP0=>) ||
+		|		(state->ff1)
+		|	);
 		|	if (PIN_WE.posedge()) {
 		|		BUS_UA_READ(ua);
 		|		state->ram[ua] = state->wcs;
