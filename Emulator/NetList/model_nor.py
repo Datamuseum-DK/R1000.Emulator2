@@ -181,7 +181,7 @@ class ModelNor(Part):
                 node.pin.name = "D%d" % n_inputs
                 node.pin.set_role("input")
                 n_inputs += 1
-        assert n_inputs > 0
+        assert n_inputs > 0, (comp, [x for x in comp])
         if n_inputs == 1:
             # print("NOR -> INV", comp)
             comp.partname = "F37"

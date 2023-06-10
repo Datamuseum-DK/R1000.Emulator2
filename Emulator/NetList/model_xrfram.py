@@ -154,6 +154,11 @@ class XRFRAMD(PartFactory):
 		|static const char *ZZZING = "z";
 		|''')
 
+    def sensitive(self):
+        yield "PIN_WE.pos()"
+        yield "PIN_OE"
+        yield "BUS_A_SENSITIVE()"
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
