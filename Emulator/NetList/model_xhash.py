@@ -40,6 +40,9 @@ class XHASH(PartFactory):
 
     ''' MEM32 HASH generator '''
 
+    def sensitive(self):
+        yield "PIN_CLK.neg()"
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 

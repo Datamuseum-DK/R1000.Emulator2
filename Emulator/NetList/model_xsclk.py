@@ -79,5 +79,5 @@ class XSCLK(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    for i in (2, 3, 8, 14,):
+    for i in (2, 3, 4, 8, 14,):
         part_lib.add_part("XSCLK%d" % i, PartModel("XSCLK%d" % i, XSCLK))

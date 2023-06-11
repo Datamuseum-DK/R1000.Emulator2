@@ -63,7 +63,7 @@ class DLY_35(PartFactory):
 		|	if (PIN_IN=> != state->state) {
 		|		state->job = 1;
 		|		state->state = !state->state;
-		|		next_trigger(28, SC_NS);
+		|		next_trigger(25, SC_NS);
 		|	}
 		|''')
 

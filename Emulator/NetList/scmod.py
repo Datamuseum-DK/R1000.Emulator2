@@ -154,7 +154,7 @@ class SystemCModule():
         if newnet.name in self.scm_nets:
             newnet.name += "_%d" % self.scm_unique
             self.scm_unique += 1
-        assert newnet.name not in self.scm_nets
+        assert newnet.name not in self.scm_nets, (self, newnet)
         self.scm_nets[newnet.name] = newnet
         newnet.scm = self
 

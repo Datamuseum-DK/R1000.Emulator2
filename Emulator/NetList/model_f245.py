@@ -67,7 +67,7 @@ class ModelF245(PartModel):
         Node(comp["DIR"].net, inv_comp, Pin("D0", "D0", "input"))
         Node(comp["DIR"].net, inv_comp, Pin("D1", "D1", "input"))
 
-        inv_net = Net(self.name + "_AB_DIR")
+        inv_net = Net(comp.name + "_AB_DIR")
         comp.scm.add_net(inv_net)
         Node(inv_net, inv_comp, Pin("Q", "Q", "output"))
 
@@ -98,7 +98,7 @@ class ModelF245(PartModel):
                 or_comp.name = comp.name + "_" + suff + "_OR"
                 or_comp.part = part_lib[or_comp.partname]
 
-                oe_net = Net(self.name + "_" + suff + "_OE")
+                oe_net = Net(comp.name + "_" + suff + "_OE")
                 comp.scm.add_net(oe_net)
 
                 Node(oe_net, or_comp, Pin("Q", "Q", "output"))
@@ -107,12 +107,33 @@ class ModelF245(PartModel):
 
                 Node(oe_net, buf_comp, Pin("OE", "OE", "input"))
 
+            ytype = "output"
+            if buf_comp.name[-2:] == "BA": 
+                ytype = "tri_state"
+            if "mem32" not in str(buf_comp.scm):
+                ytype = "tri_state"
+            if "mem32_09" in str(buf_comp.scm):
+                ytype = "tri_state"
+            if "mem32_12" in str(buf_comp.scm):
+                ytype = "tri_state"
+            if "mem32_19" in str(buf_comp.scm):
+                ytype = "tri_state"
+            if "mem32_20" in str(buf_comp.scm):
+                ytype = "tri_state"
+            if "mem32_21" in str(buf_comp.scm):
+                ytype = "tri_state"
+            if "mem32_22" in str(buf_comp.scm):
+                ytype = "tri_state"
+            if "mem32_32" in str(buf_comp.scm):
+                ytype = "tri_state"
+            if ytype == "output":
+                print("YY", buf_comp, buf_comp.scm)
             for node in comp.nodes.values():
                 if suff[1] == node.pin.name[0]:
                     new_pin = Pin(
                         "Y" + node.pin.ident[1:],
                         "Y" + node.pin.name[1:],
-                        "output",
+                        ytype,
                     )
                 elif suff[0] == node.pin.name[0]:
                     new_pin = Pin(

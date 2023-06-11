@@ -25,5 +25,5 @@ class XSCLK(FChip):
         self.finish(19)
            
 def register():
-    for i in (2, 3, 8, 14,):
+    for i in (2, 3, 4, 8, 14,):
         yield XSCLK(i)

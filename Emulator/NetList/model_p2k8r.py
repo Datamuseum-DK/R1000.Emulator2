@@ -47,6 +47,10 @@ class P2K8R(PartFactory):
         file.write("\tuint8_t prom[2050];\n")
         file.write("\tint last, nxt;\n")
 
+    def sensitive(self):
+        yield "PIN_CK.pos()"
+        yield "PIN_MR"
+
     def init(self, file):
         ''' Extra initialization '''
 

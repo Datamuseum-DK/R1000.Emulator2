@@ -285,11 +285,8 @@ class ModelF299(PartModel):
                 Node(node.net, comp, new_pin)
                 node.remove()
 
-        print("CC", comp)
         g1_node = comp["G1"]
         g2_node = comp["G2"]
-        print("  G1", g1_node)
-        print("  G2", g2_node)
         if g1_node.net == g2_node.net:
             oe_net = g1_node.net
         elif g1_node.net.is_pd():
@@ -302,7 +299,6 @@ class ModelF299(PartModel):
                 compvalue = comp.value,
                 comppart = "F32"
             )
-            print("  OR", or_comp)
             comp.scm.add_component(or_comp)
             or_comp.name = comp.name + "_" + "_OR"
             or_comp.part = part_lib[or_comp.partname]
@@ -316,9 +312,6 @@ class ModelF299(PartModel):
 
         new_pin = Pin("OE", "OE", "input")
         new_node = Node(oe_net, comp, new_pin)
-        print("  NP", new_pin)
-        print("  NN", new_node)
-        print("  N", comp["OE"])
         g1_node.remove()
         g2_node.remove()
 

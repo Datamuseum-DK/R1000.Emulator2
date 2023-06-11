@@ -36,6 +36,8 @@
 
 
 from part import PartModel, PartFactory
+from pin import Pin
+from node import Node
 
 class XRFRAM(PartFactory):
 
@@ -154,11 +156,6 @@ class XRFRAMD(PartFactory):
 		|static const char *ZZZING = "z";
 		|''')
 
-    def sensitive(self):
-        yield "PIN_WE.pos()"
-        yield "PIN_OE"
-        yield "BUS_A_SENSITIVE()"
-
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -193,6 +190,60 @@ class XRFRAMD(PartFactory):
 		|	);
 		|''')
 
+class XRFRAME(PartFactory):
+
+    ''' NXM SRAM '''
+
+    def state(self, file):
+        file.fmt('''
+		|	uint64_t ram[1<<BUS_A_WIDTH];
+		|	uint64_t last;
+		|	const char *what;
+		|''')
+
+    def extra(self, file):
+        super().extra(file)
+        file.fmt('''
+		|static const char *READING = "r";
+		|static const char *WRITING = "w";
+		|static const char *ZZZING = "z";
+		|''')
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
+
+        super().doit(file)
+
+        file.fmt('''
+		|	unsigned adr = 0;
+		|	uint64_t data = 0;
+		|
+		|	if (PIN_OE=> || !PIN_WE) {
+		|		BUS_Q_Z();
+		|		state->what = ZZZING;
+		|	} else {
+		|		BUS_A_READ(adr);
+		|		data = state->ram[adr];
+		|		BUS_Q_WRITE(data);
+		|		state->what = READING;
+		|	}
+		|	if (PIN_WE.posedge()) {
+		|		BUS_D_READ(data);
+		|		BUS_A_READ(adr);
+		|		state->ram[adr] = data;
+		|		state->what = WRITING;
+		|		BUS_Q_WRITE(data);
+		|	}
+		|	TRACE(
+		|	    << state->what
+		|	    << " we " << PIN_WE?
+		|	    << " oe " << PIN_OE?
+		|	    << " ar " << BUS_A_TRACE()
+		|	    << " d " << BUS_D_TRACE()
+		|	    << " q " << BUS_Q_TRACE()
+		|	);
+		|''')
+
 class ThisRam(PartModel):
     ''' ... '''
 
@@ -212,3 +263,4 @@ def register(part_lib):
     part_lib.add_part("16KX4", ThisRam("16KX4", XRFRAM))
     part_lib.add_part("16KX8", ThisRam("16KX8", XRFRAM))
     part_lib.add_part("16KX16", ThisRam("16KX16", XRFRAM))
+    part_lib.add_part("X16KX8", ThisRam("X16KX8", XRFRAME))
