@@ -3,6 +3,9 @@
 extern "C" {
 #endif
 
+struct diagproc;
+
+typedef int diagprocturbo_t(struct diagproc *);
 
 struct diagproc_context {
 	uint64_t profile[8192];
@@ -54,11 +57,16 @@ struct diagproc {
 	unsigned p3mask;
 	int movx_adr;
 	int movx_data;
+
+	diagprocturbo_t *turbo;
+	uint8_t *ram;
 };
 
 struct diagproc *DiagProcCreate(const char *name, const char *arg,
     uint32_t *do_trace);
 void DiagProcStep(struct diagproc *, struct diagproc_context *);
+
+diagprocturbo_t diagproc_turbo_mem32;
 
 #ifdef __cplusplus
 }

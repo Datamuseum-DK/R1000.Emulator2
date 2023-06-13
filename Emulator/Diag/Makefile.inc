@@ -21,20 +21,17 @@ ${OBJDIR}/diagproc.o: \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Diag/diagproc.c -o ${OBJDIR}/diagproc.o
 
-OBJS    += ${OBJDIR}/diproc_exp.o
-${OBJDIR}/diproc_exp.o: \
-    Diag/diproc_exp.c \
-    Diag/diag.h \
-    Diag/diproc_fiu_wcs.h \
-    Diag/diproc_seq_dec.h \
-    Diag/diproc_seq_wcs.h \
-    Diag/diproc_typ_wcs.h \
-    Diag/diproc_val_wcs.h \
+OBJS    += ${OBJDIR}/diproc_turbo_mem32.o
+${OBJDIR}/diproc_turbo_mem32.o: \
+    Diag/diproc_turbo_mem32.c \
     Chassis/r1000sc.h \
+    ${WORKDIR}/Chassis/z_codes.h \
+    Diag/diag.h \
+    Diag/diagproc.h \
+    Diag/exp_hash.h \
     Infra/context.h \
     ${R1000DEP}
-	${CC} ${CFLAGS} -c Diag/diproc_exp.c -o ${OBJDIR}/diproc_exp.o
-
+	${CC} ${CFLAGS} -I${WORKDIR} -c Diag/diproc_turbo_mem32.c -o ${OBJDIR}/diproc_turbo_mem32.o
 
 OBJS    += ${OBJDIR}/diproc_mods.o
 ${OBJDIR}/diproc_mods.o: \

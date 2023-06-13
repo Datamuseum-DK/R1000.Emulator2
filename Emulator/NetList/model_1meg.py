@@ -47,13 +47,13 @@ class DRAM1MEGWIDE(PartFactory):
     def state(self, file):
         if len(self.comp.nodes) - 13 <= 16:
             file.fmt('''
-		|	unsigned ras, cas;
 		|	uint16_t bits[1 << 20];
+		|	unsigned ras, cas;
 		|''')
         else:
             file.fmt('''
-		|	unsigned ras, cas;
 		|	uint64_t bits[1 << 20];
+		|	unsigned ras, cas;
 		|''')
 
     def sensitive(self):

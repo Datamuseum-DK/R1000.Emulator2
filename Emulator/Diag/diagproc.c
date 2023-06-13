@@ -167,6 +167,7 @@ static void
 diagproc_fast_dload(struct diagproc *dp, const uint8_t *ptr)
 {
 	uint8_t pc;
+	int status;
 
 	if (dp->dl_cnt == 0 && dp->dl_ptr == 0 && dp->dl_sum == 0) {
 		assert(ptr[0] == 1);
@@ -203,15 +204,15 @@ diagproc_fast_dload(struct diagproc *dp, const uint8_t *ptr)
 
 		UPDATE_KOOPMAN32(dp->dl_hash, 0);
 		sc_tracef(dp->name, "Download hash 0x%08jx", (uintmax_t)dp->dl_hash);
-#if 0
-		if ((dp->mod & 0x10) && diagproc_exp_download(dp->exp, dp->download_len, dp->mcs51->iram, &dp->mcs51->sfr[SFR_IP])) {
-			// pass
-		} else {
-#else
+		status = 0;
+		if (dp->turbo != NULL)
+			status = dp->turbo(dp);
+		if (status == 0) {
 			dp->pc0 = dp->mcs51->iram[0x10];
 			dp->mcs51->iram[0x04] = 0x06;
-#endif
-//		}
+		} else {
+			dp->mcs51->iram[0x04] = status;
+		}
 		dp->dl_cnt = 0;
 		dp->dl_ptr = 0;
 		dp->dl_sum = 0;
@@ -310,11 +311,6 @@ diagproc_istep(struct diagproc *dp, struct diagproc_context *dctx)
 			AZ(VSB_finish(dp->vsb));
 			sc_tracef(dp->name, "Download %s", VSB_data(dp->vsb));
 		}
-#if 0
-		if (dp->mod & 0x10) {
-			(void)diagproc_exp_download(dp->exp, dp->download_len, dp->mcs51->iram, &dp->mcs51->sfr[SFR_IP]);
-		}
-#endif
 	}
 	if (flags & FLAG_UPLOAD) {
 		if (*dp->do_trace & 16) {
@@ -467,11 +463,6 @@ DiagProcCreate(const char *name, const char *arg, uint32_t *do_trace)
 		printf("%s MOD %u\n", name, dp->mod);
 	}
 
-#if 0
-	if (dp->mod & 0x10)
-		diagproc_exp_init(&dp->exp, name);
-#endif
-
 	dp->mcs51 = MCS51_Create(name);
 	assert(dp->mcs51 != NULL);
 	dp->mcs51->do_trace = *do_trace;
@@ -543,5 +534,8 @@ DiagProcCreate(const char *name, const char *arg, uint32_t *do_trace)
 	dp->diag_bus = elastic_subscribe(diag_elastic, diagproc_busrx, dp);
 
 	sc_tracef(dp->name, "DIAGPROC Instantiated (mod 0x%x)", dp->mod);
+	if (strstr(dp->name, "mem32"))
+		dp->turbo = diagproc_turbo_mem32;
+	dp->ram = dp->mcs51->iram;
 	return (dp);
 }
