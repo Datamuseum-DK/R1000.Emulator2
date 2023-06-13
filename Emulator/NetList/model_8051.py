@@ -53,16 +53,16 @@ class I8051(PartFactory):
 
         file.write("\tstruct diagproc_context dctx;\n")
         file.write("\tstruct scm_8051_state *state;\n")
-        file.write("\tstruct diagproc_ctrl *diag_ctrl;\n")
+        file.write("\tstruct diagproc *diagproc;\n")
         file.write("\tunsigned cycle;\n")
 
     def init(self, file):
         ''' Extra initialization '''
 
         file.fmt('''
-		|	state->diag_ctrl =
+		|	state->diagproc =
 		|	    DiagProcCreate(this->name(), arg, &state->ctx.do_trace);
-		|	assert(state->diag_ctrl != NULL);
+		|	assert(state->diagproc != NULL);
 		|	state->cycle = 0;
 		|''')
 

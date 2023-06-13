@@ -3,7 +3,6 @@
 extern "C" {
 #endif
 
-struct diagproc_priv;
 
 struct diagproc_context {
 	uint64_t profile[8192];
@@ -11,7 +10,29 @@ struct diagproc_context {
 	uint64_t executions;
 };
 
-struct diagproc_ctrl {
+struct diagproc {
+
+	char *name;
+	char *arg;
+	unsigned mod;
+	struct mcs51 *mcs51;
+	int version;
+	int idle;
+	uint32_t *do_trace;
+	struct elastic_subscriber *diag_bus;
+	pthread_mutex_t mtx;
+	int did_io;
+	int longwait;
+	struct vsb *vsb;
+
+	int8_t pc0;
+	unsigned flags[0x2000];
+	uint8_t download_len;
+
+	uint8_t dl_ptr;
+	uint8_t dl_cnt;
+	uint8_t dl_sum;
+	uint64_t dl_hash;
 
 	/* Actions to complete current instruction */
 	int do_movx;		// MOVX movx_adr,movx_data cycle
@@ -33,13 +54,11 @@ struct diagproc_ctrl {
 	unsigned p3mask;
 	int movx_adr;
 	int movx_data;
-
-	struct diagproc_priv *priv;
 };
 
-struct diagproc_ctrl *DiagProcCreate(const char *name, const char *arg,
+struct diagproc *DiagProcCreate(const char *name, const char *arg,
     uint32_t *do_trace);
-void DiagProcStep(struct diagproc_ctrl *, struct diagproc_context *);
+void DiagProcStep(struct diagproc *, struct diagproc_context *);
 
 #ifdef __cplusplus
 }

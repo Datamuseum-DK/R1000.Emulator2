@@ -45,7 +45,7 @@
 
 #define READPORT(pin, port, bit, arg) \
 	do { \
-		if (!IS_L(pin)) state->diag_ctrl->port##val |= (bit); \
+		if (!IS_L(pin)) state->diagproc->port##val |= (bit); \
 	} while (0)
 
 #define SETPORT(pin, port, bit, arg) \
@@ -75,110 +75,110 @@
 
 	state->ctx.activations++;
 
-	state->diag_ctrl->pin9_reset = PIN_RST;
-	if (state->diag_ctrl->pin9_reset) {
+	state->diagproc->pin9_reset = PIN_RST;
+	if (state->diagproc->pin9_reset) {
 		state->cycle = 0;
-		state->diag_ctrl->do_movx = 0;
+		state->diagproc->do_movx = 0;
 		PIN_WRnot = true;
-		DiagProcStep(state->diag_ctrl, &state->dctx);
+		DiagProcStep(state->diagproc, &state->dctx);
 		return;
 	}
 	if (PIN_XTAL2.posedge()) {
 
-		if (state->diag_ctrl->do_movx && state->cycle == 2) {
-			p0val = state->diag_ctrl->movx_data;
+		if (state->diagproc->do_movx && state->cycle == 2) {
+			p0val = state->diagproc->movx_data;
 			p0mask = 0xff;
 			TRACE(<< "P0 data " << std::hex << (unsigned)p0val);
 			BUS_A_WRITE(p0val);
 		}
-		if (state->diag_ctrl->do_movx && state->cycle == 3) {
+		if (state->diagproc->do_movx && state->cycle == 3) {
 			TRACE(<< "WR low");
 			PIN_WRnot = false;
 		}
-		if (state->diag_ctrl->do_movx && state->cycle == 9) {
+		if (state->diagproc->do_movx && state->cycle == 9) {
 			TRACE(<< "WR high");
 			PIN_WRnot = true;
 		}
-		if (state->diag_ctrl->do_movx && state->cycle == 11) {
-			TRACE(<< "P0 back " << std::hex << (unsigned)state->diag_ctrl->p0val);
-			BUS_A_WRITE(state->diag_ctrl->p0val);
+		if (state->diagproc->do_movx && state->cycle == 11) {
+			TRACE(<< "P0 back " << std::hex << (unsigned)state->diagproc->p0val);
+			BUS_A_WRITE(state->diagproc->p0val);
 		}
 		if (++state->cycle < 12) {
-			if (state->diag_ctrl->do_movx) {
+			if (state->diagproc->do_movx) {
 				// DBG();
 			}
 			return;
 		}
 		PIN_WRnot = true;
 		state->cycle = 0;
-		state->diag_ctrl->do_movx = 0;
-		if (state->diag_ctrl->next_needs_p1) {
-			state->diag_ctrl->p1val = 0;
-			BUS_B_READ(state->diag_ctrl->p1val);
-			// TRACE(<< "Need P1 " << std::hex << state->diag_ctrl->p1val);
+		state->diagproc->do_movx = 0;
+		if (state->diagproc->next_needs_p1) {
+			state->diagproc->p1val = 0;
+			BUS_B_READ(state->diagproc->p1val);
+			// TRACE(<< "Need P1 " << std::hex << state->diagproc->p1val);
 		}
-		if (state->diag_ctrl->next_needs_p2) {
-			state->diag_ctrl->p2val = 0;
-			BUS_C_READ(state->diag_ctrl->p2val);
-			// TRACE(<< "Need P2 " << std::hex << state->diag_ctrl->p2val);
+		if (state->diagproc->next_needs_p2) {
+			state->diagproc->p2val = 0;
+			BUS_C_READ(state->diagproc->p2val);
+			// TRACE(<< "Need P2 " << std::hex << state->diagproc->p2val);
 		}
-		if (state->diag_ctrl->next_needs_p3) {
-			state->diag_ctrl->p3val = 0;
+		if (state->diagproc->next_needs_p3) {
+			state->diagproc->p3val = 0;
 			PORT3(READPORT, 0);
-			// TRACE(<< "Need P3 " << std::hex << state->diag_ctrl->p3val);
+			// TRACE(<< "Need P3 " << std::hex << state->diagproc->p3val);
 		}
-		DiagProcStep(state->diag_ctrl, &state->dctx);
-		if (state->diag_ctrl->p1mask) {
+		DiagProcStep(state->diagproc, &state->dctx);
+		if (state->diagproc->p1mask) {
 			TRACE(
 			    << "Set P1 "
-			    << std::hex << state->diag_ctrl->p1mask
+			    << std::hex << state->diagproc->p1mask
 			    << "::"
-			    << std::hex << state->diag_ctrl->p1val
+			    << std::hex << state->diagproc->p1val
 			);
-			if (state->diag_ctrl->p1val == 0xff)
+			if (state->diagproc->p1val == 0xff)
 				BUS_B_Z();
 			else
-				BUS_B_WRITE(state->diag_ctrl->p1val);
+				BUS_B_WRITE(state->diagproc->p1val);
 
-			state->diag_ctrl->p1mask = 0;
+			state->diagproc->p1mask = 0;
 		}
-		if (state->diag_ctrl->p2mask) {
+		if (state->diagproc->p2mask) {
 			TRACE(
 			    << "Set P2 "
-			    << std::hex << state->diag_ctrl->p2mask
+			    << std::hex << state->diagproc->p2mask
 			    << "::"
-			    << std::hex << state->diag_ctrl->p2val
+			    << std::hex << state->diagproc->p2val
 			);
-			if (state->diag_ctrl->p2val == 0xff)
+			if (state->diagproc->p2val == 0xff)
 				BUS_C_Z();
 			else
-				BUS_C_WRITE(state->diag_ctrl->p2val);
-			state->diag_ctrl->p2mask = 0;
+				BUS_C_WRITE(state->diagproc->p2val);
+			state->diagproc->p2mask = 0;
 		}
-		if (state->diag_ctrl->p3mask) {
+		if (state->diagproc->p3mask) {
 			TRACE(
 			    << "Set P3 "
-			    << std::hex << state->diag_ctrl->p3mask
+			    << std::hex << state->diagproc->p3mask
 			    << "::"
-			    << std::hex << state->diag_ctrl->p3val
+			    << std::hex << state->diagproc->p3val
 			);
 			TRACE(<< "Set P3");
-			PORT3(SETPORT, state->diag_ctrl->p3);
-			state->diag_ctrl->p3mask = 0;
+			PORT3(SETPORT, state->diagproc->p3);
+			state->diagproc->p3mask = 0;
 		}
-		if (state->diag_ctrl->do_movx) {
+		if (state->diagproc->do_movx) {
 			TRACE(
 				<< "DO MOVX "
-				<< std::hex << state->diag_ctrl->movx_data
+				<< std::hex << state->diagproc->movx_data
 				<< " => "
-				<< std::hex << state->diag_ctrl->movx_adr
+				<< std::hex << state->diagproc->movx_adr
 			);
 			/*
 			 * As far as I can tell, only the data byte
 			 * is used. IOCp63 as the ALE signal but I
 			 * cannot see it being used any where.
 			 */
-			p0val = state->diag_ctrl->movx_adr;
+			p0val = state->diagproc->movx_adr;
 			p0mask = 0xff;
 			TRACE(<< "P0 adr " << std::hex << (unsigned)p0val);
 			BUS_A_WRITE(p0val);

@@ -28,75 +28,39 @@
 #define FLAG_DOWNLOAD_RUN	(1<<9)
 #define FLAG_UPLOAD		(1<<10)
 
-struct diagproc_priv {
-	char *name;
-	char *arg;
-	unsigned mod;
-	struct mcs51 *mcs51;
-	int version;
-	int idle;
-	uint32_t *do_trace;
-	struct elastic_subscriber *diag_bus;
-	pthread_mutex_t mtx;
-	int did_io;
-	int longwait;
-	struct vsb *vsb;
-
-	int8_t pc0;
-	unsigned flags[0x2000];
-	uint8_t download_len;
-
-	struct diagproc_exp_priv *exp;
-
-	uint8_t dl_ptr;
-	uint8_t dl_cnt;
-	uint8_t dl_sum;
-	uint64_t dl_hash;
-};
-
 static void
 diagproc_movx8_write(struct mcs51 *mcs51, uint8_t adr, int data)
 {
-	struct diagproc_ctrl *dc;
-	struct diagproc_priv *dp;
+	struct diagproc *dp;
 
 	assert(mcs51->priv != NULL);
-	dc = mcs51->priv;
-	assert(dc->priv != NULL);
-	dp = dc->priv;
-	assert(dp->mcs51 != NULL);
-	assert(dp->mcs51 == mcs51);
+	dp = mcs51->priv;
 	dp->did_io = 1;
 
-	dc->do_movx = 1;
-	dc->movx_data = data;
-	dc->movx_adr = adr;
+	dp->do_movx = 1;
+	dp->movx_data = data;
+	dp->movx_adr = adr;
 
 }
 
 static unsigned
 diagproc_sfrfunc(struct mcs51 * mcs51, uint8_t sfr_adr, int what)
 {
-	struct diagproc_ctrl *dc;
-	struct diagproc_priv *dp;
+	struct diagproc *dp;
 	unsigned retval = 999;
 	uint8_t txbuf[1];
 
 	assert(mcs51->priv != NULL);
-	dc = mcs51->priv;
-	assert(dc->priv != NULL);
-	dp = dc->priv;
-	assert(dp->mcs51 != NULL);
-	assert(dp->mcs51 == mcs51);
+	dp = mcs51->priv;
 	dp->did_io = 1;
 
 	switch (sfr_adr) {
 	case SFR_P1:
 		if (what < 0) {
-			retval = dc->p1val;
+			retval = dp->p1val;
 		} else {
-			dc->p1mask = 0xff;
-			dc->p1val = what;
+			dp->p1mask = 0xff;
+			dp->p1val = what;
 			retval = what;
 		}
 		break;
@@ -116,10 +80,10 @@ diagproc_sfrfunc(struct mcs51 * mcs51, uint8_t sfr_adr, int what)
 		break;
 	case SFR_P2:
 		if (what < 0) {
-			retval = dc->p2val;
+			retval = dp->p2val;
 		} else {
-			dc->p2mask = 0xff;
-			dc->p2val = what;
+			dp->p2mask = 0xff;
+			dp->p2val = what;
 			retval = what;
 		}
 		break;
@@ -140,16 +104,11 @@ diagproc_sfrfunc(struct mcs51 * mcs51, uint8_t sfr_adr, int what)
 static unsigned
 diagproc_bitfunc(struct mcs51 *mcs51, uint8_t bit_adr, int what)
 {
-	struct diagproc_ctrl *dc;
-	struct diagproc_priv *dp;
+	struct diagproc *dp;
 	unsigned retval = 9;
 
 	assert(mcs51->priv != NULL);
-	dc = mcs51->priv;
-	assert(dc->priv != NULL);
-	dp = dc->priv;
-	assert(dp->mcs51 != NULL);
-	assert(dp->mcs51 == mcs51);
+	dp = mcs51->priv;
 	dp->did_io = 1;
 
 	switch (bit_adr & ~7) {
@@ -163,25 +122,25 @@ diagproc_bitfunc(struct mcs51 *mcs51, uint8_t bit_adr, int what)
 		return (mcs51_bitfunc_default(mcs51, bit_adr, what));
 	case SFR_P1:
 		if (what < 0) {
-			retval = (dc->p1val >> (bit_adr & 7)) & 1;
+			retval = (dp->p1val >> (bit_adr & 7)) & 1;
 		} else {
-			dc->p1mask |= 1 << (bit_adr & 7);
+			dp->p1mask |= 1 << (bit_adr & 7);
 			if (what == 0)
-				dc->p1val &= ~(1U << (bit_adr & 7));
+				dp->p1val &= ~(1U << (bit_adr & 7));
 			else
-				dc->p1val |= (1U << (bit_adr & 7));
+				dp->p1val |= (1U << (bit_adr & 7));
 			retval = 0;
 		}
 		break;
 	case SFR_P3:
 		if (what < 0) {
-			retval = (dc->p3val >> (bit_adr & 7)) & 1;
+			retval = (dp->p3val >> (bit_adr & 7)) & 1;
 		} else {
-			dc->p3mask |= 1 << (bit_adr & 7);
+			dp->p3mask |= 1 << (bit_adr & 7);
 			if (what == 0)
-				dc->p3val &= ~(1U << (bit_adr & 7));
+				dp->p3val &= ~(1U << (bit_adr & 7));
 			else
-				dc->p3val |= (1U << (bit_adr & 7));
+				dp->p3val |= (1U << (bit_adr & 7));
 			retval = 0;
 		}
 		break;
@@ -205,7 +164,7 @@ diagproc_bitfunc(struct mcs51 *mcs51, uint8_t bit_adr, int what)
 	} while (0)
 
 static void
-diagproc_fast_dload(struct diagproc_priv *dp, const uint8_t *ptr)
+diagproc_fast_dload(struct diagproc *dp, const uint8_t *ptr)
 {
 	uint8_t pc;
 
@@ -244,12 +203,15 @@ diagproc_fast_dload(struct diagproc_priv *dp, const uint8_t *ptr)
 
 		UPDATE_KOOPMAN32(dp->dl_hash, 0);
 		sc_tracef(dp->name, "Download hash 0x%08jx", (uintmax_t)dp->dl_hash);
+#if 0
 		if ((dp->mod & 0x10) && diagproc_exp_download(dp->exp, dp->download_len, dp->mcs51->iram, &dp->mcs51->sfr[SFR_IP])) {
 			// pass
 		} else {
+#else
 			dp->pc0 = dp->mcs51->iram[0x10];
 			dp->mcs51->iram[0x04] = 0x06;
-		}
+#endif
+//		}
 		dp->dl_cnt = 0;
 		dp->dl_ptr = 0;
 		dp->dl_sum = 0;
@@ -261,7 +223,7 @@ diagproc_fast_dload(struct diagproc_priv *dp, const uint8_t *ptr)
 static void
 diagproc_busrx(void *priv, const void *ptr, size_t len)
 {
-	struct diagproc_priv *dp = priv;
+	struct diagproc *dp = priv;
 	uint8_t serbuf[2];
 	int i, fast = 0;
 
@@ -316,22 +278,17 @@ diagproc_busrx(void *priv, const void *ptr, size_t len)
 }
 
 static uint16_t
-diagproc_istep(struct diagproc_ctrl *dc, struct diagproc_context *dctx)
+diagproc_istep(struct diagproc *dp, struct diagproc_context *dctx)
 {
-	struct diagproc_priv *dp;
 	uint16_t opc, npc;
 	unsigned ptr, u, v;
 	uint16_t flags;
 
-	assert(dc != NULL);
-	assert(dc->priv != NULL);
-	dp = dc->priv;
-
 	dp->did_io = 0;
 
-	dc->next_needs_p1 = 0;
-	dc->next_needs_p2 = 0;
-	dc->next_needs_p3 = 0;
+	dp->next_needs_p1 = 0;
+	dp->next_needs_p2 = 0;
+	dp->next_needs_p3 = 0;
 
 	dp->mcs51->do_trace = *dp->do_trace;
 	opc = dp->mcs51->pc;
@@ -353,9 +310,11 @@ diagproc_istep(struct diagproc_ctrl *dc, struct diagproc_context *dctx)
 			AZ(VSB_finish(dp->vsb));
 			sc_tracef(dp->name, "Download %s", VSB_data(dp->vsb));
 		}
+#if 0
 		if (dp->mod & 0x10) {
 			(void)diagproc_exp_download(dp->exp, dp->download_len, dp->mcs51->iram, &dp->mcs51->sfr[SFR_IP]);
 		}
+#endif
 	}
 	if (flags & FLAG_UPLOAD) {
 		if (*dp->do_trace & 16) {
@@ -415,26 +374,22 @@ diagproc_istep(struct diagproc_ctrl *dc, struct diagproc_context *dctx)
 		sc_tracef(dp->name, "OUT OF PROGRAM next PC 0x%04x", npc);
 		exit(2);
 	}
-	dc->next_needs_p1 = 1;
-	dc->next_needs_p2 = 1;
-	dc->next_needs_p3 = 1;
+	dp->next_needs_p1 = 1;
+	dp->next_needs_p2 = 1;
+	dp->next_needs_p3 = 1;
 	return (opc);
 }
 
 void
-DiagProcStep(struct diagproc_ctrl *dc, struct diagproc_context *dctx)
+DiagProcStep(struct diagproc *dp, struct diagproc_context *dctx)
 {
-	struct diagproc_priv *dp;
 	uint16_t retval;
 	uint16_t flags;
 	int i;
 
-	assert(dc != NULL);
 	assert(dctx != NULL);
-	assert(dc->priv != NULL);
-	dp = dc->priv;
 
-	if (dc->pin9_reset) {
+	if (dp->pin9_reset) {
 		Trace(trace_diagbus, "%s RST", dp->name);
 		MCS51_Reset(dp->mcs51);
 		return;
@@ -450,10 +405,10 @@ DiagProcStep(struct diagproc_ctrl *dc, struct diagproc_context *dctx)
 	do {
 		assert(dp->mcs51->pc < 0x2000);
 		flags = dp->flags[dp->mcs51->pc];
-		if ((dc->p3val & 0x08) && (flags & FLAG_WAIT_DFSM))
+		if ((dp->p3val & 0x08) && (flags & FLAG_WAIT_DFSM))
 			return;
 		assert(pthread_mutex_lock(&dp->mtx) == 0);
-		retval = diagproc_istep(dc, dctx);
+		retval = diagproc_istep(dp, dctx);
 		dctx->profile[retval]++;
 		assert(pthread_mutex_unlock(&dp->mtx) == 0);
 		assert(retval < 0x2000);
@@ -469,7 +424,7 @@ DiagProcStep(struct diagproc_ctrl *dc, struct diagproc_context *dctx)
 }
 
 static void
-diagproc_set_serialflags(struct diagproc_priv *dp, unsigned serial_rx_byte)
+diagproc_set_serialflags(struct diagproc *dp, unsigned serial_rx_byte)
 {
 	dp->flags[serial_rx_byte] |= FLAG_RX_SPIN;
 	dp->flags[serial_rx_byte + 0x94] |= FLAG_DOWNLOAD_LEN;
@@ -481,11 +436,10 @@ diagproc_set_serialflags(struct diagproc_priv *dp, unsigned serial_rx_byte)
 
 }
 
-struct diagproc_ctrl *
+struct diagproc *
 DiagProcCreate(const char *name, const char *arg, uint32_t *do_trace)
 {
-	struct diagproc_priv *dp;
-	struct diagproc_ctrl *dc;
+	struct diagproc *dp;
 	uint8_t firmware[8192];
 	unsigned u;
 	char *p, *q;
@@ -494,10 +448,6 @@ DiagProcCreate(const char *name, const char *arg, uint32_t *do_trace)
 	assert(dp != NULL);
 
 	assert(pthread_mutex_init(&dp->mtx, NULL) == 0);
-
-	dc = calloc(sizeof *dc, 1);
-	assert(dc != NULL);
-	dc->priv = dp;
 
 	dp->vsb = VSB_new_auto();
 	AN(dp->vsb);
@@ -517,13 +467,15 @@ DiagProcCreate(const char *name, const char *arg, uint32_t *do_trace)
 		printf("%s MOD %u\n", name, dp->mod);
 	}
 
+#if 0
 	if (dp->mod & 0x10)
 		diagproc_exp_init(&dp->exp, name);
+#endif
 
 	dp->mcs51 = MCS51_Create(name);
 	assert(dp->mcs51 != NULL);
 	dp->mcs51->do_trace = *do_trace;
-	dp->mcs51->priv = dc;
+	dp->mcs51->priv = dp;
 	dp->mcs51->movx8_write = diagproc_movx8_write;
 
 	dp->do_trace = do_trace;
@@ -591,5 +543,5 @@ DiagProcCreate(const char *name, const char *arg, uint32_t *do_trace)
 	dp->diag_bus = elastic_subscribe(diag_elastic, diagproc_busrx, dp);
 
 	sc_tracef(dp->name, "DIAGPROC Instantiated (mod 0x%x)", dp->mod);
-	return (dc);
+	return (dp);
 }

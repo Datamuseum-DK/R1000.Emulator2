@@ -13,4 +13,4 @@ cli 'sc quota exit'
 # 1 => All
 fru_prompt 3 4 26 1
 
-run_with_cli
+run
