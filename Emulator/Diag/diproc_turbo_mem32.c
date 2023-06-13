@@ -19,8 +19,6 @@ clear_tagstore_m32(struct diagproc *dp)
 	struct ctx *ctx;
 	uint8_t *ptr;
 
-	return (0);
-
 #if !defined(HAS_Z000) || !defined(HAS_Z001) || !defined(HAS_Z002)
 	return (0);
 #endif
@@ -28,39 +26,43 @@ clear_tagstore_m32(struct diagproc *dp)
 	return (0);
 #endif
 
-	sc_tracef(dp->name, "Turbo CLEAR_TAGSTORE.M32");
-
+	// TAR
 	ctx = CTX_Find(COMP_Z000);
 	AN(ctx);
 	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr, 0xff, 1 << 17);
+	memset(ptr, 0x00, 1 << 17);
 
+	// TBR
 	ctx = CTX_Find(COMP_Z001);
 	AN(ctx);
 	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr, 0xff, 1 << 17);
+	memset(ptr, 0x00, 1 << 17);
 
+	// TAER13
 	ctx = CTX_Find(COMP_Z002);
 	AN(ctx);
 	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr + (1<<13), 0xff, 1 << 13);
+	memset(ptr + (1<<13), 0x00, 1 << 13);
 
+	// TALR13
 	ctx = CTX_Find(COMP_Z003);
 	AN(ctx);
 	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr + (1<<13), 0xff, 1 << 13);
+	memset(ptr + (1<<13), 0x00, 1 << 13);
 
+	// TBER13
 	ctx = CTX_Find(COMP_Z004);
 	AN(ctx);
 	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr + (1<<13), 0xff, 1 << 13);
+	memset(ptr + (1<<13), 0x00, 1 << 13);
 
+	// TBLR13
 	ctx = CTX_Find(COMP_Z005);
 	AN(ctx);
 	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr + (1<<13), 0xff, 1 << 13);
-	memset(ptr + (1<<14), 0x44, 16);
+	memset(ptr + (1<<13), 0x00, 1 << 13);
 
+	sc_tracef(dp->name, "Turbo CLEAR_TAGSTORE.M32");
 	return (DIPROC_RESPONSE_DONE);
 }
 
