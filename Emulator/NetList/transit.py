@@ -86,12 +86,12 @@ TRANSIT = {
          "GB287": GB["BP_CLK_2X_"],
     },
     "fiu": {
-         "GB268": "*",		# F.PAGE_STATE~0
-         "GB271": "*",		# F.PAGE_STATE~1
-         "GB264": GB["BOARD_HIT0"],
-         "GB265": GB["BOARD_HIT1"],
-         "GB266": GB["BOARD_HIT2"],
-         "GB267": GB["BOARD_HIT3"],
+         "GB268": "*",			# F.PAGE_STATE~0
+         "GB271": "*",			# F.PAGE_STATE~1
+         "GB264": GB["BOARD_HIT0"],	# MEM2: N/C
+         "GB265": GB["BOARD_HIT1"],	# MEM2: N/C
+         "GB266": GB["BOARD_HIT2"],	# MEM2: GB264
+         "GB267": GB["BOARD_HIT3"],	# MEM2: GB265
     },
     "ioc": {
                                                   "GB004": "*",
