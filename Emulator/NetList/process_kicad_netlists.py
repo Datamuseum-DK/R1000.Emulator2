@@ -88,8 +88,6 @@ class R1000Cpu():
         self.cdir = os.path.join(workdir, "Chassis")
         self.tstamp = os.path.join(self.cdir, "_timestamp")
 
-        self.nbr_busmux = 1
-
         os.makedirs(self.cdir, exist_ok=True)
 
         if self.already_current():

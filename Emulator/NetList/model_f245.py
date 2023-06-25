@@ -107,27 +107,12 @@ class ModelF245(PartModel):
 
                 Node(oe_net, buf_comp, Pin("OE", "OE", "input"))
 
-            ytype = "output"
-            if buf_comp.name[-2:] == "BA": 
+            if "TRACXCVAB" in str(buf_comp):
+                # uDIAG uaddr 272D if tri_state
+                ytype = "output"
+            else:
                 ytype = "tri_state"
-            if "mem32" not in str(buf_comp.scm):
-                ytype = "tri_state"
-            if "mem32_09" in str(buf_comp.scm):
-                ytype = "tri_state"
-            if "mem32_12" in str(buf_comp.scm):
-                ytype = "tri_state"
-            if "mem32_19" in str(buf_comp.scm):
-                ytype = "tri_state"
-            if "mem32_20" in str(buf_comp.scm):
-                ytype = "tri_state"
-            if "mem32_21" in str(buf_comp.scm):
-                ytype = "tri_state"
-            if "mem32_22" in str(buf_comp.scm):
-                ytype = "tri_state"
-            if "mem32_32" in str(buf_comp.scm):
-                ytype = "tri_state"
-            if ytype == "output":
-                print("YY", buf_comp, buf_comp.scm)
+               
             for node in comp.nodes.values():
                 if suff[1] == node.pin.name[0]:
                     new_pin = Pin(
@@ -162,4 +147,4 @@ def register(part_lib):
         "XBIDIR32",
         "XBIDIR64",
     ):
-        part_lib.add_part(part,        ModelF245(part, F245))
+        part_lib.add_part(part, ModelF245(part, F245))

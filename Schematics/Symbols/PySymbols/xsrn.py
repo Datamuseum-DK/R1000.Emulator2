@@ -47,5 +47,6 @@ class XSRN(Chip):
         super().__init__()
 
 def register():
-    yield XSRN(8,4)
-    yield XSRN(8,5)
+    yield XSRN(8, 4)
+    yield XSRN(8, 5)
+    yield XSRN(8, 8)

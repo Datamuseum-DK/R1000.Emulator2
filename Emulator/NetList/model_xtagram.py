@@ -36,83 +36,44 @@
 
 
 from part import PartModel, PartFactory
+from pin import Pin
+from node import Node
 
-class XTAGRAMA(PartFactory):
-
-    ''' More than a simple TAG RAM'''
-
-    def state(self, file):
-        file.fmt('''
-		|	uint8_t ram[1<<BUS_A_WIDTH];
-		|''')
-
-    def sensitive(self):
-        yield "PIN_CS"
-        yield "PIN_BOE"
-        yield "PIN_BDIR"
-        yield "PIN_WE"
-        # yield "BUS_D_SENSITIVE()"
-        yield "BUS_A_SENSITIVE()"
-
-    def doit(self, file):
-        ''' The meat of the doit() function '''
-
-        super().doit(file)
-
-        file.fmt('''
-		|	unsigned adr = 0;
-		|	uint8_t data = 0;
-		|
-		|	BUS_A_READ(adr);
-		|
-		|	if ((PIN_CS=> && !PIN_WE=>) ||
-		|	    (PIN_WE.posedge() && !PIN_CS=>)) {
-		|		if (!PIN_BOE=> && !PIN_BDIR)
-		|			BUS_V_READ(data);
-		|		else
-		|			BUS_D_READ(data);
-		|		state->ram[adr] = data;
-		|		BUS_Q_WRITE(data);
-		|	}
-		|
-		|	if (PIN_BOE=> || !PIN_BDIR)
-		|		BUS_V_Z();
-		| 
-		|	if (PIN_CS=>) {
-		|		BUS_V_Z();
-		|		next_trigger(PIN_CS.negedge_event());
-		|	} else {
-		|		data = state->ram[adr];
-		|		BUS_Q_WRITE(data);
-		|		if (!PIN_BOE=> && PIN_BDIR)
-		|			BUS_V_WRITE(data);
-		|	}
-		|
-		|	TRACE(
-		|	    << " we " << PIN_WE?
-		|	    << " cs " << PIN_CS?
-		|	    << " boe " << PIN_BOE?
-		|	    << " bdir " << PIN_BDIR?
-		|	    << " a " << BUS_A_TRACE()
-		|	    << " d " << BUS_D_TRACE()
-		|	    << " v " << BUS_V_TRACE()
-		|	    << " q " << BUS_Q_TRACE()
-		|	);
-		|''')
-
-
-class XTAGRAMB(PartFactory):
+class XTAGRAM(PartFactory):
 
     ''' NXM SRAM '''
 
     def state(self, file):
         file.fmt('''
 		|	uint64_t ram[1<<BUS_A_WIDTH];
+		|	uint64_t last;
+		|	const char *what;
 		|''')
 
+    def extra(self, file):
+        super().extra(file)
+        file.fmt('''
+		|static const char *READING = "r";
+		|static const char *WRITING = "w";
+		|''')
+
+        if not self.comp.nodes["OE"].net.is_pd():
+            file.fmt('''
+		|static const char *ZZZING = "z";
+		|''')
+
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+            "rd_event",
+            "PIN_OE.posedge_event()",
+            "PIN_WE.negedge_event()",
+            "BUS_A",
+        )
+
     def sensitive(self):
-        yield "PIN_CS.pos()"
-        yield "PIN_WE.pos()"
+        yield "PIN_OE"
+        yield "PIN_WE"
         yield "BUS_A_SENSITIVE()"
 
     def doit(self, file):
@@ -126,23 +87,90 @@ class XTAGRAMB(PartFactory):
 		|
 		|	BUS_A_READ(adr);
 		|
-		|	if (PIN_CS=>) {
-		|		if (!PIN_WE=>) {
+		|	if (PIN_OE=>) {
+		|		if (state->what == READING) {
+		|			BUS_Q_Z();
+		|		} else if (state->what == WRITING) {
 		|			BUS_D_READ(data);
 		|			state->ram[adr] = data;
 		|		}
-		|		next_trigger(PIN_CS.negedge_event());
-		|	} else if (PIN_WE.posedge() && !PIN_CS=>) {
+		|		next_trigger(PIN_OE.negedge_event());
+		|		state->what = ZZZING;
+		|	} else if (!PIN_WE=>) {
+		|		if (state->what == READING)
+		|			BUS_Q_Z();
 		|		BUS_D_READ(data);
 		|		state->ram[adr] = data;
+		|		state->what = WRITING;
+		|	} else {
+		|		if (state->what == WRITING) {
+		|			BUS_D_READ(data);
+		|			state->ram[adr] = data;
+		|		}
+		|		data = state->ram[adr];
+		|		if (state->what != READING || data != state->last) {
+		|			BUS_Q_WRITE(data);
+		|			state->last = data;
+		|		}
+		|		state->what = READING;
+		|		next_trigger(rd_event);
 		|	}
-		|	data = state->ram[adr];
-		|	BUS_Q_WRITE(data);
+		|
+		|	TRACE(
+		|	    << state->what
+		|	    << " we " << PIN_WE?
+		|	    << " oe " << PIN_OE?
+		|	    << " a " << BUS_A_TRACE()
+		|	    << " d " << BUS_D_TRACE()
+		|	);
+		|''')
+
+class XTAGRAM8(PartFactory):
+
+    ''' NXM SRAM '''
+
+    def state(self, file):
+        file.fmt('''
+		|	uint8_t ram[1<<BUS_A_WIDTH];
+		|''')
+
+    def sensitive(self):
+        yield "PIN_OE"
+        yield "PIN_WE"
+        yield "BUS_A_SENSITIVE()"
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
+
+        super().doit(file)
+
+        file.fmt('''
+		|	unsigned adr = 0;
+		|	uint64_t data = 0;
+		|
+		|	BUS_A_READ(adr);
+		|
+		|	if (PIN_OE=>) {
+		|		BUS_Q_WRITE(0xff);
+		|		next_trigger(PIN_OE.negedge_event());
+		|	} else if (PIN_WE.posedge()) {
+		|		if (PIN_DIR=> || PIN_VEN=>) {
+		|			BUS_D_READ(data);
+		|		} else {
+		|			BUS_V_READ(data);
+		|		}
+		|		state->ram[adr] = data;
+		|		BUS_Q_WRITE(data);
+		|	} else if (PIN_WE=>) {
+		|		data = state->ram[adr];
+		|		BUS_Q_WRITE(data);
+		|	}
 		|
 		|	TRACE(
 		|	    << " we " << PIN_WE?
-		|	    << " cs " << PIN_CS?
+		|	    << " oe " << PIN_OE?
 		|	    << " a " << BUS_A_TRACE()
+		|	    << " v " << BUS_V_TRACE()
 		|	    << " d " << BUS_D_TRACE()
 		|	);
 		|''')
@@ -150,5 +178,5 @@ class XTAGRAMB(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XTAGRAMA", PartModel("XTAGRAMA", XTAGRAMA))
-    part_lib.add_part("XTAGRAMB", PartModel("XTAGRAMB", XTAGRAMB))
+    part_lib.add_part("XTAGRAM8", PartModel("XTAGRAM8", XTAGRAM8))
+    part_lib.add_part("XTAGRAM64", PartModel("XTAGRAM64", XTAGRAM))

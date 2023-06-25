@@ -37,6 +37,43 @@ class XLRULOGIC(FChip):
         self.sig_right(ChipSig("+-->", "TMP", 0, 7))
         self.finish(27)
 
+
+class XTAGRAM8(FChip):
+
+    ''' TAG RAM '''
+
+    symbol_name = "XTAGRAM8"
+
+    def __init__(self):
+        super().__init__()
+        self.sig_left(ChipSig("-->+", "A", 0, 12))
+        self.sig_left(ChipSig("-->+", "D", 0, 7))
+        self.sig_left(ChipSig("-->+", "V", 0, 7))
+        self.sig_left(ChipSig("-->+", "DIR"))
+        self.sig_left(ChipSig("-->+", "VEN"))
+
+        self.sig_right(ChipSig("+<--", "WE"))
+        self.sig_right(ChipSig("+<--", "OE"))
+        self.sig_right(ChipSig("+-->", "Q", 0, 7))
+        self.finish(20)
+
+
+class XTAGRAM64(FChip):
+
+    ''' TAG RAM '''
+
+    symbol_name = "XTAGRAM64"
+
+    def __init__(self):
+        super().__init__()
+        self.sig_left(ChipSig("-->+", "A", 0, 13))
+        self.sig_left(ChipSig("-->+", "D", 0, 63))
+
+        self.sig_right(ChipSig("+<--", "WE"))
+        self.sig_right(ChipSig("+<--", "OE"))
+        self.sig_right(ChipSig("+-->", "Q", 0, 63))
+        self.finish(20)
+
 class XTAGRAM(Chip):
 
     ''' 16K x 64 SRAM '''
@@ -185,4 +222,6 @@ class XTAGRAM(Chip):
 
 def register():
     yield XTAGRAM()
+    yield XTAGRAM64()
+    yield XTAGRAM8()
     yield XLRULOGIC()

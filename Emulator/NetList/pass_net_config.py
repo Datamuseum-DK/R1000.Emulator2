@@ -59,8 +59,8 @@ class MuxBus():
         self.scm = comp0.scm
         self.cpu = self.scm.cpu
 
-        self.partref = "UBMX%d" % self.cpu.nbr_busmux
-        self.cpu.nbr_busmux += 1
+        self.partref = "UBMX%d" % self.scm.scm_unique
+        self.scm.scm_unique += 1
 
         self.muxtype = "XBUSMUX%dX%d" % (self.length, self.width)
         self.part = self.cpu.part_lib[self.muxtype]

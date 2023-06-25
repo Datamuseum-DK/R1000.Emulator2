@@ -37,6 +37,9 @@
 
 
 from part import PartModel, PartFactory
+from node import Node
+from net import Net
+from pin import Pin
 
 class F579(PartFactory):
 
@@ -71,7 +74,7 @@ class F579(PartFactory):
 		|
 		|	if (PIN_MR=> && PIN_SR=> && !PIN_CS=> && !PIN_LD=>) {
 		|		// Parallel Load
-		|		BUS_IO_Z();
+		|		BUS_Q_Z();
 		|	}
 		|
 		|	if (!PIN_MR=>) {
@@ -87,7 +90,7 @@ class F579(PartFactory):
 		|			what = "sr ";
 		|		} else if (!PIN_CS=> && !PIN_LD=>) {
 		|			// Parallel Load
-		|			BUS_IO_READ(state->reg);
+		|			BUS_D_READ(state->reg);
 		|			what = "pl ";
 		|		} else if (PIN_CEP=> || PIN_CET=>) {
 		|			// Hold
@@ -97,26 +100,26 @@ class F579(PartFactory):
 		|			what = "up ";
 		|		} else {
 		|			// Count Down
-		|			state->reg += BUS_IO_MASK;
+		|			state->reg += BUS_Q_MASK;
 		|			what = "dn ";
 		|		}
-		|		state->reg &= BUS_IO_MASK;
+		|		state->reg &= BUS_Q_MASK;
 		|	}
 		|
 		|	if (PIN_CET=>)
 		|		PIN_CO<=(1);
 		|	else if (PIN_UslashBnot=>)
-		|		PIN_CO<=(state->reg != BUS_IO_MASK);
+		|		PIN_CO<=(state->reg != BUS_Q_MASK);
 		|	else
 		|		PIN_CO<=(state->reg != 0x00);
 		|
 		|	if (!PIN_CS=> && PIN_LD=> && !PIN_OE=>) {
-		|		BUS_IO_WRITE(state->reg);
+		|		BUS_Q_WRITE(state->reg);
 		|		if (state->z && what == NULL)
 		|		    what = "out ";
 		|		state->z = false;
 		|	} else {
-		|		BUS_IO_Z();
+		|		BUS_Q_Z();
 		|		if (!state->z && what == NULL)
 		|		    what = "Z ";
 		|		state->z = true;
@@ -128,7 +131,7 @@ class F579(PartFactory):
 		|		TRACE(
 		|		    << what
 		|		    << " clk↑ " << PIN_CLK.posedge()
-		|		    << " io " << BUS_IO_TRACE()
+		|		    << " io " << BUS_D_TRACE()
 		|		    << " oe_ " << PIN_OE?
 		|		    << " cs_ " << PIN_CS?
 		|		    << " pe_ " << PIN_LD?
@@ -142,8 +145,20 @@ class F579(PartFactory):
 		|	}
 		|''')
 
+class F579Model(PartModel):
+    ''' ... '''
+
+    def assign(self, comp, part_lib):
+        for node in comp:
+            if node.pin.name[:2] == "IO":
+                sfx = node.pin.name[2:]
+                Node(node.net, comp, Pin("D" + sfx, "D" + sfx, "input"))
+                Node(node.net, comp, Pin("Q" + sfx, "Q" + sfx, "output"))
+                node.remove()
+        super().assign(comp, part_lib)
+
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("F579", PartModel("F579", F579))
-    part_lib.add_part("F579X2", PartModel("F579X2", F579))
+    part_lib.add_part("F579", F579Model("F579", F579))
+    part_lib.add_part("F579X2", F579Model("F579X2", F579))
