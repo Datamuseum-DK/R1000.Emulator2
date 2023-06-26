@@ -534,8 +534,18 @@ DiagProcCreate(const char *name, const char *arg, uint32_t *do_trace)
 	dp->diag_bus = elastic_subscribe(diag_elastic, diagproc_busrx, dp);
 
 	sc_tracef(dp->name, "DIAGPROC Instantiated (mod 0x%x)", dp->mod);
-	if (strstr(dp->name, "mem32"))
+	if (strstr(dp->name, "fiu"))
+		dp->turbo = diagproc_turbo_fiu;
+	else if (strstr(dp->name, "ioc"))
+		dp->turbo = diagproc_turbo_ioc;
+	else if (strstr(dp->name, "mem32"))
 		dp->turbo = diagproc_turbo_mem32;
+	else if (strstr(dp->name, "seq"))
+		dp->turbo = diagproc_turbo_seq;
+	else if (strstr(dp->name, "typ"))
+		dp->turbo = diagproc_turbo_typ;
+	else if (strstr(dp->name, "val"))
+		dp->turbo = diagproc_turbo_val;
 	dp->ram = dp->mcs51->iram;
 	return (dp);
 }

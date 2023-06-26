@@ -66,7 +66,12 @@ struct diagproc *DiagProcCreate(const char *name, const char *arg,
     uint32_t *do_trace);
 void DiagProcStep(struct diagproc *, struct diagproc_context *);
 
+diagprocturbo_t diagproc_turbo_fiu;
+diagprocturbo_t diagproc_turbo_ioc;
 diagprocturbo_t diagproc_turbo_mem32;
+diagprocturbo_t diagproc_turbo_seq;
+diagprocturbo_t diagproc_turbo_typ;
+diagprocturbo_t diagproc_turbo_val;
 
 #ifdef __cplusplus
 }

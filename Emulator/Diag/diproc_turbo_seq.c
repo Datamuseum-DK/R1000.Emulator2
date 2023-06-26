@@ -1,0 +1,180 @@
+
+#include <pthread.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "Infra/r1000.h"
+#include "Chassis/r1000sc.h"
+#include "Chassis/z_codes.h"
+#include "Diag/diag.h"
+#include "Diag/diagproc.h"
+#include "Diag/exp_hash.h"
+#include "Infra/context.h"
+#include "Infra/vend.h"
+
+static uint32_t *decode;
+
+static unsigned seq_ptr;
+static uint64_t *seq_wcs;
+
+static int
+load_dispatch_rams_200_seq(struct diagproc *dp)
+{
+#if !defined(HAS_Z020)
+	(void)dp;
+	return (0);
+#else
+	struct ctx *ctx;
+	int offset, n;
+	uint64_t src;
+	uint32_t dst;
+
+	if (decode == NULL) {
+		ctx = CTX_Find(COMP_Z020);
+		AN(ctx);
+		decode = (uint32_t *)(ctx + 1);
+	}
+	offset = vbe16dec(dp->ram + 0x18);
+	if (dp->ram[0x11]) {
+		// Low
+		offset += 1024;
+	} else {
+		// High
+		offset >>= 6;
+	}
+	for (n = 0; n < 16; n++) {
+		src = vbe64dec(dp->ram + 0x1a + 8 * n);
+		// This translation found by correlation
+		// Last three entries are ambigious (always zero)
+		dst = 0;
+		dst <<= 1; dst |= (src >>  7) & 1;	// 31
+		dst <<= 1; dst |= (src >> 15) & 1;
+		dst <<= 1; dst |= (src >>  6) & 1;	
+		dst <<= 1; dst |= (src >> 14) & 1;	
+		dst <<= 1; dst |= (src >> 23) & 1;
+		dst <<= 1; dst |= (src >> 31) & 1;
+		dst <<= 1; dst |= (src >> 22) & 1;	// 25
+		dst <<= 1; dst |= (src >> 39) & 1;
+		dst <<= 1; dst |= (src >> 47) & 1;
+		dst <<= 1; dst |= (src >> 30) & 1;
+		dst <<= 1; dst |= (src >> 55) & 1;
+		dst <<= 1; dst |= (src >> 63) & 1;	// 20
+		dst <<= 1; dst |= (src >> 38) & 1;
+		dst <<= 1; dst |= (src >> 54) & 1;
+		dst <<= 1; dst |= (src >> 62) & 1;
+		dst <<= 1; dst |= (src >> 46) & 1;
+		dst <<= 1; dst |= (src >> 53) & 1;	// 15
+		dst <<= 1; dst |= (src >> 61) & 1;
+		dst <<= 1; dst |= (src >> 29) & 1;
+		dst <<= 1; dst |= (src >> 37) & 1;
+		dst <<= 1; dst |= (src >> 45) & 1;
+		dst <<= 1; dst |= (src >> 12) & 1;	// 10
+		dst <<= 1; dst |= (src >> 20) & 1;
+		dst <<= 1; dst |= (src >> 28) & 1;
+		dst <<= 1; dst |= (src >> 36) & 1;
+		dst <<= 1; dst |= (src >> 44) & 1;
+		dst <<= 1; dst |= (src >> 52) & 1;	// 5
+		dst <<= 1; dst |= (src >> 60) & 1;
+		dst <<= 1; dst |= (src >>  5) & 1;
+		dst <<= 1; dst |= (src >> 21) & 1; // =0
+		dst <<= 1; dst |= (src >> 13) & 1; // =0
+		dst <<= 1; dst |= (src >>  4) & 1; // =0
+
+		decode[offset + n] = dst;
+	}
+
+	sc_tracef(dp->name, "Turbo LOAD_DISPATCH_RAMS_200.SEQ");
+
+	return (DIPROC_RESPONSE_DONE);
+#endif
+}
+
+static int
+load_control_store_200_seq(struct diagproc *dp)
+{
+#if !defined(HAS_Z021)
+        (void)dp;
+        return (0);
+#else
+        struct ctx *ctx;
+        int n;
+        uint64_t wcs, inp, inv;
+
+        if (seq_wcs == NULL) {
+                ctx = CTX_Find(COMP_Z021);
+                AN(ctx);
+                seq_wcs = (uint64_t *)(ctx + 1);
+        }
+        for (n = 0; n < 16; n++) {
+                inp = vbe64dec(dp->ram + 0x18 + n * 8);
+                inv = inp ^ ~0;
+                wcs = 0;
+
+		wcs <<= 1; wcs |= (inp >> 46) & 1; // 41
+		wcs <<= 1; wcs |= (inp >> 38) & 1; // 40
+		wcs <<= 1; wcs |= (inp >> 30) & 1; // 39
+		wcs <<= 1; wcs |= (inp >> 22) & 1; // 38
+		wcs <<= 1; wcs |= (inp >> 14) & 1; // 37
+		wcs <<= 1; wcs |= (inp >>  6) & 1; // 36
+		wcs <<= 1; wcs |= (inp >> 63) & 1; // 35
+		wcs <<= 1; wcs |= (inp >> 55) & 1; // 34
+		wcs <<= 1; wcs |= (inp >> 47) & 1; // 33
+		wcs <<= 1; wcs |= (inp >> 39) & 1; // 32
+		wcs <<= 1; wcs |= (inp >> 31) & 1; // 31
+		wcs <<= 1; wcs |= (inp >> 23) & 1; // 30
+		wcs <<= 1; wcs |= (inp >> 15) & 1; // 29
+		wcs <<= 1; wcs |= (inp >>  7) & 1; // 28
+		wcs <<= 1; wcs |= (inp >> 18) & 1; // 27
+		wcs <<= 1; wcs |= (inp >> 61) & 1; // 26
+		wcs <<= 1; wcs |= (inp >> 45) & 1; // 25
+		wcs <<= 1; wcs |= (inp >> 53) & 1; // 24
+		wcs <<= 1; wcs |= (inp >> 36) & 1; // 23
+		wcs <<= 1; wcs |= (inp >> 44) & 1; // 22
+		wcs <<= 1; wcs |= (inp >> 12) & 1; // 21
+		wcs <<= 1; wcs |= (inp >> 20) & 1; // 20
+		wcs <<= 1; wcs |= (inp >> 37) & 1; // 19
+		wcs <<= 1; wcs |= (inp >> 29) & 1; // 18 
+		wcs <<= 1; wcs |= (inp >>  5) & 1; // 17
+		wcs <<= 1; wcs |= (inp >> 13) & 1; // 16
+		wcs <<= 1; wcs |= (inp >> 21) & 1; // 15
+		wcs <<= 1; wcs |= (inp >> 62) & 1; // 14
+		wcs <<= 1; wcs |= (inp >> 54) & 1; // 13
+		wcs <<= 1; wcs |= (inp >>  2) & 1; // 12
+		wcs <<= 1; wcs |= (inp >> 10) & 1; // 11
+		wcs <<= 1; wcs |= (inp >> 28) & 1; // 10
+		wcs <<= 1; wcs |= (inp >>  4) & 1; // 9
+		wcs <<= 1; wcs |= (inp >> 52) & 1; // 8
+		wcs <<= 1; wcs |= (inp >> 60) & 1; // 7
+		wcs <<= 1; wcs |= (inp >>  1) & 1; // 6
+		wcs <<= 1; wcs |= (inp >>  9) & 1; // 5
+		wcs <<= 1; wcs |= (inp >> 50) & 1; // 4
+		wcs <<= 1; wcs |= (inp >> 58) & 1; // 3
+		wcs <<= 1; wcs |= (inp >> 34) & 1; // 2
+		wcs <<= 1; wcs |= (inp >> 42) & 1; // 1
+		wcs <<= 1; wcs |= (inp >> 26) & 1; // 0
+		seq_wcs[seq_ptr++] = wcs;
+	}
+	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.SEQ");
+	return (DIPROC_RESPONSE_DONE);
+#endif
+}
+
+int
+diagproc_turbo_seq(struct diagproc *dp)
+{
+	if (dp->dl_hash == LOAD_DISPATCH_RAMS_200_SEQ_HASH ||
+            dp->dl_hash == 0x00001081) {
+		return (load_dispatch_rams_200_seq(dp));
+	}
+	if (dp->dl_hash == LOAD_COUNTER_SEQ_HASH) {
+		seq_ptr = 0x100;
+		return (0);
+	}
+	if (dp->dl_hash == LOAD_CONTROL_STORE_200_SEQ_HASH ||
+            dp->dl_hash == 0x00001045) {
+		return (load_control_store_200_seq(dp));
+	}
+
+	return (0);
+}

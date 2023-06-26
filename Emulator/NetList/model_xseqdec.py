@@ -41,10 +41,10 @@ class XSEQDEC(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint32_t reg, last, cbot, ctop;
-		|	uint8_t sr[4];
 		|	uint32_t top[1<<10];
 		|	uint32_t bot[1<<10];
+		|	uint32_t reg, last, cbot, ctop;
+		|	uint8_t sr[4];
 		|''')
 
     def xxsensitive(self):

@@ -21,6 +21,30 @@ ${OBJDIR}/diagproc.o: \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Diag/diagproc.c -o ${OBJDIR}/diagproc.o
 
+OBJS    += ${OBJDIR}/diproc_turbo_fiu.o
+${OBJDIR}/diproc_turbo_fiu.o: \
+    Diag/diproc_turbo_fiu.c \
+    Chassis/r1000sc.h \
+    ${WORKDIR}/Chassis/z_codes.h \
+    Diag/diag.h \
+    Diag/diagproc.h \
+    Diag/exp_hash.h \
+    Infra/context.h \
+    ${R1000DEP}
+	${CC} ${CFLAGS} -I${WORKDIR} -c Diag/diproc_turbo_fiu.c -o ${OBJDIR}/diproc_turbo_fiu.o
+
+OBJS    += ${OBJDIR}/diproc_turbo_ioc.o
+${OBJDIR}/diproc_turbo_ioc.o: \
+    Diag/diproc_turbo_ioc.c \
+    Chassis/r1000sc.h \
+    ${WORKDIR}/Chassis/z_codes.h \
+    Diag/diag.h \
+    Diag/diagproc.h \
+    Diag/exp_hash.h \
+    Infra/context.h \
+    ${R1000DEP}
+	${CC} ${CFLAGS} -I${WORKDIR} -c Diag/diproc_turbo_ioc.c -o ${OBJDIR}/diproc_turbo_ioc.o
+
 OBJS    += ${OBJDIR}/diproc_turbo_mem32.o
 ${OBJDIR}/diproc_turbo_mem32.o: \
     Diag/diproc_turbo_mem32.c \
@@ -32,6 +56,30 @@ ${OBJDIR}/diproc_turbo_mem32.o: \
     Infra/context.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -I${WORKDIR} -c Diag/diproc_turbo_mem32.c -o ${OBJDIR}/diproc_turbo_mem32.o
+
+OBJS    += ${OBJDIR}/diproc_turbo_seq.o
+${OBJDIR}/diproc_turbo_seq.o: \
+    Diag/diproc_turbo_seq.c \
+    Chassis/r1000sc.h \
+    ${WORKDIR}/Chassis/z_codes.h \
+    Diag/diag.h \
+    Diag/diagproc.h \
+    Diag/exp_hash.h \
+    Infra/context.h \
+    ${R1000DEP}
+	${CC} ${CFLAGS} -I${WORKDIR} -c Diag/diproc_turbo_seq.c -o ${OBJDIR}/diproc_turbo_seq.o
+
+OBJS    += ${OBJDIR}/diproc_turbo_tv.o
+${OBJDIR}/diproc_turbo_tv.o: \
+    Diag/diproc_turbo_tv.c \
+    Chassis/r1000sc.h \
+    ${WORKDIR}/Chassis/z_codes.h \
+    Diag/diag.h \
+    Diag/diagproc.h \
+    Diag/exp_hash.h \
+    Infra/context.h \
+    ${R1000DEP}
+	${CC} ${CFLAGS} -I${WORKDIR} -c Diag/diproc_turbo_tv.c -o ${OBJDIR}/diproc_turbo_tv.o
 
 OBJS    += ${OBJDIR}/diproc_mods.o
 ${OBJDIR}/diproc_mods.o: \
