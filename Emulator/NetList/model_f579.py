@@ -88,10 +88,12 @@ class F579(PartFactory):
 		|			// Sync reset
 		|			state->reg = 0;
 		|			what = "sr ";
+		|#ifdef BUS_D_READ
 		|		} else if (!PIN_CS=> && !PIN_LD=>) {
 		|			// Parallel Load
 		|			BUS_D_READ(state->reg);
 		|			what = "pl ";
+		|#endif
 		|		} else if (PIN_CEP=> || PIN_CET=>) {
 		|			// Hold
 		|		} else if (PIN_UslashBnot=>) {
@@ -131,7 +133,9 @@ class F579(PartFactory):
 		|		TRACE(
 		|		    << what
 		|		    << " clk↑ " << PIN_CLK.posedge()
+		|#ifdef BUS_D_TRACE
 		|		    << " io " << BUS_D_TRACE()
+		|#endif
 		|		    << " oe_ " << PIN_OE?
 		|		    << " cs_ " << PIN_CS?
 		|		    << " pe_ " << PIN_LD?
@@ -149,11 +153,17 @@ class F579Model(PartModel):
     ''' ... '''
 
     def assign(self, comp, part_lib):
+        no_load = comp.nodes["LD"].net.is_pu()
+        always = comp.nodes["OE"].net.is_pd() and comp.nodes["CS"].net.is_pd()
         for node in comp:
             if node.pin.name[:2] == "IO":
                 sfx = node.pin.name[2:]
-                Node(node.net, comp, Pin("D" + sfx, "D" + sfx, "input"))
-                Node(node.net, comp, Pin("Q" + sfx, "Q" + sfx, "output"))
+                if not no_load:
+                    Node(node.net, comp, Pin("D" + sfx, "D" + sfx, "input"))
+                if no_load and always:
+                    Node(node.net, comp, Pin("Q" + sfx, "Q" + sfx, "output"))
+                else:
+                    Node(node.net, comp, Pin("Q" + sfx, "Q" + sfx, "tri_state"))
                 node.remove()
         super().assign(comp, part_lib)
 

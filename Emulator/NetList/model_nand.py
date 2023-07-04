@@ -64,14 +64,6 @@ class Nand(PartFactory):
         file.fmt('''
 		|	state->out = -1;
 		|	state->job = 0;
-		|	if (strstr(this->name(), "IOC.ioc_54.RDNAN0A") != NULL) {
-		|		// TEST_MACRO_EVENT_SLICE.IOC @ optimized
-		|		state->dly = 10;
-		|	}
-		|	if (strstr(this->name(), "IOC.ioc_54.RDNAN0B") != NULL) {
-		|		// TEST_MACRO_EVENT_DELAY.IOC @ optimized
-		|		state->dly = 10;
-		|	}
 		|	if (strstr(this->name(), "TYP.typ_40.CKDR5A") != NULL) {
 		|		// TEST_LOOP_CNTR_OVERFLOW.TYP @ main
 		|		state->dly = 2;
