@@ -23,6 +23,7 @@ class XTASIDE(FChip):
         self.sig_right(ChipSig("+-->", "A", 0, 63))
         self.sig_right(ChipSig("+-->", "AP", 0, 7))
         self.sig_right(ChipSig("+-->", "AOUT"))
+        self.sig_right(ChipSig("+-->", "AB0"))
 
         self.finish()
 

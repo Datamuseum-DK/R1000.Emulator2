@@ -148,6 +148,11 @@ class XRFRAMD(PartFactory):
 		|	const char *what;
 		|''')
 
+    def sensitive(self):
+        yield "PIN_WE.pos()"
+        yield "PIN_OE"
+        yield "BUS_A_SENSITIVE()"
+
     def extra(self, file):
         super().extra(file)
         file.fmt('''
@@ -168,6 +173,10 @@ class XRFRAMD(PartFactory):
 		|	if (PIN_OE=>) {
 		|		BUS_Q_Z();
 		|		state->what = ZZZING;
+		|		next_trigger(
+		|			PIN_OE.negedge_event() | PIN_WE.posedge_event()
+		|		);
+		|
 		|	} else {
 		|		BUS_A_READ(adr);
 		|		data = state->ram[adr];
@@ -182,7 +191,7 @@ class XRFRAMD(PartFactory):
 		|	}
 		|	TRACE(
 		|	    << state->what
-		|	    << " we " << PIN_WE?
+		|	    << " we^ " << PIN_WE.posedge()
 		|	    << " oe " << PIN_OE?
 		|	    << " ar " << BUS_A_TRACE()
 		|	    << " d " << BUS_D_TRACE()

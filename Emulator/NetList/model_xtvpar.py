@@ -29,15 +29,15 @@
 # SUCH DAMAGE.
 
 '''
-   TYP A-side mux+latch
-   ====================
+   TV RF parity RAM
+   ================
 
 '''
 
 from part import PartModel, PartFactory
 
 class XTVPAR(PartFactory):
-    ''' TYP A-side mux+latch '''
+    ''' TV RF parity RAM '''
 
     def state(self, file):
         file.fmt('''
@@ -47,7 +47,7 @@ class XTVPAR(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_CLK2X.pos()"
+        yield "PIN_CLKQ2.pos()"
         yield "PIN_CLKQ4.pos()"
         yield "PIN_AWE.pos()"
         yield "PIN_BWE.pos()"
@@ -58,11 +58,13 @@ class XTVPAR(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|	if (PIN_CLK2X.posedge()) {
+		|	if (PIN_CLKQ2.posedge()) {
 		|		BUS_AADR_READ(state->aaddr);
 		|		BUS_BADR_READ(state->baddr);
 		|	}
 		|	if (PIN_CLKQ4.posedge()) {
+		|		BUS_AADR_READ(state->aaddr);
+		|		BUS_BADR_READ(state->baddr);
 		|		BUS_CCHK_READ(state->cchk);
 		|	}
 		|	if (PIN_AWE.posedge()) {

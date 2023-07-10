@@ -29,28 +29,18 @@
 # SUCH DAMAGE.
 
 '''
-   TYP A-side mux+latch
-   ====================
+   TYP+VAL B parity
+   ================
 
 '''
 
 from part import PartModel, PartFactory
 
-class XTASIDE(PartFactory):
-    ''' TYP A-side mux+latch '''
+class XTVBPAR(PartFactory):
+    ''' TYP+VAL B parity '''
 
-    def state(self, file):
-        file.fmt('''
-		|	uint64_t alat;
-		|''')
-
-    def xxsensitive(self):
-        yield "PIN_FIU_CLK.pos()"
-        yield "PIN_LOCAL_CLK.pos()"
-        yield "PIN_Q1not.pos()"
-        yield "PIN_DV_U"
-        yield "PIN_BAD_HINT"
-        yield "PIN_U_PEND"
+    def sensitive(self):
+        yield "PIN_Q3.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -58,50 +48,25 @@ class XTASIDE(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|	unsigned uir_a, loop;
-		|	uint64_t a = 0, p;
+		|	unsigned chk, against;
 		|
-		|	if (PIN_LE) {
-		|		BUS_C_READ(state->alat);
-		|	}
-		|	BUS_UA_READ(uir_a);
-		|	if ((uir_a & 0x3c) != 0x28 || !PIN_AODIAG) {
-		|		a = state->alat;
-		|		PIN_AOUT = 0;
-		|	} else if (uir_a == 0x28) {
-		|		BUS_LOOP_READ(loop);
-		|		a = BUS_A_MASK;
-		|		a ^= BUS_LOOP_MASK;
-		|		a |= loop;
-		|		PIN_AOUT = 1;
+		|	if (PIN_BOE=>) {
+		|		BUS_BPAR_READ(against);
+		|		against ^= BUS_BPAR_MASK;
 		|	} else {
-		|		a = BUS_A_MASK;
-		|		BUS_A_WRITE(BUS_A_MASK);
-		|		PIN_AOUT = 1;
+		|		BUS_BADR_READ(against);
 		|	}
-		|	BUS_A_WRITE(a);
-		|	PIN_AB0<=(a >> 63);
-		|	p = (a ^ (a >> 4)) & 0x0f0f0f0f0f0f0f0fULL;
-		|	p = (p ^ (p >> 2)) & 0x0303030303030303ULL;
-		|	p = (p ^ (p >> 1)) & 0x0101010101010101ULL;
-		|	p |= (p >> 7);
-		|	p |= (p >> 14);
-		|	p |= (p >> 28);
-		|	p &= 0xff;
-		|	p ^= 0xff;
-		|	BUS_AP_WRITE(p);
+		|	BUS_BCHK_READ(chk);
+		|	PIN_TPERR<=(chk != against);		
 		|	TRACE(
-		|	    << " aod " << PIN_AODIAG?
-		|	    << " uira " << BUS_UA_TRACE()
-		|	    << " loop " << BUS_LOOP_TRACE()
-		|	    << " c " << BUS_C_TRACE()
-		|	    << " - a " << BUS_A_TRACE()
-		|	    << " " << std::hex << a
-		|	    << " p " << std::hex << p
+		|	    << " boe " << PIN_BOE?
+		|	    << " bchk " << BUS_BCHK_TRACE()
+		|	    << " badr " << BUS_BADR_TRACE()
+		|	    << " bpar " << BUS_BPAR_TRACE()
 		|	);
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XTASIDE", PartModel("XTASIDE", XTASIDE))
+    part_lib.add_part("XTVBPAR", PartModel("XTVBPAR", XTVBPAR))

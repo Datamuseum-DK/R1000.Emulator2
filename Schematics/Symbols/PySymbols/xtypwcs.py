@@ -25,7 +25,7 @@ class XTYPWCS(FChip):
 
         self.sig_right(ChipSig("+-->", "UIR", 0, 46))
         self.sig_right(ChipSig("+===", "DGO", 0, 7))
-        self.sig_right(ChipSig("+===", "CLIT", 0, 6))
+        self.sig_right(ChipSig("+-->", "CLIT", 0, 6))
         self.sig_right(ChipSig("+===", "PERR"))
         self.sig_right(ChipSig("+-->", "ALD"))
         self.sig_right(ChipSig("+-->", "BLD"))

@@ -49,7 +49,6 @@ class XTVSCLK(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|	bool ram_stop = PIN_RMS=>;
 		|
 		|	if (state->ctx.job == 1) {
 		|		state->ctx.job = 0;
@@ -59,10 +58,11 @@ class XTVSCLK(PartFactory):
 		|		PIN_ZCLK<=(true);
 		|		PIN_ARFWE<=(true);
 		|		PIN_BRFWE<=(true);
-		|		PIN_ARFCS<=(!(PIN_ACOFF=> && ram_stop));
-		|		PIN_BRFCS<=(!(PIN_BCOFF=> && ram_stop));
 		|		next_trigger(PIN_H2.negedge_event());
 		|	} else if (PIN_H2.negedge()) {
+		|		//bool ram_stop = PIN_RMS=>;
+		|		//PIN_ARFCS<=(!(PIN_ACOFF=> && ram_stop));
+		|		//PIN_BRFCS<=(!(PIN_BCOFF=> && ram_stop));
 		|		PIN_ARFCS<=(!PIN_ACOFF=>);
 		|		PIN_BRFCS<=(!PIN_BCOFF=>);
 		|		next_trigger(PIN_H2.posedge_event());
@@ -74,6 +74,7 @@ class XTVSCLK(PartFactory):
 		|		next_trigger(PIN_Q3.posedge_event());
 		|	} else if (PIN_Q3.posedge()) {
 		|		bool uon = PIN_UON=>;
+		|		bool ram_stop = PIN_RMS=>;
 		|
 		|		bool sce = !(PIN_STS=> && ram_stop && PIN_WEL=>);
 		|		bool uena = !(
