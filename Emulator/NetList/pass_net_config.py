@@ -43,7 +43,7 @@ from scmod import ScSignal
 
 USE_MUXBUS = True
 
-MIN_BUS_WIDTH = 4
+MIN_BUS_WIDTH = 3
 
 class MuxBus():
 

@@ -76,6 +76,7 @@ class XVCMUX(PartFactory):
 		|	bool clo = false;
 		|
 		|	if (PIN_OE=>) {
+		|		BUS_C_Z();
 		|		if (state->con) {
 		|			state->con = false;
 		|			next_trigger(5, SC_NS);

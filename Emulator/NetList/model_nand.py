@@ -85,17 +85,19 @@ class Nand(PartFactory):
 
         file.fmt('''
 		|
-		|	TRACE(
-		|	    << " j " << state->job
-		|	    << " out " << state->out
-		|	    << " in "
+		|	if (state->dly != 0) {
+		|		TRACE(
+		|		    << " j " << state->job
+		|		    << " out " << state->out
+		|		    << " in "
 		|''')
 
         for i in range(self.inputs):
-            file.write("\t    << PIN_D%d\n" % i)
+            file.write("\t	    << PIN_D%d\n" % i)
 
         file.fmt('''
-		|	);
+		|		);
+		|	}
 		|
 		|	if (state->job) {
 		|		PIN_Q<=(state->out);
@@ -144,6 +146,20 @@ class Nand(PartFactory):
         file.fmt('''
 		|		}
 		|	}
+		|
+		|	if (state->dly == 0) {
+		|		TRACE(
+		|		    << " out " << state->out
+		|		    << " in "
+		|''')
+
+        for i in range(self.inputs):
+            file.write("\t	    << PIN_D%d\n" % i)
+
+        file.fmt('''
+		|		);
+		|	}
+		|
 		|''')
 
     def hookup(self, file, comp):

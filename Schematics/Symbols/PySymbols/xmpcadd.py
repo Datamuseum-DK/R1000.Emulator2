@@ -22,7 +22,9 @@ class XMPCADD(FChip):
 
 
         self.sig_right(ChipSig("+-->", "BOFF", 0, 14))
-        # self.sig_right(ChipSig("+<--", "BIN", 0, 14))
+        self.sig_right(ChipSig("+<--", "RCLK"))
+        self.sig_right(ChipSig("+<--", "COSEL", 0, 1))
+        self.sig_right(ChipSig("+-->", "COFF", 0, 14))
 
         self.finish()
 

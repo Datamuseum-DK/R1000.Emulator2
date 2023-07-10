@@ -41,15 +41,14 @@ class XUSTK(PartFactory):
 
     def state(self, file):
         file.fmt('''
+		|	uint16_t ram[16];
 		|	uint16_t topu;
+		|	uint16_t adr;
 		|''')
 
     def sensitive(self):
-        #yield "PIN_WRITE"
-        #yield "PIN_H2"
-        #yield "PIN_Q2"
-        #yield "BUS_SEL_SENSITIVE()"
-        yield "PIN_TOSWE.pos()"
+        yield "PIN_Q2.pos()"
+        yield "PIN_Q4.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -59,9 +58,10 @@ class XUSTK(PartFactory):
         file.fmt('''
 		|	uint16_t tmp;
 		|	const char *what = "?";
+		|	bool stkclk = PIN_Q4.posedge() && !PIN_STKEN=>;
 		|
-		|	if (PIN_TOSWE.posedge()) {
-		|		if (PIN_H2 && !PIN_WRITE) {
+		|	if (stkclk && !PIN_CNTENA=>) {
+		|		if (PIN_H2 && PIN_WRITE) {
 		|			BUS_SEL_READ(tmp);
 		|			switch(tmp) {
 		|			case 0:
@@ -94,24 +94,38 @@ class XUSTK(PartFactory):
 		|			}
 		|		} else {
 		|			what = "4";
-		|			BUS_TOPS_READ(state->topu);
+		|			state->topu = state->ram[state->adr];
 		|		}
 		|		BUS_TOPU_WRITE(~state->topu);
 		|	}
+		|	if (PIN_Q2.posedge()) {
+		|		state->ram[(state->adr + 1) & 0xf] = state->topu;
+		|	}
+		|	if (stkclk) {
+		|		bool write = PIN_WRITE=>;
+		|		if (PIN_CSR=> && PIN_STOP=>) {
+		|			state->adr = write;
+		|		} else if (!PIN_CNTENA=>) {
+		|			if (write) {
+		|				state->adr = (state->adr + 1) & 0xf;
+		|			} else {
+		|				state->adr = (state->adr + 0xf) & 0xf;
+		|			}
+		|		}
+		|		PIN_SSZ<=(state->adr == 0);
+		|	}
 		|	TRACE(
 		|		<< " w " << what
-		|		<< " q2 " << PIN_Q2
+		|		<< " q2^ " << PIN_Q2.posedge()
+		|		<< " q4^ " << PIN_Q4.posedge()
 		|		<< " h2 " << PIN_H2
 		|		<< " wr " << PIN_WRITE
 		|		<< " sel " << BUS_SEL_TRACE()
-		|		<< " toswe^ " << PIN_TOSWE.posedge()
 		|		<< " q3c " << PIN_Q3COND
 		|		<< " lted " << PIN_LATCHED
 		|		<< " curu " << BUS_CURU_TRACE()
 		|		<< " fiu " << BUS_FIU_TRACE()
 		|		<< " brnch " << BUS_BRNCH_TRACE()
-		|		<< " a " << BUS_A_TRACE()
-		|		<< " tops " << BUS_TOPS_TRACE()
 		|	);
 		|
 		|''')

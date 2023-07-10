@@ -33,7 +33,7 @@ class XNXTUADR(FChip):
 
         self.sig_left(ChipSig("-->+", "DPAR"))
 
-        self.sig_right(ChipSig("+<--", "FIU", 0, 13))
+        self.sig_right(ChipSig("+<--", "FIU", 0, 15))
         self.sig_right(ChipSig("+<--", "FIU_CLK"))
 
         self.sig_right(ChipSig("+<--", "DEC", 0, 12))

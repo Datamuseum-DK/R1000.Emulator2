@@ -18,7 +18,7 @@ class XSEQ12(FChip):
         self.sig_left(ChipSig("-->+", "UTOS"))
         self.sig_left(ChipSig("-->+", "H2"))
         self.sig_left(ChipSig("-->+", "IRDS", 1, 2))
-        self.sig_left(ChipSig("-->+", "TYP", 0, 19))
+        self.sig_left(ChipSig("-->+", "TYP", 0, 31))
         self.sig_left(ChipSig("-->+", "TCLK"))
         self.sig_left(ChipSig("-->+", "TOSS"))
         self.sig_left(ChipSig("-->+", "RWE"))

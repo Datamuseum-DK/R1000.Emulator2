@@ -33,9 +33,9 @@ class XSEQDEC(FChip):
         self.sig_right(ChipSig("+-->", "BSEL"))
         self.sig_right(ChipSig("+-->", "DPER"))
         self.sig_right(ChipSig("+-->", "SCAN", 0, 3))
-        self.sig_right(ChipSig("+===", "UAD", 0, 15))
-        self.sig_right(ChipSig("+===", "DEC", 0, 7))
-        self.sig_right(ChipSig("+===", "CCL", 0, 3))
+        self.sig_right(ChipSig("+-->", "UAD", 0, 15))
+        self.sig_right(ChipSig("+-->", "DEC", 0, 7))
+        self.sig_right(ChipSig("+-->", "CCL", 0, 3))
         self.sig_right(ChipSig("+-->", "EMP"))
         self.sig_right(ChipSig("+-->", "DSP", 0, 15))
 

@@ -29,93 +29,66 @@
 # SUCH DAMAGE.
 
 '''
-   SEQ Macro PC adder
-   ==================
+   SEQ 52 CSA
+   ==========
 
 '''
 
 from part import PartModel, PartFactory
 
-class XMPCADD(PartFactory):
-    ''' SEQ Macro PC adder '''
+class XSEQ52CSA(PartFactory):
+    ''' SEQ 52 CSA '''
 
     def state(self, file):
         file.fmt('''
-		|	unsigned retrn_pc_ofs;
+		|	bool overflow, underflow;
+		|	unsigned in_csa;
 		|''')
+
+    def xxsensitive(self):
+        yield "PIN_FIU_CLK.pos()"
+        yield "PIN_LOCAL_CLK.pos()"
+        yield "PIN_Q1not.pos()"
+        yield "PIN_DV_U"
+        yield "PIN_BAD_HINT"
+        yield "PIN_U_PEND"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         super().doit(file)
-        file.fmt('''
-		|	bool wdisp, mibmt, oper;
-		|	unsigned macro_pc_ofs;
-		|	unsigned a, b, boff = 0;
-		|
-		|	wdisp = PIN_WDISP;
-		|	mibmt = PIN_MIBMT;
-		|	BUS_MPC_READ(macro_pc_ofs);
-		|	if (PIN_RCLK.posedge()) {
-		|		state->retrn_pc_ofs = macro_pc_ofs;
-		|	}
-		|	b = macro_pc_ofs;
-		|	if (!wdisp && !mibmt) {
-		|		a = 0;
-		|		oper = true;
-		|	} else if (!wdisp && mibmt) {
-		|		BUS_DISP_READ(a);
-		|		oper = false;
-		|	} else if (wdisp && !mibmt) {
-		|		BUS_CURI_READ(a);
-		|		a |= 0xf800;
-		|		oper = true;
-		|	} else {
-		|		BUS_CURI_READ(a);
-		|		a |= 0xf800;
-		|		oper = true;
-		|	}
-		|	a &= 0x7ff;
-		|	if (a & 0x400)
-		|		a |= 0x7800;
-		|	a ^= 0x7fff;
-		|	b &= 0x7fff;
-		|	if (oper) {
-		|		if (wdisp)
-		|			a += 1;
-		|		a &= 0x7fff;
-		|		boff = a + b;
-		|	} else {
-		|		if (!wdisp)
-		|			a += 1;
-		|		boff = b - a;
-		|	}
-		|	boff &= 0x7fff;
-		|	BUS_BOFF_WRITE(boff);
-		|	unsigned code_sel, coff;
-		|	BUS_COSEL_READ(code_sel);
-		|	switch (code_sel) {
-		|	case 0:	coff = state->retrn_pc_ofs; break;
-		|	case 1: coff = boff; break;
-		|	case 2: coff = macro_pc_ofs; break;
-		|	case 3: coff = boff; break;
-		|	}
-		|	coff ^= BUS_COFF_MASK;
-		|	BUS_COFF_WRITE(coff);
-		|	TRACE(
-		|	    << " wdisp " << PIN_WDISP
-		|	    << " mibmt " << PIN_MIBMT
-		|	    << " disp " << BUS_DISP_TRACE()
-		|	    << " curi " << BUS_CURI_TRACE()
-		|	    << " mpc " << BUS_MPC_TRACE()
-		|	    << " - boff " << std::hex << boff
-		|	    << " a " << std::hex << a
-		|	    << " b " << std::hex << b
-		|	);
-		''')
 
+        file.fmt('''
+		|	if (state->ctx.job) {
+		|		state->ctx.job = 0;
+		|		BUS_CSA_WRITE(state->in_csa);
+		|		PIN_UFL<=(state->underflow);
+		|		PIN_OFL<=(state->overflow);
+		|	}
+		|		
+		|	unsigned csa_nve, csa_dec;
+		|	unsigned in_csa = state->in_csa;
+		|
+		|	BUS_NVE_READ(csa_nve);
+		|	BUS_DEC_READ(csa_dec);
+		|	if (PIN_CLK.posedge()) {
+		|		in_csa = csa_nve;
+		|	}
+		|	bool underflow = csa_nve >= (csa_dec & 7);
+		|	bool overflow = csa_nve <= ((csa_dec >> 3) | 12);
+		|	if (underflow != state->underflow ||
+		|	    overflow != state->overflow ||
+		|	    in_csa != state->in_csa) {
+		|		state->ctx.job = 1;
+		|		state->underflow = underflow;
+		|		state->overflow = overflow;
+		|		state->in_csa = in_csa;;
+		|		next_trigger(5, SC_NS);
+		|	}
+		|		
+		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XMPCADD", PartModel("XMPCADD", XMPCADD))
+    part_lib.add_part("XSEQ52CSA", PartModel("XSEQ52CSA", XSEQ52CSA))

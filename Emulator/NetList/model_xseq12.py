@@ -105,12 +105,16 @@ class XSEQ12(PartFactory):
 		|		PIN_SAVE<=(!(intreads1 && intreads2));
 		|	}
 		|	if (PIN_TCLK.posedge()) {
-		|		BUS_TYP_READ(state->tosof);
+		|		unsigned typ;
+		|		BUS_TYP_READ(typ);
+		|		state->tosof = (typ >> 7) & 0xfffff;
 		|	}
 		|	unsigned offs;
 		|	if (uses_tos) {
 		|		if (PIN_TOSS=>) {
-		|			BUS_TYP_READ(offs);
+		|			unsigned typ;
+		|			BUS_TYP_READ(typ);
+		|			offs = (typ >> 7) & 0xfffff;
 		|		} else {
 		|			offs = state->tosof;
 		|		}
@@ -118,7 +122,9 @@ class XSEQ12(PartFactory):
 		|		unsigned res_adr;
 		|		BUS_RADR_READ(res_adr);
 		|		if (PIN_RWE.posedge()) {
-		|			BUS_TYP_READ(offs);
+		|			unsigned typ;
+		|			BUS_TYP_READ(typ);
+		|			offs = (typ >> 7) & 0xfffff;
 		|			state->tosram[res_adr] = offs;
 		|		} else {
 		|			offs = state->tosram[res_adr];
