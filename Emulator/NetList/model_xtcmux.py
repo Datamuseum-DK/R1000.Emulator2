@@ -29,15 +29,15 @@
 # SUCH DAMAGE.
 
 '''
-   VAL C-bus mux
+   TYP C-bus mux
    =============
 
 '''
 
 from part import PartModel, PartFactory
 
-class XVCMUX(PartFactory):
-    ''' VAL C-bus mux '''
+class XTCMUX(PartFactory):
+    ''' TYP C-bus mux '''
 
     def state(self, file):
  
@@ -65,22 +65,10 @@ class XVCMUX(PartFactory):
 		|		BUS_C_WRITE(state->c);
 		|		state->ctx.job = 0;
 		|	}
+		|
 		|	uint64_t c = 0;
 		|	uint64_t fiu = 0, alu = 0, wdr = 0;
 		|	bool fiu_valid = false, alu_valid = false, wdr_valid = false;
-		|	bool sel0 = PIN_SEL0=>;
-		|	bool sel1 = PIN_SEL1=> || !PIN_FPA=>;
-		|	bool diag_mux_sel = PIN_DGMS=>;
-		|	bool cm_diag_on = PIN_DGCO=>;
-		|	bool hilo = 
-		|		(diag_mux_sel && sel0) ||
-		|		(diag_mux_sel && !cm_diag_on);
-		|	bool c_source = PIN_CSRC=>;
-		|	bool split_c_src = PIN_CSPL=>;
-		|	bool efiu0 = cm_diag_on && !c_source;
-		|	bool efiu1 = cm_diag_on && (c_source != split_c_src);
-		|	bool chi = false;
-		|	bool clo = false;
 		|
 		|	if (!PIN_OE=>) {
 		|		unsigned adr;
@@ -94,24 +82,28 @@ class XVCMUX(PartFactory):
 		|		return;
 		|	}
 		|
-		|	if (efiu0) {
+		|	bool fiu0, fiu1;
+		|	if (!PIN_DGCM=>) {
+		|		fiu0 = true;
+		|		fiu1 = true;
+		|	} else {
+		|		bool c_source = PIN_CSRC=>;
+		|		fiu0 = c_source;
+		|		fiu1 = c_source == PIN_CSPL=>;
+		|	}
+		|
+		|	bool sel = PIN_SEL=>;
+		|	bool chi = false;
+		|	bool clo = false;
+		|
+		|	if (!fiu0) {
 		|		BUS_FIU_READ(fiu);
 		|		fiu ^= BUS_FIU_MASK;
 		|		fiu_valid = true;
 		|		c |= fiu & 0xffffffff00000000ULL;
 		|		chi = true;
-		|	} else if (!hilo) {
-		|		BUS_ALU_READ(alu);
-		|		alu_valid = true;
-		|		if (sel1) {
-		|			c |= (alu >> 16) & 0xffffffff00000000ULL;
-		|			c |= 0xffff000000000000ULL;
-		|		} else {
-		|			c |= (alu << 1) & 0xffffffff00000000ULL;
-		|		}
-		|		chi = true;
 		|	} else {
-		|		if (sel1) {
+		|		if (sel) {
 		|			BUS_WDR_READ(wdr);
 		|			wdr_valid = true;
 		|			c |= wdr & 0xffffffff00000000ULL;
@@ -122,33 +114,15 @@ class XVCMUX(PartFactory):
 		|		}
 		|		chi = true;
 		|	}
-		|	if (efiu1) {
+		|	if (!fiu1) {
 		|		if (!fiu_valid) {
 		|			BUS_FIU_READ(fiu);
 		|			fiu ^= BUS_FIU_MASK;
 		|		}
-		|		c |= fiu & 0xfffffffeULL;
-		|		unsigned csel;
-		|		BUS_CSEL_READ(csel);
-		|		if (csel == 7) {
-		|			c |= fiu & 0x1ULL;
-		|		} else {
-		|			unsigned cond = PIN_COND=>;
-		|			c |= cond & 1;
-		|		}
-		|		clo = true;
-		|	} else if (!hilo) {
-		|		if (!alu_valid)
-		|			BUS_ALU_READ(alu);
-		|		if (sel1) {
-		|			c |= (alu >> 16) & 0xffffffffULL;
-		|		} else {
-		|			c |= (alu << 1) & 0xffffffffULL;
-		|			c |= 1;
-		|		}
+		|		c |= fiu & 0xffffffffULL;
 		|		clo = true;
 		|	} else {
-		|		if (sel1) {
+		|		if (sel) {
 		|			if (!wdr_valid)
 		|				BUS_WDR_READ(wdr);
 		|			c |= wdr & 0xffffffffULL;
@@ -173,14 +147,12 @@ class XVCMUX(PartFactory):
 		|		state->c = c;
 		|		next_trigger(5, SC_NS);
 		|	}
+		|
 		|	TRACE(
-		|	    << " sel0 " << PIN_SEL0?
-		|	    << " sel1 " << PIN_SEL1?
+		|	    << " sel " << PIN_SEL?
 		|	    << " csrc " << PIN_CSRC?
 		|	    << " cspl " << PIN_CSPL?
-		|	    << " dgms " << PIN_DGMS?
-		|	    << " dgco " << PIN_DGCO?
-		|	    << " fpa " << PIN_FPA?
+		|	    << " dgcm " << PIN_DGCM?
 		|	    << " fiu " << BUS_FIU_TRACE()
 		|	    << " wdr " << BUS_WDR_TRACE()
 		|	    << " alu " << BUS_ALU_TRACE()
@@ -191,4 +163,4 @@ class XVCMUX(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XVCMUX", PartModel("XVCMUX", XVCMUX))
+    part_lib.add_part("XTCMUX", PartModel("XTCMUX", XTCMUX))

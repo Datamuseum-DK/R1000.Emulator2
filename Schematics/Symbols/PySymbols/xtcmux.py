@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
 
-''' VAL C-bus mux '''
+''' TYP C-bus mux '''
 
 from chip import Chip, FChip, ChipSig
 
-class XVCMUX(FChip):
+class XTCMUX(FChip):
 
-    ''' VAL C-bus mux '''
+    ''' TYP C-bus mux '''
 
-    symbol_name = "XVCMUX"
+    symbol_name = "XTCMUX"
 
     def __init__(self):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "FIU", 0, 63))
         self.sig_left(ChipSig("-->+", "ALU", 0, 63))
-        self.sig_left(ChipSig("-->+", "SEL", 0, 1))
+        self.sig_left(ChipSig("-->+", "SEL"))
+        #self.sig_left(ChipSig("-->+", "MOE0"))
+        #self.sig_left(ChipSig("-->+", "MOE1"))
+        #self.sig_left(ChipSig("-->+", "FOE0"))
+        #self.sig_left(ChipSig("-->+", "FOE1"))
         self.sig_left(ChipSig("-->+", "CSRC"))
         self.sig_left(ChipSig("-->+", "CSPL"))
-        self.sig_left(ChipSig("-->+", "DGMS"))
-        self.sig_left(ChipSig("-->+", "DGCO"))
-        self.sig_left(ChipSig("-->+", "FPA"))
+        self.sig_left(ChipSig("-->+", "DGCM"))
 
         self.sig_right(ChipSig("+-->", "C", 0, 63))
         self.sig_right(ChipSig("+<--", "WDR", 0, 63))
-        self.sig_right(ChipSig("+<--", "COND"))
-        self.sig_right(ChipSig("+<--", "CSEL", 0, 2))
         self.sig_right(ChipSig("+<--", "OE"))
         self.sig_right(ChipSig("+<--", "WE"))
         self.sig_right(ChipSig("+<--", "A", 0, 9))
@@ -33,6 +33,6 @@ class XVCMUX(FChip):
         self.finish()
 
 def register():
-    yield XVCMUX()
+    yield XTCMUX()
 
 
