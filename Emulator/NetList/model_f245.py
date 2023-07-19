@@ -107,18 +107,12 @@ class ModelF245(PartModel):
 
                 Node(oe_net, buf_comp, Pin("OE", "OE", "input"))
 
-            if "TRACXCVAB" in str(buf_comp):
-                # uDIAG uaddr 272D if tri_state
-                ytype = "output"
-            else:
-                ytype = "tri_state"
-               
             for node in comp.nodes.values():
                 if suff[1] == node.pin.name[0]:
                     new_pin = Pin(
                         "Y" + node.pin.ident[1:],
                         "Y" + node.pin.name[1:],
-                        ytype,
+                        "tri_state",
                     )
                 elif suff[0] == node.pin.name[0]:
                     new_pin = Pin(
