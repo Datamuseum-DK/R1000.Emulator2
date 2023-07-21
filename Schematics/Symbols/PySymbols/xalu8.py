@@ -8,8 +8,10 @@ class XALUN(Chip):
 
     ''' N 74x181 - Arithmetic Logic Unit '''
 
-    def __init__(self, width):
+    def __init__(self, width, clocked=False):
         self.symbol_name = "XALU%d" % width
+        if clocked:
+            self.symbol_name += "C"
         right = [
             "   |%",
             " COo-->",
@@ -38,6 +40,11 @@ class XALUN(Chip):
             right.append("   |")
             right.append("   |%")
             right.append("MAG+<--")
+
+        if clocked:
+            right.append("   |")
+            right.append("   |%")
+            right.append("CLK+<--")
 
         left = [
             "   |   ",
@@ -84,3 +91,4 @@ def register():
     yield XALUN(20)
     yield XALUN(24)
     yield XALUN(32)
+    yield XALUN(32, True)

@@ -45,6 +45,13 @@ class XALU(PartFactory):
         file.include("Components/tables.h")
         super().extra(file)
 
+    def sensitive(self):
+        if 'CLK' in self.comp:
+            yield "PIN_CLK.pos()"
+            yield "PIN_CI"
+        else:
+            yield from super().sensitive()
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -118,3 +125,4 @@ def register(part_lib):
     part_lib.add_part("XALU20", PartModel("XALU20", XALU))
     part_lib.add_part("XALU24", PartModel("XALU20", XALU))
     part_lib.add_part("XALU32", PartModel("XALU32", XALU))
+    part_lib.add_part("XALU32C", PartModel("XALU32C", XALU))
