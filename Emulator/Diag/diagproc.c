@@ -386,7 +386,7 @@ DiagProcStep(struct diagproc *dp, struct diagproc_context *dctx)
 	assert(dctx != NULL);
 
 	if (dp->pin9_reset) {
-		Trace(trace_diagbus, "%s RST", dp->name);
+		// Trace(trace_diagbus, "%s RST", dp->name);
 		MCS51_Reset(dp->mcs51);
 		return;
 	}
