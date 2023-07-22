@@ -41,12 +41,17 @@ class XSEQ79(PartFactory):
     ''' XSEQ79 (Dual) D-Type Positive Edge-Triggered Flip-Flop '''
 
     def sensitive(self):
-        yield "PIN_C2EN.pos()"
+        yield "PIN_C2EN"
 
     def state(self, file):
         ''' Extra state variable '''
 
-        file.write("\tbool diag_enable;\n")
+        file.fmt('''
+		|	bool diag_enable;
+		|	bool aclk;
+		|	bool pclk;
+		|	bool lclk;
+		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -58,22 +63,47 @@ class XSEQ79(PartFactory):
 		|	if (state->ctx.job) {
 		|		state->ctx.job = 0;
 		|		PIN_DGET<=(state->diag_enable);
-		|		PIN_DGEF<=(!state->diag_enable);
+		|		PIN_ACLK<=(state->aclk);
+		|		PIN_PCLK<=(state->pclk);
+		|		PIN_LCLK<=(state->lclk);
 		|		return;
 		|	}
 		|
-		|	bool diag_enable = true;
+		|	bool diag_enable = state->diag_enable;
+		|	bool aclk = state->aclk;
+		|	bool pclk = state->pclk;
+		|	bool lclk = state->lclk;
 		|
 		|	if (PIN_C2EN.posedge()) {
+		|		diag_enable = true;
 		|		if (PIN_H1E=>) {
 		|			diag_enable = false;
 		|		} else if (PIN_DSTOP=>) {
 		|			diag_enable = false;
 		|		}
+		|		if (!PIN_DCLK=> && !PIN_SFSTP=>) {
+		|			aclk = false;
+		|		}
+		|		if (!PIN_PRDEC=> && !PIN_SFSTP=>) {
+		|			pclk = false;
+		|		}
+		|		if (diag_enable && !PIN_LCLKE=>) {
+		|			lclk = false;
+		|		}
+		|	} else if (PIN_C2EN.negedge()) {
+		|		aclk = true;
+		|		pclk = true;
+		|		lclk = true;
 		|	}
-		|	if (diag_enable != state->diag_enable) {
+		|	if (diag_enable != state->diag_enable ||
+		|	    aclk != state->aclk ||
+		|	    pclk != state->pclk ||
+		|	    lclk != state->lclk) {
 		|		state->ctx.job = 1;
 		|		state->diag_enable = diag_enable;
+		|		state->aclk = aclk;
+		|		state->pclk = pclk;
+		|		state->lclk = lclk;
 		|		next_trigger(5, SC_NS);
 		|	}
 		|''')

@@ -16,9 +16,15 @@ class XSEQ79(FChip):
         self.sig_left(ChipSig("-->+", "C2EN"))
         self.sig_left(ChipSig("-->+", "H1E"))
         self.sig_left(ChipSig("-->+", "DSTOP"))
+        self.sig_left(ChipSig("-->+", "DCLK"))
+        self.sig_left(ChipSig("-->+", "SFSTP"))
+        self.sig_left(ChipSig("-->+", "PRDEC"))
+        self.sig_left(ChipSig("-->+", "LCLKE"))
 
         self.sig_right(ChipSig("+-->", "DGET"))
-        self.sig_right(ChipSig("o-->", "DGEF"))
+        self.sig_right(ChipSig("+-->", "ACLK"))
+        self.sig_right(ChipSig("+-->", "PCLK"))
+        self.sig_right(ChipSig("+-->", "LCLK"))
 
         self.finish(22)
 
