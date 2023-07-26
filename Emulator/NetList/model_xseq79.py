@@ -51,6 +51,7 @@ class XSEQ79(PartFactory):
 		|	bool aclk;
 		|	bool pclk;
 		|	bool lclk;
+		|	bool bad_hint_en;
 		|''')
 
     def doit(self, file):
@@ -66,6 +67,7 @@ class XSEQ79(PartFactory):
 		|		PIN_ACLK<=(state->aclk);
 		|		PIN_PCLK<=(state->pclk);
 		|		PIN_LCLK<=(state->lclk);
+		|		PIN_BHEN<=(state->bad_hint_en);
 		|		return;
 		|	}
 		|
@@ -73,6 +75,9 @@ class XSEQ79(PartFactory):
 		|	bool aclk = state->aclk;
 		|	bool pclk = state->pclk;
 		|	bool lclk = state->lclk;
+		|
+		|	bool bad_hint_en = (PIN_DUADR=> && PIN_LLMC=> && PIN_BHNT=>);
+		|	bad_hint_en = !(bad_hint_en || PIN_UEVNT);
 		|
 		|	if (PIN_C2EN.posedge()) {
 		|		diag_enable = true;
@@ -96,11 +101,13 @@ class XSEQ79(PartFactory):
 		|		lclk = true;
 		|	}
 		|	if (diag_enable != state->diag_enable ||
+		|	    bad_hint_en != state->bad_hint_en ||
 		|	    aclk != state->aclk ||
 		|	    pclk != state->pclk ||
 		|	    lclk != state->lclk) {
 		|		state->ctx.job = 1;
 		|		state->diag_enable = diag_enable;
+		|		state->bad_hint_en = bad_hint_en;
 		|		state->aclk = aclk;
 		|		state->pclk = pclk;
 		|		state->lclk = lclk;
