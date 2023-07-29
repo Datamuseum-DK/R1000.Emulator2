@@ -13,7 +13,9 @@
 #include "Infra/context.h"
 #include "Infra/vend.h"
 
+#if defined(HAS_Z022)
 static uint64_t *fiu_wcs;
+#endif
 static unsigned fiu_ptr;
 
 static int
@@ -37,45 +39,55 @@ load_control_store_200_fiu(struct diagproc *dp)
                 inv = inp ^ ~0;
                 wcs = 0;
 
-		wcs <<= 1; wcs |= (inp >>  7) & 1; // 38
-		wcs <<= 1; wcs |= (inp >> 15) & 1; // 37
-		wcs <<= 1; wcs |= (inp >> 23) & 1; // 36
-		wcs <<= 1; wcs |= (inp >> 31) & 1; // 35
-		wcs <<= 1; wcs |= (inp >> 39) & 1; // 34
-		wcs <<= 1; wcs |= (inp >> 47) & 1; // 33
-		wcs <<= 1; wcs |= (inp >> 55) & 1; // 32
-		wcs <<= 1; wcs |= (inp >> 45) & 1; // 31
-		wcs <<= 1; wcs |= (inp >> 63) & 1; // 30
-		wcs <<= 1; wcs |= (inp >>  6) & 1; // 29
-		wcs <<= 1; wcs |= (inp >> 14) & 1; // 28
-		wcs <<= 1; wcs |= (inp >> 22) & 1; // 27
-		wcs <<= 1; wcs |= (inp >> 30) & 1; // 26
-		wcs <<= 1; wcs |= (inp >> 38) & 1; // 25
-		wcs <<= 1; wcs |= (inp >> 46) & 1; // 24
-		wcs <<= 1; wcs |= (inp >>  2) & 1; // 23
-		wcs <<= 1; wcs |= (inp >> 54) & 1; // 22
-		wcs <<= 1; wcs |= (inp >> 62) & 1; // 21
-		wcs <<= 1; wcs |= (inp >> 37) & 1; // 20
-		wcs <<= 1; wcs |= (inp >> 10) & 1; // 19
-		wcs <<= 1; wcs |= (inp >> 36) & 1; // 18
-		wcs <<= 1; wcs |= (inp >> 52) & 1; // 17
-		wcs <<= 1; wcs |= (inp >> 44) & 1; // 16
-		wcs <<= 1; wcs |= (inp >> 60) & 1; // 15
-		wcs <<= 1; wcs |= (inp >>  5) & 1; // 14
-		wcs <<= 1; wcs |= (inp >> 13) & 1; // 13
-		wcs <<= 1; wcs |= (inp >> 21) & 1; // 12
-		wcs <<= 1; wcs |= (inp >> 29) & 1; // 11
-		wcs <<= 1; wcs |= (inp >>  4) & 1; // 10
-		wcs <<= 1; wcs |= (inp >> 12) & 1; // 9
-		wcs <<= 1; wcs |= (inp >> 20) & 1; // 8
-		wcs <<= 1; wcs |= (inp >> 28) & 1; // 7
-		wcs <<= 1; wcs |= (inp >>  3) & 1; // 6
-		wcs <<= 1; wcs |= (inp >> 11) & 1; // 5
-		wcs <<= 1; wcs |= (inp >> 19) & 1; // 4
-		wcs <<= 1; wcs |= (inp >> 27) & 1; // 3
-		wcs <<= 1; wcs |= (inp >> 35) & 1; // 2
-		wcs <<= 1; wcs |= (inp >> 43) & 1; // 1
-		wcs <<= 1; wcs |= (inp >> 59) & 1; // 0
+                wcs <<= 1; wcs |= (inp >>  7) & 1; // 46
+                wcs <<= 1; wcs |= (inp >> 15) & 1; // 45
+                wcs <<= 1; wcs |= (inp >> 23) & 1; // 44
+                wcs <<= 1; wcs |= (inp >> 31) & 1; // 43
+                wcs <<= 1; wcs |= (inp >> 39) & 1; // 42
+                wcs <<= 1; wcs |= (inp >> 47) & 1; // 41
+                wcs <<= 1; wcs |= (inp >> 55) & 1; // 40
+                wcs <<= 1; wcs |= (inp >>  0) & 0; // 39
+                wcs <<= 1; wcs |= (inp >> 63) & 1; // 38
+                wcs <<= 1; wcs |= (inp >>  6) & 1; // 37
+                wcs <<= 1; wcs |= (inp >> 14) & 1; // 36
+                wcs <<= 1; wcs |= (inp >> 22) & 1; // 35
+                wcs <<= 1; wcs |= (inp >> 30) & 1; // 34
+                wcs <<= 1; wcs |= (inp >> 38) & 1; // 33
+                wcs <<= 1; wcs |= (inp >> 46) & 1; // 32
+                wcs <<= 1; wcs |= (inp >> 54) & 1; // 31
+                wcs <<= 1; wcs |= (inp >> 62) & 1; // 30
+                wcs <<= 1; wcs |= (inp >>  5) & 1; // 29
+                wcs <<= 1; wcs |= (inp >> 13) & 1; // 28
+                wcs <<= 1; wcs |= (inp >> 21) & 1; // 27
+                wcs <<= 1; wcs |= (inp >> 29) & 1; // 26
+                wcs <<= 1; wcs |= (inp >> 37) & 1; // 25
+                wcs <<= 1; wcs |= (inp >> 45) & 1; // 24
+                wcs <<= 1; wcs |= (inp >>  4) & 1; // 23
+                wcs <<= 1; wcs |= (inp >> 12) & 1; // 22
+                wcs <<= 1; wcs |= (inp >> 20) & 1; // 21
+                wcs <<= 1; wcs |= (inp >> 28) & 1; // 20
+                wcs <<= 1; wcs |= (inp >> 36) & 1; // 19
+                wcs <<= 1; wcs |= (inp >> 44) & 1; // 18
+                wcs <<= 1; wcs |= (inp >> 52) & 1; // 17
+                wcs <<= 1; wcs |= (inp >> 60) & 1; // 16
+                wcs <<= 1; wcs |= (inp >>  0) & 0; // 15
+                wcs <<= 1; wcs |= (inp >>  3) & 1; // 14
+                wcs <<= 1; wcs |= (inp >> 11) & 1; // 13
+                wcs <<= 1; wcs |= (inp >> 19) & 1; // 12
+                wcs <<= 1; wcs |= (inp >> 27) & 1; // 11
+                wcs <<= 1; wcs |= (inp >> 35) & 1; // 10
+                wcs <<= 1; wcs |= (inp >> 43) & 1; //  9
+                wcs <<= 1; wcs |= (inp >> 59) & 1; //  8
+                wcs <<= 1; wcs |= (inp >>  0) & 0; //  7
+                wcs <<= 1; wcs |= (inp >>  0) & 0; //  6
+                wcs <<= 1; wcs |= (inp >>  0) & 0; //  5
+                wcs <<= 1; wcs |= (inp >>  0) & 0; //  4
+                wcs <<= 1; wcs |= (inp >>  0) & 0; //  3
+                wcs <<= 1; wcs |= (inp >>  0) & 0; //  2
+                wcs <<= 1; wcs |= (inp >>  2) & 1; //  1
+                wcs <<= 1; wcs |= (inp >> 10) & 1; //  0
+
+
 		fiu_wcs[fiu_ptr++] = wcs;
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.FIU");
