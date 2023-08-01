@@ -13,7 +13,9 @@
 #include "Infra/context.h"
 #include "Infra/vend.h"
 
+#if defined(HAS_Z023)
 static uint64_t *ioc_wcs;
+#endif
 static unsigned ioc_ptr;
 
 static int
