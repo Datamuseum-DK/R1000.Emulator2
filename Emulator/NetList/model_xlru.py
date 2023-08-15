@@ -231,15 +231,8 @@ class XLRU(PartFactory):
 		|		    ((!p_tag_57) &&   p_tag_56  &&   p_force_hit  && (!p_mcyc1) && cmd == 0xc);
 		|		bool out_soil_q =
 		|		    ((!p_tag_51) && (!p_mcyc1) && cmd == 0xd);
-		|		bool out_lpar_q =
-		|		    ((!p_tag_55) &&   p_tag_54  &&   p_tag_53  &&   p_tag_52 ) ||
-		|		    (  p_tag_55  && (!p_tag_54) &&   p_tag_53  &&   p_tag_52 ) ||
-		|		    (  p_tag_55  &&   p_tag_54  && (!p_tag_53) &&   p_tag_52 ) ||
-		|		    (  p_tag_55  &&   p_tag_54  &&   p_tag_53  && (!p_tag_52)) ||
-		|		    ((!p_tag_55) && (!p_tag_54) && (!p_tag_53) &&   p_tag_52 ) ||
-		|		    ((!p_tag_55) && (!p_tag_54) &&   p_tag_53  && (!p_tag_52)) ||
-		|		    ((!p_tag_55) &&   p_tag_54  && (!p_tag_53) && (!p_tag_52)) ||
-		|		    (  p_tag_55  && (!p_tag_54) && (!p_tag_53) && (!p_tag_52));
+		|
+		|		bool out_lpar_q = p_tag_52 ^ p_tag_53 ^ p_tag_54 ^ p_tag_55;
 		|
 		|		state->qhit = out_hitq;
 		|		state->qlog = out_logq;

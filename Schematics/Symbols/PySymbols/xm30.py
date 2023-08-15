@@ -22,6 +22,7 @@ class XM30(FChip):
         self.sig_left(ChipSig("-->+", "BHIT"))
         self.sig_left(ChipSig("-->+", "LAB"))
         self.sig_left(ChipSig("-->+", "DDA"))
+        self.sig_left(ChipSig("-->+", "SETB"))
 
         self.sig_right(ChipSig("+-->", "RAS"))
         self.sig_right(ChipSig("+-->", "CASA"))
@@ -31,6 +32,11 @@ class XM30(FChip):
         self.sig_right(ChipSig("+-->", "TAGW"))
         self.sig_right(ChipSig("+-->", "RAOE"))
         self.sig_right(ChipSig("+-->", "CAOE"))
+
+        self.sig_right(ChipSig("+-->", "TRCE"))
+        self.sig_right(ChipSig("+-->", "VACE"))
+        self.sig_right(ChipSig("+-->", "VBCE"))
+        self.sig_right(ChipSig("+-->", "VPCE"))
 
         self.finish()
 

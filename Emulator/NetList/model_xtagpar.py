@@ -65,24 +65,12 @@ class XTAGPAR(PartFactory):
 		|	BUS_TSPR_READ(tspr);
 		|	if (pos && tspr) {
 		|		if (tspr == 3) {
-		|#if 0
-		|			if (!oee) {
-		|				state->sr = state->ae << 8;
-		|				state->sr |= state->be;
-		|			} else if (!oel) {
-		|				state->sr = state->al << 8;
-		|				state->sr |= state->bl;
-		|			} else {
-		|				state->sr = 0xffff;
-		|			}
-		|#else
 		|			state->sr = state->la << 8;
 		|			state->sr |= state->lb;
-		|#endif
-		|		} else if (tspr == 1) {
+		|		} else if (tspr == 2) {
 		|			state->sr >>= 1;
 		|			state->sr |= PIN_DIAG=> << 15;
-		|		} else if (tspr == 2) {
+		|		} else if (tspr == 1) {
 		|			state->sr <<= 1;
 		|			state->sr &= 0xf7f7;
 		|		}

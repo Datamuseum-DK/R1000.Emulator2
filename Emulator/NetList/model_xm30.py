@@ -42,6 +42,10 @@ class XM30(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	bool awe, nameq, row_adr_oe, col_adr_oe, tag_write, ras, cas_a, cas_b;
+		|	bool vpdr;
+		|	bool vbdr;
+		|	bool vadr;
+		|	bool trdr;
 		|''')
 
     def sensitive(self):
@@ -61,6 +65,10 @@ class XM30(PartFactory):
 		|		PIN_RAOE<=(state->row_adr_oe);
 		|		PIN_CAOE<=(state->col_adr_oe);
 		|		PIN_TAGW<=(state->tag_write);
+		|		PIN_TRCE<=(state->trdr);
+		|		PIN_VACE<=(state->vadr);
+		|		PIN_VBCE<=(state->vbdr);
+		|		PIN_VPCE<=(state->vpdr);
 		|		if (state->ctx.job & 2)
 		|			next_trigger(30, SC_NS);
 		|		return;
@@ -83,6 +91,7 @@ class XM30(PartFactory):
 		|		bool bhit = PIN_BHIT=>;
 		|		bool late_abort = PIN_LAB=>;
 		|		bool d_dis_adr = PIN_DDA=>;
+		|		bool set_b = PIN_SETB=>;
 		|
 		|		bool ras = !(
 		|		    ((cmd == 0x9 || cmd == 0xb) && !mcyc2_next) ||
@@ -122,12 +131,43 @@ class XM30(PartFactory):
 		|			state->cas_a = cas_a;
 		|			state->cas_b = cas_b;
 		|		}
+		|
+		|		bool trdr =
+		|		    !(
+		|		        (cmd == 0xc && !h1  && (!mcyc2_next)) ||
+		|		        (cmd == 0xe && !h1  && (!mcyc2_next)) ||
+		|		        (cmd == 0x5 && !h1 )
+		|		    );
+		|		bool vadr =
+		|		    !(
+		|		        (cmd == 0xe && !h1  && (!mcyc2_next)) ||
+		|		        (cmd == 0x6 && !h1  && (!mcyc2_next) &&   set_b ) ||
+		|		        (cmd == 0xc && !h1  && (!mcyc2_next)) ||
+		|		        (cmd == 0x5 && !h1 )
+		|		    );
+		|		bool vbdr =
+		|		    !(
+		|		        (cmd == 0xe && !h1  && (!mcyc2_next)) ||
+		|		        (cmd == 0x6 && !h1  && (!mcyc2_next) && (!set_b)) ||
+		|		        (cmd == 0xc && !h1  && (!mcyc2_next)) ||
+		|		        (cmd == 0x5 && !h1 )
+		|		    );
+		|		bool vpdr =
+		|		    !(
+		|		        (cmd == 0x6 && !h1  && (!mcyc2_next)) ||
+		|		        (cmd == 0x5 && !h1 )
+		|		    );
+		|
 		|		if (
 		|		    awe != state->awe ||
 		|		    nameq != state->nameq ||
 		|		    row_adr_oe != state->row_adr_oe ||
 		|		    col_adr_oe != state->col_adr_oe ||
-		|		    tag_write != state->tag_write
+		|		    tag_write != state->tag_write ||
+		|		    trdr != state->trdr ||
+		|		    vadr != state->vadr ||
+		|		    vbdr != state->vbdr ||
+		|		    vpdr != state->vpdr
 		|		) {
 		|			state->ctx.job |= 1;
 		|			state->awe = awe;
@@ -135,6 +175,10 @@ class XM30(PartFactory):
 		|			state->row_adr_oe = row_adr_oe;
 		|			state->col_adr_oe = col_adr_oe;
 		|			state->tag_write = tag_write;
+		|			state->trdr = trdr;
+		|			state->vadr = vadr;
+		|			state->vbdr = vbdr;
+		|			state->vpdr = vpdr;
 		|		}
 		|		if (state->ctx.job & 1)
 		|			next_trigger(5, SC_NS);
