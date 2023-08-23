@@ -69,7 +69,6 @@ class XNXTUADR(PartFactory):
 		|	if (PIN_FIU_CLK.posedge()) {
 		|		BUS_FIU_READ(state->fiu);
 		|		state->fiu &= 0x3fff;
-		|		state->fiu ^= 0x3fff;
 		|	}	
 		|
 		|	if (PIN_LOCAL_CLK.posedge()) {

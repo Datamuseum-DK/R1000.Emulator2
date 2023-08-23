@@ -50,6 +50,12 @@ class XEQ(PartFactory):
         if "CONST" in self.name:
             file.write('\tstate->const_b = strtoul(arg, NULL, 16);\n')
 
+    def sensitive(self):
+        if "X521" in self.name:
+           yield "PIN_C.pos()"
+        else:
+           yield from super().sensitive()
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -96,8 +102,8 @@ class ModelXeq(PartModel):
     def assign(self, comp, part_lib):
 
         # Eliminate PIN_E if pulled down
-        node_e = comp.nodes["E"]
-        if node_e.net.is_pd():
+        node_e = comp.nodes.get("E")
+        if node_e and node_e.net.is_pd():
             node_e.remove()
 
         # Eliminate constant, identical A-B pairs
@@ -161,6 +167,7 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("F521", ModelXeq("F521", XEQ))
+    part_lib.add_part("X521", ModelXeq("X521", XEQ))
     part_lib.add_part("XEQ9", ModelXeq("XEQ9", XEQ))
     part_lib.add_part("XEQ16", ModelXeq("XEQ16", XEQ))
     part_lib.add_part("XEQ20", ModelXeq("XEQ20", XEQ))

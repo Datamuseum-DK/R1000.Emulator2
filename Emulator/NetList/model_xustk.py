@@ -73,7 +73,6 @@ class XUSTK(PartFactory):
 		|				break;
 		|			case 1:
 		|				BUS_FIU_READ(state->topu);
-		|				state->topu ^= BUS_TOPU_MASK;
 		|				what = "1";
 		|				break;
 		|			case 2:

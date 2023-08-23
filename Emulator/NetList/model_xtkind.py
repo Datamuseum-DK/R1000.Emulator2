@@ -29,20 +29,18 @@
 # SUCH DAMAGE.
 
 '''
-   TYP Privacy Comparator
-   ======================
+   TYP Kind Matching
+   =================
 
 '''
 
 from part import PartModel, PartFactory
 
-class XPRIVCMP(PartFactory):
-    ''' TYP Privacy Comparator '''
+class XTKIND(PartFactory):
+    ''' TYP Kind Matching '''
 
     def state(self, file):
         file.fmt('''
-		|	bool names, path, aop, bop, iop;
-		|	uint64_t ofreg;
 		|	bool okm;
 		|	bool aeql;
 		|	bool aeqb;
@@ -51,8 +49,6 @@ class XPRIVCMP(PartFactory):
 		|	bool clce;
 		|	bool clev;
 		|	bool sysu;
-		|	unsigned bbit;
-		|	unsigned bbuf;
 		|	uint8_t prom[512];
 		|''')
 
@@ -64,12 +60,6 @@ class XPRIVCMP(PartFactory):
 		|''')
         super().init(file)
 
-    def sensitive(self):
-        yield "BUS_A_SENSITIVE()"
-        yield "BUS_B_SENSITIVE()"
-        yield "BUS_CLIT_SENSITIVE()"
-        yield "BUS_UCOD_SENSITIVE()"
-        yield "PIN_OFC.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -79,11 +69,6 @@ class XPRIVCMP(PartFactory):
         file.fmt('''
 		|	if (state->ctx.job) {
 		|		state->ctx.job = 0;
-		|		PIN_NAMES<=(state->names);
-		|		PIN_PATH<=(state->path);
-		|		PIN_AOP<=(state->aop);
-		|		PIN_BOP<=(state->bop);
-		|		PIN_IOP<=(state->iop);
 		|		PIN_OKM<=(state->okm);
 		|		PIN_AEQL<=(state->aeql);
 		|		PIN_BEQL<=(state->beql);
@@ -92,71 +77,36 @@ class XPRIVCMP(PartFactory):
 		|		PIN_CLCE<=(state->clce);
 		|		PIN_CLEV<=(state->clev);
 		|		PIN_SYSU<=(state->sysu);
-		|		BUS_BBIT_WRITE(state->bbit);
-		|		BUS_BBUF_WRITE(state->bbuf);
 		|	}
-		|	uint64_t a, b;
-		|	bool names, tmp, path;
-		|	bool aop, bop, iop;
-		|	bool a34, a35, b34, b35, dp;
 		|
+		|	unsigned a, b, l, uc;
 		|	BUS_A_READ(a);
 		|	BUS_B_READ(b);
-		|	names = (a >> 32) == (b >> 32);
-		|	tmp = ((a >> 7) & 0xfffff) == ((b >> 7) & 0xfffff);
-		|	path = !(tmp && names);
-		|#define BITN(x, n) ((x >> (63 - n)) & 1)
-		|	a34 = BITN(a, 34);
-		|	a35 = BITN(a, 35);
-		|	b34 = BITN(b, 34);
-		|	b35 = BITN(b, 35);
-		|	dp = !(a35 && b35);
-		|
-		|	if (PIN_OFC.posedge()) {
-		|		state->ofreg = b >> 32;
-		|	}		
-		|
-		|	bool aopm = (a >> 32) == state->ofreg;
-		|	bool bopm = (b >> 32) == state->ofreg;
-		|	bool abim = !(!aopm | dp);
-		|	bool bbim = !(!bopm | dp);
-		|
-		|	aop = !(a35 && (aopm || a34));
-		|	bop = !(b35 && (bopm || b34));
-		|
-		|	iop = !(
-		|		(abim && bbim) ||
-		|		(bbim && a34) ||
-		|		(abim && b34) ||
-		|		(a34 && a35 && b34 && b35)
-		|	);
-		|
-		|	unsigned l, ucod;
 		|	BUS_CLIT_READ(l);
-		|	BUS_UCOD_READ(ucod);
+		|	BUS_UC_READ(uc);
 		|
-		|	bool aeql = (a & 0x7f) != l;
-		|	bool aeqb = (a & 0x7f) != (b & 0x7f);
-		|	bool beql = (b & 0x7f) != l;
+		|	bool aeql = a != l;
+		|	bool aeqb = a != b;
+		|	bool beql = b != l;
 		|	bool able = !(aeql | aeqb);
 		|
 		|	unsigned mask_a = state->prom[l] >> 1;
 		|	unsigned okpat_a = state->prom[l + 256] >> 1;
-		|	bool oka = (0x7f ^ (mask_a & (b & 0x7f))) != okpat_a;
+		|	bool oka = (0x7f ^ (mask_a & b)) != okpat_a;
 		|
 		|	unsigned mask_b = state->prom[l + 128] >> 1;
 		|	unsigned okpat_b = state->prom[l + 384] >> 1;
-		|	bool okb = (0x7f ^ (mask_b & (b & 0x7f))) != okpat_b;
+		|	bool okb = (0x7f ^ (mask_b & b)) != okpat_b;
 		|
 		|	bool okm = !(oka & okb);
 		|
-		|	bool clce = (ucod >> 1) != 0xf;
+		|	bool clce = (uc >> 1) != 0xf;
 		|
-		|	bool ucatol = (ucod >> 4) & 1;
-		|	bool ucatob = (ucod >> 3) & 1;
-		|	bool ucbtol = (ucod >> 2) & 1;
-		|	bool ucabl = (ucod >> 1) & 1;
-		|	bool clsysb = (ucod >> 0) & 1;
+		|	bool ucatol = (uc >> 4) & 1;
+		|	bool ucatob = (uc >> 3) & 1;
+		|	bool ucbtol = (uc >> 2) & 1;
+		|	bool ucabl = (uc >> 1) & 1;
+		|	bool clsysb = (uc >> 0) & 1;
 		|	bool clev = !(
 		|	    (!ucatol & !aeql) ||
 		|	    (!ucatob & !aeqb) ||
@@ -165,50 +115,15 @@ class XPRIVCMP(PartFactory):
 		|	);
 		|	bool sysu = !(clsysb | !beql);
 		|
-		|	unsigned bbit = 0;
-		|	bbit |= ((b >> BUS_B_LSB(0)) & 1) << 6;
-		|	bbit |= ((b >> BUS_B_LSB(21)) & 1) << 5;
-		|	bbit |= ((b >> BUS_B_LSB(36)) & 0x1f) << 0;
-		|
-		|	unsigned bbuf = b & 7;
-		|
-		|	TRACE(
-		|	    << " a " << BUS_A_TRACE()
-		|	    << " b " << BUS_B_TRACE()
-		|	    << " a34 " << a34
-		|	    << " a35 " << a35
-		|	    << " b34 " << b34
-		|	    << " b35 " << b35
-		|	    << " - n " << names
-		|	    << " p " << path
-		|	    << " a " << aop
-		|	    << " b " << bop
-		|	    << " i " << iop
-		|	    << " d " << dp
-		|	);
-		|
-		|	if (names != state->names ||
-		|	    path != state->path ||
-		|	    aop != state->aop ||
-		|	    bop != state->bop ||
-		|	    iop != state->iop ||
-		|	    aeql != state->aeql ||
+		|	if (aeql != state->aeql ||
 		|	    aeqb != state->aeqb ||
 		|	    beql != state->beql ||
 		|	    able != state->able ||
 		|	    okm != state->okm ||
 		|	    clce != state->clce ||
 		|	    clev != state->clev ||
-		|	    sysu != state->sysu ||
-		|	    bbit != state->bbit ||
-		|	    bbuf != state->bbuf
+		|	    sysu != state->sysu
 		|	) {
-		|		state->ctx.job = 1;
-		|		state->names = names;
-		|		state->path = path;
-		|		state->aop = aop;
-		|		state->bop = bop;
-		|		state->iop = iop;
 		|		state->aeql = aeql;
 		|		state->aeqb = aeqb;
 		|		state->beql = beql;
@@ -217,13 +132,13 @@ class XPRIVCMP(PartFactory):
 		|		state->clce = clce;
 		|		state->clev = clev;
 		|		state->sysu = sysu;
-		|		state->bbit = bbit;
-		|		state->bbuf = bbuf;
+		|		state->ctx.job = 1;
 		|		next_trigger(5, SC_NS);
 		|	}
+		|	
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XPRIVCMP", PartModel("XPRIVCMP", XPRIVCMP))
+    part_lib.add_part("XTKIND", PartModel("XTKIND", XTKIND))
