@@ -21,6 +21,14 @@ OPTIMIZE ?= -O2
 # You should not need to touch anything below this line
 all:	r1000sim
 
+bus:
+	sed -i '' 's/^USE_MUXBUS.*/USE_MUXBUS = True/' NetList/pass_net_config.py
+	${MAKE} r1000sim
+
+nobus:
+	sed -i '' 's/^USE_MUXBUS.*/USE_MUXBUS = False/' NetList/pass_net_config.py
+	${MAKE} r1000sim
+
 .PHONY: r1000sim
 
 r1000sim:
