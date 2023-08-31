@@ -47,7 +47,7 @@ class XFIUWCS(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_UCLK.pos()"
+        yield "PIN_CLK.pos()"
         yield "PIN_WE.pos()"
         yield "PIN_SUIR"
         yield "BUS_UAD_SENSITIVE()"
@@ -104,6 +104,9 @@ class XFIUWCS(PartFactory):
 		|	MX(46, state->ff5, 0, 0) /* LENGTH_SRC */ \\
 		|	MX(47, state->ff5, 1, 0) /* OFFS_SRC */ \\
 		|
+		|#ifndef BUS_UIR_LSB
+		|#  define BUS_UIR_LSB(lsb) (47 - (lsb))
+		|#endif
 		|
 		|#define WCS2SR(wcsbit, srnam, srbit, inv) \\
 		|	srnam |= ((state->wcs >> BUS_UIR_LSB(wcsbit)) & 1) << (7 - srbit);
@@ -130,9 +133,25 @@ class XFIUWCS(PartFactory):
 		|		PERMUTE(SR2WCS); \\
 		|	} while (0)
 		|
-		|	if (state->ctx.job) {
+		|	if (state->ctx.job == 1) {
 		|		state->ctx.job = 0;
-		|		BUS_UIR_WRITE(state->wcs);
+		|
+		|		BUS_OFSL_WRITE(state->wcs >> 40);
+		|		BUS_LFL_WRITE(state->wcs >> 32);
+		|		BUS_LFCN_WRITE(state->wcs >> 30);
+		|		BUS_OPSL_WRITE(state->wcs >> 28);
+		|		BUS_VMSL_WRITE(state->wcs >> 26);
+		|		PIN_FILL<=((state->wcs >> 25) & 1);
+		|		PIN_OSRC<=((state->wcs >> 24) & 1);
+		|		BUS_TIVI_WRITE(state->wcs >> 20);
+		|		PIN_LDO<=((state->wcs >> 19) & 1);
+		|		PIN_LDV<=((state->wcs >> 18) & 1);
+		|		PIN_LDT<=((state->wcs >> 17) & 1);
+		|		PIN_LDM<=((state->wcs >> 16) & 1);
+		|		BUS_MSTR_WRITE(state->wcs >> 10);
+		|		PIN_RSRC<=((state->wcs >> 9) & 1);
+		|		PIN_LSRC<=((state->wcs >> 1) & 1);
+		|		PIN_OFSRC<=((state->wcs >> 0) & 1);
 		|
 		|		uint64_t par;
 		|		par = state->wcs & 0x7f7fffff7f03;
@@ -167,14 +186,13 @@ class XFIUWCS(PartFactory):
 		|
 		|	PIN_APER<=(!pa && !pb);
 		|
-		|	if (PIN_UCLK.posedge() && !PIN_CKEN=> && !PIN_SFST=>) {
+		|	if (PIN_CLK.posedge() && !PIN_CKEN=> && !PIN_SFST=>) {
 		|		if (PIN_MODE=>) {
 		|			state->wcs = state->ram[state->addr];
 		|			PERMUTE(INVM);
 		|		} else {
 		|			unsigned diag;
 		|			BUS_DGI_READ(diag);
-		|			TRACE(<< " before " << std::hex << state->wcs << " sr0 " << state->sr0 << " diag " << diag);
 		|			TOSR();
 		|			state->sr0 >>= 1;
 		|			state->sr0 |= ((diag >> 7) & 1) << 7;
@@ -190,8 +208,12 @@ class XFIUWCS(PartFactory):
 		|			state->ff5 |= ((diag >> 2) & 1) << 7;
 		|			
 		|			TOWCS();
-		|			TRACE(<< " after " << std::hex << state->wcs << " sr0 " << state->sr0 << " diag " << diag);
 		|		}
+		|		TRACE(
+		|		    << " mode " << PIN_MODE
+		|		    << " diag " << BUS_DGI_TRACE()
+		|		    << " wcs " << std::hex << state->wcs
+		|		);
 		|		state->ctx.job = 1;
 		|		next_trigger(5, SC_NS);
 		|	}
