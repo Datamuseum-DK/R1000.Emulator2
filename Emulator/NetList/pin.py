@@ -139,6 +139,7 @@ class PinBus():
         self.low = low
         self.pins = []
         self.width = 0
+        self.oe = None
 
     def __repr__(self):
         return "_".join(("PinBus", self.name, str(self.low), str(len(self.pins))))

@@ -151,7 +151,7 @@ class MuxBus():
 
             busgroups.append(nets)
 
-            oenode = comp["OE"]
+            oenode = comp[pinbus.oe]
             pin3 = self.pins["OE%c" % group]
             Node(
                 oenode.net,
@@ -443,8 +443,14 @@ class NetBus():
         for node in self.nets[0].nnodes:
             if node.pin.type.name == "zo":
                 width += 1
-                if "OE" not in node.component:
-                    file.write("MUX has no OE in " + str(node.component) + "\n")
+                specoe = node.pin.pinbus.name + "OE"
+                if specoe in node.component:
+                    node.pin.pinbus.oe = specoe
+                    print("PBOE", node.pin, specoe)
+                elif "OE" in node.component:
+                    node.pin.pinbus.oe = "OE"
+                else:
+                    file.write("MUX has no OE or " + specoe + " in " + str(node.component) + "\n")
                     good = False
             elif node.pin.type.name != "in":
                 file.write("MUX has pintype " + node.pin.type.name + "\n")
