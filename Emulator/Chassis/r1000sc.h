@@ -19,6 +19,9 @@ void pit_clock(void);
 
 double sc_now(void);
 
+uint8_t odd_parity(uint8_t);
+uint8_t odd_parity64(uint64_t);
+
 #ifdef __cplusplus
 }
 #endif
