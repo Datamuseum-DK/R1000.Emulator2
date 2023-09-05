@@ -446,7 +446,6 @@ class NetBus():
                 specoe = node.pin.pinbus.name + "OE"
                 if specoe in node.component:
                     node.pin.pinbus.oe = specoe
-                    print("PBOE", node.pin, specoe)
                 elif "OE" in node.component:
                     node.pin.pinbus.oe = "OE"
                 else:

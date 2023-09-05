@@ -12,8 +12,6 @@ fi
 
 sc_boards seq fiu
 
-# cli sc trace S79TRACE 1
-
 cli 'sc quota add 20'
 # cli 'dfs sed TEST_SEQ.EM /seq_wcs_tests/d'
 
