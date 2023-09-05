@@ -218,16 +218,21 @@ class PartFactory(Part):
         self.subs(self.scm.sf_cc)
         self.scm.std_hh(self.pin_iterator())
         self.scm.std_cc(
-            extra = self.extra,
-            state = self.state,
-            init = self.init,
+            extra = self.real_extra,
+            state = self.real_state,
+            init = self.real_init,
             sensitive = self.sensitive,
-            doit = self.doit,
+            doit = self.real_doit,
         )
         self.scm.commit()
 
     def extra(self, file):
         ''' Extra source-code at globale level'''
+
+    def real_extra(self, file):
+        self.extra(file)
+        if self.autopin is not None:
+            self.autopin_extra(file)
         for node in self.comp:
             node.pin.netbus = node.netbus
         for bus in self.comp.busses.values():
@@ -240,10 +245,19 @@ class PartFactory(Part):
 
     def state(self, _file):
         ''' Extra state variable '''
-        return
+
+    def real_state(self, file):
+        ''' Extra state variable '''
+        self.state(file)
+        if self.autopin is not None:
+            self.autopin_state(file)
 
     def init(self, file):
         ''' Extra initialization '''
+
+    def real_init(self, file):
+        ''' Extra initialization '''
+        self.init(file)
         if self.has_private:
             file.write("\tfirst_initialization = true;\n")
 
@@ -260,6 +274,7 @@ class PartFactory(Part):
                     yield "PIN_%s" % node.pin.name
                 elif node.netbus.nets[0] == node.net:
                     yield "PINB_%s" % node.pin.name
+
 
     def subs(self, file):
         ''' Standard substitutions for .fmt() '''
@@ -291,12 +306,21 @@ class PartFactory(Part):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
+
+
+    def real_doit(self, file):
+        ''' The meat of the doit() function '''
         if self.has_private:
             file.write("\tif (first_initialization) {\n")
             file.write("\t\tfirst_initialization = false;\n")
             for _decl, init in self.private():
                 file.write("\t\t" + init + ";\n")
             file.write("\t}\n")
+        if self.autopin is not None:
+            self.autopin_doit_before(file)
+        self.doit(file)
+        if self.autopin is not None:
+            self.autopin_doit_after(file)
 
     def pin_iterator(self):
         ''' SC pin declarations '''
@@ -375,3 +399,45 @@ class PartFactory(Part):
                 j.append(pin + ".default_event()")
         init = name + " = " + " | ".join(j)
         yield "sc_event_or_list\t" + name + ";", init
+
+    autopin = None
+
+    def is_autopin(self, node):
+        if not node.pin.type.output:
+            return False
+        if node.pin.pinbus:
+            return False
+        if self.autopin is True:
+            return True
+        return node.pin.name in self.autopin
+
+    def autopin_state(self, file):
+        ''' Extra state variable '''
+        file.write('\tstruct output_pins output;\n')
+
+    def autopin_doit_before(self, file):
+        file.write('\tstruct output_pins output = state->output;\n')
+        file.write('\tif (state->ctx.job & 1) {\n')
+        for node in self.comp:
+            if not self.is_autopin(node):
+                continue
+            file.fmt('\t\tPIN_%s<=(output.%s);\n' % (node.pin.name, node.pin.name.lower()))
+        file.write('\t\tstate->ctx.job &= ~1;\n')
+        file.write('\t}\n')
+
+    def autopin_doit_after(self, file):
+        file.write('\tif(memcmp(&output, &state->output, sizeof(output))) {\n')
+        file.write('\t\tstate->ctx.job |= 1;\n')
+        file.write('\t\tstate->output = output;\n')
+        file.write('\t}\n')
+        file.write('\tif (state->ctx.job)\n')
+        file.write('\t\tnext_trigger(5, SC_NS);\n')
+
+
+    def autopin_extra(self, file):
+        file.write('struct output_pins {\n')
+        for node in self.comp:
+            if not self.is_autopin(node):
+                continue
+            file.write('\tbool ' + node.pin.name.lower() + ';\n')
+        file.write('};\n')
