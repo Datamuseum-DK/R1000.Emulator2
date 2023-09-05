@@ -86,7 +86,7 @@ class Component():
 
     def add_node(self, node):
         ''' Add a node to this component '''
-        assert node.pin.name not in self.nodes
+        assert node.pin.name not in self.nodes, ("Duplicate pin", node.pin.name, self)
         self.nodes[node.pin.name] = node
 
     def del_node(self, node):

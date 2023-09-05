@@ -298,7 +298,6 @@ class GAL(PartFactory):
         yield from sorted(want)
 
     def state(self, file):
-        file.write('\tint job;\n')
         for out in sorted(self.palolmc):
             if not out.disabled:
                 file.write('\tint %s;\n' % out.pin.var)
@@ -314,7 +313,7 @@ class GAL(PartFactory):
 
         file.fmt('''
 		|
-		|	if (state->job) {
+		|	if (state->ctx.job) {
 		|		TRACE(
 		|''')
 
@@ -344,6 +343,7 @@ class GAL(PartFactory):
                 file.fmt('\t\t|\t\t%s<=(state->%s);\n' % (pin.name, pin.var))
             else:
                 file.fmt('\t\t|\t\t%s = outs[state->%s];\n' % (pin.name, pin.var))
+        file.write('\t\tstate->ctx.job = 0;\n')
         file.write('\t}\n')
 
         # Set up the input variables to the equations
@@ -432,7 +432,7 @@ class GAL(PartFactory):
             j.append("\t\tstate->%s = %s;" % (out.pin.var, out.pin.out))
         file.write('\tif (\n\t    %s) {\n' % (" ||\n\t    ".join(i)))
         file.write("\n".join(j) + "\n")
-        file.write("\t\tstate->job = 1;\n")
+        file.write("\t\tstate->ctx.job = 1;\n")
         file.write("\t\tnext_trigger(5, SC_NS);\n")
         file.write('\t}\n')
 
