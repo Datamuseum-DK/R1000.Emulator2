@@ -28,6 +28,7 @@ class XM28(FChip):
         self.sig_left(ChipSig("-->+", "BEH"))
         self.sig_left(ChipSig("-->+", "BLH"))
         self.sig_left(ChipSig("-->+", "EHIT"))
+        self.sig_left(ChipSig("-->+", "LABRT"))
 
         self.sig_right(ChipSig("+-->", "PHAE"))
         self.sig_right(ChipSig("+-->", "PHAL"))
@@ -39,6 +40,15 @@ class XM28(FChip):
         self.sig_right(ChipSig("+-->", "BBHT"))
         self.sig_right(ChipSig("+===", "SET2"))
         self.sig_right(ChipSig("+===", "SET3"))
+        self.sig_right(ChipSig("+-->", "TXEOE"))
+        self.sig_right(ChipSig("+-->", "TXLOE"))
+        self.sig_right(ChipSig("+-->", "TXOEN"))
+        self.sig_right(ChipSig("+-->", "TXXWE"))
+        self.sig_right(ChipSig("+-->", "TXEWE"))
+        self.sig_right(ChipSig("+-->", "TXLWE"))
+        self.sig_right(ChipSig("+-->", "TGACE"))
+        self.sig_right(ChipSig("+-->", "TGBCE"))
+        self.sig_right(ChipSig("+-->", "TSC14"))
 
         self.finish()
 

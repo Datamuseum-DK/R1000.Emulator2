@@ -57,7 +57,7 @@ class XTAGPAR(PartFactory):
         file.fmt('''
 		|	bool pos = PIN_CLK.posedge();
 		|	bool neg = PIN_CLK.negedge();
-		|	uint64_t tag = 0, par = 0;
+		|	uint64_t tag = 0, bpar = 0;
 		|
 		|	bool oee = PIN_OEE=>;
 		|	bool oel = PIN_OEL=>;
@@ -79,34 +79,18 @@ class XTAGPAR(PartFactory):
 		|
 		|	if (pos || neg) {
 		|		BUS_TAG_READ(tag);
-		|		par = (tag ^ (tag >> 4)) & 0x0f0f0f0f0f0f0f0f;
-		|		par = (par ^ (par >> 2)) & 0x0303030303030303;
-		|		par = (par ^ (par >> 1)) & 0x0101010101010101;
+		|		bpar = odd_parity64(tag);
 		|	}
 		|	if (pos) {
-		|		state->al = 0;
-		|		state->al |= ((par >> 56) & 1) << 7;
-		|		state->al |= ((par >> 48) & 1) << 6;
-		|		state->al |= ((par >> 40) & 1) << 5;
-		|		state->al |= ((par >> 32) & 1) << 4;
-		|		state->al |= ((par >> 24) & 1) << 3;
-		|		state->al |= ((par >> 16) & 1) << 2;
+		|		state->al = bpar & 0xfd;
 		|		state->al |= PIN_TS6L=> << 1;
-		|		state->al |= ((par >> 0) & 1) << 0;
 		|		state->bl = (tag >> 7) & 0xfc;
 		|		state->bl |= (tag >> 8) & 0x01;
 		|		state->bl |= PIN_TA6L=> << 1;
 		|	}
 		|	if (neg) {
-		|		state->ae = 0;
-		|		state->ae |= ((par >> 56) & 1) << 7;
-		|		state->ae |= ((par >> 48) & 1) << 6;
-		|		state->ae |= ((par >> 40) & 1) << 5;
-		|		state->ae |= ((par >> 32) & 1) << 4;
-		|		state->ae |= ((par >> 24) & 1) << 3;
-		|		state->ae |= ((par >> 16) & 1) << 2;
+		|		state->ae = bpar & 0xfd;
 		|		state->ae |= PIN_TS6E=> << 1;
-		|		state->ae |= ((par >> 0) & 1) << 0;
 		|		state->be = (tag >> 7) & 0xfc;
 		|		state->be |= (tag >> 8) & 0x01;
 		|		state->be |= PIN_TA6E=> << 1;
@@ -142,7 +126,7 @@ class XTAGPAR(PartFactory):
 		|		<< " lb " << std::hex << state->lb
 		|		<< " perr " << (state->la != state->lb)
 		|		<< " sr " << state->sr
-		|		<< " par " << par
+		|		<< " bpar " << bpar
 		|		<< " ae " << state->ae
 		|		<< " al " << state->al
 		|		<< " be " << state->be

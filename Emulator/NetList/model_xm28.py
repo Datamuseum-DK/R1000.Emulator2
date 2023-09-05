@@ -41,17 +41,19 @@ from part import PartModel, PartFactory
 class XM28(PartFactory):
     ''' MEM32 page28 '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
-		|	bool ahit0, ahit1, bhit4, bhit5, ahit0145, bhit0246;
+		|	bool ahit0145, bhit0246;
 		|	bool ah012, bh456;
-		|	bool h01, h02;
-		|	bool set2, set3;
 		|	bool bhit, ahit;
+		|	bool set2, set3;
+		|	bool ahit0, ahit1, bhit4, bhit5;
 		|''')
 
     def sensitive(self):
-        yield "PIN_CLK.neg()"
+        yield "PIN_CLK"
         yield "PIN_AEH"
         yield "PIN_ALH"
         yield "PIN_BEH"
@@ -65,7 +67,9 @@ class XM28(PartFactory):
         super().doit(file)
 
         file.fmt('''
+		|
 		|	bool neg = PIN_CLK.negedge();
+		|	bool pos = PIN_CLK.posedge();
 		|	bool h1 = PIN_H1=>;
 		|	bool q1 = PIN_Q1=>;
 		|	bool aehit = PIN_AEH=>;
@@ -74,6 +78,17 @@ class XM28(PartFactory):
 		|	bool blhit = PIN_BLH=>;
 		|	bool drvhit = PIN_DRH=>;
 		|	bool exthit = PIN_EHIT=>;
+		|
+		|	TRACE(
+		|		<< " clkv^ " << neg << pos
+		|		<< " aeh " << PIN_AEH?
+		|		<< " alh " << PIN_ALH?
+		|		<< " beh " << PIN_BEH?
+		|		<< " blh " << PIN_BLH?
+		|		<< " q1v " << PIN_Q1.negedge()
+		|		<< " drh " << PIN_DRH?
+		|		<< " job " << state->ctx.job
+		|	);
 		|
 		|	if (state->ctx.job) {
 		|		PIN_SET2 = state->set2 ? sc_logic_Z : sc_logic_0;
@@ -101,38 +116,70 @@ class XM28(PartFactory):
 		|		    (drvhit && !aehit && blhit && !state->ahit1 && !state->bhit5)
 		|		;
 		|	}
-		|	bool ah012 = !(state->ahit0 || state->ahit1 || !aehit);
-		|	bool bh456 = !(state->bhit4 || state->bhit5 || !behit);
+		|	state->ah012 = !(state->ahit0 || state->ahit1 || !aehit);
+		|	state->bh456 = !(state->bhit4 || state->bhit5 || !behit);
 		|	bool set2 = !(state->ahit0145 && !exthit);
 		|	bool set3 = !(state->bhit0246 && !exthit);
 		|
 		|	if (!q1) {
-		|		state->ahit = !(alhit && ah012);
-		|		state->bhit = !(blhit && bh456);
-		|		PIN_AHT<=(!state->ahit);
-		|		PIN_BHT<=(!state->bhit);
+		|		state->ahit = !(alhit && state->ah012);
+		|		state->bhit = !(blhit && state->bh456);
+		|		output.aht = !state->ahit;
+		|		output.bht = !state->bhit;
 		|	}
-		|	bool b_ahit = !(drvhit && state->ahit);
-		|	PIN_BAHT<=(b_ahit);
-		|	bool b_bhit = !(drvhit && state->bhit);
-		|	PIN_BBHT<=(b_bhit);
+		|	output.baht = !(drvhit && state->ahit);
+		|	output.bbht = !(drvhit && state->bhit);
+		|
+		|	if (pos) {
+		|		unsigned cmd;
+		|		BUS_CMD_READ(cmd);
+		|		unsigned pset;
+		|		BUS_PSET_READ(pset);
+		|		bool mcyc2_next = PIN_MC2N=>;
+		|		bool late_abort = PIN_LABRT=>;
+		|		bool high_board = PIN_HIGH=>;
+		|		bool seta_sel = !(
+		|			((0x8 <= pset && pset <= 0xb) && high_board) ||
+		|			((0x0 <= pset && pset <= 0x3) && !high_board)
+		|		);
+		|		bool setb_sel = !(
+		|			((0xc <= pset && pset <= 0xf) && high_board) ||
+		|			((0x4 <= pset && pset <= 0x7) && !high_board)
+		|		);
+		|
+		|		bool mc2 = PIN_MC2=>;
+		|
+		|		output.txoen =                (mc2 || !h1 || (cmd != 0x7));
+		|		output.txeoe = !(pset & 1) && (mc2 || !h1 || (cmd != 0x7));
+		|		output.txloe =  (pset & 1) && (mc2 || !h1 || (cmd != 0x7));
+		|
+		|		output.txxwe = (cmd == 0x7 && !h1 && !mcyc2_next && mc2);
+		|		output.txewe = (
+		|			(cmd == 0x7 &&                 !h1 && !mcyc2_next &&  mc2 && !(pset & 1)) ||
+		|			(cmd == 0x2 &&                 !h1 && !mcyc2_next &&  mc2) ||
+		|			(cmd == 0x2 &&                  h1 &&                !mc2 && !late_abort && state->output.txewe) ||
+		|			((cmd == 0xc || cmd == 0xd) && !h1 && !mcyc2_next &&  mc2) ||
+		|			((cmd == 0xc || cmd == 0xd) &&  h1 &&                !mc2 && !late_abort && state->output.txewe)
+		|		);
+		|		output.txlwe = (
+		|			(cmd == 0x7 &&                 !h1 && !mcyc2_next &&  mc2 && (pset & 1)) ||
+		|			(cmd == 0x2 &&                 !h1 && !mcyc2_next &&  mc2) ||
+		|			(cmd == 0x2 &&                  h1 &&                !mc2 && !late_abort && state->output.txlwe) ||
+		|			((cmd == 0xc || cmd == 0xd) && !h1 && !mcyc2_next &&  mc2) ||
+		|			((cmd == 0xc || cmd == 0xd) &&  h1 &&                !mc2 && !late_abort && state->output.txlwe)
+		|		);
+		|		output.tgace = !(cmd == 0x7 && !h1 && !mcyc2_next && mc2 && seta_sel);
+		|		output.tgbce = !(cmd == 0x7 && !h1 && !mcyc2_next && mc2 && setb_sel);
+		|		output.tsc14 = !h1 && !mcyc2_next;
+		|	}
 		|
 		|	if (
-		|	    state->ahit0145 != state->h01 ||
-		|	    state->bhit0246 != state->h02 ||
-		|	    set2 != state->set2 ||
-		|	    set3 != state->set3 ||
-		|	    ah012 != state->ah012 ||
-		|	    bh456 != state->bh456
+		|		set2 != state->set2 ||
+		|		set3 != state->set3
 		|	) {
-		|		state->h01 = state->ahit0145;
-		|		state->h02 = state->bhit0246;
 		|		state->set2 = set2;
 		|		state->set3 = set3;
-		|		state->ah012 = ah012;
-		|		state->bh456 = bh456;
-		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		state->ctx.job |= 2;
 		|	}
 		|''')
 

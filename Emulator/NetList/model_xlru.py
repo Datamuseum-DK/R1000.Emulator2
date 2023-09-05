@@ -207,7 +207,7 @@ class XLRU(PartFactory):
 		|		bool p_tag_53 = (tag >> 4) & 1;
 		|		bool p_tag_52 = (tag >> 5) & 1;
 		|		bool p_tag_51 = (tag >> 6) & 1;
-		|		bool p_phit_al = PIN_PHIT=>;
+		|		bool p_phit = PIN_PHIT=>;
 		|		bool p_force_hit = PIN_FHIT=>;
 		|		bool p_hit_h = state->hhit;
 		|		bool p_mcyc1 = PIN_CYC1=>;
@@ -216,11 +216,11 @@ class XLRU(PartFactory):
 		|		    ((!p_tag_55) && (!p_tag_54) && (!p_tag_53) && (!p_tag_52) &&   p_force_hit  && (!p_mcyc1) && cmd == 0x2) ||
 		|		    (  p_force_hit  && (!p_hit_h) &&   (!p_mcyc1) && cmd == 0x9) ||
 		|		    ((!p_tag_57) && (!p_tag_56) &&   p_force_hit  && (!p_mcyc1) && cmd == 0x01) ||
-		|		    ((!p_phit_al) && (!p_force_hit)) ||
-		|		    ((!p_phit_al) &&   p_force_hit  && (!p_mcyc1) && (cmd == 0x6 || cmd == 0x7 || cmd == 0xe || cmd == 0xf)) ||
-		|		    ((!p_phit_al) &&   p_force_hit  && (!p_mcyc1) && (cmd == 0xa || cmd == 0xb)) ||
-		|		    ((!p_phit_al) &&   p_force_hit  && (!p_mcyc1) && cmd == 0x8) ||
-		|		    ((!p_phit_al) &&   p_force_hit  && (!p_mcyc1) && cmd == 0x5) ||
+		|		    ((!p_phit) && (!p_force_hit)) ||
+		|		    ((!p_phit) &&   p_force_hit  && (!p_mcyc1) && (cmd == 0x6 || cmd == 0x7 || cmd == 0xe || cmd == 0xf)) ||
+		|		    ((!p_phit) &&   p_force_hit  && (!p_mcyc1) && (cmd == 0xa || cmd == 0xb)) ||
+		|		    ((!p_phit) &&   p_force_hit  && (!p_mcyc1) && cmd == 0x8) ||
+		|		    ((!p_phit) &&   p_force_hit  && (!p_mcyc1) && cmd == 0x5) ||
 		|		    (  p_force_hit  && (!p_hit_h) &&   p_mcyc1 );
 		|		bool out_logq =
 		|		    (  p_tag_57  && (!p_tag_56) &&   p_force_hit  && (!p_mcyc1) && (cmd == 0xc || cmd == 0xd)) ||
