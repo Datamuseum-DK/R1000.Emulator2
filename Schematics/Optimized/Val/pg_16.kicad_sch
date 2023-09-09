@@ -2673,6 +2673,7 @@
     )
   )
 
+
   (junction (at 271.78 668.02) (diameter 0) (color 0 0 0 0)
     (uuid 9ff88b7b-33be-4060-9d52-9247fa4482bc)
   )
@@ -2681,6 +2682,7 @@
   )
 
   (no_connect (at 299.72 25.4) (uuid 0d78b6fc-9dd3-4293-8914-203345fe974c))
+  (no_connect (at 325.12 650.24) (uuid 936fa145-04a5-4547-be9d-152b9b381802))
   (no_connect (at 276.86 662.94) (uuid ad7a173b-d9d6-479f-a913-c7290d8d4874))
   (no_connect (at 276.86 652.78) (uuid ed32f904-1278-4742-90ec-1e4a3833320f))
 
@@ -4429,10 +4431,6 @@
     (stroke (width 0) (type default))
     (uuid 2fd33ee8-60d5-49a5-b34e-5b37435b6a5b)
   )
-  (wire (pts (xy 320.04 650.24) (xy 325.12 650.24))
-    (stroke (width 0) (type default))
-    (uuid 2fd89370-4a4b-4cb0-9881-81aed2b7b546)
-  )
   (bus (pts (xy 68.58 416.56) (xy 68.58 421.64))
     (stroke (width 0) (type default))
     (uuid 2ffb73d5-49dd-4028-a9ac-3ebd99d94fbf)
@@ -6101,10 +6099,6 @@
     (uuid a6713ef9-1360-4b57-a07c-7cc9c324f2bd)
   )
 
-  (wire (pts (xy 320.04 637.54) (xy 320.04 650.24))
-    (stroke (width 0) (type default))
-    (uuid a71c201d-56a3-4915-b9dc-a1315a59c668)
-  )
   (wire (pts (xy 535.94 132.08) (xy 508 132.08))
     (stroke (width 0) (type default))
     (uuid a81ba858-89bb-4d97-89e0-b37daac2a13b)
@@ -6273,11 +6267,6 @@
   (bus (pts (xy 162.56 187.96) (xy 162.56 193.04))
     (stroke (width 0) (type default))
     (uuid b2cc935b-d416-422e-8e1d-4af472bfa314)
-  )
-
-  (wire (pts (xy 264.16 637.54) (xy 320.04 637.54))
-    (stroke (width 0) (type default))
-    (uuid b35022b6-5f4d-4c6d-a28b-22e6ee261312)
   )
   (bus (pts (xy 68.58 548.64) (xy 68.58 553.72))
     (stroke (width 0) (type default))
@@ -9484,13 +9473,6 @@
     (uuid 6ea91fcc-77cc-4ed8-9581-ed0b9599f72f)
     (property "Intersheetrefs" "${INTERSHEET_REFS}" (at 519.2365 22.7013 0)
       (effects (font (size 1.905 1.905)) (justify left))
-    )
-  )
-  (global_label "Q1~" (shape input) (at 264.16 637.54 180) (fields_autoplaced)
-    (effects (font (size 2.54 2.54)) (justify right))
-    (uuid 7dbc7ae0-8b08-4dc3-b805-a0f0fc612f14)
-    (property "Intersheetrefs" "${INTERSHEET_REFS}" (at 251.4552 637.54 0)
-      (effects (font (size 1.27 1.27)) (justify right))
     )
   )
   (global_label "FIU_COND.SEL0" (shape input) (at 144.78 693.42 0) (fields_autoplaced)
