@@ -307,7 +307,6 @@ class PartFactory(Part):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-
     def real_doit(self, file):
         ''' The meat of the doit() function '''
         if self.has_private:
@@ -405,10 +404,12 @@ class PartFactory(Part):
     def is_autopin(self, node):
         if not node.pin.type.output:
             return False
-        if node.pin.pinbus:
+        if node.pin.pinbus and not node.pin.pinbus.is_first_pin(node):
             return False
         if self.autopin is True:
             return True
+        if node.pin.pinbus and node.pin == node.pin.pinbus.pins[0]:
+            return node.pin.pinbus.name in self.autopin
         return node.pin.name in self.autopin
 
     def autopin_state(self, file):
@@ -421,7 +422,27 @@ class PartFactory(Part):
         for node in self.comp:
             if not self.is_autopin(node):
                 continue
-            file.fmt('\t\tPIN_%s<=(output.%s);\n' % (node.pin.name, node.pin.name.lower()))
+            if not node.pin.type.hiz and node.pin.pinbus:
+                file.fmt('\t\tBUS_%s_WRITE(output.%s);\n' % (node.pin.pinbus.name, node.pin.pinbus.name.lower()))
+            elif not node.pin.type.hiz:
+                file.fmt('\t\tPIN_%s<=(output.%s);\n' % (node.pin.name, node.pin.name.lower()))
+            elif node.pin.pinbus:
+                nm = node.pin.pinbus.name
+                file.fmt('''
+		|		if (output.z_%s)
+		|			BUS_%s_Z();
+		|		else
+		|			BUS_%s_WRITE(output.%s);
+		|''' % (nm.lower(), nm.upper(), nm.upper(), nm.lower()))
+            else:
+                nm = node.pin.name
+                file.fmt('''
+		|		if (output.z_%s)
+		|			PIN_%s = sc_logic_Z;
+		|		else
+		|			PIN_%s<=(output.%s);
+		|''' % (nm.lower(), nm.upper(), nm.upper(), nm.lower()))
+
         file.write('\t\tstate->ctx.job &= ~1;\n')
         file.write('\t}\n')
 
@@ -439,5 +460,15 @@ class PartFactory(Part):
         for node in self.comp:
             if not self.is_autopin(node):
                 continue
-            file.write('\tbool ' + node.pin.name.lower() + ';\n')
+            if not node.pin.pinbus:
+                if node.pin.type.hiz:
+                    file.write('\tbool z_' + node.pin.name.lower() + ';\n')
+                file.write('\tbool ' + node.pin.name.lower() + ';\n')
+                continue
+            if node.pin.type.hiz:
+                file.write('\tbool z_' + node.pin.pinbus.name.lower() + ';\n')
+            if node.pin.pinbus.width > 32:
+                file.write('\tuint64_t ' + node.pin.pinbus.name.lower() + ';\n')
+            else:
+                file.write('\tuint32_t ' + node.pin.pinbus.name.lower() + ';\n')
         file.write('};\n')

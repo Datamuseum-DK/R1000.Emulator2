@@ -285,3 +285,6 @@ class PinBus():
             elif pin.netbus.nets[0].sc_type != "bool":
                 file.fmt('\t\t%s.write("%s"); \\\n' % (pin.netbusname, "z" * len(pin.netbus.nets)))
         file.write("\t} while(0)\n")
+
+    def is_first_pin(self, node):
+        return node.pin == self.pins[0]
