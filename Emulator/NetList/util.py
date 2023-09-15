@@ -33,6 +33,8 @@
    =============
 '''
 
+import hashlib
+
 def sortkey(word):
     '''
 	Split input into runs of digits vs. non-digits and return
@@ -71,4 +73,8 @@ def signature(elem):
             j = 1
     if j > 1:
         retval[-1] = retval[-1] + ("%d" % j)
-    return "".join(retval)
+    sign = "".join(retval)
+    if len(sign) > 64:
+        hash = hashlib.sha256(sign.encode("utf-8")).hexdigest()
+        sign = sign[:64] + "_" + hash[:8]
+    return sign
