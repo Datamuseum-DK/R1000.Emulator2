@@ -514,42 +514,47 @@ class Chip():
 
 class ChipSig():
 
-    def __init__(self, arrow, name, low = None, high = None, bus=False):
+    def __init__(self, arrow, name, low = None, high = None, space=1):
         self.arrow = arrow
         self.name = name
         self.low = low
         self.high = high
-        self.bus = bus
+        self.space = space
 
     def __iter__(self):
-        if self.low is None and self.high is None:
+        if self.arrow is None:
+            pass
+        elif self.low is None and self.high is None:
             yield self.name, self.arrow
-        elif self.bus:
-            yield self.name + "%d" % self.low, self.arrow
-            yield self.name + "%d" % self.high, self.arrow
         else:
             for pin in range(self.low, self.high + 1):
                 yield self.name + "%d" % pin, self.arrow
-
-    def spacing(self, really):
-        if really:
-            yield ""
-            yield ""
-            if 0 and self.high:
-                yield ""
-                yield ""
 
 class FChip(Chip):
 
     def __init__(self):
         self.sig_l = []
         self.sig_r = []
+        self.height_l = 0
+        self.height_r = 0
 
     def sig_left(self, signal):
         self.sig_l.append(signal)
+        h = len([x for x in signal]) + signal.space
+        self.height_l += h
 
     def sig_right(self, signal):
         self.sig_r.append(signal)
+        h = len([x for x in signal]) + signal.space
+        self.height_r += h
+
+    def sig_level(self):
+        d = self.height_l - self.height_r
+        print("Balance", d, self.height_l, self.height_r)
+        if d > 0:
+            self.sig_right(ChipSig(None, None, space = d))
+        if d < 0:
+            self.sig_left(ChipSig(None, None, space = -d))
 
     def finish(self, width = 0):
         self.symbol = ''
@@ -557,36 +562,32 @@ class FChip(Chip):
         left = []
         space = False
         for sig in self.sig_l:
-            for _i in sig.spacing(space):
-                left.append('   |')
+            if space:
+                for _i in range(sig.space * 2):
+                    left.append('   |')
             for nm, arrow in sig:
                 left.append('  %|')
-                if sig.bus:
-                    left.append(arrow + '=' + nm)
-                else:
-                    left.append(arrow + nm)
+                left.append(arrow + nm)
  
             space = True
 
         right = []
         space = False
         for sig in self.sig_r:
-            for _i in sig.spacing(space):
-                right.append('   |   ')
+            if space:
+                for _i in range(sig.space * 2):
+                    right.append('|   ')
             for nm, arrow in sig:
                 right.append('|%  ')
-                if sig.bus:
-                    right.append(nm + '=' + arrow)
-                else:
-                    right.append(nm + arrow)
+                right.append(nm + arrow)
             space = True
 
         minwidth = max(len(x) for x in left) + max(len(x) for x in right) + 2
         if width == 0:
-            print(self.symbol_name, "W", width, "MW", minwidth)
+            #print(self.symbol_name, "W", width, "MW", minwidth)
             width = minwidth
         else:
-            print(self.symbol_name, "W", width, "MW", minwidth)
+            #print(self.symbol_name, "W", width, "MW", minwidth)
             assert width >= minwidth
 
         top_bot = '   +' + '-' * (width - 8) + '+\n'

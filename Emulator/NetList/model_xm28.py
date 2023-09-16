@@ -48,7 +48,6 @@ class XM28(PartFactory):
 		|	bool ahit0145, bhit0246;
 		|	bool ah012, bh456;
 		|	bool bhit, ahit;
-		|	bool set2, set3;
 		|	bool ahit0, ahit1, bhit4, bhit5;
 		|''')
 
@@ -90,12 +89,6 @@ class XM28(PartFactory):
 		|		<< " job " << state->ctx.job
 		|	);
 		|
-		|	if (state->ctx.job) {
-		|		PIN_SET2 = state->set2 ? sc_logic_Z : sc_logic_0;
-		|		PIN_SET3 = state->set3 ? sc_logic_Z : sc_logic_0;
-		|		state->ctx.job = 0;
-		|	}
-		|
 		|	if (neg && !h1) {
 		|		state->ahit0 = !aehit           &&  behit &&  blhit;
 		|		state->ahit1 =  aehit && !alhit &&  behit &&  blhit;
@@ -118,8 +111,10 @@ class XM28(PartFactory):
 		|	}
 		|	state->ah012 = !(state->ahit0 || state->ahit1 || !aehit);
 		|	state->bh456 = !(state->bhit4 || state->bhit5 || !behit);
-		|	bool set2 = !(state->ahit0145 && !exthit);
-		|	bool set3 = !(state->bhit0246 && !exthit);
+		|	output.z_seta = !(state->ahit0145 && !exthit);
+		|	output.z_setb = !(state->bhit0246 && !exthit);
+		|	output.seta = output.z_seta;
+		|	output.setb = output.z_setb;
 		|
 		|	if (!q1) {
 		|		state->ahit = !(alhit && state->ah012);
@@ -171,15 +166,6 @@ class XM28(PartFactory):
 		|		output.tgace = !(cmd == 0x7 && !h1 && !mcyc2_next && mc2 && seta_sel);
 		|		output.tgbce = !(cmd == 0x7 && !h1 && !mcyc2_next && mc2 && setb_sel);
 		|		output.tsc14 = !h1 && !mcyc2_next;
-		|	}
-		|
-		|	if (
-		|		set2 != state->set2 ||
-		|		set3 != state->set3
-		|	) {
-		|		state->set2 = set2;
-		|		state->set3 = set3;
-		|		state->ctx.job |= 2;
 		|	}
 		|''')
 
