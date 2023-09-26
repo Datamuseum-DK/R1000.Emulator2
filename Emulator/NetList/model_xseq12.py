@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XSEQ12(PartFactory):
     ''' SEQ 12 Noodle Logic '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t tosram[1<<BUS_RADR_WIDTH];
@@ -74,8 +76,8 @@ class XSEQ12(PartFactory):
 		|		sel1 = !(mem_start < 3);
 		|		sel2 = !(mem_start == 3 || mem_start == 7);
 		|	}
-		|	PIN_ACIN<=((mem_start & 1) != 0);
-		|	PIN_AMOD<=((mem_start & 4) != 0);
+		|	output.acin=((mem_start & 1) != 0);
+		|	output.amod=((mem_start & 4) != 0);
 		|	switch(mem_start) {
 		|	case 0: res_alu_s = 0x9; break;
 		|	case 1: res_alu_s = 0x6; break;
@@ -86,23 +88,23 @@ class XSEQ12(PartFactory):
 		|	case 6: res_alu_s = 0x5; break;
 		|	case 7: res_alu_s = 0xf; break;
 		|	}
-		|	BUS_AS_WRITE(res_alu_s);
+		|	output.as = res_alu_s;
 		|	if (dis) {
-		|		PIN_NRAM<=1;
-		|		PIN_TNAM<=1;
-		|		PIN_VNAM<=1;
-		|		PIN_PRED<=1;
-		|		PIN_TOP<=1;
-		|		PIN_RES<=1;
-		|		PIN_SAVE<=1;
+		|		output.nram=1;
+		|		output.tnam=1;
+		|		output.vnam=1;
+		|		output.pred=1;
+		|		output.top=1;
+		|		output.res=1;
+		|		output.save=1;
 		|	} else {
-		|		PIN_NRAM<=(!(!sel1 && sel2));
-		|		PIN_TNAM<=(!(sel1 && !sel2));
-		|		PIN_VNAM<=(!(sel1 && sel2));
-		|		PIN_PRED<=(!(!intreads1 && !intreads2));
-		|		PIN_TOP<=(!(!intreads1 &&  intreads2));
-		|		PIN_RES<=(!(intreads1 && !intreads2));
-		|		PIN_SAVE<=(!(intreads1 && intreads2));
+		|		output.nram=(!(!sel1 && sel2));
+		|		output.tnam=(!(sel1 && !sel2));
+		|		output.vnam=(!(sel1 && sel2));
+		|		output.pred=(!(!intreads1 && !intreads2));
+		|		output.top=(!(!intreads1 &&  intreads2));
+		|		output.res=(!(intreads1 && !intreads2));
+		|		output.save=(!(intreads1 && intreads2));
 		|	}
 		|	if (PIN_TCLK.posedge()) {
 		|		unsigned typ;
@@ -131,7 +133,7 @@ class XSEQ12(PartFactory):
 		|		}
 		|	}
 		|	offs ^= BUS_OFFS_MASK;
-		|	BUS_OFFS_WRITE(offs);
+		|	output.offs = offs;
 		|''')
 
 def register(part_lib):
