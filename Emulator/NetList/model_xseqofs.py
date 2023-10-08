@@ -46,14 +46,6 @@ class XSEQOFS(PartFactory):
 		|	unsigned par;
 		|''')
 
-    def xxsensitive(self):
-        yield "PIN_FIU_CLK.pos()"
-        yield "PIN_LOCAL_CLK.pos()"
-        yield "PIN_Q1not.pos()"
-        yield "PIN_DV_U"
-        yield "PIN_BAD_HINT"
-        yield "PIN_U_PEND"
-
     def doit(self, file):
         ''' The meat of the doit() function '''
 

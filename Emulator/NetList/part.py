@@ -465,8 +465,7 @@ class PartFactory(Part):
                     file.write('\tbool z_' + node.pin.name.lower() + ';\n')
                 file.write('\tbool ' + node.pin.name.lower() + ';\n')
                 continue
-            if node.pin.type.hiz:
-                file.write('\tbool z_' + node.pin.pinbus.name.lower() + ';\n')
+            file.write('\tbool z_' + node.pin.pinbus.name.lower() + ';\n')
             if node.pin.pinbus.width > 32:
                 file.write('\tuint64_t ' + node.pin.pinbus.name.lower() + ';\n')
             else:

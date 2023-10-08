@@ -45,6 +45,9 @@ class XSEQ12(PartFactory):
         file.fmt('''
 		|	uint64_t tosram[1<<BUS_RADR_WIDTH];
 		|	uint64_t tosof;
+		|	uint32_t savrg;
+		|	uint32_t pred;
+		|	uint32_t topcnt;
 		|''')
 
     def doit(self, file):
@@ -76,36 +79,16 @@ class XSEQ12(PartFactory):
 		|		sel1 = !(mem_start < 3);
 		|		sel2 = !(mem_start == 3 || mem_start == 7);
 		|	}
-		|	output.acin=((mem_start & 1) != 0);
-		|	output.amod=((mem_start & 4) != 0);
-		|	switch(mem_start) {
-		|	case 0: res_alu_s = 0x9; break;
-		|	case 1: res_alu_s = 0x6; break;
-		|	case 2: res_alu_s = 0x9; break;
-		|	case 3: res_alu_s = 0x6; break;
-		|	case 4: res_alu_s = 0x5; break;
-		|	case 5: res_alu_s = 0xf; break;
-		|	case 6: res_alu_s = 0x5; break;
-		|	case 7: res_alu_s = 0xf; break;
-		|	}
-		|	output.as = res_alu_s;
 		|	if (dis) {
 		|		output.nram=1;
 		|		output.tnam=1;
 		|		output.vnam=1;
-		|		output.pred=1;
-		|		output.top=1;
-		|		output.res=1;
-		|		output.save=1;
 		|	} else {
 		|		output.nram=(!(!sel1 && sel2));
 		|		output.tnam=(!(sel1 && !sel2));
 		|		output.vnam=(!(sel1 && sel2));
-		|		output.pred=(!(!intreads1 && !intreads2));
-		|		output.top=(!(!intreads1 &&  intreads2));
-		|		output.res=(!(intreads1 && !intreads2));
-		|		output.save=(!(intreads1 && intreads2));
 		|	}
+		|
 		|	if (PIN_TCLK.posedge()) {
 		|		unsigned typ;
 		|		BUS_TYP_READ(typ);
@@ -132,8 +115,105 @@ class XSEQ12(PartFactory):
 		|			offs = state->tosram[res_adr];
 		|		}
 		|	}
-		|	offs ^= BUS_OFFS_MASK;
-		|	output.offs = offs;
+		|	offs ^= 0xfffff;
+		|
+		|       unsigned disp;
+		|       BUS_DSP_READ(disp);
+		|       bool d7 = (disp & 0x8100) == 0;
+		|       unsigned sgdisp = disp & 0xff;
+		|       if (!d7)
+		|               sgdisp |= 0x100;
+		|       if (!(PIN_SGEXT && d7))
+		|               sgdisp |= 0xffe00;
+		|
+		|	unsigned intreads = 0;
+		|	if (intreads1) intreads |= 2;
+		|	if (intreads2) intreads |= 1;
+		|	bool acin = ((mem_start & 1) != 0);
+		|       offs &= 0xfffff;
+		|       sgdisp &= 0xfffff;
+		|       unsigned rofs = 0;
+		|       bool co = false;
+		|
+		|	switch(mem_start) {
+		|	case 0:
+		|	case 2:
+		|		res_alu_s = 0x9;
+		|               rofs = offs + sgdisp + 1;
+		|               co = (rofs >> 20) == 0;
+		|		break;
+		|	case 1:
+		|	case 3:
+		|		res_alu_s = 0x6;
+		|               rofs = (1<<20) + offs - (sgdisp + 1);
+		|               co = acin && (offs == 0);
+		|		break;
+		|	case 4:
+		|	case 6:
+		|		res_alu_s = 0x5;
+		|               rofs = sgdisp ^ 0xfffff;
+		|               // Carry is probably "undefined" here.
+		|		break;
+		|	case 5:
+		|	case 7:
+		|		res_alu_s = 0xf;
+		|               rofs = offs;
+		|               co = acin && (offs == 0);
+		|		break;
+		|	}
+		|
+		|	output.rofs = rofs;
+		|
+		|	unsigned cnb;
+		|	if (PIN_CMR=>) {
+		|		BUS_TYP_READ(cnb);
+		|		cnb ^= BUS_TYP_MASK;
+		|	} else {
+		|		BUS_FIU_READ(cnb);
+		|	}
+		|	cnb >>= 7;
+		|	cnb &= 0xfffff;
+		|
+		|	unsigned csa_cntl;
+		|	BUS_CTL_READ(csa_cntl);
+		|
+		|	if (PIN_SVCLK.posedge()) {
+		|		state->savrg = rofs;
+		|		output.cout = co;
+		|	}
+		|	if (PIN_PDCLK.posedge()) {
+		|		state->pred = cnb;
+		|	}
+		|	if (PIN_STCLK.posedge()) {
+		|		bool ten = (csa_cntl != 2 && csa_cntl != 3);
+		|		bool tud = !(csa_cntl & 1);
+		|		if (!PIN_TOPLD=>) {
+		|			state->topcnt = cnb;
+		|		} else if (!PIN_LSTPD=> || ten) {
+		|			// Nothing
+		|		} else if (tud) {
+		|			state->topcnt += 1;
+		|		} else {
+		|			state->topcnt += 0xfffff;
+		|		}
+		|		state->topcnt &= 0xfffff;
+		|	}
+		|
+		|	if (dis) {
+		|		output.ob = 0xfffff;
+		|	} else if (intreads == 0) {
+		|		output.ob = state->pred;
+		|	} else if (intreads == 1) {
+		|		output.ob = state->topcnt;
+		|	} else if (intreads == 2) {
+		|		output.ob = rofs;
+		|	} else if (intreads == 3) {
+		|		output.ob = state->savrg;
+		|	} else {
+		|		output.ob = 0xfffff;
+		|	}
+		|	
+		|
 		|''')
 
 def register(part_lib):
