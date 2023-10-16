@@ -95,7 +95,7 @@ PIN_NAMES = {
     "PHITPAL": {
         1: "pset0", 2: "pset1", 3: "pset2", 4: "pset3", 5: "hibrd", 6: "h1", 7: "dbusmode0",
         8: "dbusmode1", 9: "dbusmode2", 11: "dbusmode3", 13: "dforcehit", 14: "physhit26",
-        15: "setb_sel", 16: "seta_sel", 17: "phit_bl", 18: "phit_be", 19: "phit_al", 12: "phit_ae"
+        15: "setb_sel", 16: "seta_sel", 17: "phit_bl", 18: "phit_be", 19: "phit_ae", 12: "phit_al"
     },
     "RDRPAL": {
         1: "clk", 2: "cmd0", 3: "cmd1", 4: "cmd2", 5: "cmd3", 6: "h2", 7: "mcyc2_next",

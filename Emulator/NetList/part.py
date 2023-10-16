@@ -422,9 +422,7 @@ class PartFactory(Part):
         for node in self.comp:
             if not self.is_autopin(node):
                 continue
-            if not node.pin.type.hiz and node.pin.pinbus:
-                file.fmt('\t\tBUS_%s_WRITE(output.%s);\n' % (node.pin.pinbus.name, node.pin.pinbus.name.lower()))
-            elif not node.pin.type.hiz:
+            if not node.pin.type.hiz and not node.pin.pinbus:
                 file.fmt('\t\tPIN_%s<=(output.%s);\n' % (node.pin.name, node.pin.name.lower()))
             elif node.pin.pinbus:
                 nm = node.pin.pinbus.name

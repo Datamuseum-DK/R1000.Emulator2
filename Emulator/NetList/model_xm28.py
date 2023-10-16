@@ -49,6 +49,8 @@ class XM28(PartFactory):
 		|	bool ah012, bh456;
 		|	bool bhit, ahit;
 		|	bool ahit0, ahit1, bhit4, bhit5;
+		|	bool labort, eabort;
+		|	bool dradpal_p22;
 		|''')
 
     def sensitive(self):
@@ -57,8 +59,15 @@ class XM28(PartFactory):
         yield "PIN_ALH"
         yield "PIN_BEH"
         yield "PIN_BLH"
-        yield "PIN_Q1.neg()"
+        yield "PIN_Q1"
+        yield "PIN_H1"
         yield "PIN_DRH"
+        yield "BUS_PSET_SENSITIVE()"
+        yield "BUS_DBM_SENSITIVE()"
+
+        #yield "BUS_TRDR_SENSITIVE()"
+        #yield "BUS_LAR_SENSITIVE()"
+        #yield "PIN_DDISA"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -67,19 +76,24 @@ class XM28(PartFactory):
 
         file.fmt('''
 		|
-		|	bool neg = PIN_CLK.negedge();
-		|	bool pos = PIN_CLK.posedge();
+		|	bool clk2x_neg = PIN_CLK.negedge();
+		|	bool clk2x_pos = PIN_CLK.posedge();
 		|	bool h1 = PIN_H1=>;
 		|	bool q1 = PIN_Q1=>;
+		|	bool q4pos = PIN_Q1.negedge();
 		|	bool aehit = PIN_AEH=>;
 		|	bool alhit = PIN_ALH=>;
 		|	bool behit = PIN_BEH=>;
 		|	bool blhit = PIN_BLH=>;
 		|	bool drvhit = PIN_DRH=>;
 		|	bool exthit = PIN_EHIT=>;
+		|	bool high_board = PIN_HIGH=>;
+		|	bool mc2 = PIN_MC2=>;
+		|	unsigned cmd;
+		|	BUS_CMD_READ(cmd);
 		|
 		|	TRACE(
-		|		<< " clkv^ " << neg << pos
+		|		<< " clkv^ " << clk2x_neg << clk2x_pos
 		|		<< " aeh " << PIN_AEH?
 		|		<< " alh " << PIN_ALH?
 		|		<< " beh " << PIN_BEH?
@@ -89,13 +103,13 @@ class XM28(PartFactory):
 		|		<< " job " << state->ctx.job
 		|	);
 		|
-		|	if (neg && !h1) {
+		|	if (clk2x_neg && !h1) {
 		|		state->ahit0 = !aehit           &&  behit &&  blhit;
 		|		state->ahit1 =  aehit && !alhit &&  behit &&  blhit;
 		|		state->bhit4 =                     !behit;
 		|		state->bhit5 =                      behit && !blhit;
 		|	}
-		|	if (neg && h1) {
+		|	if (clk2x_neg && h1) {
 		|		state->ahit0145 =
 		|		    (drvhit && state->bhit5) ||
 		|		    (drvhit && state->bhit4) ||
@@ -125,14 +139,66 @@ class XM28(PartFactory):
 		|	output.baht = !(drvhit && state->ahit);
 		|	output.bbht = !(drvhit && state->bhit);
 		|
-		|	if (pos) {
-		|		unsigned cmd;
-		|		BUS_CMD_READ(cmd);
-		|		unsigned pset;
-		|		BUS_PSET_READ(pset);
+		|	unsigned pset;
+		|	BUS_PSET_READ(pset);
+		|	unsigned dbus_mode;
+		|	BUS_DBM_READ(dbus_mode);
+		|
+		|	output.phae = !(
+		|		(pset == 0x0 && (!high_board) &&  h1   && (!(dbus_mode & 4))) ||
+		|		(pset == 0x2 && (!high_board) && (!h1) && (!(dbus_mode & 4))) ||
+		|		(pset == 0x8 &&   high_board  &&   h1  && (!(dbus_mode & 4))) ||
+		|		(pset == 0xa &&   high_board  && (!h1) && (!(dbus_mode & 4))) ||
+		|		(dbus_mode == 0xd || dbus_mode == 0xf)  
+		|	);
+		|
+		|	output.phal = !(
+		|		(pset == 0x1 && (!high_board) &&  h1   && (!(dbus_mode & 4))) ||
+		|		(pset == 0x3 && (!high_board) && (!h1) && (!(dbus_mode & 4))) ||
+		|		(pset == 0x9 &&   high_board  &&   h1  && (!(dbus_mode & 4))) ||
+		|		(pset == 0xb &&   high_board  && (!h1) && (!(dbus_mode & 4))) ||
+		|		(dbus_mode == 0xd || dbus_mode == 0xf)  
+		|	);
+		|
+		|	output.phbe = !(
+		|		(pset == 0x4 && (!high_board) &&  h1   && (!(dbus_mode & 4))) ||
+		|		(pset == 0x6 && (!high_board) && (!h1) && (!(dbus_mode & 4))) ||
+		|		(pset == 0xc &&   high_board  &&   h1  && (!(dbus_mode & 4))) ||
+		|		(pset == 0xe &&   high_board  && (!h1) && (!(dbus_mode & 4))) ||
+		|		(dbus_mode == 0xe || dbus_mode == 0xf)  
+		|	);
+		|
+		|	output.phbl = !(
+		|		(pset == 0x5 && (!high_board) &&  h1   && (!(dbus_mode & 4))) ||
+		|		(pset == 0x7 && (!high_board) && (!h1) && (!(dbus_mode & 4))) ||
+		|		(pset == 0xd &&   high_board  &&   h1  && (!(dbus_mode & 4))) ||
+		|		(pset == 0xf &&   high_board  && (!h1) && (!(dbus_mode & 4))) ||
+		|		(dbus_mode == 0xe || dbus_mode == 0xf)  
+		|	);
+		|
+		|	output.setas = !(
+		|		((pset & 0xc) == 0x8 &&  high_board) ||
+		|		((pset & 0xc) == 0x0 && !high_board)
+		|	);
+		|
+		|	output.setbs = !(
+		|		((pset & 0xc) == 0xc &&  high_board) ||
+		|		((pset & 0xc) == 0x4 && !high_board)
+		|	);
+		|
+		|	output.pht26 = !(
+		|		((pset & 0xb) == 0xa &&  high_board) ||
+		|		((pset & 0xb) == 0x2 && !high_board)
+		|	);
+		|	output.dfhit = !(dbus_mode >= 0xc);
+		|
+		|	bool eabort_y = !(PIN_DEABT=> && PIN_EABT=> && PIN_ELABT=>);
+		|	bool labort_y = !(PIN_DLABT=> && PIN_LABT=> && PIN_ELABT=> && !h1);
+		|
+		|	if (clk2x_pos) {
 		|		bool mcyc2_next = PIN_MC2N=>;
-		|		bool late_abort = PIN_LABRT=>;
-		|		bool high_board = PIN_HIGH=>;
+		|		bool late_abort = state->labort;
+		|
 		|		bool seta_sel = !(
 		|			((0x8 <= pset && pset <= 0xb) && high_board) ||
 		|			((0x0 <= pset && pset <= 0x3) && !high_board)
@@ -142,7 +208,6 @@ class XM28(PartFactory):
 		|			((0x4 <= pset && pset <= 0x7) && !high_board)
 		|		);
 		|
-		|		bool mc2 = PIN_MC2=>;
 		|
 		|		output.txoen =                (mc2 || !h1 || (cmd != 0x7));
 		|		output.txeoe = !(pset & 1) && (mc2 || !h1 || (cmd != 0x7));
@@ -166,7 +231,69 @@ class XM28(PartFactory):
 		|		output.tgace = !(cmd == 0x7 && !h1 && !mcyc2_next && mc2 && seta_sel);
 		|		output.tgbce = !(cmd == 0x7 && !h1 && !mcyc2_next && mc2 && setb_sel);
 		|		output.tsc14 = !h1 && !mcyc2_next;
+		|
+		|		output.rclke = labort_y;
 		|	}
+		|
+		|	if (q4pos) {
+		|		state->labort = labort_y;
+		|		state->eabort = eabort_y;
+		|		output.eabrt = state->eabort;
+		|		output.labrt = state->labort;
+		|		output.abort = !(state->labort || output.eabrt);
+		|	}
+		|
+		|	if (clk2x_neg) {
+		|		bool d_dis_adr = PIN_DDISA=>;
+		|		bool trace_dra1 = PIN_TRDR1=>;
+		|		bool trace_dra2 = PIN_TRDR2=>;
+		|		bool lar_2 = PIN_LAR2=>;
+		|		bool lar_3 = PIN_LAR3=>;
+		|
+		|		output.da2sl =
+		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mc2 && blhit && behit && alhit && aehit ) ||
+		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mc2 && blhit && behit && alhit && aehit );
+		|
+		|		output.daa1d =
+		|		    (  d_dis_adr  &&                    trace_dra1 ) ||
+		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa1d ) ||
+		|		    ((!d_dis_adr) &&   h1  &&   mc2  && lar_2 ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mc2  && blhit && behit && alhit && aehit );
+		|
+		|		output.dba1d =
+		|		    (  d_dis_adr  &&                    trace_dra1 ) ||
+		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa1d ) ||
+		|		    ((!d_dis_adr) &&   h1  &&   mc2  && lar_2 ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mc2  && blhit && behit && alhit && aehit );
+		|
+		|		output.daa2d =
+		|		    (  d_dis_adr  &&                    trace_dra2 ) ||
+		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa2d  && (!state->output.da2sl)) ||
+		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa2d  && (!state->dradpal_p22)) ||
+		|		    ((!d_dis_adr) &&   h1  &&   mc2  && lar_3 ) ||
+		|		    ((!d_dis_adr) &&          (!mc2) && behit && aehit && state->dradpal_p22 && state->output.da2sl ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mc2  && (!alhit) && behit && aehit ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mc2  && (!blhit) && behit && aehit ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mc2  && state->output.pht26 && behit && aehit ) ||
+		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mc2 && behit && aehit ) ||
+		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mc2 && behit && aehit );
+		|
+		|		output.dba2d =
+		|		    (  d_dis_adr  &&   trace_dra2 ) ||
+		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa2d  && (!state->output.da2sl)) ||
+		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa2d  && (!state->dradpal_p22)) ||
+		|		    ((!d_dis_adr) &&   h1  &&   mc2  && lar_3 ) ||
+		|		    ((!d_dis_adr) &&          (!mc2) && behit && aehit && state->dradpal_p22 && state->output.da2sl ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mc2  && (!alhit) && behit && aehit ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mc2  && (!blhit) && behit && aehit ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mc2  && state->output.pht26 && behit && aehit ) ||
+		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mc2 && behit && aehit ) ||
+		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mc2 && behit && aehit );
+		|
+		|		state->dradpal_p22 = mc2;
+		|
+		|	}
+		|
 		|''')
 
 def register(part_lib):

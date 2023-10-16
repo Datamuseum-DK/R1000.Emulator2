@@ -50,8 +50,8 @@ class XTCOND(PartFactory):
         for i in (
                                                              "c0h",
             "c1a",        "c1c",
-            "c2a", "c2b", "c2c", "c2d", "c2e", "c2f", "c2g", "c2h",
-            "c3a", "c3b", "c3c", "c3d", "c3e",
+            "c2a", "c2b", "c2c", "c2d", "c2e", "c2f", "c2g",
+            "c3a", "c3b", "c3c",        "c3e",
         ):
             yield from self.event_or(
                 i + "_event",
@@ -59,6 +59,13 @@ class XTCOND(PartFactory):
                 "PIN_SCLK.posedge_event()",
                 "PIN_%s" % i.upper(),
             )
+        yield from self.event_or(
+            "c3d_event",
+            "BUS_SEL",
+            "PIN_SCLK.posedge_event()",
+            "PIN_C3A",
+            "PIN_C3C",
+        )
         yield from self.event_or(
             "c0c_event",
             "BUS_SEL",
@@ -237,7 +244,10 @@ class XTCOND(PartFactory):
 		|		case 4: cond2 = PIN_C2E=>; next_trigger(c2e_event); break;
 		|		case 5: cond2 = PIN_C2F=>; next_trigger(c2f_event); break;
 		|		case 6: cond2 = PIN_C2G=>; next_trigger(c2g_event); break;
-		|		case 7: cond2 = PIN_C2H=>; next_trigger(c2h_event); break;
+		|		case 7:
+		|			cond2 = PIN_C3C=> && PIN_C3A;
+		|			next_trigger(c3d_event);	// 2h and 3d use same
+		|			break;
 		|		default: cond2 = true; break;
 		|		}
 		|		if (sclk)
@@ -248,7 +258,10 @@ class XTCOND(PartFactory):
 		|		case 0: cond3 = PIN_C3A=>; next_trigger(c3a_event); break;
 		|		case 1: cond3 = PIN_C3B=>; next_trigger(c3b_event); break;
 		|		case 2: cond3 = PIN_C3C=>; next_trigger(c3c_event); break;
-		|		case 3: cond3 = PIN_C3D=>; next_trigger(c3d_event); break;
+		|		case 3:
+		|			cond3 = !(PIN_C3A=> || PIN_C3C=>);
+		|			next_trigger(c3d_event);
+		|			break;
 		|		case 4: cond3 = PIN_C3E=>; next_trigger(c3e_event); break;
 		|		case 5:
 		|			BUS_BBIT_READ(bbit);

@@ -39,20 +39,11 @@ from part import PartModel, PartFactory
 class XPRIVCMP(PartFactory):
     ''' TYP Privacy Comparator '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
-		|	bool names, path, aop, bop, iop;
 		|	uint64_t ofreg;
-		|	bool okm;
-		|	bool aeql;
-		|	bool aeqb;
-		|	bool beql;
-		|	bool able;
-		|	bool clce;
-		|	bool clev;
-		|	bool sysu;
-		|	unsigned bbit;
-		|	unsigned bbuf;
 		|	uint8_t prom[512];
 		|''')
 
@@ -70,6 +61,8 @@ class XPRIVCMP(PartFactory):
         yield "BUS_CLIT_SENSITIVE()"
         yield "BUS_UCOD_SENSITIVE()"
         yield "PIN_OFC.pos()"
+        yield "PIN_Q4"
+        yield "PIN_UEN"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -77,34 +70,15 @@ class XPRIVCMP(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		PIN_NAMES<=(state->names);
-		|		PIN_PATH<=(state->path);
-		|		PIN_AOP<=(state->aop);
-		|		PIN_BOP<=(state->bop);
-		|		PIN_IOP<=(state->iop);
-		|		PIN_OKM<=(state->okm);
-		|		PIN_AEQL<=(state->aeql);
-		|		PIN_BEQL<=(state->beql);
-		|		PIN_AEQB<=(state->aeqb);
-		|		PIN_ABLE<=(state->able);
-		|		PIN_CLCE<=(state->clce);
-		|		PIN_CLEV<=(state->clev);
-		|		PIN_SYSU<=(state->sysu);
-		|		BUS_BBIT_WRITE(state->bbit);
-		|		BUS_BBUF_WRITE(state->bbuf);
-		|	}
 		|	uint64_t a, b;
-		|	bool names, tmp, path;
-		|	bool aop, bop, iop;
+		|	bool tmp;
 		|	bool a34, a35, b34, b35, dp;
 		|
 		|	BUS_A_READ(a);
 		|	BUS_B_READ(b);
-		|	names = (a >> 32) == (b >> 32);
+		|	output.names = (a >> 32) == (b >> 32);
 		|	tmp = ((a >> 7) & 0xfffff) == ((b >> 7) & 0xfffff);
-		|	path = !(tmp && names);
+		|	output.path = !(tmp && output.names);
 		|#define BITN(x, n) ((x >> (63 - n)) & 1)
 		|	a34 = BITN(a, 34);
 		|	a35 = BITN(a, 35);
@@ -121,10 +95,10 @@ class XPRIVCMP(PartFactory):
 		|	bool abim = !(!aopm | dp);
 		|	bool bbim = !(!bopm | dp);
 		|
-		|	aop = !(a35 && (aopm || a34));
-		|	bop = !(b35 && (bopm || b34));
+		|	output.aop = !(a35 && (aopm || a34));
+		|	output.bop = !(b35 && (bopm || b34));
 		|
-		|	iop = !(
+		|	output.iop = !(
 		|		(abim && bbim) ||
 		|		(bbim && a34) ||
 		|		(abim && b34) ||
@@ -135,10 +109,10 @@ class XPRIVCMP(PartFactory):
 		|	BUS_CLIT_READ(l);
 		|	BUS_UCOD_READ(ucod);
 		|
-		|	bool aeql = (a & 0x7f) != l;
-		|	bool aeqb = (a & 0x7f) != (b & 0x7f);
-		|	bool beql = (b & 0x7f) != l;
-		|	bool able = !(aeql | aeqb);
+		|	output.aeql = (a & 0x7f) != l;
+		|	output.aeqb = (a & 0x7f) != (b & 0x7f);
+		|	output.beql = (b & 0x7f) != l;
+		|	output.able = !(output.aeql | output.aeqb);
 		|
 		|	unsigned mask_a = state->prom[l] >> 1;
 		|	unsigned okpat_a = state->prom[l + 256] >> 1;
@@ -148,7 +122,7 @@ class XPRIVCMP(PartFactory):
 		|	unsigned okpat_b = state->prom[l + 384] >> 1;
 		|	bool okb = (0x7f ^ (mask_b & (b & 0x7f))) != okpat_b;
 		|
-		|	bool okm = !(oka & okb);
+		|	output.okm = !(oka & okb);
 		|
 		|	bool clce = (ucod >> 1) != 0xf;
 		|
@@ -158,69 +132,88 @@ class XPRIVCMP(PartFactory):
 		|	bool ucabl = (ucod >> 1) & 1;
 		|	bool clsysb = (ucod >> 0) & 1;
 		|	bool clev = !(
-		|	    (!ucatol & !aeql) ||
-		|	    (!ucatob & !aeqb) ||
-		|	    (!ucbtol & !beql) ||
-		|	    (!ucabl & !aeqb & !beql)
+		|	    (!ucatol & !output.aeql) ||
+		|	    (!ucatob & !output.aeqb) ||
+		|	    (!ucbtol & !output.beql) ||
+		|	    (!ucabl & !output.aeqb & !output.beql)
 		|	);
-		|	bool sysu = !(clsysb | !beql);
+		|	bool sysu = !(clsysb | !output.beql);
 		|
-		|	unsigned bbit = 0;
-		|	bbit |= ((b >> BUS_B_LSB(0)) & 1) << 6;
-		|	bbit |= ((b >> BUS_B_LSB(21)) & 1) << 5;
-		|	bbit |= ((b >> BUS_B_LSB(36)) & 0x1f) << 0;
+		|	output.bbit = 0;
+		|	output.bbit |= ((b >> BUS_B_LSB(0)) & 1) << 6;
+		|	output.bbit |= ((b >> BUS_B_LSB(21)) & 1) << 5;
+		|	output.bbit |= ((b >> BUS_B_LSB(36)) & 0x1f) << 0;
 		|
-		|	unsigned bbuf = b & 7;
+		|	output.bbuf = b & 7;
 		|
-		|	TRACE(
-		|	    << " a " << BUS_A_TRACE()
-		|	    << " b " << BUS_B_TRACE()
-		|	    << " a34 " << a34
-		|	    << " a35 " << a35
-		|	    << " b34 " << b34
-		|	    << " b35 " << b35
-		|	    << " - n " << names
-		|	    << " p " << path
-		|	    << " a " << aop
-		|	    << " b " << bop
-		|	    << " i " << iop
-		|	    << " d " << dp
-		|	);
+		|	unsigned priv_chk;
+		|	BUS_UPVC_READ(priv_chk);
 		|
-		|	if (names != state->names ||
-		|	    path != state->path ||
-		|	    aop != state->aop ||
-		|	    bop != state->bop ||
-		|	    iop != state->iop ||
-		|	    aeql != state->aeql ||
-		|	    aeqb != state->aeqb ||
-		|	    beql != state->beql ||
-		|	    able != state->able ||
-		|	    okm != state->okm ||
-		|	    clce != state->clce ||
-		|	    clev != state->clev ||
-		|	    sysu != state->sysu ||
-		|	    bbit != state->bbit ||
-		|	    bbuf != state->bbuf
-		|	) {
-		|		state->ctx.job = 1;
-		|		state->names = names;
-		|		state->path = path;
-		|		state->aop = aop;
-		|		state->bop = bop;
-		|		state->iop = iop;
-		|		state->aeql = aeql;
-		|		state->aeqb = aeqb;
-		|		state->beql = beql;
-		|		state->able = able;
-		|		state->okm = okm;
-		|		state->clce = clce;
-		|		state->clev = clev;
-		|		state->sysu = sysu;
-		|		state->bbit = bbit;
-		|		state->bbuf = bbuf;
-		|		next_trigger(5, SC_NS);
+		|	if (PIN_Q4.posedge()) {
+		|		if (PIN_DMODE=>) {
+		|			// nothing
+		|		} else if (!PIN_SCKEN=>) {
+		|			// nothing
+		|		} else if (priv_chk == 7) {
+		|			// nothing
+		|		} else {
+		|			output.ppriv = PIN_SPPRV=>;
+		|		}
 		|	}
+		|
+		|	bool micros_en = PIN_UEN=>;
+		|
+		|	unsigned selcond;
+		|	if (output.ppriv && micros_en) {
+		|		selcond = 0x80 >> priv_chk;
+		|		selcond ^= 0xff;
+		|	} else {
+		|		selcond = 0xff;
+		|	}
+		|
+		|	if (PIN_Q4.negedge()) {
+		|		output.ue = BUS_UE_MASK;
+		|
+		|		if (micros_en && selcond == 0xbf && output.iop)
+		|			output.ue &= ~0x20;	// T.BIN_OP.UE~
+		|
+		|		if (micros_en && selcond == 0x7f && output.path && output.iop)
+		|			output.ue &= ~0x10;	// T.BIN_EQ.UE~
+		|
+		|		if (micros_en && clev && clce)
+		|			output.ue &= ~0x08;	// T.CLASS.UE~
+		|
+		|		if (micros_en && selcond == 0xef && output.aop)
+		|			output.ue &= ~0x04;	// T.TOS1_OP.UE~
+		|		if (micros_en && selcond == 0xfb && output.bop)
+		|			output.ue &= ~0x04;	// T.TOS1_OP.UE~
+		|
+		|		if (micros_en && selcond == 0xdf && output.aop)
+		|			output.ue &= ~0x02;	// T.TOS_OP.UE~
+		|		if (micros_en && selcond == 0xf7 && output.bop)
+		|			output.ue &= ~0x02;	// T.TOS_OP.UE~
+		|
+		|		if (micros_en && sysu)
+		|			output.ue &= ~0x01;	// T.CHK_SYS.UE~
+		|	}
+		|
+		|	output.t0stp = true;
+		|	if (micros_en && sysu)
+		|		output.t0stp = false;
+		|	if (micros_en && clce && clev)
+		|		output.t0stp = false;
+		|	if (micros_en && output.path && output.iop && selcond == 0x7f)
+		|		output.t0stp = false;
+		|
+		|	output.t1stp = true;
+		|	if (selcond == 0xbf && output.iop)
+		|		output.t1stp = false;
+		|	if ((selcond == 0xef || selcond == 0xdf) && output.aop)
+		|		output.t1stp = false;
+		|	if ((selcond == 0xf7 || selcond == 0xfb) && output.bop)
+		|		output.t1stp = false;
+		|
+		|
 		|''')
 
 def register(part_lib):

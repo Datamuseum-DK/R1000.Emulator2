@@ -33,12 +33,10 @@ class XTCOND(FChip):
         self.sig_left(ChipSig("-->+", "C2E"))
         self.sig_left(ChipSig("-->+", "C2F"))
         self.sig_left(ChipSig("-->+", "C2G"))
-        self.sig_left(ChipSig("-->+", "C2H"))
 
         self.sig_left(ChipSig("-->+", "C3A"))
         self.sig_left(ChipSig("-->+", "C3B"))
         self.sig_left(ChipSig("-->+", "C3C"))
-        self.sig_left(ChipSig("-->+", "C3D"))
         self.sig_left(ChipSig("-->+", "C3E"))
 
         self.sig_left(ChipSig("-->+", "BBIT", 0, 6))

@@ -18,6 +18,13 @@ class XPRIVCMP(FChip):
         self.sig_left(ChipSig("-->+", "CLIT", 0, 6))
         self.sig_left(ChipSig("-->+", "UCOD", 0, 4))
 
+        self.sig_left(ChipSig("-->+", "Q4"))
+        self.sig_left(ChipSig("-->+", "UPVC", 0, 2))
+        self.sig_left(ChipSig("-->+", "UEN"))
+        self.sig_left(ChipSig("-->+", "SPPRV"))
+        self.sig_left(ChipSig("-->+", "SCKEN"))
+        self.sig_left(ChipSig("-->+", "DMODE"))
+
         self.sig_right(ChipSig("+<--", "B", 0, 63))
         self.sig_right(ChipSig("+-->", "NAMES"))
         self.sig_right(ChipSig("+-->", "PATH"))
@@ -30,11 +37,13 @@ class XPRIVCMP(FChip):
         self.sig_right(ChipSig("+-->", "AEQB"))
         self.sig_right(ChipSig("+-->", "BEQL"))
         self.sig_right(ChipSig("+-->", "ABLE"))
-        self.sig_right(ChipSig("+-->", "CLCE"))
-        self.sig_right(ChipSig("+-->", "CLEV"))
-        self.sig_right(ChipSig("+-->", "SYSU"))
+        self.sig_right(ChipSig("+-->", "PPRIV"))
         self.sig_right(ChipSig("+-->", "BBIT", 0, 6))
         self.sig_right(ChipSig("+-->", "BBUF", 0, 2))
+        self.sig_right(ChipSig("+-->", "UE", 0, 5))
+
+        self.sig_left(ChipSig("<--+", "T0STP"))
+        self.sig_left(ChipSig("<--+", "T1STP"))
 
         self.finish()
 
