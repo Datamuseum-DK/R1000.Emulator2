@@ -97,6 +97,7 @@ class F113(PartFactory):
 		|		nxt = true;
 		|	} else {
 		|		what = " nop ";
+		|		next_trigger(PIN_J.posedge_event() | PIN_K.posedge_event());
 		|	}
 		|	if (nxt != state->dreg) {
 		|		state->job = 1;

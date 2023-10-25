@@ -91,16 +91,17 @@ class XTVSCLK(PartFactory):
 		|		bool aena = !(sce || PIN_ACE=>);
 		|		PIN_ACLK<=(!aena);
 		|
+		|		bool ween = !PIN_H2=> || PIN_DSTOP=>;
 		|		bool arfwe = !(
 		|			PIN_ACOFF=> &&
-		|			!(PIN_WEEN=> || PIN_ARFWR=>) &&
+		|			!(ween || PIN_ARFWR=>) &&
 		|			ram_stop
 		|		);
 		|		PIN_ARFWE<=(arfwe);
 		|
 		|		bool brfwe = !(
 		|			PIN_BCOFF=> &&
-		|			!(PIN_WEEN=> || PIN_BRFWR=>) &&
+		|			!(ween || PIN_BRFWR=>) &&
 		|			ram_stop
 		|		);
 		|		PIN_BRFWE<=(brfwe);
