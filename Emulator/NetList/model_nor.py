@@ -180,6 +180,7 @@ class ModelNor(Part):
             else:
                 node.pin.name = "D%d" % n_inputs
                 node.pin.set_role("input")
+                node.pin.update()
                 n_inputs += 1
         assert n_inputs > 0, (comp, [x for x in comp])
         if n_inputs == 1:
