@@ -357,6 +357,15 @@ cli_elastic_text(struct cli *cli)
 	ep->text = 1;
 }
 
+static void v_matchproto_(cli_func_f)
+cli_elastic_break(struct cli *cli)
+{
+	struct elastic *ep = cli->elastic;
+
+	if (ep->break_function != NULL)
+		ep->break_function(cli);
+}
+
 static const struct cli_cmds cli_elastic_cmds[] = {
 	{ "<",			cli_elastic_input },
 	{ "<<",			cli_elastic_here },
@@ -364,6 +373,7 @@ static const struct cli_cmds cli_elastic_cmds[] = {
 	{ ">>",			cli_elastic_output },
 	{ "baud",		cli_elastic_baud },
 	{ "binary",		cli_elastic_binary },
+	{ "break",		cli_elastic_break },
 	{ "cps",		cli_elastic_cps },
 	{ "hex",		cli_elastic_hex },
 	{ "match",		cli_elastic_match },

@@ -48,6 +48,21 @@ static struct cons {
 	unsigned	updated;
 } cons[1];
 
+
+static void v_matchproto_(cli_func_f)
+cli_ioc_console_break(struct cli *cli)
+{
+	if (cli->help) {
+		Cli_Usage(cli, NULL, "Send BREAK");
+		return;
+	}
+	irq_raise(&IRQ_CONSOLE_BREAK);
+	Cli_Printf(cli, "Sending BREAK\n");
+	callout_sleep(10000000);
+	irq_lower(&IRQ_CONSOLE_BREAK);
+	return;
+}
+
 void v_matchproto_(cli_func_f)
 cli_ioc_console(struct cli *cli)
 {
@@ -235,5 +250,6 @@ ioc_console_init(void)
 {
 
 	cons->ep = elastic_new(O_RDWR);
+	cons->ep->break_function = cli_ioc_console_break;
 	AZ(pthread_create(&cons_rx, NULL, thr_console_rx, NULL));
 }
