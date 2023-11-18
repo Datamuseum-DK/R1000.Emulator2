@@ -250,7 +250,7 @@ ioc_duart_tx_callback(void *priv)
 				usleep(100000);
 				Trace(
 				    trace_diagbus,
-				    "%s Post Reset (0x%x%02x)", 
+				    "%s Post Reset (0x%x%02x)",
 					    chp->name,
 					    chp->txshift[0],
 					    chp->txshift[1]
@@ -464,7 +464,7 @@ ioc_duart_init(void)
 	ioc_duart->chan[1].is_diagbus = 1;
 	ioc_duart->chan[1].vsb = VSB_new_auto();
 	AN(ioc_duart->chan[1].vsb);
-	
+
 	// 1/10_MHz * (64 * 11_bits) = 70400 nsec
 	ioc_duart->chan[1].inflight = 70400;
 	ioc_duart->chan[1].inflight /= 2;		// hack

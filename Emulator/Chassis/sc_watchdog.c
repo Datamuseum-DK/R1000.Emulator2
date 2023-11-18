@@ -30,7 +30,7 @@ fido(void *priv)
 
 	(void)priv;
 	sleep(fido_patience);
-        dl = el = 0;
+	dl = el = 0;
 	AZ(clock_gettime(CLOCK_MONOTONIC, &t1));
 	while (1) {
 		t0 = t1;
@@ -51,9 +51,9 @@ fido(void *priv)
 				continue;
 			ccp = *cp;
 			p = strchr(ccp.ident, ' ');
-                        if (p != NULL)
+			if (p != NULL)
 				*p = '\0';
-			
+
 			dctx = (const void*)(cp+1);
 			if (!fido_dont_bite) {
 				printf("FIDO barks: %s act %ju mcs51 %ju exp %ju\n",
@@ -85,7 +85,7 @@ fido(void *priv)
 		dl = d;
 
 		if (fido_dont_bite ||
-                    (this_exec > last_exec && this_instr > last_instr)) {
+		    (this_exec > last_exec && this_instr > last_instr)) {
 			last_act = this_act;
 			last_exec = this_exec;
 			last_instr = this_instr;

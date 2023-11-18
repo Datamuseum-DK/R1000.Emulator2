@@ -38,28 +38,10 @@
 
 #include "Infra/r1000.h"
 #include "Infra/vav.h"
+#include "Infra/vsb.h"
 #include "Iop/iop.h"
 
 static int cli_echo_cmds = 1;
-
-static void
-cli_path(struct cli *cli)
-{
-	size_t sz;
-	char **av;
-	const char *sep = "";
-
-	for (av = cli->av0; *av; av++) {
-		sz = strcspn(*av, " \t");
-		if ((*av)[sz])
-			Cli_Printf(cli, "%s\"%s\"", sep, *av);
-		else
-			Cli_Printf(cli, "%s%s", sep, *av);
-		if (av == cli->av)
-			break;
-		sep = " ";
-	}
-}
 
 static void
 cli_exit(struct cli *cli)
@@ -192,20 +174,17 @@ Cli_Usage(struct cli *cli, const char *args, const char *fmt, ...)
 {
 	va_list ap;
 
-	if (cli->help < 2) {
-		Cli_Printf(cli, "Usage:\n\t");
-		if (*cli->av0)
-			cli_path(cli);
+	if (cli->help && cli->ac == 0) {
+		Cli_Printf(cli, "\t%s", VSB_data(cli->path));
+		if (args != NULL)
+			Cli_Printf(cli, " %s\n", args);
 		else
-			Cli_Printf(cli, " ");
-	}
-
-	if (args != NULL)
-		Cli_Printf(cli, " %s\n", args);
-	else
-		Cli_Printf(cli, "\n");
-
-	if (cli->help == 1) {
+			Cli_Printf(cli, "\n");
+	} else {
+		Cli_Printf(cli, "Usage:\t");
+		Cli_Printf(cli, "%s", VSB_data(cli->path));
+		if (args != NULL)
+			Cli_Printf(cli, " %s", args);
 		Cli_Printf(cli, "\n\t");
 		va_start(ap, fmt);
 		(void)vprintf(fmt, ap);
@@ -215,45 +194,44 @@ Cli_Usage(struct cli *cli, const char *args, const char *fmt, ...)
 }
 
 static void
+cli_call_func(struct cli *cli, const struct cli_cmds *cc)
+{
+	struct vsb *old_path = cli->path;
+
+	AN(cc);
+	AN(cc->cmd);
+	AN(cc->func);
+	cli->cmd = cc->cmd;
+	cli->path = VSB_new_auto();
+	AN(cli->path);
+	if (VSB_len(old_path)) {
+		VSB_cat(cli->path, VSB_data(old_path));
+		VSB_cat(cli->path, " ");
+	}
+	VSB_cat(cli->path, cc->cmd);
+	AZ(VSB_finish(cli->path));
+	cc->func(cli);
+	VSB_destroy(&cli->path);
+	cli->path = old_path;
+}
+
+static void
 cli_int_dispatch(struct cli *cli, const struct cli_cmds *cmds)
 {
 	const struct cli_cmds *cc;
-
-	if (cli->ac == 0 && cli->help) {
-		cli->help++;
-
-		Cli_Printf(cli, "Usage:");
-		if (cli->av != cli->av0) {
-			Cli_Printf(cli, " ");
-			cli_path(cli);
-			Cli_Printf(cli, " …");
-		}
-		Cli_Printf(cli, "\n");
-
-		for (cc = cmds; cc->cmd != NULL; cc++) {
-			if (cli->av != cli->av0)
-				Cli_Printf(cli, "\t… %s", cc->cmd);
-			else
-				Cli_Printf(cli, "\t%s", cc->cmd);
-			cli->cmd = cc->cmd;
-			cc->func(cli);
-		}
-		return;
-	}
 
 	for (cc = cmds; cc->cmd != NULL; cc++)
 		if (!strcasecmp(cc->cmd, *cli->av))
 			break;
 
 	if (cc->func != NULL) {
-		cli->cmd = cc->cmd;
-		cc->func(cli);
+		cli_call_func(cli, cc);
 		return;
 	}
 
 	Cli_Error(cli, "CLI error, no command: ");
-	cli_path(cli);
-	Cli_Printf(cli, "\n");
+	Cli_Printf(cli, "[%s] ", VSB_data(cli->path));
+	Cli_Printf(cli, "%s\n", *cli->av);
 }
 
 static void v_matchproto_(cli_func_f)
@@ -266,53 +244,38 @@ cli_help(struct cli *cli)
 	}
 
 	cli->help = 1;
-	cli->av0++;
-	cli->av++;
-	cli->ac--;
-	cli_int_dispatch(cli, cli_cmds);
+	VSB_clear(cli->path);
+	AZ(VSB_finish(cli->path));
+	Cli_Dispatch(cli, cli_cmds);
 }
 
 void
 Cli_Dispatch(struct cli *cli, const struct cli_cmds *cmds)
 {
 	const struct cli_cmds *cc;
-	const char *mycmd = cli->cmd;
-	char buf[BUFSIZ];
 
-	if (cli->help == 0 && cli->ac < 2) {
-		cli->help = 1;
-		Cli_Error(cli, "Usage:\n");
-	}
-	if (cli->help == 2) {
-		for (cc = cmds; cc->cmd != NULL; cc++) {
-			if (cc != cmds) {
-				Cli_Printf(cli, "\t");
-				cli_path(cli);
-				Cli_Printf(cli, "%s", cli->cmd);
-			}
-			Cli_Printf(cli, " %s", cc->cmd);
-			bprintf(buf, "%s %s", mycmd, cc->cmd);
-			cli->cmd = buf;
-			cc->func(cli);
-			cli->cmd = mycmd;
-		}
-		return;
-	}
-	if (cli->help == 1 && cli->ac == 1) {
-		cli->help++;
-		for (cc = cmds; cc->cmd != NULL; cc++) {
-			Cli_Printf(cli, "\t");
-			cli_path(cli);
-			Cli_Printf(cli, " %s", cc->cmd);
-			cc->func(cli);
-		}
-		return;
-	}
-	if (cli->ac > 1) {
+	if (cli->help == 1 && cli->ac == 0) {
+		for (cc = cmds; cc->cmd != NULL; cc++)
+			cli_call_func(cli, cc);
+	} else if (cli->help == 1 && cli->ac < 2) {
 		cli->ac--;
 		cli->av++;
+		for (cc = cmds; cc->cmd != NULL; cc++)
+			cli_call_func(cli, cc);
+		cli->av--;
+		cli->ac++;
+	} else if (cli->help == 0 && cli->ac < 2) {
+		cli->help = 1;
+		Cli_Error(cli, "Usage:\n");
+		for (cc = cmds; cc->cmd != NULL; cc++)
+			cli_call_func(cli, cc);
+	} else if (cli->ac >= 1) {
+		cli->ac--;
+		cli->av++;
+		cli_int_dispatch(cli, cmds);
+		cli->ac++;
+		cli->av--;
 	}
-	cli_int_dispatch(cli, cmds);
 }
 
 int
@@ -345,9 +308,12 @@ Cli_Exec(const char *s)
 	}
 	memset(&cli, 0, sizeof cli);
 	cli.ac = ac - 1;
-	cli.av0 = av + 1;
 	cli.av = av + 1;
+	cli.path = VSB_new_auto();
+	AN(cli.path);
+	AZ(VSB_finish(cli.path));
 	cli_int_dispatch(&cli, cli_cmds);
+	VSB_destroy(&cli.path);
 	VAV_Free(av);
 	return (cli.status);
 }

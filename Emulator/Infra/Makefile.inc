@@ -1,4 +1,4 @@
-
+CFLAGS += -g
 OBJS += ${OBJDIR}/callout.o
 ${OBJDIR}/callout.o: \
     Infra/callout.c \

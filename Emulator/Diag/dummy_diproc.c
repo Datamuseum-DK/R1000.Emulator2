@@ -170,7 +170,7 @@ cli_diproc_dummy(struct cli *cli)
 		Cli_Usage(cli, "[-<status>] <board> …",
 		    "Implement dummy DIPROC.  Default status is OK."
 		);
-		if (cli->help == 1) {
+		if (cli->ac == 1) {
 			cli_diproc_help_status(cli);
 			cli_diproc_help_board(cli);
 		}

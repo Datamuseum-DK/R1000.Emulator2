@@ -22,70 +22,70 @@ static int
 load_control_store_200_fiu(struct diagproc *dp)
 {
 #if !defined(HAS_Z022)
-        (void)dp;
-        return (0);
+	(void)dp;
+	return (0);
 #else
-        struct ctx *ctx;
-        int n;
-        uint64_t wcs, inp, inv;
+	struct ctx *ctx;
+	int n;
+	uint64_t wcs, inp, inv;
 
-        if (fiu_wcs == NULL) {
-                ctx = CTX_Find(COMP_Z022);
-                AN(ctx);
-                fiu_wcs = (uint64_t *)(ctx + 1);
-        }
-        for (n = 0; n < 16; n++) {
-                inp = vbe64dec(dp->ram + 0x18 + n * 8);
-                inv = inp ^ ~0;
-                wcs = 0;
+	if (fiu_wcs == NULL) {
+		ctx = CTX_Find(COMP_Z022);
+		AN(ctx);
+		fiu_wcs = (uint64_t *)(ctx + 1);
+	}
+	for (n = 0; n < 16; n++) {
+		inp = vbe64dec(dp->ram + 0x18 + n * 8);
+		inv = inp ^ ~0;
+		wcs = 0;
 
-                wcs <<= 1; wcs |= (inp >>  7) & 1; // 46
-                wcs <<= 1; wcs |= (inp >> 15) & 1; // 45
-                wcs <<= 1; wcs |= (inp >> 23) & 1; // 44
-                wcs <<= 1; wcs |= (inp >> 31) & 1; // 43
-                wcs <<= 1; wcs |= (inp >> 39) & 1; // 42
-                wcs <<= 1; wcs |= (inp >> 47) & 1; // 41
-                wcs <<= 1; wcs |= (inp >> 55) & 1; // 40
-                wcs <<= 1; wcs |= (inp >>  0) & 0; // 39
-                wcs <<= 1; wcs |= (inp >> 63) & 1; // 38
-                wcs <<= 1; wcs |= (inp >>  6) & 1; // 37
-                wcs <<= 1; wcs |= (inp >> 14) & 1; // 36
-                wcs <<= 1; wcs |= (inp >> 22) & 1; // 35
-                wcs <<= 1; wcs |= (inp >> 30) & 1; // 34
-                wcs <<= 1; wcs |= (inp >> 38) & 1; // 33
-                wcs <<= 1; wcs |= (inp >> 46) & 1; // 32
-                wcs <<= 1; wcs |= (inp >> 54) & 1; // 31
-                wcs <<= 1; wcs |= (inp >> 62) & 1; // 30
-                wcs <<= 1; wcs |= (inp >>  5) & 1; // 29
-                wcs <<= 1; wcs |= (inp >> 13) & 1; // 28
-                wcs <<= 1; wcs |= (inp >> 21) & 1; // 27
-                wcs <<= 1; wcs |= (inp >> 29) & 1; // 26
-                wcs <<= 1; wcs |= (inp >> 37) & 1; // 25
-                wcs <<= 1; wcs |= (inp >> 45) & 1; // 24
-                wcs <<= 1; wcs |= (inp >>  4) & 1; // 23
-                wcs <<= 1; wcs |= (inp >> 12) & 1; // 22
-                wcs <<= 1; wcs |= (inp >> 20) & 1; // 21
-                wcs <<= 1; wcs |= (inp >> 28) & 1; // 20
-                wcs <<= 1; wcs |= (inp >> 36) & 1; // 19
-                wcs <<= 1; wcs |= (inp >> 44) & 1; // 18
-                wcs <<= 1; wcs |= (inp >> 52) & 1; // 17
-                wcs <<= 1; wcs |= (inp >> 60) & 1; // 16
-                wcs <<= 1; wcs |= (inp >>  0) & 0; // 15
-                wcs <<= 1; wcs |= (inp >>  3) & 1; // 14
-                wcs <<= 1; wcs |= (inp >> 11) & 1; // 13
-                wcs <<= 1; wcs |= (inp >> 19) & 1; // 12
-                wcs <<= 1; wcs |= (inp >> 27) & 1; // 11
-                wcs <<= 1; wcs |= (inp >> 35) & 1; // 10
-                wcs <<= 1; wcs |= (inp >> 43) & 1; //  9
-                wcs <<= 1; wcs |= (inp >> 59) & 1; //  8
-                wcs <<= 1; wcs |= (inp >>  0) & 0; //  7
-                wcs <<= 1; wcs |= (inp >>  0) & 0; //  6
-                wcs <<= 1; wcs |= (inp >>  0) & 0; //  5
-                wcs <<= 1; wcs |= (inp >>  0) & 0; //  4
-                wcs <<= 1; wcs |= (inp >>  0) & 0; //  3
-                wcs <<= 1; wcs |= (inp >>  0) & 0; //  2
-                wcs <<= 1; wcs |= (inp >>  2) & 1; //  1
-                wcs <<= 1; wcs |= (inp >> 10) & 1; //  0
+		wcs <<= 1; wcs |= (inp >>  7) & 1; // 46
+		wcs <<= 1; wcs |= (inp >> 15) & 1; // 45
+		wcs <<= 1; wcs |= (inp >> 23) & 1; // 44
+		wcs <<= 1; wcs |= (inp >> 31) & 1; // 43
+		wcs <<= 1; wcs |= (inp >> 39) & 1; // 42
+		wcs <<= 1; wcs |= (inp >> 47) & 1; // 41
+		wcs <<= 1; wcs |= (inp >> 55) & 1; // 40
+		wcs <<= 1; wcs |= (inp >>  0) & 0; // 39
+		wcs <<= 1; wcs |= (inp >> 63) & 1; // 38
+		wcs <<= 1; wcs |= (inp >>  6) & 1; // 37
+		wcs <<= 1; wcs |= (inp >> 14) & 1; // 36
+		wcs <<= 1; wcs |= (inp >> 22) & 1; // 35
+		wcs <<= 1; wcs |= (inp >> 30) & 1; // 34
+		wcs <<= 1; wcs |= (inp >> 38) & 1; // 33
+		wcs <<= 1; wcs |= (inp >> 46) & 1; // 32
+		wcs <<= 1; wcs |= (inp >> 54) & 1; // 31
+		wcs <<= 1; wcs |= (inp >> 62) & 1; // 30
+		wcs <<= 1; wcs |= (inp >>  5) & 1; // 29
+		wcs <<= 1; wcs |= (inp >> 13) & 1; // 28
+		wcs <<= 1; wcs |= (inp >> 21) & 1; // 27
+		wcs <<= 1; wcs |= (inp >> 29) & 1; // 26
+		wcs <<= 1; wcs |= (inp >> 37) & 1; // 25
+		wcs <<= 1; wcs |= (inp >> 45) & 1; // 24
+		wcs <<= 1; wcs |= (inp >>  4) & 1; // 23
+		wcs <<= 1; wcs |= (inp >> 12) & 1; // 22
+		wcs <<= 1; wcs |= (inp >> 20) & 1; // 21
+		wcs <<= 1; wcs |= (inp >> 28) & 1; // 20
+		wcs <<= 1; wcs |= (inp >> 36) & 1; // 19
+		wcs <<= 1; wcs |= (inp >> 44) & 1; // 18
+		wcs <<= 1; wcs |= (inp >> 52) & 1; // 17
+		wcs <<= 1; wcs |= (inp >> 60) & 1; // 16
+		wcs <<= 1; wcs |= (inp >>  0) & 0; // 15
+		wcs <<= 1; wcs |= (inp >>  3) & 1; // 14
+		wcs <<= 1; wcs |= (inp >> 11) & 1; // 13
+		wcs <<= 1; wcs |= (inp >> 19) & 1; // 12
+		wcs <<= 1; wcs |= (inp >> 27) & 1; // 11
+		wcs <<= 1; wcs |= (inp >> 35) & 1; // 10
+		wcs <<= 1; wcs |= (inp >> 43) & 1; //  9
+		wcs <<= 1; wcs |= (inp >> 59) & 1; //  8
+		wcs <<= 1; wcs |= (inp >>  0) & 0; //  7
+		wcs <<= 1; wcs |= (inp >>  0) & 0; //  6
+		wcs <<= 1; wcs |= (inp >>  0) & 0; //  5
+		wcs <<= 1; wcs |= (inp >>  0) & 0; //  4
+		wcs <<= 1; wcs |= (inp >>  0) & 0; //  3
+		wcs <<= 1; wcs |= (inp >>  0) & 0; //  2
+		wcs <<= 1; wcs |= (inp >>  2) & 1; //  1
+		wcs <<= 1; wcs |= (inp >> 10) & 1; //  0
 
 
 		fiu_wcs[fiu_ptr++] = wcs;
@@ -103,7 +103,7 @@ diagproc_turbo_fiu(struct diagproc *dp)
 		return (0);
 	}
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_FIU_HASH ||
-            dp->dl_hash == 0x00001045) {
+	    dp->dl_hash == 0x00001045) {
 		return (load_control_store_200_fiu(dp));
 	}
 

@@ -50,8 +50,8 @@ load_dispatch_rams_200_seq(struct diagproc *dp)
 		dst = 0;
 		dst <<= 1; dst |= (src >>  7) & 1;	// 31
 		dst <<= 1; dst |= (src >> 15) & 1;
-		dst <<= 1; dst |= (src >>  6) & 1;	
-		dst <<= 1; dst |= (src >> 14) & 1;	
+		dst <<= 1; dst |= (src >>  6) & 1;
+		dst <<= 1; dst |= (src >> 14) & 1;
 		dst <<= 1; dst |= (src >> 23) & 1;
 		dst <<= 1; dst |= (src >> 31) & 1;
 		dst <<= 1; dst |= (src >> 22) & 1;	// 25
@@ -94,22 +94,22 @@ static int
 load_control_store_200_seq(struct diagproc *dp)
 {
 #if !defined(HAS_Z021)
-        (void)dp;
-        return (0);
+	(void)dp;
+	return (0);
 #else
-        struct ctx *ctx;
-        int n;
-        uint64_t wcs, inp, inv;
+	struct ctx *ctx;
+	int n;
+	uint64_t wcs, inp, inv;
 
-        if (seq_wcs == NULL) {
-                ctx = CTX_Find(COMP_Z021);
-                AN(ctx);
-                seq_wcs = (uint64_t *)(ctx + 1);
-        }
-        for (n = 0; n < 16; n++) {
-                inp = vbe64dec(dp->ram + 0x18 + n * 8);
-                inv = inp ^ ~0;
-                wcs = 0;
+	if (seq_wcs == NULL) {
+		ctx = CTX_Find(COMP_Z021);
+		AN(ctx);
+		seq_wcs = (uint64_t *)(ctx + 1);
+	}
+	for (n = 0; n < 16; n++) {
+		inp = vbe64dec(dp->ram + 0x18 + n * 8);
+		inv = inp ^ ~0;
+		wcs = 0;
 
 		wcs <<= 1; wcs |= (inp >> 46) & 1; // 41
 		wcs <<= 1; wcs |= (inp >> 38) & 1; // 40
@@ -134,7 +134,7 @@ load_control_store_200_seq(struct diagproc *dp)
 		wcs <<= 1; wcs |= (inp >> 12) & 1; // 21
 		wcs <<= 1; wcs |= (inp >> 20) & 1; // 20
 		wcs <<= 1; wcs |= (inp >> 37) & 1; // 19
-		wcs <<= 1; wcs |= (inp >> 29) & 1; // 18 
+		wcs <<= 1; wcs |= (inp >> 29) & 1; // 18
 		wcs <<= 1; wcs |= (inp >>  5) & 1; // 17
 		wcs <<= 1; wcs |= (inp >> 13) & 1; // 16
 		wcs <<= 1; wcs |= (inp >> 21) & 1; // 15
@@ -164,7 +164,7 @@ int
 diagproc_turbo_seq(struct diagproc *dp)
 {
 	if (dp->dl_hash == LOAD_DISPATCH_RAMS_200_SEQ_HASH ||
-            dp->dl_hash == 0x00001081) {
+	    dp->dl_hash == 0x00001081) {
 		return (load_dispatch_rams_200_seq(dp));
 	}
 	if (dp->dl_hash == LOAD_COUNTER_SEQ_HASH) {
@@ -172,7 +172,7 @@ diagproc_turbo_seq(struct diagproc *dp)
 		return (0);
 	}
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_SEQ_HASH ||
-            dp->dl_hash == 0x00001045) {
+	    dp->dl_hash == 0x00001045) {
 		return (load_control_store_200_seq(dp));
 	}
 

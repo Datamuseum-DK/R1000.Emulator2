@@ -342,7 +342,7 @@ diagproc_turbo_typ(struct diagproc *dp)
 		return (0);
 	}
 	if (dp->dl_hash == LOAD_REGISTER_FILE_200_TYP_HASH ||
-            dp->dl_hash == 0x000017c5)
+	    dp->dl_hash == 0x000017c5)
 		return (load_register_file_typ(dp));
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_TYP_HASH ||
 	    dp->dl_hash == 0x00001045) {
@@ -363,7 +363,7 @@ diagproc_turbo_val(struct diagproc *dp)
 		return (0);
 	}
 	if (dp->dl_hash == LOAD_REGISTER_FILE_200_VAL_HASH ||
-            dp->dl_hash == 0x000017c5)
+	    dp->dl_hash == 0x000017c5)
 		return (load_register_file_val(dp));
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_VAL_HASH ||
 	    dp->dl_hash == 0x00001045) {

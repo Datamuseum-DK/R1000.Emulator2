@@ -132,7 +132,7 @@ cli_diproc_wait(struct cli *cli)
 	if (cli->help || cli->ac < 2 || cli->ac > 3) {
 		Cli_Usage(cli, "[[-]<status>] <board>",
 		    "Wait for DIPROC to reach or leave (-) status");
-		if (cli->help == 1) {
+		if (cli->ac == 1) {
 			cli_diproc_help_status(cli);
 			cli_diproc_help_board(cli);
 		}

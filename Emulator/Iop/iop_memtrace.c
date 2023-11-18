@@ -92,13 +92,6 @@ get_next_trace(void)
 	return (mt);
 }
 
-#define USAGE_ADD() \
-	do { \
-		Cli_Usage(cli, "<segname>|<lo_adr> <hi_adr>", \
-		    "Add a memory trace point."); \
-		return; \
-	} while (0)
-
 static void v_matchproto_(cli_func_f)
 cli_ioc_memtrace_add(struct cli *cli)
 {
@@ -106,8 +99,23 @@ cli_ioc_memtrace_add(struct cli *cli)
 	const struct memdesc *md;
 	unsigned u, lo, hi;
 
-	if (cli->help || cli->ac < 2 || cli->ac > 3)
-		USAGE_ADD();
+	if (cli->help || cli->ac < 2 || cli->ac > 3) {
+		Cli_Usage(cli, "<segname>|<lo_adr> <hi_adr>",
+		    "Add a memory trace point.");
+		if (cli->ac == 1) {
+			Cli_Printf(cli, "\tsegnames:\n");
+			for (u = 0; u < n_memdesc; u++) {
+				Cli_Printf(
+				    cli,
+				    "\t\t0x%08jx-%08jx %s\n",
+				    (uintmax_t)memdesc[u]->lo,
+				    (uintmax_t)(memdesc[u]->hi - 1),
+				    memdesc[u]->name
+				);
+			}
+		}
+		return;
+	}
 
 	cli->ac--;
 	cli->av++;
@@ -157,6 +165,8 @@ cli_ioc_memtrace_del(struct cli *cli)
 
 	if (cli->help || cli->ac != 2) {
 		Cli_Usage(cli, "<number>", "Delete memtrace.");
+		if (cli->ac == 1)
+			Cli_Printf(cli, "\t(Use iop memtrace list to see numbers)\n");
 		return;
 	}
 	cli->ac--;
@@ -181,7 +191,7 @@ cli_ioc_memtrace_list(struct cli *cli)
 	struct memtrace *mt1;
 
 	if (cli->help) {
-		Cli_Usage(cli, NULL, "List memtrace.");
+		Cli_Usage(cli, NULL, "List memtraces and their numbers.");
 		return;
 	}
 	if (VTAILQ_EMPTY(&memtraces)) {

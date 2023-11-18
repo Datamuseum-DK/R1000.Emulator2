@@ -80,7 +80,7 @@ cli_trace(struct cli *cli)
 	if (cli->help) {
 		Cli_Usage(cli, "[+|-|~]<trace> …",
 		    "Enable/disable/flip tracing of trace.");
-		if (cli->help == 1) {
+		if (cli->ac == 1) {
 			Cli_Printf(cli, "\n    Traces");
 			if (cli->ac > 1)
 				Cli_Printf(cli, " matching '%s':\n",

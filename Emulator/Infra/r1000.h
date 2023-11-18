@@ -85,9 +85,9 @@ struct cli {
 	int			help;
 	int			ac;
 	char			**av;
-	char			**av0;
 	const char		*cmd;
 	struct elastic		*elastic;
+	struct vsb		*path;
 };
 
 typedef void cli_func_f(struct cli *);

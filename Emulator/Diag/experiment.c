@@ -93,7 +93,7 @@ cli_diproc_experiment(struct cli *cli)
 	if (cli->help || cli->ac != 3) {
 		Cli_Usage(cli, "<board> <filename>",
 		    "Start DIPROC experiment.");
-		if (cli->help == 1)
+		if (cli->ac == 1)
 			cli_diproc_help_board(cli);
 		return;
 	}
@@ -123,7 +123,7 @@ cli_diproc_status(struct cli *cli)
 
 	if (cli->help || cli->ac != 2) {
 		Cli_Usage(cli, "<board>", "Report DIPROC status");
-		if (cli->help == 1)
+		if (cli->ac == 1)
 			cli_diproc_help_board(cli);
 		return;
 	}
