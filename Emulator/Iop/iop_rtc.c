@@ -205,18 +205,18 @@ ioc_rtc_init(void)
 }
 
 static const char *configs[] = {
-    "+modem_dialout",
-    "-modem_dialout",
-    "+modem_answer",
-    "-modem_answer",
-    "+iop_autoboot",
-    "-iop_autoboot",
-    "+r1000_autoboot",
-    "-r1000_autoboot",
-    "+auto_crash_recovery",
-    "-auto_crash_recovery",
-    "+console_break_key",
-    "-console_break_key",
+    "+modem-dialout",
+    "-modem-dialout",
+    "+modem-answer",
+    "-modem-answer",
+    "+iop-autoboot",
+    "-iop-autoboot",
+    "+r1000-autoboot",
+    "-r1000-autoboot",
+    "+auto-crash-recovery",
+    "-auto-crash-recovery",
+    "+console-break-key",
+    "-console-break-key",
     NULL,
 };
 
@@ -225,6 +225,20 @@ cli_ioc_config(struct cli *cli)
 {
 	int i, j;
 
+	if (cli->help || cli->ac > 2) {
+		Cli_Usage(
+		    cli,
+		    "[-|+]option",
+		    "Operator mode options:\n"
+		    "\t    [+|-]modem_dialout\n"
+		    "\t    [+|-]modem_answer\n"
+		    "\t    [+|-]iop_autoboot\n"
+		    "\t    [+|-]r1000_autoboot\n"
+		    "\t    [+|-]auto_crash_recovery\n"
+		    "\t    [+|-]console_break_key"
+		);
+		return;
+	}
 	for (i = 1; i < cli->ac; i++) {
 		for (j = 0; configs[j] != NULL; j++) {
 			if (!strcmp(cli->av[i], configs[j])) {
@@ -235,10 +249,19 @@ cli_ioc_config(struct cli *cli)
 				}
 				break;
 			}
+			if (!strcmp(cli->av[i], configs[j] + 1)) {
+				rtcregs[0xa] ^= (1 << (j >> 1));
+				break;
+			}
 		}
 		if (configs[j] == NULL)
 			Cli_Error(cli, "Unknown flag '%s'\n", cli->av[i]);
 	}
-        Cli_Printf(cli, "Config is 0x%02x\n", rtcregs[0xa]);
-	Cli_Usage(cli, "-option", "Operator mode options");
+	Cli_Printf(cli, "Config is 0x%02x:\n", rtcregs[0xa]);
+	for (j = 0; configs[j] != NULL; j += 2) {
+		if (rtcregs[0xa] & (1 << (j >> 1)))
+			Cli_Printf(cli, "    %s\n", configs[j]);
+		else
+			Cli_Printf(cli, "    %s\n", configs[j + 1]);
+	}
 }
