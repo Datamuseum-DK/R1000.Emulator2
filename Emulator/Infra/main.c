@@ -133,6 +133,7 @@ main(int argc, char **argv)
 	int ch, i;
 	char buf[BUFSIZ];
 	const char *p, *q;
+	const char *argv0 = argv[0];
 
 	AZ(clock_gettime(CLOCK_MONOTONIC, &t0));
 	setbuf(stdout, NULL);
@@ -156,9 +157,9 @@ main(int argc, char **argv)
 		p = getenv("TMPDIR");
 		if (p == NULL)
 			p = "/tmp";
-		q = strrchr(argv[0], '/');
+		q = strrchr(argv0, '/');
 		if (q == NULL)
-			q = argv[0];
+			q = argv0;
 		else
 			q++;
 		bprintf(buf, "%s/_%s", p, q);
