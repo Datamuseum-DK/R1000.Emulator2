@@ -57,6 +57,7 @@ ${R1000BIN}:	${OBJS}
 flint: ${OBJS}
 	flexelint flint.lnt \
 		${R1000SIM} ${CFLAGSMINUSI} ${CFLAGSMINUSD} \
+		-I${WORKDIR}/ \
 		Dfs/*.c \
 		Diag/*.c \
 		Infra/*.c \

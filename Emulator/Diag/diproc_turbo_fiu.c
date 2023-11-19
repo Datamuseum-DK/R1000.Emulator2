@@ -19,7 +19,7 @@ static uint64_t *fiu_wcs;
 static unsigned fiu_ptr;
 
 static int
-load_control_store_200_fiu(struct diagproc *dp)
+load_control_store_200_fiu(const struct diagproc *dp)
 {
 #if !defined(HAS_Z022)
 	(void)dp;
@@ -27,26 +27,24 @@ load_control_store_200_fiu(struct diagproc *dp)
 #else
 	struct ctx *ctx;
 	int n;
-	uint64_t wcs, inp, inv;
+	uint64_t wcs, inp;
 
 	if (fiu_wcs == NULL) {
 		ctx = CTX_Find(COMP_Z022);
 		AN(ctx);
-		fiu_wcs = (uint64_t *)(ctx + 1);
+		fiu_wcs = (uint64_t *)(void*)(ctx + 1);
 	}
 	for (n = 0; n < 16; n++) {
 		inp = vbe64dec(dp->ram + 0x18 + n * 8);
-		inv = inp ^ ~0;
-		wcs = 0;
 
-		wcs <<= 1; wcs |= (inp >>  7) & 1; // 46
+		wcs = 0;   wcs |= (inp >>  7) & 1; // 46
 		wcs <<= 1; wcs |= (inp >> 15) & 1; // 45
 		wcs <<= 1; wcs |= (inp >> 23) & 1; // 44
 		wcs <<= 1; wcs |= (inp >> 31) & 1; // 43
 		wcs <<= 1; wcs |= (inp >> 39) & 1; // 42
 		wcs <<= 1; wcs |= (inp >> 47) & 1; // 41
 		wcs <<= 1; wcs |= (inp >> 55) & 1; // 40
-		wcs <<= 1; wcs |= (inp >>  0) & 0; // 39
+		wcs <<= 1; // wcs |= (inp >>  0) & 0; // 39
 		wcs <<= 1; wcs |= (inp >> 63) & 1; // 38
 		wcs <<= 1; wcs |= (inp >>  6) & 1; // 37
 		wcs <<= 1; wcs |= (inp >> 14) & 1; // 36
@@ -70,7 +68,7 @@ load_control_store_200_fiu(struct diagproc *dp)
 		wcs <<= 1; wcs |= (inp >> 44) & 1; // 18
 		wcs <<= 1; wcs |= (inp >> 52) & 1; // 17
 		wcs <<= 1; wcs |= (inp >> 60) & 1; // 16
-		wcs <<= 1; wcs |= (inp >>  0) & 0; // 15
+		wcs <<= 1; // wcs |= (inp >>  0) & 0; // 15
 		wcs <<= 1; wcs |= (inp >>  3) & 1; // 14
 		wcs <<= 1; wcs |= (inp >> 11) & 1; // 13
 		wcs <<= 1; wcs |= (inp >> 19) & 1; // 12
@@ -78,12 +76,12 @@ load_control_store_200_fiu(struct diagproc *dp)
 		wcs <<= 1; wcs |= (inp >> 35) & 1; // 10
 		wcs <<= 1; wcs |= (inp >> 43) & 1; //  9
 		wcs <<= 1; wcs |= (inp >> 59) & 1; //  8
-		wcs <<= 1; wcs |= (inp >>  0) & 0; //  7
-		wcs <<= 1; wcs |= (inp >>  0) & 0; //  6
-		wcs <<= 1; wcs |= (inp >>  0) & 0; //  5
-		wcs <<= 1; wcs |= (inp >>  0) & 0; //  4
-		wcs <<= 1; wcs |= (inp >>  0) & 0; //  3
-		wcs <<= 1; wcs |= (inp >>  0) & 0; //  2
+		wcs <<= 1; // wcs |= (inp >>  0) & 0; //  7
+		wcs <<= 1; // wcs |= (inp >>  0) & 0; //  6
+		wcs <<= 1; // wcs |= (inp >>  0) & 0; //  5
+		wcs <<= 1; // wcs |= (inp >>  0) & 0; //  4
+		wcs <<= 1; // wcs |= (inp >>  0) & 0; //  3
+		wcs <<= 1; // wcs |= (inp >>  0) & 0; //  2
 		wcs <<= 1; wcs |= (inp >>  2) & 1; //  1
 		wcs <<= 1; wcs |= (inp >> 10) & 1; //  0
 
@@ -91,12 +89,12 @@ load_control_store_200_fiu(struct diagproc *dp)
 		fiu_wcs[fiu_ptr++] = wcs;
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.FIU");
-	return (DIPROC_RESPONSE_DONE);
+	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
 
-int
-diagproc_turbo_fiu(struct diagproc *dp)
+int v_matchproto_(diagprocturbo_t)
+diagproc_turbo_fiu(const struct diagproc *dp)
 {
 	if (dp->dl_hash == LOAD_COUNTER_FIU_HASH) {
 		fiu_ptr = 0x100;

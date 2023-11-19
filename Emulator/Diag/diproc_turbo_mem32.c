@@ -14,7 +14,7 @@
 #include "Infra/vend.h"
 
 static int
-clear_tagstore_m32(struct diagproc *dp)
+clear_tagstore_m32(const struct diagproc *dp)
 {
 
 #if !defined(HAS_Z000) || !defined(HAS_Z001)
@@ -37,12 +37,12 @@ clear_tagstore_m32(struct diagproc *dp)
 	memset(ptr, 0x00, (1 << 17) + 2 * (1 << 14));
 
 	sc_tracef(dp->name, "Turbo CLEAR_TAGSTORE.M32");
-	return (DIPROC_RESPONSE_DONE);
+	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
 
 static int
-fill_memory_m32(struct diagproc *dp)
+fill_memory_m32(const struct diagproc *dp)
 {
 #if !defined(HAS_Z006) || !defined(HAS_Z007) || !defined(HAS_Z008) || \
     !defined(HAS_Z009) || !defined(HAS_Z010) || !defined(HAS_Z011)
@@ -62,52 +62,52 @@ fill_memory_m32(struct diagproc *dp)
 	// RAMAT
 	ctx = CTX_Find(COMP_Z006);
 	AN(ctx);
-	ptr = (uint64_t *)(ctx + 1);
+	ptr = (uint64_t *)(void*)(ctx + 1);
 	for (i = 0; i < 1<<20; i++)
 		ptr[i] = typ;
 
 	// RAMAV
 	ctx = CTX_Find(COMP_Z007);
 	AN(ctx);
-	ptr = (uint64_t *)(ctx + 1);
+	ptr = (uint64_t *)(void*)(ctx + 1);
 	for (i = 0; i < 1<<20; i++)
 		ptr[i] = val;
 
 	// RAMAC
 	ctx = CTX_Find(COMP_Z008);
 	AN(ctx);
-	ptr = (uint64_t *)(ctx + 1);
+	ptr = (uint64_t *)(void*)(ctx + 1);
 	for (i = 0; i < 1<<20; i++)
 		ptr[i] = cbit;
 
 	// RAMBT
 	ctx = CTX_Find(COMP_Z009);
 	AN(ctx);
-	ptr = (uint64_t *)(ctx + 1);
+	ptr = (uint64_t *)(void*)(ctx + 1);
 	for (i = 0; i < 1<<20; i++)
 		ptr[i] = typ;
 
 	// RAMBV
 	ctx = CTX_Find(COMP_Z010);
 	AN(ctx);
-	ptr = (uint64_t *)(ctx + 1);
+	ptr = (uint64_t *)(void*)(ctx + 1);
 	for (i = 0; i < 1<<20; i++)
 		ptr[i] = val;
 
 	// RAMBC
 	ctx = CTX_Find(COMP_Z011);
 	AN(ctx);
-	ptr = (uint64_t *)(ctx + 1);
+	ptr = (uint64_t *)(void*)(ctx + 1);
 	for (i = 0; i < 1<<20; i++)
 		ptr[i] = cbit;
 
 	sc_tracef(dp->name, "Turbo FILL_MEMORY.M32");
-	return (DIPROC_RESPONSE_DONE);
+	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
 
-int
-diagproc_turbo_mem32(struct diagproc *dp)
+int v_matchproto_(diagprocturbo_t)
+diagproc_turbo_mem32(const struct diagproc *dp)
 {
 	if (dp->dl_hash == CLEAR_TAGSTORE_M32_HASH)
 		return (clear_tagstore_m32(dp));

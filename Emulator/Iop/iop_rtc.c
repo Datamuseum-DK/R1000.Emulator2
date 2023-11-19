@@ -204,7 +204,7 @@ ioc_rtc_init(void)
 	AZ(pthread_create(&rtc_thr, NULL, ioc_rtc_thread, NULL));
 }
 
-static const char *configs[] = {
+static const char * const configs[] = {
     "+modem-dialout",
     "-modem-dialout",
     "+modem-answer",
@@ -223,7 +223,8 @@ static const char *configs[] = {
 void v_matchproto_(cli_func_f)
 cli_ioc_config(struct cli *cli)
 {
-	int i, j;
+	int i;
+	unsigned j;
 
 	if (cli->help || cli->ac > 2) {
 		Cli_Usage(
@@ -243,14 +244,14 @@ cli_ioc_config(struct cli *cli)
 		for (j = 0; configs[j] != NULL; j++) {
 			if (!strcmp(cli->av[i], configs[j])) {
 				if (j & 1) {
-					rtcregs[0xa] &= ~(1 << (j >> 1));
+					rtcregs[0xa] &= ~(1U << (j >> 1));
 				} else {
-					rtcregs[0xa] |= (1 << (j >> 1));
+					rtcregs[0xa] |= (1U << (j >> 1));
 				}
 				break;
 			}
 			if (!strcmp(cli->av[i], configs[j] + 1)) {
-				rtcregs[0xa] ^= (1 << (j >> 1));
+				rtcregs[0xa] ^= (1U << (j >> 1));
 				break;
 			}
 		}
@@ -259,7 +260,7 @@ cli_ioc_config(struct cli *cli)
 	}
 	Cli_Printf(cli, "Config is 0x%02x:\n", rtcregs[0xa]);
 	for (j = 0; configs[j] != NULL; j += 2) {
-		if (rtcregs[0xa] & (1 << (j >> 1)))
+		if (rtcregs[0xa] & (1U << (j >> 1)))
 			Cli_Printf(cli, "    %s\n", configs[j]);
 		else
 			Cli_Printf(cli, "    %s\n", configs[j + 1]);

@@ -19,7 +19,7 @@ static uint64_t *ioc_wcs;
 static unsigned ioc_ptr;
 
 static int
-load_control_store_200_ioc(struct diagproc *dp)
+load_control_store_200_ioc(const struct diagproc *dp)
 {
 #if !defined(HAS_Z023)
 	(void)dp;
@@ -32,19 +32,19 @@ load_control_store_200_ioc(struct diagproc *dp)
 	if (ioc_wcs == NULL) {
 		ctx = CTX_Find(COMP_Z023);
 		AN(ctx);
-		ioc_wcs = (uint64_t *)(ctx + 1);
+		ioc_wcs = (uint64_t *)(void*)(ctx + 1);
 	}
 	for (n = 0; n < 16; n++) {
 		inp = vbe16dec(dp->ram + 0x18 + n * 2);
 		ioc_wcs[ioc_ptr++] = inp & 0xffff;
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.IOC");
-	return (DIPROC_RESPONSE_DONE);
+	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
 
-int
-diagproc_turbo_ioc(struct diagproc *dp)
+int v_matchproto_(diagprocturbo_t)
+diagproc_turbo_ioc(const struct diagproc *dp)
 {
 
 	if (dp->dl_hash == LOAD_WCS_ADDRESS_IOC_HASH) {

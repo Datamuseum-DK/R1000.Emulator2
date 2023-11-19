@@ -148,6 +148,7 @@ cli_diproc_status(struct cli *cli)
 	DiagBus_Send(dp, 0);
 	DiagBus_Send(dp, want);
 
+	buf[0] = 0x55; // flexelint
 	for (z = 0; z < 2 + want; z += sz)
 		sz = elastic_get(diag_elastic, buf + z, sizeof buf - z);
 

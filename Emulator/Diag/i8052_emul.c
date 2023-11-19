@@ -58,7 +58,6 @@ mcs51_diag(struct mcs51 *mcs51, const char *fmt, ...)
 	fprintf(stderr, " %02x", mcs51->progmem[mcs51->pc + 2]);
 	fprintf(stderr, " %02x]\n", mcs51->progmem[mcs51->pc + 3]);
 	exit(2);
-	return(-1);
 }
 
 /*---------------------------------------------------------------------*/
@@ -99,6 +98,9 @@ mcs51_pop(struct mcs51 *mcs51)
 	mcs51_trace(mcs51, "pop -> 0x%02x", retval);
 	return (retval);
 }
+
+// Boolean argument to function
+//lint -save -e730
 
 static uint8_t
 mcs51_carry(struct mcs51 *mcs51, int what)
@@ -160,7 +162,7 @@ mcs51_reg(struct mcs51 *mcs51, uint8_t regno)
 			warg |= 0xff00;					\
 		warg += mcs51->npc;					\
 		if (cond) {						\
-			mcs51_trace(mcs51, "=> 0x%04x", warg);	\
+			mcs51_trace(mcs51, "=> 0x%04x", warg);		\
 			return (warg);					\
 		} else {						\
 			mcs51_trace(mcs51, "(0x%04x)", warg);		\
@@ -1392,3 +1394,4 @@ MCS51_SFRS
 	MCS51_Reset(mcs51);
 	return (mcs51);
 }
+//lint -restore

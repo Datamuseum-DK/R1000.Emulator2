@@ -21,6 +21,9 @@
 -emacro(527, WRONG)
 -esym(527, break)
 
+// 762 Redundantly declared symbol
+-esym(762, ioc_fc)
+
 // 534 Ignoring return value of our own functions
 -esym(534, cli_error)
 -esym(534, m68k_disassemble)
@@ -123,3 +126,5 @@
 -e737		// Loss of sign in promotion from ___ to ___
 -e747		// Significant prototype coercion (___) ___ to ___
 -e679		// Suspicious Truncation in arithmetic expression combining with pointer
+-e835		// A zero has been given as right argument to operator '<<'
+-esym(123,MC_*)	// Macro '___' defined with arguments at ___ -- this is just a warning

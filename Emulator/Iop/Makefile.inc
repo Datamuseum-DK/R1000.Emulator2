@@ -25,6 +25,7 @@ ${OBJDIR}/iop_duart.o: \
     Infra/vsb.h \
     Iop/memspace.h \
     Diag/diag.h \
+    Chassis/r1000sc.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Iop/iop_duart.c -o ${OBJDIR}/iop_duart.o
 
@@ -34,7 +35,6 @@ ${OBJDIR}/iop_eeproms.o: \
     Iop/iop.h \
     Iop/memspace.h \
     Infra/vend.h \
-    Chassis/r1000sc.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Iop/iop_eeproms.c -o ${OBJDIR}/iop_eeproms.o
 
@@ -113,6 +113,7 @@ ${OBJDIR}/iop_sc.o: \
     Iop/iop_sc_68k20.hh \
     Iop/iop.h \
     Chassis/r1000sc_priv.h \
+    Chassis/r1000sc.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Iop/iop_sc.c -o ${OBJDIR}/iop_sc.o
 

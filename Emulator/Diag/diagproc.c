@@ -28,7 +28,7 @@
 #define FLAG_DOWNLOAD_RUN	(1<<9)
 #define FLAG_UPLOAD		(1<<10)
 
-static void
+static void v_matchproto_(movx8_write)
 diagproc_movx8_write(struct mcs51 *mcs51, uint8_t adr, int data)
 {
 	struct diagproc *dp;
@@ -241,7 +241,7 @@ diagproc_busrx(void *priv, const void *ptr, size_t len)
 		// pass
 	} else if ((serbuf[1] & 0xe0) != 0xa0) {
 		// pass
-	} else if (dp->mcs51->iram[4] == DIPROC_RESPONSE_RUNNING) {
+	} else if (dp->mcs51->iram[4] == (int)DIPROC_RESPONSE_RUNNING) {
 		// pass
 	} else {
 		fast = 1;
@@ -306,7 +306,7 @@ diagproc_istep(struct diagproc *dp, struct diagproc_context *dctx)
 		if (*dp->do_trace & 16) {
 			VSB_clear(dp->vsb);
 			VSB_printf(dp->vsb, "%02x ", dp->download_len);
-			for (u = 0; u < dp->download_len - 1; u++)
+			for (u = 0; u < dp->download_len - 1U; u++)
 				VSB_printf(dp->vsb, "%02x", dp->mcs51->iram[0x10 + u]);
 			AZ(VSB_finish(dp->vsb));
 			sc_tracef(dp->name, "Download %s", VSB_data(dp->vsb));

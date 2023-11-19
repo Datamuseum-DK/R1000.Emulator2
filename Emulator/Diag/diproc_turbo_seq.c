@@ -21,21 +21,21 @@ static uint32_t *decode;
 #endif
 
 static int
-load_dispatch_rams_200_seq(struct diagproc *dp)
+load_dispatch_rams_200_seq(const struct diagproc *dp)
 {
 #if !defined(HAS_Z020)
 	(void)dp;
 	return (0);
 #else
 	struct ctx *ctx;
-	int offset, n;
+	unsigned offset, n;
 	uint64_t src;
 	uint32_t dst;
 
 	if (decode == NULL) {
 		ctx = CTX_Find(COMP_Z020);
 		AN(ctx);
-		decode = (uint32_t *)(ctx + 1);
+		decode = (uint32_t *)(void*)(ctx + 1);
 	}
 	offset = vbe16dec(dp->ram + 0x18);
 	if (dp->ram[0x11]) {
@@ -49,8 +49,7 @@ load_dispatch_rams_200_seq(struct diagproc *dp)
 		src = vbe64dec(dp->ram + 0x1a + 8 * n);
 		// This translation found by correlation
 		// Last three entries are ambigious (always zero)
-		dst = 0;
-		dst <<= 1; dst |= (src >>  7) & 1;	// 31
+		dst = 0;   dst |= (src >>  7) & 1;	// 31
 		dst <<= 1; dst |= (src >> 15) & 1;
 		dst <<= 1; dst |= (src >>  6) & 1;
 		dst <<= 1; dst |= (src >> 14) & 1;
@@ -88,12 +87,12 @@ load_dispatch_rams_200_seq(struct diagproc *dp)
 
 	sc_tracef(dp->name, "Turbo LOAD_DISPATCH_RAMS_200.SEQ");
 
-	return (DIPROC_RESPONSE_DONE);
+	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
 
 static int
-load_control_store_200_seq(struct diagproc *dp)
+load_control_store_200_seq(const struct diagproc *dp)
 {
 #if !defined(HAS_Z021)
 	(void)dp;
@@ -101,19 +100,17 @@ load_control_store_200_seq(struct diagproc *dp)
 #else
 	struct ctx *ctx;
 	int n;
-	uint64_t wcs, inp, inv;
+	uint64_t wcs, inp;
 
 	if (seq_wcs == NULL) {
 		ctx = CTX_Find(COMP_Z021);
 		AN(ctx);
-		seq_wcs = (uint64_t *)(ctx + 1);
+		seq_wcs = (uint64_t *)(void*)(ctx + 1);
 	}
 	for (n = 0; n < 16; n++) {
 		inp = vbe64dec(dp->ram + 0x18 + n * 8);
-		inv = inp ^ ~0;
-		wcs = 0;
 
-		wcs <<= 1; wcs |= (inp >> 46) & 1; // 41
+		wcs = 0;   wcs |= (inp >> 46) & 1; // 41
 		wcs <<= 1; wcs |= (inp >> 38) & 1; // 40
 		wcs <<= 1; wcs |= (inp >> 30) & 1; // 39
 		wcs <<= 1; wcs |= (inp >> 22) & 1; // 38
@@ -158,12 +155,12 @@ load_control_store_200_seq(struct diagproc *dp)
 		seq_wcs[seq_ptr++] = wcs;
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.SEQ");
-	return (DIPROC_RESPONSE_DONE);
+	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
 
-int
-diagproc_turbo_seq(struct diagproc *dp)
+int v_matchproto_(diagprocturbo_t)
+diagproc_turbo_seq(const struct diagproc *dp)
 {
 	if (dp->dl_hash == LOAD_DISPATCH_RAMS_200_SEQ_HASH ||
 	    dp->dl_hash == 0x00001081) {

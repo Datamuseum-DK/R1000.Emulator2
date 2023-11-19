@@ -38,7 +38,6 @@
 #include "Iop/iop.h"
 #include "Iop/memspace.h"
 #include "Infra/vend.h"
-#include "Chassis/r1000sc.h"
 
 static uint8_t resha_eeprom[32768];
 

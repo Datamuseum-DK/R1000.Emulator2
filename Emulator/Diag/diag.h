@@ -43,15 +43,15 @@
 	macro(UNLOOP, unloop, 7)
 
 enum diproc_cmd {
-#define CMD(upper, lower, num)	DIPROC_CMD_##upper = num,
-CMD_TABLE(CMD)
-#undef CMD
+#define MC_CMD(upper, lower, num) DIPROC_CMD_##upper = num,
+CMD_TABLE(MC_CMD)
+#undef MC_CMD
 };
 
 enum diproc_response {
-#define RESPONSE(num, name)	DIPROC_RESPONSE_##name = num,
-RESPONSE_TABLE(RESPONSE)
-#undef RESPONSE
+#define MC_RESPONSE(num, name)	DIPROC_RESPONSE_##name = num,
+RESPONSE_TABLE(MC_RESPONSE)
+#undef MC_RESPONSE
 };
 
 struct elastic;

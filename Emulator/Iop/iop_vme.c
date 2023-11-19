@@ -72,12 +72,12 @@ resha_wildcard_pre_read(int debug, uint8_t *space, unsigned width, unsigned adr)
 {
 	(void)debug;
 	(void)space;
-	printf("RESHA_WILDCARD READ @0x%x width=%d\n", adr, width);
+	printf("RESHA_WILDCARD READ @0x%x width=0x%x\n", adr, width);
 }
 
 void v_matchproto_(mem_post_write)
 resha_wildcard_post_write(int debug, uint8_t *space, unsigned width, unsigned adr)
 {
 	(void)debug;
-	printf("RESHA_WILDCARD WRITE @0x%x =0x%x width=%d\n", adr, vbe32dec(space + adr), width);
+	printf("RESHA_WILDCARD WRITE @0x%x =0x%x width=0x%x\n", adr, vbe32dec(space + adr), width);
 }

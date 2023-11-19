@@ -9,6 +9,7 @@
 #include "Iop/iop_sc_68k20.hh"
 
 #include "Chassis/r1000sc_priv.h"
+#include "Chassis/r1000sc.h"
 
 typedef void ioc_sc_bus_callback_f(uint32_t data);
 

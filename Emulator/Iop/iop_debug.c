@@ -267,8 +267,10 @@ RPN_REGS
 		a7 = m68k_get_reg(NULL, M68K_REG_A7);		\
 		RPN_PUSH(a7 + 2U * nbr);			\
 	}
-
+// The right argument to operator '+' is certain to be 0
+//lint -save -e845
 RPN_SPS
+//lint -restore
 #undef RPN_SP
 
 static void v_matchproto_(rpn_op_f)

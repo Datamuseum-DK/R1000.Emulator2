@@ -17,6 +17,7 @@
 #include "Infra/vsb.h"
 #include "Iop/memspace.h"
 #include "Diag/diag.h"
+#include "Chassis/r1000sc.h"
 
 static const char * const rd_reg[] = {
 	"MODEM R MR1A_2A",
@@ -211,9 +212,9 @@ ioc_duart_pace_downloads(struct chan *chp)
 		usleep(50000);
 	} else if (cmd == 0xa0) {
 		// DOWNLOAD
-		elastic_drain(chp->ep);
+		(void)elastic_drain(chp->ep);
 		adr = chp->txshift[1] & 0x1f;
-		while ((diprocs[adr].status & 0x0f) == DIPROC_RESPONSE_RUNNING) {
+		while ((diprocs[adr].status & 0x0f) == (int)DIPROC_RESPONSE_RUNNING) {
 			Trace(
 			    trace_diagbus,
 			    "%s Holding Download (0x%x%02x)",
@@ -246,7 +247,7 @@ ioc_duart_tx_callback(void *priv)
 			cmd = chp->txshift[1] & 0xe0;
 			adr = chp->txshift[1] & 0x1f;
 			if (cmd == 0x80 && adr != 5) {
-				elastic_drain(chp->ep);
+				(void)elastic_drain(chp->ep);
 				usleep(100000);
 				Trace(
 				    trace_diagbus,

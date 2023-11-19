@@ -7,6 +7,8 @@
 extern "C" {
 #endif
 
+extern int sc_started;
+
 void load_programmable(const char *who,
     void *dst, size_t size, const char *spec);
 

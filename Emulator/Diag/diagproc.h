@@ -5,7 +5,7 @@ extern "C" {
 
 struct diagproc;
 
-typedef int diagprocturbo_t(struct diagproc *);
+typedef int diagprocturbo_t(const struct diagproc *);
 
 struct diagproc_context {
 	uint64_t profile[8192];

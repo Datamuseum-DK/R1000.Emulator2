@@ -22,7 +22,7 @@ static unsigned typ_ptr;
 #if (defined(HAS_Z013) && defined(HAS_Z014) && defined(HAS_Z018)) || \
 	(defined(HAS_Z016) && defined(HAS_Z017))
 static uint64_t
-get_wdr(struct diagproc *dp, uint8_t offset)
+get_wdr(const struct diagproc *dp, uint8_t offset)
 {
 	uint64_t wdr, m;
 	unsigned v;
@@ -47,7 +47,7 @@ get_wdr(struct diagproc *dp, uint8_t offset)
 #endif
 
 static int
-load_register_file_typ(struct diagproc *dp)
+load_register_file_typ(const struct diagproc *dp)
 {
 #if !defined(HAS_Z016) || !defined(HAS_Z017)
 	(void)dp;
@@ -61,17 +61,17 @@ load_register_file_typ(struct diagproc *dp)
 	if (typ_aram == NULL) {
 		ctx = CTX_Find(COMP_Z016);
 		AN(ctx);
-		typ_aram = (uint64_t *)(ctx + 1);
+		typ_aram = (uint64_t *)(void*)(ctx + 1);
 	}
 	if (typ_bram == NULL) {
 		ctx = CTX_Find(COMP_Z017);
 		AN(ctx);
-		typ_bram = (uint64_t *)(ctx + 1);
+		typ_bram = (uint64_t *)(void*)(ctx + 1);
 	}
 	if (typ_rfpar == NULL) {
 		ctx = CTX_Find(COMP_Z019);
 		AN(ctx);
-		typ_rfpar = (uint8_t *)(ctx + 1);
+		typ_rfpar = (uint8_t *)(void*)(ctx + 1);
 	}
 
 	for (i = 0; i < 16; i++, typ_ptr++) {
@@ -97,7 +97,7 @@ load_register_file_typ(struct diagproc *dp)
 	}
 
 	sc_tracef(dp->name, "Turbo LOAD_REGISTER_FILE_200.TYP");
-	return (DIPROC_RESPONSE_DONE);
+	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
 
@@ -109,7 +109,7 @@ static uint8_t *val_rfpar;
 static unsigned val_ptr;
 
 static int
-load_register_file_val(struct diagproc *dp)
+load_register_file_val(const struct diagproc *dp)
 {
 #if !defined(HAS_Z013) || !defined(HAS_Z014) || !defined(HAS_Z018)
 	(void)dp;
@@ -123,17 +123,17 @@ load_register_file_val(struct diagproc *dp)
 	if (val_aram == NULL) {
 		ctx = CTX_Find(COMP_Z013);
 		AN(ctx);
-		val_aram = (uint64_t *)(ctx + 1);
+		val_aram = (uint64_t *)(void*)(ctx + 1);
 	}
 	if (val_bram == NULL) {
 		ctx = CTX_Find(COMP_Z014);
 		AN(ctx);
-		val_bram = (uint64_t *)(ctx + 1);
+		val_bram = (uint64_t *)(void*)(ctx + 1);
 	}
 	if (val_rfpar == NULL) {
 		ctx = CTX_Find(COMP_Z018);
 		AN(ctx);
-		val_rfpar = (uint8_t *)(ctx + 1);
+		val_rfpar = (uint8_t *)(void*)(ctx + 1);
 	}
 
 	for (i = 0; i < 16; i++, val_ptr++) {
@@ -159,7 +159,7 @@ load_register_file_val(struct diagproc *dp)
 	}
 
 	sc_tracef(dp->name, "Turbo LOAD_REGISTER_FILE_200.VAL");
-	return (DIPROC_RESPONSE_DONE);
+	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
 
@@ -168,7 +168,7 @@ static uint64_t *typ_wcs;
 #endif
 
 static int
-load_control_store_200_typ(struct diagproc *dp)
+load_control_store_200_typ(const struct diagproc *dp)
 {
 #if !defined(HAS_Z015)
 	(void)dp;
@@ -181,12 +181,11 @@ load_control_store_200_typ(struct diagproc *dp)
 	if (typ_wcs == NULL) {
 		ctx = CTX_Find(COMP_Z015);
 		AN(ctx);
-		typ_wcs = (uint64_t *)(ctx + 1);
+		typ_wcs = (uint64_t *)(void*)(ctx + 1);
 	}
 	for (n = 0; n < 16; n++) {
 		inp = vbe64dec(dp->ram + 0x18 + n * 8);
 		inv = inp ^ ~0;
-		wcs = 0;
 
 		// The pattern is:
 		// WCS-    ------- Bit numbers ---------
@@ -198,7 +197,7 @@ load_control_store_200_typ(struct diagproc *dp)
 		// byte5   2  10  18  26  34  42  50  29
 		// bit#29 is the parity bit.
 
-		wcs <<= 1; wcs |= (inv >>  7) & 1; // 46
+		wcs = 0;   wcs |= (inv >>  7) & 1; // 46
 		wcs <<= 1; wcs |= (inv >> 15) & 1; // 45
 		wcs <<= 1; wcs |= (inv >> 23) & 1; // 44
 		wcs <<= 1; wcs |= (inv >> 31) & 1; // 43
@@ -253,7 +252,7 @@ load_control_store_200_typ(struct diagproc *dp)
 		typ_wcs[typ_ptr++] = wcs;
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.TYP");
-	return (DIPROC_RESPONSE_DONE);
+	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
 
@@ -262,7 +261,7 @@ static uint64_t *val_wcs;
 #endif
 
 static int
-load_control_store_200_val(struct diagproc *dp)
+load_control_store_200_val(const struct diagproc *dp)
 {
 #if !defined(HAS_Z012)
 	(void)dp;
@@ -275,12 +274,11 @@ load_control_store_200_val(struct diagproc *dp)
 	if (val_wcs == NULL) {
 		ctx = CTX_Find(COMP_Z012);
 		AN(ctx);
-		val_wcs = (uint64_t *)(ctx + 1);
+		val_wcs = (uint64_t *)(void*)(ctx + 1);
 	}
 	for (n = 0; n < 16; n++) {
 		inp = vbe64dec(dp->ram + 0x18 + n * 8);
 		inv = inp ^ ~0;
-		wcs = 0;
 
 		// The pattern is:  (29 = parity)
 		// WCS-    ------- Bit numbers ---------
@@ -290,7 +288,7 @@ load_control_store_200_val(struct diagproc *dp)
 		// byte3   4  12  20  28  36  44  52  60
 		// byte4   3  11  19  27  35  43  51  59
 
-		wcs <<= 1; wcs |= (inv >>  7) & 1; // 39
+		wcs = 0;   wcs |= (inv >>  7) & 1; // 39
 		wcs <<= 1; wcs |= (inv >> 15) & 1; // 38
 		wcs <<= 1; wcs |= (inv >> 23) & 1; // 37
 		wcs <<= 1; wcs |= (inv >> 31) & 1; // 36
@@ -338,13 +336,13 @@ load_control_store_200_val(struct diagproc *dp)
 		val_wcs[val_ptr++] = wcs;
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.VAL");
-	return (DIPROC_RESPONSE_DONE);
+	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
 
 
-int
-diagproc_turbo_typ(struct diagproc *dp)
+int v_matchproto_(diagprocturbo_t)
+diagproc_turbo_typ(const struct diagproc *dp)
 {
 	if (dp->dl_hash == PREP_LOAD_REGISTER_FILE_TYP_HASH) {
 		typ_ptr = 0;
@@ -364,8 +362,8 @@ diagproc_turbo_typ(struct diagproc *dp)
 	return (0);
 }
 
-int
-diagproc_turbo_val(struct diagproc *dp)
+int v_matchproto_(diagprocturbo_t)
+diagproc_turbo_val(const struct diagproc *dp)
 {
 	if (dp->dl_hash == PREP_LOAD_REGISTER_FILE_VAL_HASH) {
 		val_ptr = 0;

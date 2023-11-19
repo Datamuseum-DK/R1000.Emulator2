@@ -15,25 +15,25 @@
 struct elastic *diag_elastic;
 
 struct diproc diprocs[16] = {
-#define BOARD(u, l, a) \
+#define MC_BOARD(u, l, a) \
 	[a] = { \
 		.upper = #u, \
 		.lower = #l,\
 		.address = a,\
 		.status = 0,\
 	 },
-BOARD_TABLE(BOARD)
-#undef BOARD
+BOARD_TABLE(MC_BOARD)
+#undef MC_BOARD
 };
 
 struct diproc *
 diagbus_get_board(struct cli *cli, const char *name)
 {
-#define BOARD(upper, lower, address) \
+#define MC_BOARD(upper, lower, address) \
 	if (!strcasecmp(name, #upper)) \
 		return(&diprocs[address]);
-BOARD_TABLE(BOARD)
-#undef BOARD
+BOARD_TABLE(MC_BOARD)
+#undef MC_BOARD
 	Cli_Error(cli, "Unknown board '%s'\n", name);
 	return (NULL);
 }
@@ -42,18 +42,18 @@ void
 cli_diproc_help_status(struct cli *cli)
 {
 	Cli_Printf(cli, "\n\tStatus:\n");
-#define RESPONSE(num, name) Cli_Printf(cli, "\t    %s\n", #name);
-	RESPONSE_TABLE(RESPONSE)
-#undef RESPONSE
+#define MC_RESPONSE(num, name) Cli_Printf(cli, "\t    %s\n", #name);
+	RESPONSE_TABLE(MC_RESPONSE)
+#undef MC_RESPONSE
 }
 
 void
 cli_diproc_help_board(struct cli *cli)
 {
 	Cli_Printf(cli, "\n\tBoard:\n");
-#define BOARD(upper, lower, address) Cli_Printf(cli, "\t    %s\n", #upper);
-	BOARD_TABLE(BOARD)
-#undef BOARD
+#define MC_BOARD(upper, lower, address) Cli_Printf(cli, "\t    %s\n", #upper);
+	BOARD_TABLE(MC_BOARD)
+#undef MC_BOARD
 }
 
 
@@ -77,15 +77,15 @@ DiagBus_Explain_Cmd(struct vsb *vsb, const uint8_t serbuf[2])
 	if (serbuf[0] != 0) {
 		VSB_printf(vsb, "0x%x%02x", serbuf[0], serbuf[1]);
 		switch(serbuf[1] >> 5) {
-#define CMD(upper, lower, nbr) case nbr: VSB_cat(vsb, " " #upper); break;
-		CMD_TABLE(CMD)
-#undef CMD
+#define MC_CMD(upper, lower, nbr) case nbr: VSB_cat(vsb, " " #upper); break;
+		CMD_TABLE(MC_CMD)
+#undef MC_CMD
 		default: WRONG();
 		}
 		switch(serbuf[1] & 0x1f) {
-#define BRD(upper, lower, nbr) case nbr: VSB_cat(vsb, " " #upper); break;
-		BOARD_TABLE(BRD)
-#undef BRD
+#define MC_BRD(upper, lower, nbr) case nbr: VSB_cat(vsb, " " #upper); break;
+		BOARD_TABLE(MC_BRD)
+#undef MC_BRD
 		default:
 			fprintf(stderr, "UNKNOWN DIAG BOARD 0x%x\n", serbuf[1]);
 			VSB_printf(vsb, " BRD%d", serbuf[1] & 0x1f);

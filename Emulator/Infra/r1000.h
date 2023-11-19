@@ -66,9 +66,6 @@ extern volatile nanosec		simclock;
 extern volatile nanosec		systemc_t_zero;
 extern volatile int		systemc_clock;
 extern int			trace_fd;
-extern const char		*tracepath;
-
-double sc_when(void);
 
 /* CONTEXT  ***************************************************************/
 
@@ -179,11 +176,6 @@ int Firmware_Copy(const char *name, size_t size, void *dst);
 /* MEMORY *************************************************************/
 
 void mem_init(void);
-
-/* SYSTEMC ************************************************************/
-
-void pit_clock(void);
-extern int sc_started;
 
 /* UTILITIES **********************************************************/
 
