@@ -13,14 +13,14 @@
 #include "Infra/context.h"
 #include "Infra/vend.h"
 
+#if defined(HAS_Z016) && defined(HAS_Z017)
 static uint64_t *typ_aram, *typ_bram;
 static uint8_t *typ_rfpar;
+#endif
 static unsigned typ_ptr;
 
-static uint64_t *val_aram, *val_bram;
-static uint8_t *val_rfpar;
-static unsigned val_ptr;
-
+#if (defined(HAS_Z013) && defined(HAS_Z014) && defined(HAS_Z018)) || \
+	(defined(HAS_Z016) && defined(HAS_Z017))
 static uint64_t
 get_wdr(struct diagproc *dp, uint8_t offset)
 {
@@ -44,6 +44,7 @@ get_wdr(struct diagproc *dp, uint8_t offset)
 	}
 	return (wdr);
 }
+#endif
 
 static int
 load_register_file_typ(struct diagproc *dp)
@@ -100,6 +101,13 @@ load_register_file_typ(struct diagproc *dp)
 #endif
 }
 
+#if defined(HAS_Z013) && defined(HAS_Z014) && defined(HAS_Z018)
+static uint64_t *val_aram, *val_bram;
+static uint8_t *val_rfpar;
+#endif
+
+static unsigned val_ptr;
+
 static int
 load_register_file_val(struct diagproc *dp)
 {
@@ -155,8 +163,9 @@ load_register_file_val(struct diagproc *dp)
 #endif
 }
 
+#if defined(HAS_Z015)
 static uint64_t *typ_wcs;
-static uint64_t *val_wcs;
+#endif
 
 static int
 load_control_store_200_typ(struct diagproc *dp)
@@ -247,6 +256,10 @@ load_control_store_200_typ(struct diagproc *dp)
 	return (DIPROC_RESPONSE_DONE);
 #endif
 }
+
+#if defined(HAS_Z012)
+static uint64_t *val_wcs;
+#endif
 
 static int
 load_control_store_200_val(struct diagproc *dp)

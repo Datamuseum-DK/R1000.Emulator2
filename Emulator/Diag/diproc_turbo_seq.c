@@ -13,10 +13,12 @@
 #include "Infra/context.h"
 #include "Infra/vend.h"
 
-static uint32_t *decode;
 
 static unsigned seq_ptr;
+#if defined(HAS_Z020)
 static uint64_t *seq_wcs;
+static uint32_t *decode;
+#endif
 
 static int
 load_dispatch_rams_200_seq(struct diagproc *dp)

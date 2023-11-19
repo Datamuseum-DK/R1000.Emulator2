@@ -44,16 +44,14 @@ clear_tagstore_m32(struct diagproc *dp)
 static int
 fill_memory_m32(struct diagproc *dp)
 {
+#if !defined(HAS_Z006) || !defined(HAS_Z007) || !defined(HAS_Z008) || \
+    !defined(HAS_Z009) || !defined(HAS_Z010) || !defined(HAS_Z011)
+	(void)dp;
+	return (0);
+#else
 	struct ctx *ctx;
 	uint64_t *ptr, typ, val, cbit;
 	int i;
-
-#if !defined(HAS_Z006) || !defined(HAS_Z007) || !defined(HAS_Z008)
-	return (0);
-#endif
-#if !defined(HAS_Z009) || !defined(HAS_Z010) || !defined(HAS_Z011)
-	return (0);
-#endif
 
 	typ = vbe64dec(dp->ram + 0x18);		// P18IS8 DATA.TYP
 	val = vbe64dec(dp->ram + 0x20);		// P20IS8 DATA.VAL
@@ -105,6 +103,7 @@ fill_memory_m32(struct diagproc *dp)
 
 	sc_tracef(dp->name, "Turbo FILL_MEMORY.M32");
 	return (DIPROC_RESPONSE_DONE);
+#endif
 }
 
 int
