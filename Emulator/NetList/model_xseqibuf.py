@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XSEQIBUF(PartFactory):
     ''' SEQ Instruction buffer '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t typ, val;
@@ -55,7 +57,7 @@ class XSEQIBUF(PartFactory):
 
         file.fmt('''
 		|
-		|	unsigned iboe, disp;
+		|	unsigned iboe;
 		|
 		|	if (PIN_CLK.posedge()) {
 		|		BUS_TYP_READ(state->typ);
@@ -65,28 +67,27 @@ class XSEQIBUF(PartFactory):
 		|	BUS_IBOE_READ(iboe);
 		|
 		|	if (!(iboe & 0x80))
-		|		disp = state->typ >> 48;
+		|		output.disp = state->typ >> 48;
 		|	else if (!(iboe & 0x40))
-		|		disp = state->typ >> 32;
+		|		output.disp = state->typ >> 32;
 		|	else if (!(iboe & 0x20))
-		|		disp = state->typ >> 16;
+		|		output.disp = state->typ >> 16;
 		|	else if (!(iboe & 0x10))
-		|		disp = state->typ >> 0;
+		|		output.disp = state->typ >> 0;
 		|	else if (!(iboe & 0x08))
-		|		disp = state->val >> 48;
+		|		output.disp = state->val >> 48;
 		|	else if (!(iboe & 0x04))
-		|		disp = state->val >> 32;
+		|		output.disp = state->val >> 32;
 		|	else if (!(iboe & 0x02))
-		|		disp = state->val >> 16;
+		|		output.disp = state->val >> 16;
 		|	else if (!(iboe & 0x01))
-		|		disp = state->val >> 0;
+		|		output.disp = state->val >> 0;
 		|	else
-		|		disp = 0xffff;
-		|	BUS_DISP_WRITE(disp);
+		|		output.disp = 0xffff;
 		|	TRACE(
 		|		<< " clk^ " << PIN_CLK.posedge()
 		|		<< " iboe " << BUS_IBOE_TRACE()
-		|		<< " disp " << std::hex << disp
+		|		<< " disp " << std::hex << output.disp
 		|	);
 		|
 		|

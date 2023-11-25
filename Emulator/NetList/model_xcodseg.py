@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XCODSEG(PartFactory):
     ''' SEQ 34 Code Segment '''
 
+    # autopin = True fails SEQ_MACRO_RPC_TESTS
+
     def state(self, file):
         file.fmt('''
 		|	unsigned pcseg, retseg;
@@ -67,8 +69,10 @@ class XCODSEG(PartFactory):
 		|	}
 		|	if (PIN_CSEL) {
 		|		BUS_CSEG_WRITE(state->pcseg);
+		|		//output.cseg = state->pcseg;
 		|	} else {
 		|		BUS_CSEG_WRITE(state->retseg);
+		|		//output.cseg = state->retseg;
 		|	}
 		|''')
 

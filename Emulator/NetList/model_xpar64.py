@@ -41,6 +41,8 @@ class XPAR18(PartFactory):
 
     ''' 2x9 parity checker '''
 
+    autopin = True
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -68,7 +70,7 @@ class XPAR18(PartFactory):
 		|
 		|	if (a) par |= 2;
 		|	if (b) par |= 1;
-		|	BUS_P_WRITE(par);
+		|	output.p = par;
 		|
 		|	total = a ^ b;
 		|
@@ -81,16 +83,18 @@ class XPAR18(PartFactory):
 		|	    << " a " << total
 		|	);
 		|
-		|	PIN_PALL<=(total & 1);
+		|	output.pall = total & 1;
 		|
 		|''')
 
 class XPAR64(PartFactory):
-
     ''' 8x8 parity checker '''
+
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
+
 
         super().doit(file)
 
@@ -98,29 +102,11 @@ class XPAR64(PartFactory):
 		|	uint64_t tmp, total = 0, par = 0;
 		|
 		|	BUS_I_READ(tmp);
-		|	tmp = (tmp ^ (tmp >> 4)) & 0x0f0f0f0f0f0f0f0f;
-		|	tmp = (tmp ^ (tmp >> 2)) & 0x0303030303030303;
-		|	tmp = (tmp ^ (tmp >> 1)) & 0x0101010101010101;
-		|
+		|	par = odd_parity64(tmp);
 		|	if (PIN_ODD=>)
-		|		tmp ^= 0x0101010101010101;
-		|
-		|	if (tmp & (1ULL<<56)) par |= 0x80;
-		|	if (tmp & (1ULL<<48)) par |= 0x40;
-		|	if (tmp & (1ULL<<40)) par |= 0x20;
-		|	if (tmp & (1ULL<<32)) par |= 0x10;
-		|	if (tmp & (1ULL<<24)) par |= 0x8;
-		|	if (tmp & (1ULL<<16)) par |= 0x4;
-		|	if (tmp & (1ULL<<8)) par |= 0x2;
-		|	if (tmp & (1ULL<<0)) par |= 0x1;
-		|	BUS_P_WRITE(par);
-		|
-		|	total = (tmp ^ (tmp >> 32)) & 0x01010101;
-		|	total = (total ^ (total >> 16)) & 0x0101;
-		|	total = (total ^ (total >> 8)) & 0x01;
-		|
-		|	if (PIN_ODD=>)
-		|		total ^= 0x1;
+		|		par ^= 0xff;
+		|	output.p = par;
+		|	total = odd_parity(par);
 		|
 		|	TRACE(
 		|	    << " i " << BUS_I_TRACE()
@@ -128,13 +114,15 @@ class XPAR64(PartFactory):
 		|	    << " a " << total
 		|	);
 		|
-		|	PIN_PALL<=(total & 1);
+		|	output.pall = total & 1;
 		|
 		|''')
 
 class XPAR32(PartFactory):
 
     ''' 4x8 parity checker '''
+
+    # XXX: autopin fails XPAR32
 
     def doit(self, file):
         ''' The meat of the doit() function '''

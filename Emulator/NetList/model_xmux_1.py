@@ -41,6 +41,8 @@ class XMUX_1(PartFactory):
 
     ''' XMUX16_1 16-Input Multiplexer '''
 
+    autopin = True
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -54,8 +56,8 @@ class XMUX_1(PartFactory):
 		|	BUS_S_READ(adr);
 		|	BUS_I_READ(tmp);
 		|	y = tmp & (1ULL << ((BUS_I_WIDTH - 1) - adr));
-		|	PIN_Y<=(y != 0);
-		|	PIN_Ynot<=(y == 0);
+		|	output.y = y != 0;
+		|	output.ynot = y == 0;
 		|
 		|	TRACE(
 		|	    << " s " << BUS_S_TRACE()
@@ -69,4 +71,3 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("XMUX16_1", PartModel("XMUX16_1", XMUX_1))
-    part_lib.add_part("XMUX64_1", PartModel("XMUX64_1", XMUX_1))

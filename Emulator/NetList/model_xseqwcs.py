@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XSEQWCS(PartFactory):
     ''' SEQ Writeable Control Store '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t ram[1<<BUS_UA_WIDTH];
@@ -178,7 +180,7 @@ class XSEQWCS(PartFactory):
 		|		case 0: // noop
 		|			break;
 		|		}
-		|		BUS_UIR_WRITE(state->wcs);
+		|		output.uir = state->wcs;
 		|		par = (state->wcs ^ (state->wcs >> 32)) & 0xffffffff;
 		|		par = (par ^ (par >> 16)) & 0xffff;
 		|		par = (par ^ (par >> 8)) & 0xff;
@@ -186,10 +188,10 @@ class XSEQWCS(PartFactory):
 		|		par = (par ^ (par >> 2)) & 0x3;
 		|		par = (par ^ (par >> 1)) & 0x1;
 		|		par ^= PIN_PTST=>;
-		|		PIN_PERR<=(par);
-		|		PIN_HALT<=((state->srd6 >> 5) & 1);
-		|		PIN_LLM<=((state->srd6 >> 4) & 1);
-		|		PIN_LLMI<=(!((state->srd6 >> 4) & 1));
+		|		output.perr = par;
+		|		output.halt = (state->srd6 >> 5) & 1;
+		|		output.llm = (state->srd6 >> 4) & 1;
+		|		output.llmi = !output.llm;
 		|	}
 		|	if (PIN_PDCK.posedge()) {
 		|		BUS_UA_READ(ua);
@@ -198,32 +200,33 @@ class XSEQWCS(PartFactory):
 		|			(((tmp >> 22) & 3) == 3) ||
 		|			(((tmp >> 24) & 3) != 3)
 		|		);
-		|		PIN_MDSP<=state->ff0;
+		|		output.mdsp = !state->ff0;
 		|		state->ff1 = ((tmp >> 12) & 0x1);
 		|		state->ff2 = ((tmp >> 11) & 0x3) == 0;
-		|		PIN_RAS1<=(!state->ff2);
-		|		PIN_LEXI<=!(state->ff1 || state->ff2);
+		|		if (!state->ff2)
+		|			output.ras &= ~1;
+		|		else
+		|			output.ras |= 1;
+		|		output.lexi = !(state->ff1 || state->ff2);
 		|	}
-		|	PIN_RAS0<=(
-		|		(state->ff0 && !PIN_DSP0=>) ||
-		|		(state->ff1)
-		|	);
+		|	if ((state->ff0 && !PIN_DSP0=>) || (state->ff1))
+		|		output.ras &= ~2;
+		|	else
+		|		output.ras |= 2;
 		|	if (PIN_WE.posedge()) {
 		|		BUS_UA_READ(ua);
 		|		state->ram[ua] = state->wcs;
 		|		// printf("Save [0x%04x] 0x%016jx\\n", ua, state->wcs);
 		|	}
-		|	if (PIN_OE=>) {
-		|		BUS_DOUT_Z();
-		|	} else {
-		|		tmp = 0;
-		|		tmp |= (state->srd0 & 1) << 7;
-		|		tmp |= (state->srd1 & 1) << 6;
-		|		tmp |= (state->srd2 & 1) << 5;
-		|		tmp |= (state->srd3 & 1) << 4;
-		|		tmp |= (state->srd5 & 1) << 2;
-		|		tmp |= ((state->srd6 & 0x10) != 0) << 1;
-		|		BUS_DOUT_WRITE(tmp);
+		|	output.z_dout = PIN_OE=>;
+		|	if (!output.z_dout) {
+		|		output.dout = 0;
+		|		output.dout |= (state->srd0 & 1) << 7;
+		|		output.dout |= (state->srd1 & 1) << 6;
+		|		output.dout |= (state->srd2 & 1) << 5;
+		|		output.dout |= (state->srd3 & 1) << 4;
+		|		output.dout |= (state->srd5 & 1) << 2;
+		|		output.dout |= ((state->srd6 & 0x10) != 0) << 1;
 		|	}
 		''')
 

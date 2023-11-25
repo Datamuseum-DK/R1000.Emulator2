@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XSEQFNCK(PartFactory):
     ''' SEQ Field Num Check '''
 
+    autopin = True
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -52,10 +54,8 @@ class XSEQFNCK(PartFactory):
 		|
 		|	unsigned tmp = (val >> 7) ^ cur_instr;
 		|	tmp &= 0x3ff;
-		|	bool fner = tmp != 0x3ff;
-		|	PIN_FNER<=(fner);
-		|	bool ferr = !(fner && !(PIN_FCHR=> || PIN_ENFU=>));
-		|	PIN_FERR<=(ferr);
+		|	output.fner = tmp != 0x3ff;
+		|	output.ferr = !(output.fner && !(PIN_FCHR=> || PIN_ENFU=>));
 		|''')
 
 def register(part_lib):

@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XWDR(PartFactory):
     ''' Select next micro address '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t data;
@@ -122,12 +124,12 @@ class XWDR(PartFactory):
 		|		} else if (s1) {
 		|			cerr << "WDR shift left\\n";
 		|		}
-		|		BUS_QB_WRITE(state->data);
+		|		output.qb = state->data;
 		|		// .P2 and .P6 are swapped and patching DIPROC's tbl is not enough. 
 		|		tmp = state->parity & 0xdd;
 		|		tmp |= (state->parity & 0x02) << 4;
 		|		tmp |= (state->parity & 0x20) >> 4;
-		|		BUS_QP_WRITE(tmp);
+		|		output.qp = tmp;
 		|	}
 		|	if (!PIN_SCANWDR=>) {
 		|		diag = 0x03;
@@ -137,9 +139,10 @@ class XWDR(PartFactory):
 		|		if (state->data & (1ULL<<24))	diag |= 0x10;
 		|		if (state->data & (1ULL<<12))	diag |= 0x08;
 		|		if (state->data & (1ULL<<0))	diag |= 0x04;
-		|		BUS_DIAG_WRITE(~diag);
+		|		output.z_diag = false;
+		|		output.diag = ~diag;
 		|	} else {
-		|		BUS_DIAG_Z();
+		|		output.z_diag = true;
 		|	}
 		|	if (s0 || s1 || !PIN_SCANWDR=>) {
 		|		TRACE(

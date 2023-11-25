@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XSRESADR(PartFactory):
     ''' SEQ Resolve address '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	unsigned curr_lex;
@@ -66,7 +68,7 @@ class XSRESADR(PartFactory):
 		|	if (PIN_CLCLK.posedge()) {
 		|		state->curr_lex = val & 0xf;
 		|		state->curr_lex ^= 0xf;
-		|		BUS_CLEX_WRITE(state->curr_lex);
+		|		output.clex = state->curr_lex;
 		|	}
 		|	unsigned sel, res_addr = 0;
 		|	BUS_RASEL_READ(sel);
@@ -91,13 +93,13 @@ class XSRESADR(PartFactory):
 		|	default:
 		|		assert(sel < 4);
 		|	}
-		|	BUS_RADR_WRITE(res_addr);
+		|	output.radr = res_addr;
 		|	if (PIN_LINC=>) {
-		|		PIN_ICOND<=(true);
-		|		PIN_SEXT<=(true);
+		|		output.icond = true;
+		|		output.sext = true;
 		|	} else {
-		|		PIN_ICOND<=(!(res_addr == 0xf));
-		|		PIN_SEXT<=!((res_addr > 0xd));
+		|		output.icond = !(res_addr == 0xf);
+		|		output.sext = !((res_addr > 0xd));
 		|	}		
 
 		|''')

@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XSEQDEC(PartFactory):
     ''' SEQ Decode Ram '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint32_t top[1<<10];
@@ -117,16 +119,9 @@ class XSEQDEC(PartFactory):
 		|	tdec |= icc << 4;
 		|
 		|	bool e_macro_pend = !(emac == BUS_EMAC_MASK);
-		|	PIN_EMP<=(e_macro_pend);
+		|	output.emp = e_macro_pend;
 		|
 		|	if (PIN_CLK.posedge()) {
-		|
-		|#if 0
-		|		if (mode == 1 || mode == 2) {
-		|			state->sr[0] = state->sr[1] = state->sr[2] = state->sr[3] = 0;
-		|			PERMUTE(TO_SR);
-		|		}
-		|#endif
 		|		switch (mode) {
 		|		case 3:
 		|			state->reg = tdec;
@@ -168,7 +163,7 @@ class XSEQDEC(PartFactory):
 		|			scan |= (state->sr[1] & 1) << 2;
 		|			scan |= (state->sr[2] & 1) << 1;
 		|			scan |= (state->sr[3] & 1) << 0;
-		|			BUS_SCAN_WRITE(scan);
+		|			output.scan = scan;
 		|		TRACE(
 		|			<< " mode " << mode
 		|			<< std::hex
@@ -187,7 +182,7 @@ class XSEQDEC(PartFactory):
 		|	a ^= 0xffff;
 		|
 		|	bool banksel = (state->sr[2] >> 7) & 1;
-		|	PIN_BSEL<=(banksel);
+		|	output.bsel = banksel;
 		|
 		|	bool top = !banksel || (disp >> 10) != 0x3f;
 		|
@@ -201,9 +196,9 @@ class XSEQDEC(PartFactory):
 		|	bool write_ccl = false;
 		|	if (!PIN_DWOE && mode != 3) {
 		|		state->last = state->reg;
-		|		BUS_UAD_WRITE(state->reg >> 16);
-		|		BUS_DEC_WRITE(state->reg >> 8);
-		|		BUS_CCL_WRITE(state->reg >> 4);
+		|		output.uad = state->reg >> 16;
+		|		output.dec = state->reg >> 8;
+		|		output.ccl = state->reg >> 4;
 		|	} else {
 		|		if (emac != BUS_EMAC_MASK) {
 		|			unsigned uad = 0;
@@ -224,13 +219,13 @@ class XSEQDEC(PartFactory):
 		|			else if (!(emac & 0x01))
 		|				uad = 0x0080;
 		|			uad <<= 3;
-		|			BUS_UAD_WRITE(uad);
+		|			output.uad = uad;
 		|			state->last &= 0x0000ffff;
 		|			state->last |= uad << 16;
 		|		} else {
 		|			TRACE(" would " << std::hex << (*ptr >> 16));
-		|			BUS_UAD_WRITE((*ptr >> 16));
-		|			BUS_DEC_WRITE((*ptr >> 8));
+		|			output.uad = (*ptr >> 16);
+		|			output.dec = (*ptr >> 8);
 		|			state->last &= 0x000000ff;
 		|			state->last |= *ptr & 0xffffff00;
 		|		}
@@ -249,7 +244,7 @@ class XSEQDEC(PartFactory):
 		|
 		|	bool enuadr = !(e_macro_pend || !dec_cs);
 		|
-		|	PIN_DPER<=!(enuadr && par);
+		|	output.dper = !(enuadr && par);
 		|
 		|	if (!PIN_WE=> && dec_cs && enuadr) {
 		|		TRACE(<< " W " << std::hex << a << " " << state->reg);
@@ -281,7 +276,7 @@ class XSEQDEC(PartFactory):
 		|	else
 		|		cur_instr = state->ctop;
 		|
-		|	BUS_DSP_WRITE(cur_instr);
+		|	output.dsp = cur_instr;
 		|
 		|	uint32_t *ciptr;
 		|	if (cur_instr & 0xfc00 || !banksel)
@@ -295,7 +290,7 @@ class XSEQDEC(PartFactory):
 		|	}
 		|	if (write_ccl) {
 		|		uint ccls = (*ciptr >> 4) & 0xf;
-		|		BUS_CCL_WRITE(ccls);
+		|		output.ccl = ccls;
 		|	}
 		|
 		|''')

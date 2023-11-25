@@ -67,8 +67,6 @@ class XSUDEC(PartFactory):
 		|	unsigned br_type;
 		|	BUS_BRTYP_READ(br_type);
 		|
-		|	unsigned br_timing;
-		|	BUS_BRTIM_READ(br_timing);
 		|
 		|	bool bad_hint = PIN_BADH=>;
 		|
@@ -99,7 +97,7 @@ class XSUDEC(PartFactory):
 		|		btimm = 2;
 		|		brtm3 = PIN_BRBH3=>;
 		|	} else {
-		|		btimm = br_timing;
+		|		BUS_BRTIM_READ(btimm);
 		|		brtm3 = br_type & 1;
 		|	}
 		|

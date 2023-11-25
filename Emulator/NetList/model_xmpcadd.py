@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XMPCADD(PartFactory):
     ''' SEQ Macro PC adder '''
 
+    # XXX: autopin failed
+
     def state(self, file):
         file.fmt('''
 		|	unsigned retrn_pc_ofs;

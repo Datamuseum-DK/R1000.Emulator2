@@ -38,9 +38,9 @@
 from part import PartModel, PartFactory
 
 class F148(PartFactory):
-
     ''' F148 8-Line to 3-Line Priority Encoder '''
 
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -78,15 +78,15 @@ class F148(PartFactory):
 		|	    << " | "
 		|	    << std::hex << s
 		|	);
-		|	BUS_Y_WRITE(~s);
-		|	PIN_GS<=(s & 16);
-		|	PIN_EZ<=(!(s & 8));
+		|	output.y = ~s;
+		|	output.gs = (s >> 4) & 1;
+		|	output.ez = !((s >> 3) & 1);
 		|''')
 
 class F148X2(PartFactory):
-
     ''' Dual F148 8-Line to 3-Line Priority Encoder '''
 
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -140,9 +140,9 @@ class F148X2(PartFactory):
 		|	    << " | "
 		|	    << std::hex << s
 		|	);
-		|	BUS_Y_WRITE(~s);
-		|	PIN_GS<=(s & 32);
-		|	PIN_EZ<=(!(s & 16));
+		|	output.y = ~s;
+		|	output.gs = (s >> 5) & 1;
+		|	output.ez = !((s >> 4) & 1);
 		|''')
 
 def register(part_lib):

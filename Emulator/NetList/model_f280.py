@@ -42,6 +42,8 @@ class F280(PartFactory):
 
     ''' F280 9-Bit Parity Generator Checker '''
 
+    autopin = True
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -63,8 +65,8 @@ class F280(PartFactory):
 		|	    << tmp
 		|	);
 		|
-		|	PIN_PEV<=(!tmp);
-		|	PIN_POD<=(tmp);
+		|	output.pev = !tmp;
+		|	output.pod = tmp;
 		|''')
 
 def register(part_lib):

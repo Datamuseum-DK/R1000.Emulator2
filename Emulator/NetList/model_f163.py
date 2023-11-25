@@ -42,6 +42,9 @@ class F163(PartFactory):
 
     ''' F163 F163 SYNCHRONOUS 4-BIT BINARY COUNTER '''
 
+    # XXX: autopin => major slowdown
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	unsigned state;
@@ -57,13 +60,15 @@ class F163(PartFactory):
 
         file.fmt('''
 		|
-		|	if (!PIN_CLR=>) {
-		|		state->state = 0;
-		|	} else if (!PIN_LD=>) {
-		|		state->state = 0;
-		|		BUS_D_READ(state->state);
-		|	} else if (PIN_ENP=> && PIN_ENT=>) {
-		|		state->state = (state->state + 1) & BUS_D_MASK;
+		|	if (PIN_CLK.posedge()) {
+		|		if (!PIN_CLR=>) {
+		|			state->state = 0;
+		|		} else if (!PIN_LD=>) {
+		|			state->state = 0;
+		|			BUS_D_READ(state->state);
+		|		} else if (PIN_ENP=> && PIN_ENT=>) {
+		|			state->state = (state->state + 1) & BUS_D_MASK;
+		|		}
 		|	}
 		|	TRACE(
 		|	    << " clr " << PIN_CLR?
@@ -76,8 +81,8 @@ class F163(PartFactory):
 		|	    << std::hex
 		|	    << state->state
 		|	);
-		|	BUS_Q_WRITE(state->state);
-		|	PIN_CO<=((state->state == BUS_D_MASK) && PIN_ENT=>);
+		|	output.q = state->state;
+		|	output.co = (state->state == BUS_D_MASK) && PIN_ENT=>;
 		|''')
 
 def register(part_lib):

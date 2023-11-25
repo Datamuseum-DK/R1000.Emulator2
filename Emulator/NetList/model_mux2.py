@@ -44,6 +44,8 @@ class Mux2(PartFactory):
 
     ''' Two-choice multiplexers '''
 
+    autopin = True
+
     def __init__(self, ident, invert):
         super().__init__(ident)
         self.invert = invert
@@ -138,7 +140,7 @@ class Mux2(PartFactory):
 		|	    << " | " << std::hex << tmp
 		|	);
 		|
-		|	BUS_Y_WRITE(tmp);
+		|	output.y = tmp;
 		|''')
 
 class ModelMux2(PartModel):

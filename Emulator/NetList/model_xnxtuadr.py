@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XNXTUADR(PartFactory):
     ''' Select next micro address '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	unsigned fiu;
@@ -152,7 +154,7 @@ class XNXTUADR(PartFactory):
 		|		}
 		|	}
 		|	if (PIN_Q1not.posedge()) {
-		|		BUS_NU_WRITE(data);
+		|		output.nu = data;
 		|		p0 = (data >> 8) & 0x3f;
 		|		p0 = (p0 ^ (p0 >> 4)) & 0xf;
 		|		p0 = (p0 ^ (p0 >> 2)) & 0x3;
@@ -165,8 +167,8 @@ class XNXTUADR(PartFactory):
 		|			p0 ^= 1;
 		|			p1 ^= 1;
 		|		}
-		|		PIN_NU_P0<=(p0);
-		|		PIN_NU_P1<=(p1);
+		|		output.nu_p0 = p0;
+		|		output.nu_p1 = p1;
 		|	}
 		|	TRACE(
 		|	    << " fc^ " << PIN_FIU_CLK.posedge()
@@ -184,9 +186,9 @@ class XNXTUADR(PartFactory):
 		|	    << " p " << p0 << p1
 		|	);
 		|
-		|	PIN_MACRO_HIC<=(macro_hic);
-		|	PIN_U_EVENT<=(!u_event);
-		|	PIN_U_EVENTnot<=(u_event);
+		|	output.macro_hic = macro_hic;
+		|	output.u_event = !u_event;
+		|	output.u_eventnot = u_event;
 		|
 		|''')
 

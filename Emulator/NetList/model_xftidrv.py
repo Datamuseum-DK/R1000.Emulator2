@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XFTIDRV(PartFactory):
     ''' FIU TI driver '''
 
+    autopin = True
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -47,14 +49,14 @@ class XFTIDRV(PartFactory):
         file.fmt('''
 		|	unsigned d;
 		|
-		|	if (PIN_OE=>) {
-		|		BUS_Q_Z();
+		|	output.z_q = PIN_OE=>;
+		|	if (output.z_q) {
 		|		next_trigger(PIN_OE.negedge_event());
 		|	} else {
 		|		BUS_D_READ(d);
 		|		d ^= BUS_D_MASK;
 		|		d ^= 0xf7800000;
-		|		BUS_Q_WRITE(d);
+		|		output.q = d;
 		|	}
 		|''')
 

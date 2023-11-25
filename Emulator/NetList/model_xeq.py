@@ -42,6 +42,8 @@ class XEQ(PartFactory):
 
     ''' F521 8-Bit Identity Comparator (and multiples) '''
 
+    autopin = True
+
     def state(self, file):
         if "CONST" in self.name:
             file.write("\tuint64_t const_b;\n")
@@ -64,7 +66,7 @@ class XEQ(PartFactory):
         if "E" in self.comp.nodes:
             file.fmt('''
 		|	if (PIN_E=>) {
-		|		PIN_AeqB<=(true);
+		|		output.aeqb = true
 		|		TRACE ( << " e " << PIN_E?);
 		|		next_trigger(PIN_E.negedge_event());
 		|		return;
@@ -76,7 +78,7 @@ class XEQ(PartFactory):
             file.fmt('''
 		|	uint64_t a;
 		|	BUS_A_READ(a);
-		|	PIN_AeqB<=((a != state->const_b));
+		|	output.aeqb = (a != state->const_b);
 		|
 		|	TRACE (
 		|	    << "a " << BUS_A_TRACE()
@@ -88,7 +90,7 @@ class XEQ(PartFactory):
 		|	uint64_t a, b;
 		|	BUS_A_READ(a);
 		|	BUS_B_READ(b);
-		|	PIN_AeqB<=((a != b));
+		|	output.aeqb = (a != b);
 		|
 		|	TRACE (
 		|	    << "a " << BUS_A_TRACE()

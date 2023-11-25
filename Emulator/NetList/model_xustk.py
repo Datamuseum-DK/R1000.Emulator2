@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XUSTK(PartFactory):
     ''' Micro Stack '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint16_t ram[16];
@@ -95,7 +97,7 @@ class XUSTK(PartFactory):
 		|			what = "4";
 		|			state->topu = state->ram[state->adr];
 		|		}
-		|		BUS_TOPU_WRITE(~state->topu);
+		|		output.topu = ~state->topu;
 		|	}
 		|	if (PIN_Q2.posedge()) {
 		|		state->ram[(state->adr + 1) & 0xf] = state->topu;
@@ -111,7 +113,7 @@ class XUSTK(PartFactory):
 		|				state->adr = (state->adr + 0xf) & 0xf;
 		|			}
 		|		}
-		|		PIN_SSZ<=(state->adr == 0);
+		|		output.ssz = state->adr == 0;
 		|	}
 		|	TRACE(
 		|		<< " w " << what

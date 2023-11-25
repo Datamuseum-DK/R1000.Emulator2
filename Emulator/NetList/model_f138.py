@@ -39,8 +39,9 @@
 from part import PartModel, PartFactory
 
 class F138(PartFactory):
-
     ''' F138 1-of-8 decoder/demultiplexer '''
+
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -65,7 +66,8 @@ class F138(PartFactory):
 		|''')
         for n in range(7, -1, -1):
             if "Y%d_" % n in self.comp.nodes:
-                file.fmt('	PIN_Y%d_<=(adr != %d);\n' % (n, n))
+                # file.fmt('	PIN_Y%d_<=(adr != %d);\n' % (n, n))
+                file.fmt('	output.y%d_ = adr != %d;\n' % (n, n))
 
 class F154(PartFactory):
 

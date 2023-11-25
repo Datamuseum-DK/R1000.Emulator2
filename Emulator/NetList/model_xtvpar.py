@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XTVPAR(PartFactory):
     ''' TV RF parity RAM '''
 
+    # XXX: autopin fails
+
     def state(self, file):
         file.fmt('''
 		|	uint8_t apar[1 << BUS_AADR_WIDTH];

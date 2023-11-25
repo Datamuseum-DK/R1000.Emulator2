@@ -42,6 +42,8 @@ class F86(PartFactory):
 
     ''' F86 (Quad) 2-input XOR '''
 
+    # autopin fails run_udiag early
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 

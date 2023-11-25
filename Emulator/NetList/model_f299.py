@@ -46,6 +46,8 @@ class F299(PartFactory):
 
     ''' F299 Octal Universal Shift/Storage Register with Common Parallel I/O Pins '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	unsigned reg;
@@ -110,17 +112,18 @@ class F299(PartFactory):
 		|	if (PIN_OE=> || (mode == 3)) {
 		|		if (what == NULL && (state->ctx.do_trace & 2))
 		|			what = "Z ";
-		|		BUS_Y_Z();
+		|		output.z_y = 1;
 		|	} else {
 		|		if (what == NULL && (state->ctx.do_trace & 2))
 		|			what = "out ";
-		|		BUS_Y_WRITE(state->reg);
+		|		output.z_y = 0;
+		|		output.y = state->reg;
 		|	}
-		|	PIN_Q0<=((state->reg & (1 << (BUS_Y_WIDTH-1))) != 0);
+		|	output.q0 = ((state->reg & (1 << (BUS_Y_WIDTH-1))) != 0);
 		|#if BUS_Y_WIDTH == 8
-		|	PIN_Q7<=((state->reg & 0x01) != 0);
+		|	output.q7 = ((state->reg & 0x01) != 0);
 		|#else
-		|	PIN_Q15<=((state->reg & 0x01) != 0);
+		|	output.q15 = ((state->reg & 0x01) != 0);
 		|#endif
 		|
 		|	if (what != NULL) {
@@ -149,6 +152,8 @@ class F299(PartFactory):
 class F299X8(PartFactory):
 
     ''' 8X F299 Octal Universal Shift/Storage Register with Common Parallel I/O Pins '''
+
+    autopin = True
 
     def state(self, file):
         file.fmt('''
@@ -231,11 +236,12 @@ class F299X8(PartFactory):
 		|	if (PIN_OE=> || (mode == 3)) {
 		|		if (what == NULL && (state->ctx.do_trace & 2))
 		|			what = "Z ";
-		|		BUS_Y_Z();
+		|		output.z_y = 1;
 		|	} else {
 		|		if (what == NULL && (state->ctx.do_trace & 2))
 		|			what = "out ";
-		|		BUS_Y_WRITE(state->reg);
+		|		output.z_y = 0;
+		|		output.y = state->reg;
 		|	}
 		|	tmp = 0;
 		|	if (state->reg & (1ULL << 56)) tmp |= 0x80;
@@ -246,7 +252,7 @@ class F299X8(PartFactory):
 		|	if (state->reg & (1ULL << 16)) tmp |= 0x04;
 		|	if (state->reg & (1ULL <<  8)) tmp |= 0x02;
 		|	if (state->reg & 1ULL)         tmp |= 0x01;
-		|	BUS_Q_WRITE(tmp);
+		|	output.q = tmp;
 		|
 		|	if (what != NULL) {
 		|		TRACE(

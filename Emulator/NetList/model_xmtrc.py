@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XMTRC(PartFactory):
     ''' MEM32 Tracing '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint8_t traram[1 << BUS_A_WIDTH];
@@ -120,7 +122,7 @@ class XMTRC(PartFactory):
 		|		trace = state->traram[adr];
 		|		next_trigger(ram_event);
 		|	}
-		|	BUS_Q_WRITE(trace);
+		|	output.q = trace;
 		|	if (PIN_WE.posedge()) {
 		|		BUS_A_READ(adr);
 		|		state->traram[adr] = trace;

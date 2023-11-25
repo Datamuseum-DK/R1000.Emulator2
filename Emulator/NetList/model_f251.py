@@ -39,8 +39,9 @@
 from part import PartModel, PartFactory
 
 class F251(PartFactory):
-
     ''' F251 8-Input Multiplexer '''
+
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -74,8 +75,8 @@ class F251(PartFactory):
 		|	case 6: s = PIN_G=>; break;
 		|	case 7: s = PIN_H=>; break;
 		|	}
-		|	PIN_Y<=(s);
-		|	PIN_Ynot<=(!s);
+		|	output.y = s;
+		|	output.ynot = !s;
 		|
 		|	TRACE(
 		|	    << " oe "

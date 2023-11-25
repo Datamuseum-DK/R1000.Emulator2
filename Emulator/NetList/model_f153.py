@@ -42,6 +42,8 @@ class F153(PartFactory):
 
     ''' F153 Dual 4-Input Multiplexer '''
 
+    autopin = True
+
     def private(self):
         ''' private variables '''
         for  i in "abcd":
@@ -93,7 +95,7 @@ class F153(PartFactory):
 		|	    << " s " << BUS_S_TRACE()
 		|	    << " | " << val
 		|	);
-		|	BUS_Y_WRITE(val);
+		|	output.y = val;
 		|''')
 
 def register(part_lib):

@@ -40,6 +40,8 @@ class XROTF(PartFactory):
 
     ''' FIU first stage rotator '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|       unsigned lreg;
@@ -126,7 +128,7 @@ class XROTF(PartFactory):
 		|		if (lfrg != 0x7f)
 		|			lfrg |= 1<<7;
 		|
-		|		BUS_LFRG_WRITE(lfrg);
+		|		output.lfrg = lfrg;
 		|		state->lreg = lfrg;
 		|	}
 		|
@@ -149,7 +151,7 @@ class XROTF(PartFactory):
 		|
 		|	// ZLNAN
 		|	bool zlen = !(fill_mode & (lenone == 0x3f));
-		|	PIN_ZL<=(zlen);
+		|	output.zl = zlen;
 		|
 		|	// OFSMX
 		|	bool ckpn;
@@ -163,11 +165,11 @@ class XROTF(PartFactory):
 		|		BUS_AO_READ(oregin);
 		|		ckpn = PIN_OCE=>;
 		|	}
-		|	PIN_CKPN<=(ckpn);
+		|	output.ckpn = ckpn;
 		|
 		|	if (PIN_OCLK.posedge()) {	// Q4~^
 		|		state->oreg = oregin;
-		|		BUS_OREG_WRITE(state->oreg);
+		|		output.oreg = state->oreg;
 		|	}
 		|
 		|	// OSMX
@@ -181,7 +183,7 @@ class XROTF(PartFactory):
 		|	// XWALU
 		|	unsigned xword;
 		|	xword = state->oreg + (state->lreg & 0x3f) + (state->lreg & 0x80);
-		|	PIN_XWRD<=(xword > 255);
+		|	output.xwrd = xword > 255;
 		|
 		|	// SBTMX
 		|	unsigned sbit;
@@ -200,7 +202,7 @@ class XROTF(PartFactory):
 		|		sbit = offset;
 		|		break;
 		|	}
-		|	BUS_SBIT_WRITE(sbit);
+		|	output.sbit = sbit;
 		|
 		|	unsigned ebit;
 		|	if (op & 1) {
@@ -210,7 +212,7 @@ class XROTF(PartFactory):
 		|	} else {
 		|		ebit = 0x7f;
 		|	}
-		|	BUS_EBIT_WRITE(ebit);
+		|	output.ebit = ebit;
 		|
 		|	if (op != 0) {
 		|		msk = 0x7fff;
@@ -283,19 +285,17 @@ class XROTF(PartFactory):
 		|
 		|		sgnbit = (ft >> (63 - sgn)) & 1;
 		|	}
-		|	PIN_SGNB<=(sgnbit);
+		|	output.sgnb = sgnbit;
 		|
-		|	if (PIN_OE=>) {
-		|		BUS_Q_Z();
-		|		next_trigger(oe_event);
-		|	} else {
+		|	output.z_q = PIN_OE=>;
+		|	if (!output.z_q) {
 		|		uint64_t yl = 0, yh = 0, q;
 		|
 		|		fs = s & ~3;
 		|		yl = ft >> fs;
 		|		yh = ft << (64 - fs);
 		|		q = yh | yl;
-		|		BUS_Q_WRITE(q);
+		|		output.q = q;
 		|	}
 		|
 		|	TRACE(
@@ -322,80 +322,7 @@ class XROTF(PartFactory):
 		|	);
 		|''')
 
-
-class XROT16(PartFactory):
-
-    ''' 16x4x2 rotator '''
-
-
-    def doit(self, file):
-        ''' The meat of the doit() function '''
-
-        super().doit(file)
-
-        file.fmt('''
-		|	unsigned a, b, s, ab, y = 0;
-		|
-		|	BUS_A_READ(a);
-		|	BUS_B_READ(b);
-		|	BUS_S_READ(s);
-		|	BUS_AB_READ(ab);
-		|	a >>= s;
-		|	b >>= s;
-		|	y |= (ab & 0x1) ? (b & 0x000f) : (a & 0x000f);
-		|	y |= (ab & 0x2) ? (b & 0x00f0) : (a & 0x00f0);
-		|	y |= (ab & 0x4) ? (b & 0x0f00) : (a & 0x0f00);
-		|	y |= (ab & 0x8) ? (b & 0xf000) : (a & 0xf000);
-		|	TRACE(
-		|	    << " a " << BUS_A_TRACE()
-		|	    << " b " << BUS_B_TRACE()
-		|	    << " s " << BUS_S_TRACE()
-		|	    << " ab " << BUS_AB_TRACE()
-		|	    << " y " << std::hex << y
-		|	);
-		|	BUS_Y_WRITE(y);
-		|''')
-
-
-class XROT64(PartFactory):
-
-    ''' 64x4 rotator '''
-
-
-    def doit(self, file):
-        ''' The meat of the doit() function '''
-
-        super().doit(file)
-
-        file.fmt('''
-		|	uint64_t s, i, yl = 0, yh = 0, y;
-		|
-		|	if (PIN_OE=>) {
-		|		TRACE(<<"Z");
-		|		BUS_Y_Z();
-		|		next_trigger(PIN_OE.negedge_event());
-		|		return;
-		|	}
-		|
-		|	BUS_S_READ(s);
-		|	BUS_I_READ(i);
-		|	s <<= 2;
-		|	yl = i >> s;
-		|	yh = i << (64 - s);
-		|	y = yh | yl;
-		|	BUS_Y_WRITE(y);
-		|	TRACE(
-		|	    << " oe " << PIN_OE?
-		|	    << " s " << BUS_S_TRACE()
-		|	    << " i " << BUS_I_TRACE()
-		|	    << " " << std::hex << i
-		|	    << " y " << std::hex << y
-		|	);
-		|''')
-
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XROT16", PartModel("XROT16", XROT16))
-    part_lib.add_part("XROT64", PartModel("XROT64", XROT64))
     part_lib.add_part("XROTF", PartModel("XROTF", XROTF))

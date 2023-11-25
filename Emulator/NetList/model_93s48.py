@@ -38,8 +38,9 @@
 from part import PartModel, PartFactory
 
 class AM93S48(PartFactory):
-
     ''' AM93S48 12-Bit Parity Generator Checker '''
+
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -63,8 +64,8 @@ class AM93S48(PartFactory):
 		|	    << tmp
 		|	);
 		|
-		|	PIN_PEV<=(!tmp);
-		|	PIN_POD<=(tmp);
+		|	output.pev = !tmp;
+		|	output.pod = tmp;
 		|''')
 
 def register(part_lib):

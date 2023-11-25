@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XCADR(PartFactory):
     ''' TV C-addr calculation '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	unsigned csa_offset;
@@ -208,8 +210,8 @@ class XCADR(PartFactory):
 		|		aadr = cadr;
 		|		badr = cadr;
 		|	}
-		|	BUS_AADR_WRITE(aadr);
-		|	BUS_BADR_WRITE(badr);
+		|	output.aadr = aadr;
+		|	output.badr = badr;
 		|
 		|	TRACE(
 		|		<< " uclk^ " << PIN_UCLK.posedge()

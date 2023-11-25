@@ -42,8 +42,9 @@ from net import Net
 from pin import Pin
 
 class F579(PartFactory):
-
     ''' F579 8-bit bidirectional binary counter (3-State) '''
+
+    autopin = True
 
     def state(self, file):
         file.fmt('''
@@ -74,7 +75,7 @@ class F579(PartFactory):
 		|
 		|	if (PIN_MR=> && PIN_SR=> && !PIN_CS=> && !PIN_LD=>) {
 		|		// Parallel Load
-		|		BUS_Q_Z();
+		|		output.z_q = true;
 		|	}
 		|
 		|	if (!PIN_MR=>) {
@@ -109,19 +110,20 @@ class F579(PartFactory):
 		|	}
 		|
 		|	if (PIN_CET=>)
-		|		PIN_CO<=(1);
+		|		output.co = true;
 		|	else if (PIN_UslashBnot=>)
-		|		PIN_CO<=(state->reg != BUS_Q_MASK);
+		|		output.co = (state->reg != BUS_Q_MASK);
 		|	else
-		|		PIN_CO<=(state->reg != 0x00);
+		|		output.co = (state->reg != 0x00);
 		|
 		|	if (!PIN_CS=> && PIN_LD=> && !PIN_OE=>) {
-		|		BUS_Q_WRITE(state->reg);
+		|		output.z_q = false;
+		|		output.q = state->reg;
 		|		if (state->z && what == NULL)
 		|		    what = "out ";
 		|		state->z = false;
 		|	} else {
-		|		BUS_Q_Z();
+		|		output.z_q = true;
 		|		if (!state->z && what == NULL)
 		|		    what = "Z ";
 		|		state->z = true;

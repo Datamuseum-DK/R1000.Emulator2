@@ -41,6 +41,8 @@ class F169(PartFactory):
 
     ''' F169 (Dual) D-Type Positive Edge-Triggered Flip-Flop '''
 
+    autopin = True
+
     def state(self, file):
         ''' Extra state variable '''
 
@@ -116,8 +118,8 @@ class F169(PartFactory):
 		|		    << carry
 		|		);
 		|	}
-		|	BUS_Q_WRITE(state->count);
-		|	PIN_CO<=(carry);
+		|	output.q = state->count;
+		|	output.co = carry;
 		|''')
 
 def register(part_lib):

@@ -38,8 +38,9 @@
 from part import PartModel, PartFactory
 
 class XALU(PartFactory):
-
     ''' TYP/VAL ALU '''
+
+    autopin = True
 
     def extra(self, file):
         file.include("Components/tables.h")
@@ -110,11 +111,15 @@ class XALU(PartFactory):
 		|	    << " co " << ci
 		|	    << " y " << std::hex << y
 		|	);
-		|	PIN_AeqB<=(eq);
-		|	PIN_CO<=(ci);
-		|	BUS_Y_WRITE(y);
+		|	//PIN_AeqB<=(eq);
+		|	output.aeqb = eq;
+		|	//PIN_CO<=(ci);
+		|	output.co = ci;
+		|	//BUS_Y_WRITE(y);
+		|	output.y = y;
 		|#ifdef BUS_EQ_MASK
-		|	BUS_EQ_WRITE(ebus);
+		|	output.eq = ebus;
+		|	//BUS_EQ_WRITE(ebus);
 		|#endif
 		|''')
 

@@ -149,6 +149,8 @@ class XECC64(PartFactory):
 
     ''' 128bit ECC checker/generator '''
 
+    autopin = True
+
     def state(self, file):
         ''' Extra state variable '''
 
@@ -211,7 +213,7 @@ class XECC64(PartFactory):
 		|	    << " o " << out
 		|	);
 		|
-		|	PIN_O<=(out);
+		|	output.o = out;
 		|
 		|''')
 

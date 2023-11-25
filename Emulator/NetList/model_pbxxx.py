@@ -39,8 +39,9 @@
 from part import PartModel, PartFactory
 
 class PBxxx(PartFactory):
-
     ''' 256-bit TTL bipolar PROM (32x8) '''
+
+    autopin = True
 
     def state(self, file):
         ''' Extra state variable '''
@@ -60,6 +61,7 @@ class PBxxx(PartFactory):
         super().doit(file)
 
         if 'OE' in self.comp and not self.comp["OE"].net.is_const():
+            assert False
             file.fmt('''
 		|	if (!PIN_OE=>) {
 		|		BUS_Y_WRITE(data);
@@ -85,7 +87,7 @@ class PBxxx(PartFactory):
 		|	    << AS(data & 0x02)
 		|	    << AS(data & 0x01)
 		|	);
-		|	BUS_Y_WRITE(data);
+		|	output.y = data;
 		|''')
 
 class ModelPBxxx(PartModel):

@@ -41,6 +41,8 @@ class XADRPAR(PartFactory):
 
     ''' Address bus parity checker '''
 
+    autopin = True
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -89,9 +91,9 @@ class XADRPAR(PartFactory):
 		|	    << " out " << std::hex << out
 		|	);
 		|
-		|	BUS_POD_WRITE(out);
+		|	output.pod = out;
 		|	out ^= BUS_PEV_MASK;
-		|	BUS_PEV_WRITE(out);
+		|	output.pev = out;
 		|
 		|''')
 

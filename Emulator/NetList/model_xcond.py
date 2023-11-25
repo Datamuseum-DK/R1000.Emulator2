@@ -39,12 +39,11 @@ from part import PartModel, PartFactory
 class XCOND(PartFactory):
     ''' SEQ Condition Select '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint8_t elprom[512];
-		|	unsigned condsel;
-		|	bool is_e_ml;
-		|	bool cond;
 		|	bool q3cond;
 		|	bool llcond;
 		|''')
@@ -86,17 +85,6 @@ class XCOND(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		BUS_OCOND_WRITE(state->condsel ^ BUS_OCOND_MASK);
-		|		PIN_E_ML<=(state->is_e_ml);
-		|		PIN_CNDP<=(state->cond);
-		|		PIN_CNDN<=(!state->cond);
-		|		PIN_CQ3P<=(state->q3cond);
-		|		PIN_CQ3N<=(!state->q3cond);
-		|		PIN_CLLP<=(state->llcond);
-		|		PIN_CLLN<=(!state->llcond);
-		|	}
 		|
 		|	unsigned condsel;
 		|	BUS_ICOND_READ(condsel);
@@ -106,7 +94,7 @@ class XCOND(PartFactory):
 		|
 		|	bool cond;
 		|	sc_event_or_list *next = NULL;
-		|	switch(state->condsel >> 3) {
+		|	switch(condsel >> 3) {
 		|''')
 
         for pin in range(16):
@@ -122,36 +110,22 @@ class XCOND(PartFactory):
         file.fmt('''
 		|	}
 		|
-		|	bool q3cond = state->q3cond;
-		|	bool llcond = state->llcond;
 		|	if (!is_e_ml && PIN_Q4.negedge()) {
-		|		q3cond = cond;
+		|		state->q3cond = cond;
 		|	}
 		|	if (is_e_ml && !PIN_SCKE=> && PIN_Q4.posedge()) {
-		|		llcond = cond;
+		|		state->llcond = cond;
 		|	}
 		|
-		|	if (condsel != state->condsel ||
-		|	    is_e_ml != state->is_e_ml ||
-		|	    cond != state->cond ||
-		|	    q3cond != state->q3cond ||
-		|	    llcond != state->llcond) {
-		|		state->condsel = condsel;
-		|		state->is_e_ml = is_e_ml;
-		|		state->cond = cond;
-		|		state->q3cond = q3cond;
-		|		state->llcond = llcond;
-		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
-		|		TRACE (
-		|		    << std::hex
-		|		    << " condsel " << condsel
-		|		    << " e_ml " << is_e_ml
-		|		    << " cond " << cond
-		|		    << " q3cond " << q3cond
-		|		    << " llcond " << llcond
-		|		);
-		|	} else {
+		|	output.ocond = (condsel ^ BUS_OCOND_MASK);
+		|	output.e_ml = is_e_ml;
+		|	output.cndp = cond;
+		|	output.cndn = !cond;
+		|	output.cq3p = state->q3cond;
+		|	output.cq3n = !state->q3cond;
+		|	output.cllp = state->llcond;
+		|	output.clln = !state->llcond;
+		|	if (!memcmp(&output, &state->output, sizeof output)) {
 		|		next_trigger(*next);
 		|	}
 		|''')

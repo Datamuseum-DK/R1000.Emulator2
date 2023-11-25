@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XTVBPAR(PartFactory):
     ''' TYP+VAL B parity '''
 
+    autopin = True
+
     def sensitive(self):
         yield "PIN_Q3.pos()"
 
@@ -57,7 +59,7 @@ class XTVBPAR(PartFactory):
 		|		BUS_BADR_READ(against);
 		|	}
 		|	BUS_BCHK_READ(chk);
-		|	PIN_TPERR<=(chk != against);		
+		|	output.tperr = chk != against;		
 		|	TRACE(
 		|	    << " boe " << PIN_BOE?
 		|	    << " bchk " << BUS_BCHK_TRACE()

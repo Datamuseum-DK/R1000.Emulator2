@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XTASIDE(PartFactory):
     ''' TYP A-side mux+latch '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t alat;
@@ -67,20 +69,19 @@ class XTASIDE(PartFactory):
 		|	BUS_UA_READ(uir_a);
 		|	if ((uir_a & 0x3c) != 0x28 || !PIN_AODIAG) {
 		|		a = state->alat;
-		|		PIN_AOUT = 0;
+		|		output.aout = 0;
 		|	} else if (uir_a == 0x28) {
 		|		BUS_LOOP_READ(loop);
 		|		a = BUS_A_MASK;
 		|		a ^= BUS_LOOP_MASK;
 		|		a |= loop;
-		|		PIN_AOUT = 1;
+		|		output.aout = 1;
 		|	} else {
 		|		a = BUS_A_MASK;
-		|		BUS_A_WRITE(BUS_A_MASK);
-		|		PIN_AOUT = 1;
+		|		output.aout = 1;
 		|	}
-		|	BUS_A_WRITE(a);
-		|	PIN_AB0<=(a >> 63);
+		|	output.a = a;
+		|	output.ab0 = a >> 63;
 		|	p = (a ^ (a >> 4)) & 0x0f0f0f0f0f0f0f0fULL;
 		|	p = (p ^ (p >> 2)) & 0x0303030303030303ULL;
 		|	p = (p ^ (p >> 1)) & 0x0101010101010101ULL;
@@ -89,7 +90,7 @@ class XTASIDE(PartFactory):
 		|	p |= (p >> 28);
 		|	p &= 0xff;
 		|	p ^= 0xff;
-		|	BUS_AP_WRITE(p);
+		|	output.ap = p;
 		|	TRACE(
 		|	    << " aod " << PIN_AODIAG?
 		|	    << " uira " << BUS_UA_TRACE()

@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XFAINC(PartFactory):
     ''' FIU Address increment '''
 
+    autopin = True
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -57,19 +59,16 @@ class XFAINC(PartFactory):
 		|	if (inc_mar && inco != 0x1f)
 		|		inco += 1;
 		|	inco |= mar_offset & 0x20;
-		|	BUS_INCO_WRITE(inco);
+		|	output.inco = inco;
 		|
-		|	PIN_PXNX<=(
+		|	output.pxnx = (
 		|		(page_xing && sel_pg_xing && sel_incyc_px) ||
 		|		(!page_xing && sel_pg_xing && sel_incyc_px && inc_mar && marbot == 0x1f)
 		|	);
 		|
-		|	PIN_WEZ<=((mar_offset & 0x3f) == 0);
+		|	output.wez = (mar_offset & 0x3f) == 0;
 		|
-		|	PIN_NTOP<=(!
-		|		(marbot > 0x10) &&
-		|		(mar_offset & 0x20)
-		|	);
+		|	output.ntop = !	(marbot > 0x10) && (mar_offset & 0x20);
 		|
 		|''')
 

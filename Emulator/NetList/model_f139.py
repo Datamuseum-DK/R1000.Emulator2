@@ -39,8 +39,9 @@
 from part import PartModel, PartFactory
 
 class F139(PartFactory):
-
     ''' F139 (Dual) 1-of-4 Decoder/Demultiplexer '''
+
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -58,7 +59,7 @@ class F139(PartFactory):
 		|	    << " o " << adr
 		|	);
 		|	out &= ~(0x08 >> adr);
-		|	BUS_Y_WRITE(out);
+		|	output.y = out;
 		|''')
 
 def register(part_lib):

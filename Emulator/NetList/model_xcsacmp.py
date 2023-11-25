@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XCSACMP(PartFactory):
     ''' FIU CSA Comparator '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	unsigned nve, pdreg;
@@ -96,23 +98,22 @@ class XCSACMP(PartFactory):
 		|
 		|	// CNAN0B, CINV0B, CSCPR0
 		|	in_range = (!state->pdt && name_match) || (dif & 0xffff0);
-		|	PIN_INRG<=(in_range);
+		|	output.inrg = in_range;
 		|
 		|	unsigned hofs = 0xf + state->nve - (dif & 0xf);
-		|	BUS_HOFS_WRITE(hofs);
+		|	output.hofs = hofs;
 		|
-		|	bool chit = !(
+		|	output.chit = !(
 		|		co &&
 		|		!(
 		|			in_range ||
 		|			((dif & 0xf) >= state->nve)
 		|		)
 		|	);
-		|	PIN_CHIT<=(chit);
 		|
 		|	if (PIN_Q4.posedge()) {
 		|		state->oor = !(co || name_match);
-		|		PIN_OOR<=(state->oor);
+		|		output.oor = state->oor;
 		|	}
 		|''')
 

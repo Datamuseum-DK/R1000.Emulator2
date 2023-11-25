@@ -39,8 +39,9 @@
 from part import PartModel, PartFactory
 
 class F151(PartFactory):
-
     ''' F151 8-Input Multiplexer '''
+
+    autopin = True
 
     def private(self):
         ''' private variables '''
@@ -103,8 +104,8 @@ class F151(PartFactory):
 		|	    << " | "
 		|	    << s
 		|	);
-		|	PIN_Y<=(s);
-		|	PIN_Ynot<=(!s);
+		|	output.y = s;
+		|	output.ynot = !s;
 		|''')
 
 def register(part_lib):

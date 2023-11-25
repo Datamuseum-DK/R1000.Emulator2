@@ -41,8 +41,9 @@ from node import Node
 from component import Component
 
 class DRAM1MEGWIDE(PartFactory):
-
     ''' 1MEGxN DRAM '''
+
+    autopin = True
 
     def state(self, file):
         if len(self.comp.nodes) - 13 <= 16:
@@ -76,14 +77,15 @@ class DRAM1MEGWIDE(PartFactory):
 		|		state->cas = adr;
 		|		adr = (state->cas << 10) | state->ras;
 		|		if (!PIN_WE=>) {
-		|			BUS_Q_Z();
+		|			output.z_q = true;
 		|			BUS_D_READ(state->bits[adr]);
 		|		} else {
-		|			BUS_Q_WRITE(state->bits[adr]);
+		|			output.z_q = false;
+		|			output.q = state->bits[adr];
 		|		}
 		|	}
 		|	if (PIN_RAS.posedge() || PIN_CAS.posedge()) {
-		|		BUS_Q_Z();
+		|		output.z_q = true;
 		|	}
 		|	if (!PIN_CAS=> || (state->ctx.do_trace & 2)) {
 		|		TRACE(

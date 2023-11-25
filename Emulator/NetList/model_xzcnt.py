@@ -41,6 +41,8 @@ class XZCNT(PartFactory):
 
     ''' Zero bit counter'''
 
+    autopin = True
+
     def state(self, file):
         file.write("\tuint64_t count;\n")
 
@@ -72,11 +74,9 @@ class XZCNT(PartFactory):
 		|	   << " reg " << std::hex << state->count
 		|	);
 		|
-		|	if (PIN_OE=>) {
-		|		BUS_Z_Z();
-		|	} else {
-		|		BUS_Z_WRITE(~state->count);
-		|	}
+		|	output.z_z = PIN_OE=>;
+		|	if (!output.z_z)
+		|		output.z = ~state->count;
 		|''')
 
 def register(part_lib):

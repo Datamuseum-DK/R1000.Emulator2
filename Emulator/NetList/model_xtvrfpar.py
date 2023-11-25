@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XTVRFPAR(PartFactory):
     ''' TYP/VAL RF Parity Check '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t reg;
@@ -91,7 +93,7 @@ class XTVRFPAR(PartFactory):
 		|	}
 		|	unsigned ap;
 		|	BUS_AP_READ(ap);
-		|	PIN_PERR<=(ap != state->reg);
+		|	output.perr = ap != state->reg;
 		|''')
 
 def register(part_lib):

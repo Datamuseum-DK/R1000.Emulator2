@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XFHRAM(PartFactory):
     ''' FIU Hash RAM '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint8_t ramhi[1<<10];
@@ -108,7 +110,7 @@ class XFHRAM(PartFactory):
 		|	q |= state->ramhi[ahi] << 6;
 		|	q |= state->ramlo[alo] << 2;
 		|	q ^= 0xff << 2;
-		|	BUS_Q_WRITE(q);
+		|	output.q = q;
 		|
 		|	TRACE(
 		|	    << " big " << PIN_BIG?

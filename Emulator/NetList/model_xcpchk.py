@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XCPCHK(PartFactory):
     '''  Clocked parity checker '''
 
+    # autopin = True fails run_udiag early
+
     def sensitive(self):
         yield "PIN_CLK.pos()"
 
