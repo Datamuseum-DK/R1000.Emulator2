@@ -19,10 +19,14 @@ void sc_tracef(const char *me, const char *fmt, ...) __printflike(2, 3);
 
 void pit_clock(void);
 
+void microtrace(const void *p, size_t l);
+
 double sc_now(void);
 
 uint8_t odd_parity(uint8_t);
+uint8_t even_parity(uint8_t);
 uint8_t odd_parity64(uint64_t);
+uint8_t offset_parity(uint64_t);
 
 #ifdef __cplusplus
 }

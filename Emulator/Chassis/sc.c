@@ -442,6 +442,12 @@ odd_parity(uint8_t inp)
 }
 
 uint8_t
+even_parity(uint8_t inp)
+{
+	return odd[inp] ^ 0xff;
+}
+
+uint8_t
 odd_parity64(uint64_t inp)
 {
 	uint8_t retval = 0;
@@ -454,4 +460,15 @@ odd_parity64(uint64_t inp)
 		inp >>= 8;
 	}
 	return (retval);
+}
+
+uint8_t
+offset_parity(uint64_t inp)
+{
+	uint8_t par = 0;
+	par |= odd_parity(odd_parity64(inp & 0x0000007f)) & 1;
+	par |= even_parity(odd_parity64(inp & 0x00001f80)) & 2;
+	par |= odd_parity(odd_parity64(inp & 0x00ffe000)) & 4;
+	par |= even_parity(odd_parity64(inp & 0xff000000)) & 8;
+	return (par);
 }

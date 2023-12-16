@@ -148,6 +148,8 @@ TRACERS
 
 cli_func_f cli_trace;
 
+void microtrace(const void *p, size_t l);
+
 /* CALLOUTS ***********************************************************/
 
 void callout_signal_cond(pthread_cond_t *cond,

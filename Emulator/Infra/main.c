@@ -53,7 +53,15 @@ volatile int systemc_clock;
 
 const char *tracepath;
 
+static FILE *utrace_file;
+
 static struct timespec t0;
+
+void
+microtrace(const void *p, size_t l)
+{
+	(void)fwrite(p, l, 1, utrace_file);
+}
 
 void
 hexdump(struct vsb *vsb, const void *ptr, size_t len, unsigned offset)
@@ -126,7 +134,7 @@ finish(int status, const char *why)
 	exit (status);
 }
 
-#define ARG_SPEC "T:"
+#define ARG_SPEC "T:U:"
 
 int
 main(int argc, char **argv)
@@ -175,6 +183,15 @@ main(int argc, char **argv)
 		    buf, strerror(errno));
 		exit(2);
 	}
+
+	bprintf(buf, "%s.utrace", tracepath);
+	utrace_file = fopen(buf, "w");
+	if (utrace_file == NULL) {
+		fprintf(stderr, "Cannot open utracefile '%s': %s\n",
+		    buf, strerror(errno));
+		exit(2);
+	}
+
 	CTX_init(tracepath);
 	diagbus_init();
 	mem_init();
