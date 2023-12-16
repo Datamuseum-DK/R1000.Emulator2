@@ -289,10 +289,14 @@ class SystemCModule():
 		|	SC_METHOD(doit);
 		|''')
 
-        i = list(sensitive())
+        i = []
+        for j in sensitive():
+            if "BUS" in j and "SENSITIVE" not in j:
+                j += "_SENSITIVE()"
+            i.append(j)
         if i:
             self.sf_cc.write("\tsensitive\n\t    << ")
-            self.sf_cc.write("\n\t    << ".join(sensitive()) + ";\n")
+            self.sf_cc.write("\n\t    << ".join(i) + ";\n")
 
         self.sf_cc.fmt('''
 		|}

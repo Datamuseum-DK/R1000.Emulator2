@@ -264,17 +264,25 @@ class PartFactory(Part):
     def sensitive(self):
         ''' sensitivity list '''
 
+        pbus = set()
         for node in self.comp:
             if node.pin.pinbus is None and node.net.is_pu():
                 continue
             if node.pin.pinbus is None and node.net.is_pd():
                 continue
             if node.pin.type.input:
-                if not node.netbus:
-                    yield "PIN_%s" % node.pin.name
-                elif node.netbus.nets[0] == node.net:
-                    yield "PINB_%s" % node.pin.name
+                if False:
+                    if not node.netbus:
+                        yield "PIN_%s" % node.pin.name
+                    elif node.netbus.nets[0] == node.net:
+                        yield "PINB_%s" % node.pin.name
+                    continue
 
+                if not node.pin.pinbus:
+                    yield "PIN_%s" % node.pin.name
+                elif node.pin.pinbus not in pbus:
+                    yield "BUS_" + node.pin.sortkey[0] + "_SENSITIVE()"
+                    pbus.add(node.pin.pinbus)
 
     def subs(self, file):
         ''' Standard substitutions for .fmt() '''
@@ -306,6 +314,7 @@ class PartFactory(Part):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
+        #print("SURPLUS super().doit()", self)
 
     def real_doit(self, file):
         ''' The meat of the doit() function '''
@@ -400,6 +409,7 @@ class PartFactory(Part):
         yield "sc_event_or_list\t" + name + ";", init
 
     autopin = None
+    autotrace = True
 
     def is_autopin(self, node):
         if not node.pin.type.output:
@@ -444,13 +454,75 @@ class PartFactory(Part):
         file.write('\t\tstate->ctx.job &= ~1;\n')
         file.write('\t}\n')
 
+    def doit_idle(self, file):
+        ''' ... '''
+
     def autopin_doit_after(self, file):
-        file.write('\tif(memcmp(&output, &state->output, sizeof(output))) {\n')
-        file.write('\t\tstate->ctx.job |= 1;\n')
-        file.write('\t\tstate->output = output;\n')
-        file.write('\t}\n')
-        file.write('\tif (state->ctx.job)\n')
-        file.write('\t\tnext_trigger(5, SC_NS);\n')
+        file.fmt('''
+		|	if(memcmp(&output, &state->output, sizeof(output))) {
+		|		state->ctx.job |= 1;
+		|	        state->output = output;
+		|	}
+		|	if (state->ctx.job) {
+		|		next_trigger(5, SC_NS);
+		|	} else {
+		|''')
+
+        self.doit_idle(file)
+
+        file.fmt('''
+		|	}
+		|''')
+
+        if not self.autotrace:
+            return
+
+        file.fmt('''
+		|	if (state->ctx.do_trace & 1) {
+		|		char trc[4096];
+		|		trc[0] = '\\0';
+		|		std::stringstream trcs(trc);
+		|''')
+
+        for sens in self.sensitive():
+            if "BUS" in sens:
+                bnam = sens.split('_')[1]
+                file.write('\t\ttrcs << " ' + bnam.lower() + ' " << BUS_' + bnam + '_TRACE();\n')
+                continue
+            assert sens[:4] == "PIN_"
+            pnam = sens[4:].split('.')[0]
+            file.write('\t\ttrcs << " ' + pnam.lower() + ' " << PIN_' + pnam + ';\n')
+
+        file.fmt('''
+		|		if (state->ctx.job) {
+		|			trcs << std::hex;
+		|''')
+  
+        for node in self.comp:
+            if not self.is_autopin(node):
+                continue
+            lname = node.pin.name.lower()
+            if not node.pin.pinbus and not node.pin.type.hiz:
+                file.write('\t\t\ttrcs << " ' + lname + ' " <<')
+                file.write(' output.' + lname + ';\n')
+                continue
+            if node.pin.pinbus:
+                lname = node.pin.pinbus.name.lower()
+            file.write('\t\t\tif (output.z_' + lname + ') {\n')
+            file.write('\t\t\t\ttrcs << " ' + lname + ' z ";\n')
+            file.write('\t\t\t} else {\n')
+            file.write('\t\t\t\ttrcs << " ' + lname + ' " << output.' + lname + ';\n')
+            file.write('\t\t\t}\n')
+
+        file.fmt('''
+		|		}
+		|''')
+
+        file.fmt('''
+		|		trcs << (uint8_t)0;
+		|		sysc_trace(this->name(), trcs.str().c_str());
+		|	}
+		|''')
 
 
     def autopin_extra(self, file):
