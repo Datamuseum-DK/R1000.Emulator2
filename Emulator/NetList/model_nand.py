@@ -236,8 +236,8 @@ def register(part_lib):
     part_lib.add_part("F10", ModelNand(0, True))
     part_lib.add_part("F20", ModelNand(0, True))   ### Not: OC-thing with ALU-ZERO outputs
     part_lib.add_part("F30", ModelNand(0, True))
-    part_lib.add_part("F40", ModelNand(1, True))
-    part_lib.add_part("F133", ModelNand(1, True))
-    part_lib.add_part("AND4", ModelNand(1, False))
-    part_lib.add_part("AND3", ModelNand(1, False))
-    part_lib.add_part("AND2", ModelNand(1, False))
+    part_lib.add_part("F40", ModelNand(5, True))
+    part_lib.add_part("F133", ModelNand(5, True))
+    part_lib.add_part("AND4", ModelNand(5, False))
+    part_lib.add_part("AND3", ModelNand(5, False))
+    part_lib.add_part("AND2", ModelNand(5, False))

@@ -71,7 +71,7 @@ class Nor(PartFactory):
         file.fmt('''
 		|	state->out = -1;
 		|	state->job = 0;
-		|	state->dly = 0;
+		|	state->dly = 5;
 		|''')
 
     def sensitive(self):
