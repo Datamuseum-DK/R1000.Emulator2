@@ -50,6 +50,8 @@ class F169(PartFactory):
 
     def sensitive(self):
         yield "PIN_CLK.pos()"
+        if "CO" not in self.comp.nodes:
+            return
         if not self.comp.nodes["ENP"].net.is_const():
             yield "PIN_ENP"
         if not self.comp.nodes["ENT"].net.is_const():
@@ -63,19 +65,14 @@ class F169(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|	bool carry;
-		|	const char *what = "?";
 		|
 		|	if (PIN_CLK.posedge()) {
 		|		if (!PIN_LD=>) {
-		|			what = "LD";
 		|			BUS_D_READ(state->count);
 		|		} else if (!PIN_ENP=> && !PIN_ENT=>) {
 		|			if (PIN_UP=>) {
-		|				what = "UP";
 		|				state->count = (state->count + 0x1) & BUS_D_MASK;
 		|			} else {
-		|				what = "DN";
 		|				state->count = (state->count + BUS_D_MASK) & BUS_D_MASK;
 		|			}
 		|		} else {
@@ -93,6 +90,11 @@ class F169(PartFactory):
         file.fmt('''
 		|		}
 		|	}
+		|	output.q = state->count;
+		|''')
+        if "CO" in self.comp.nodes:
+            file.fmt('''
+		|	bool carry;
 		|	if (PIN_ENT=>)
 		|		carry = true;
 		|	else if (PIN_UP=> && (state->count == BUS_D_MASK))
@@ -101,32 +103,25 @@ class F169(PartFactory):
 		|		carry = false;
 		|	else
 		|		carry = true;
-		|	if ((state->ctx.do_trace & 2) && what == NULL)
-		|		what = " - ";
-		|	if (what != NULL) {
-		|		TRACE(
-		|		    << what
-		|		    << " up " << PIN_UP?
-		|		    << " clk↑ " << PIN_CLK.posedge()
-		|		    << " d " << BUS_D_TRACE()
-		|		    << " enp " << PIN_ENP?
-		|		    << " load " << PIN_LD?
-		|		    << " ent " << PIN_ENT?
-		|		    << " | "
-		|		    << std::hex << state->count
-		|		    << " + "
-		|		    << carry
-		|		);
-		|	}
-		|	output.q = state->count;
 		|	output.co = carry;
 		|''')
+
+class ModelF169(PartModel):
+    ''' F169 counters '''
+
+    def assign(self, comp, part_lib):
+
+        co_node = comp["CO"]
+        if len(co_node.net) == 1:
+            print("CO not used", comp)
+            co_node.remove()
+        super().assign(comp, part_lib)
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("F169", PartModel("F169", F169))
-    part_lib.add_part("F169X2", PartModel("F169X2", F169))
-    part_lib.add_part("F169X3", PartModel("F169X3", F169))
-    part_lib.add_part("F169X4", PartModel("F169X4", F169))
-    part_lib.add_part("F169X5", PartModel("F169X5", F169))
+    part_lib.add_part("F169", ModelF169("F169", F169))
+    part_lib.add_part("F169X2", ModelF169("F169X2", F169))
+    part_lib.add_part("F169X3", ModelF169("F169X3", F169))
+    part_lib.add_part("F169X4", ModelF169("F169X4", F169))
+    part_lib.add_part("F169X5", ModelF169("F169X5", F169))
