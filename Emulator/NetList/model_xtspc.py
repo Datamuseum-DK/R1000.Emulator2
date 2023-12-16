@@ -29,82 +29,83 @@
 # SUCH DAMAGE.
 
 '''
-   TYP/VAL A-bus driver
-   ====================
+   TYP Spc
+   =======
 
 '''
 
 from part import PartModel, PartFactory
 
-class XTVADR(PartFactory):
-    ''' TYP/VAL A-bus driver '''
+class XTSPC(PartFactory):
+    ''' TYP Spc '''
 
     autopin = True
 
     def sensitive(self):
-        yield "PIN_Q4"
-        yield "PIN_AEN"
+        yield "PIN_CLK"
+        yield "BUS_MARCTL"
+        yield "BUS_B"
+        yield "PIN_FSP"
+        yield "PIN_TAEN"
+        yield "PIN_VAEN"
         yield "PIN_DON"
         yield "PIN_DOFF"
-        yield "BUS_ALU"
 
     def private(self):
+        ''' private variables '''
         yield from self.event_or(
             "idle_event",
-            "PIN_AEN",
+            "PIN_TAEN",
+            "PIN_VAEN",
             "PIN_DON",
             "PIN_DOFF",
         )
 
     def state(self, file):
         file.fmt('''
-		|	bool poe;
-		|	uint8_t par;
+		|       bool poe;
+		|       uint8_t par;
 		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
+        super().doit(file)
+
         file.fmt('''
-		|	bool q4pos = PIN_Q4.posedge();
+		|	bool pos = PIN_CLK.posedge();
 		|
-		|	output.adre = !(!(PIN_AEN=> && PIN_DON=>) && PIN_DOFF=>);
-		|	output.z_adr = output.adre;
+		|	output.aspe = !(
+		|		!(PIN_TAEN=> && PIN_VAEN=> && PIN_DON=>) &&
+		|		PIN_DOFF=>
+		|	);
+		|	output.z_asp = output.aspe;
 		|
-		|	if (q4pos) {
-		|		state->poe = output.adre;
+		|	if (pos) {
+		|		state->poe = output.aspe;
 		|	}
-		|	output.pare = !(PIN_Q4=> && !state->poe);
+		|	output.pare = !(PIN_CLK=> && !state->poe);
 		|	output.z_par = output.pare;
 		|
-		|	unsigned spc;
-		|	BUS_SPC_READ(spc);
+		|	if (pos || !output.z_asp || !output.z_par) {
+		|		unsigned marctl;
+		|		BUS_MARCTL_READ(marctl);
+		|		bool force_sp_h1 = PIN_FSP=>;
 		|
-		|	uint64_t alu;
-		|	BUS_ALU_READ(alu);
-		|
-		|	if (spc < 4 || (PIN_FRCPA=> && spc > 4)) {
-		|		alu |=0xf8000000ULL;
+		|		if (!force_sp_h1) {
+		|			output.asp = 0x7;
+		|		} else if (marctl & 0x8) {
+		|			output.asp = (marctl & 0x7) ^ 0x7;
+		|		} else {
+		|			unsigned b;
+		|			BUS_B_READ(b);
+		|			output.asp = b ^ 0x7;
+		|		}
+		|		if (pos) {
+		|			output.par = !odd_parity(output.asp);
+		|		}
 		|	}
-		|
-		|	if (q4pos) {
-		|		state->par = odd_parity64(alu) & 0xf8;
-		|
-		|		if (odd_parity(odd_parity64(alu & 0x00ffe000ULL)))
-		|			state->par |= 0x04;
-		|		if (odd_parity(odd_parity64(alu & 0x00001f80ULL)))
-		|			state->par |= 0x02;
-		|		if (odd_parity(odd_parity64(alu & 0x0000007fULL)))
-		|			state->par |= 0x01;
-		|	}
-		|
-		|	if (!output.z_adr)
-		|		output.adr = alu ^ BUS_ALU_MASK;
-		|
-		|	if (!output.z_par)
-		|		output.par = state->par;
-		|
-		|	if (output.z_adr && state->poe) {
+		|	if (output.z_asp && state->poe) {
 		|		next_trigger(idle_event);
 		|	}
 		|''')
@@ -112,4 +113,4 @@ class XTVADR(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XTVADR", PartModel("XTVADR", XTVADR))
+    part_lib.add_part("XTSPC", PartModel("XTSPC", XTSPC))
