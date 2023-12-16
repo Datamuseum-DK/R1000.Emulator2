@@ -50,6 +50,33 @@ class XSEQ12(PartFactory):
 		|	uint32_t topcnt;
 		|''')
 
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+            "idle_event",
+            "PIN_NAMOE",
+            "PIN_TYQOE",
+            "PIN_STCLK",
+            "PIN_SVCLK",
+            "PIN_TCLK",
+            "PIN_PDCLK",
+            "BUS_IRDS",
+            "PIN_UTOS",
+            "BUS_MSD",
+            "PIN_H2",
+        )
+        yield from self.event_or(
+            "idle_event_md",
+            "PIN_NAMOE",
+            "PIN_TYQOE",
+            "PIN_STCLK",
+            "PIN_SVCLK",
+            "PIN_TCLK",
+            "PIN_PDCLK",
+            "BUS_IRDS",
+        )
+
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -61,6 +88,7 @@ class XSEQ12(PartFactory):
 		|	unsigned mem_start, res_alu_s;
 		|	bool intreads1, intreads2;
 		|	bool sel1, sel2;
+		|	unsigned output_rofs, output_ob;
 		|
 		|	if (maybe_dispatch) {
 		|		uses_tos = false;
@@ -89,16 +117,15 @@ class XSEQ12(PartFactory):
 		|		output.vnam=(!(sel1 && sel2));
 		|	}
 		|
+		|	unsigned typ;
+		|	BUS_TYP_READ(typ);
+		|
 		|	if (PIN_TCLK.posedge()) {
-		|		unsigned typ;
-		|		BUS_TYP_READ(typ);
 		|		state->tosof = (typ >> 7) & 0xfffff;
 		|	}
 		|	unsigned offs;
 		|	if (uses_tos) {
 		|		if (PIN_TOSS=>) {
-		|			unsigned typ;
-		|			BUS_TYP_READ(typ);
 		|			offs = (typ >> 7) & 0xfffff;
 		|		} else {
 		|			offs = state->tosof;
@@ -107,8 +134,6 @@ class XSEQ12(PartFactory):
 		|		unsigned res_adr;
 		|		BUS_RADR_READ(res_adr);
 		|		if (PIN_RWE.posedge()) {
-		|			unsigned typ;
-		|			BUS_TYP_READ(typ);
 		|			offs = (typ >> 7) & 0xfffff;
 		|			state->tosram[res_adr] = offs;
 		|		} else {
@@ -162,12 +187,12 @@ class XSEQ12(PartFactory):
 		|		break;
 		|	}
 		|
-		|	output.rofs = rofs;
+		|	output_rofs = rofs;
+		|	output_rofs &= 0xfffff;
 		|
 		|	unsigned cnb;
 		|	if (PIN_CMR=>) {
-		|		BUS_TYP_READ(cnb);
-		|		cnb ^= BUS_TYP_MASK;
+		|		cnb = typ ^ BUS_TYP_MASK;
 		|	} else {
 		|		BUS_FIU_READ(cnb);
 		|	}
@@ -200,20 +225,60 @@ class XSEQ12(PartFactory):
 		|	}
 		|
 		|	if (dis) {
-		|		output.ob = 0xfffff;
+		|		output_ob = 0xfffff;
 		|	} else if (intreads == 0) {
-		|		output.ob = state->pred;
+		|		output_ob = state->pred;
 		|	} else if (intreads == 1) {
-		|		output.ob = state->topcnt;
+		|		output_ob = state->topcnt;
 		|	} else if (intreads == 2) {
-		|		output.ob = rofs;
+		|		output_ob = rofs;
 		|	} else if (intreads == 3) {
-		|		output.ob = state->savrg;
+		|		output_ob = state->savrg;
 		|	} else {
-		|		output.ob = 0xfffff;
+		|		output_ob = 0xfffff;
 		|	}
+		|	output_ob &= 0xfffff;
 		|	
+		|	output.z_tyq = PIN_TYQOE=>;
+		|	if (!output.z_tyq) {
+		|		BUS_CSA_READ(output.tyq);
+		|		output.tyq |= output_ob << 7;
+		|		output.tyq ^= BUS_TYQ_MASK;
+		|	}
 		|
+		|	uint64_t nam;
+		|
+		|	if (!PIN_RESDR=>) {
+		|		//BUS_RES_READ(nam);
+		|		nam = output_rofs;
+		|	} else if (PIN_ADRIC=>) {
+		|		BUS_CODE_READ(nam);
+		|	} else {
+		|		//BUS_OFFS_READ(nam);
+		|		nam = output_ob;
+		|	}
+		|	nam <<= 7;
+		|
+		|	unsigned branch;
+		|	BUS_BRNC_READ(branch);
+		|	branch ^= BUS_BRNC_MASK;
+		|	nam |= branch << 4;
+		|
+		|	output.z_nam = PIN_NAMOE=>;
+		|	if (!output.z_nam) {
+		|		output.nam = nam;
+		|		output.par = offset_parity(nam);
+		|	}
+		|
+		|''')
+
+    def doit_idle(self, file):
+        file.fmt('''
+		|		if (output.z_nam && output.z_tyq && maybe_dispatch) {
+		|			next_trigger(idle_event_md);
+		|		} else if (output.z_nam && output.z_tyq) {
+		|			next_trigger(idle_event);
+		|		}
 		|''')
 
 def register(part_lib):

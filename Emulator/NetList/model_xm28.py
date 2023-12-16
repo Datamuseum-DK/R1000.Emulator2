@@ -65,10 +65,6 @@ class XM28(PartFactory):
         yield "BUS_PSET_SENSITIVE()"
         yield "BUS_DBM_SENSITIVE()"
 
-        #yield "BUS_TRDR_SENSITIVE()"
-        #yield "BUS_LAR_SENSITIVE()"
-        #yield "PIN_DDISA"
-
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -91,17 +87,6 @@ class XM28(PartFactory):
 		|	bool mc2 = PIN_MC2=>;
 		|	unsigned cmd;
 		|	BUS_CMD_READ(cmd);
-		|
-		|	TRACE(
-		|		<< " clkv^ " << clk2x_neg << clk2x_pos
-		|		<< " aeh " << PIN_AEH?
-		|		<< " alh " << PIN_ALH?
-		|		<< " beh " << PIN_BEH?
-		|		<< " blh " << PIN_BLH?
-		|		<< " q1v " << PIN_Q1.negedge()
-		|		<< " drh " << PIN_DRH?
-		|		<< " job " << state->ctx.job
-		|	);
 		|
 		|	if (clk2x_neg && !h1) {
 		|		state->ahit0 = !aehit           &&  behit &&  blhit;
@@ -209,27 +194,24 @@ class XM28(PartFactory):
 		|		);
 		|
 		|
-		|		output.txoen =                (mc2 || !h1 || (cmd != 0x7));
-		|		output.txeoe = !(pset & 1) && (mc2 || !h1 || (cmd != 0x7));
-		|		output.txloe =  (pset & 1) && (mc2 || !h1 || (cmd != 0x7));
+		|		output.txoen = mc2 || !h1 || (cmd != 0x7);
+		|		output.txeoe = !(pset & 1) && output.txoen;
+		|		output.txloe =  (pset & 1) && output.txoen;
 		|
 		|		output.txxwe = (cmd == 0x7 && !h1 && !mcyc2_next && mc2);
+		|		bool cmd_2cd = (cmd == 0x2) || (cmd == 0xc) || (cmd == 0xd);
 		|		output.txewe = (
-		|			(cmd == 0x7 &&                 !h1 && !mcyc2_next &&  mc2 && !(pset & 1)) ||
-		|			(cmd == 0x2 &&                 !h1 && !mcyc2_next &&  mc2) ||
-		|			(cmd == 0x2 &&                  h1 &&                !mc2 && !late_abort && state->output.txewe) ||
-		|			((cmd == 0xc || cmd == 0xd) && !h1 && !mcyc2_next &&  mc2) ||
-		|			((cmd == 0xc || cmd == 0xd) &&  h1 &&                !mc2 && !late_abort && state->output.txewe)
+		|			(output.txxwe && !(pset & 1)) ||
+		|			(cmd_2cd && !h1 &&  mc2 && !mcyc2_next) ||
+		|			(cmd_2cd &&  h1 && !mc2 && !late_abort && state->output.txewe)
 		|		);
 		|		output.txlwe = (
-		|			(cmd == 0x7 &&                 !h1 && !mcyc2_next &&  mc2 && (pset & 1)) ||
-		|			(cmd == 0x2 &&                 !h1 && !mcyc2_next &&  mc2) ||
-		|			(cmd == 0x2 &&                  h1 &&                !mc2 && !late_abort && state->output.txlwe) ||
-		|			((cmd == 0xc || cmd == 0xd) && !h1 && !mcyc2_next &&  mc2) ||
-		|			((cmd == 0xc || cmd == 0xd) &&  h1 &&                !mc2 && !late_abort && state->output.txlwe)
+		|			(output.txxwe && (pset & 1)) ||
+		|			(cmd_2cd && !h1 &&  mc2 && !mcyc2_next) ||
+		|			(cmd_2cd &&  h1 && !mc2 && !late_abort && state->output.txlwe)
 		|		);
-		|		output.tgace = !(cmd == 0x7 && !h1 && !mcyc2_next && mc2 && seta_sel);
-		|		output.tgbce = !(cmd == 0x7 && !h1 && !mcyc2_next && mc2 && setb_sel);
+		|		output.tgace = !(output.txxwe && seta_sel);
+		|		output.tgbce = !(output.txxwe && setb_sel);
 		|		output.tsc14 = !h1 && !mcyc2_next;
 		|
 		|		output.rclke = labort_y;

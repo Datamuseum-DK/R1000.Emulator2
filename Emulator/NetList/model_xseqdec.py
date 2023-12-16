@@ -47,6 +47,7 @@ class XSEQDEC(PartFactory):
 		|	uint32_t bot[1<<10];
 		|	uint32_t reg, last, cbot, ctop;
 		|	uint8_t sr[4];
+		|	unsigned prev_dsp;
 		|''')
 
     def xxsensitive(self):
@@ -277,6 +278,9 @@ class XSEQDEC(PartFactory):
 		|		cur_instr = state->ctop;
 		|
 		|	output.dsp = cur_instr;
+		|	if (state->prev_dsp != cur_instr) {
+		|		state->prev_dsp = cur_instr;
+		|	}
 		|
 		|	uint32_t *ciptr;
 		|	if (cur_instr & 0xfc00 || !banksel)

@@ -154,6 +154,7 @@ class XNXTUADR(PartFactory):
 		|		}
 		|	}
 		|	if (PIN_Q1not.posedge()) {
+		|
 		|		output.nu = data;
 		|		p0 = (data >> 8) & 0x3f;
 		|		p0 = (p0 ^ (p0 >> 4)) & 0xf;
@@ -170,21 +171,6 @@ class XNXTUADR(PartFactory):
 		|		output.nu_p0 = p0;
 		|		output.nu_p1 = p1;
 		|	}
-		|	TRACE(
-		|	    << " fc^ " << PIN_FIU_CLK.posedge()
-		|	    << " lc^ " << PIN_LOCAL_CLK.posedge()
-		|	    << " q1^ " << PIN_Q1not.posedge()
-		|	    << " dv " << PIN_DV_U?
-		|	    << " bh " << PIN_BAD_HINT?
-		|	    << " lm " << PIN_LATE_MACRO?
-		|	    << " up " << PIN_U_PEND?
-		|	    << " dp " << PIN_DPAR?
-		|	    << " - "
-		|	    << " mc " << macro_hic
-		|	    << " ue " << u_event
-		|	    << " d 0x" << std::hex << data
-		|	    << " p " << p0 << p1
-		|	);
 		|
 		|	output.macro_hic = macro_hic;
 		|	output.u_event = !u_event;

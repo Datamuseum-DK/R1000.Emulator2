@@ -44,6 +44,7 @@ class XMPCADD(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	unsigned retrn_pc_ofs;
+		|	unsigned last;
 		|''')
 
     def doit(self, file):
@@ -97,12 +98,17 @@ class XMPCADD(PartFactory):
 		|	unsigned code_sel, coff;
 		|	BUS_COSEL_READ(code_sel);
 		|	switch (code_sel) {
-		|	case 0:	coff = state->retrn_pc_ofs; break;
-		|	case 1: coff = boff; break;
-		|	case 2: coff = macro_pc_ofs; break;
-		|	case 3: coff = boff; break;
+		|	case 3:	coff = state->retrn_pc_ofs; break;
+		|	case 2: coff = boff; break;
+		|	case 1: coff = macro_pc_ofs; break;
+		|	case 0: coff = boff; break;
 		|	}
 		|	coff ^= BUS_COFF_MASK;
+		|	if (coff != state->last) {
+		|		unsigned disp;
+		|		BUS_DISP_READ(disp);
+		|		state->last = coff;
+		|	}
 		|	BUS_COFF_WRITE(coff);
 		|	TRACE(
 		|	    << " wdisp " << PIN_WDISP

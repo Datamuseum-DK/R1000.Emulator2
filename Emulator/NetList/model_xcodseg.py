@@ -39,14 +39,20 @@ from part import PartModel, PartFactory
 class XCODSEG(PartFactory):
     ''' SEQ 34 Code Segment '''
 
-    # autopin = True fails SEQ_MACRO_RPC_TESTS
+    autopin = True
 
     def state(self, file):
         file.fmt('''
-		|	unsigned pcseg, retseg;
+		|	unsigned pcseg, retseg, last;
 		|''')
 
-    def xxsensitive(self):
+    def init(self, file):
+        file.fmt('''
+		|	// for SEQ_MACRO_RPC_TESTS
+		|	state->output.cseg = 0xffffffff;
+		|''')
+
+    def sensitive(self):
         yield "PIN_MCLK.pos()"
         yield "PIN_RCLK.pos()"
         yield "PIN_CSEL"
@@ -67,12 +73,13 @@ class XCODSEG(PartFactory):
 		|		val ^= BUS_VAL_MASK;
 		|		state->pcseg = val;
 		|	}
-		|	if (PIN_CSEL) {
-		|		BUS_CSEG_WRITE(state->pcseg);
-		|		//output.cseg = state->pcseg;
+		|	if (!PIN_CSEL) {
+		|		output.cseg = state->pcseg;
 		|	} else {
-		|		BUS_CSEG_WRITE(state->retseg);
-		|		//output.cseg = state->retseg;
+		|		output.cseg = state->retseg;
+		|	}
+		|	if (output.cseg && state->last != output.cseg) {
+		|		state->last = output.cseg;
 		|	}
 		|''')
 

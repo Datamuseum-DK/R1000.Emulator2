@@ -44,6 +44,7 @@ class DRAM1MEGWIDE(PartFactory):
     ''' 1MEGxN DRAM '''
 
     autopin = True
+    autotrace = False
 
     def state(self, file):
         if len(self.comp.nodes) - 13 <= 16:

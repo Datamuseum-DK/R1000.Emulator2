@@ -38,8 +38,19 @@ class XSEQ12(FChip):
         self.sig_right(ChipSig("+-->", "TNAM"))
         self.sig_right(ChipSig("+-->", "VNAM"))
         self.sig_right(ChipSig("+-->", "COUT"))
-        self.sig_right(ChipSig("+-->", "ROFS", 0, 19))
-        self.sig_right(ChipSig("+-->", "OB", 0, 19))
+
+        self.sig_right(ChipSig("+<--", "CSA", 0, 3))
+        self.sig_right(ChipSig("+<--", "TYQOE"))
+        self.sig_right(ChipSig("+===", "TYQ", 0, 31))
+
+        self.sig_right(ChipSig("+<--", "RESDR"))
+        self.sig_right(ChipSig("+<--", "ADRIC"))
+        self.sig_right(ChipSig("+<--", "BRNC", 0, 2))
+        self.sig_right(ChipSig("+<--", "CODE", 0, 11))
+
+        self.sig_right(ChipSig("+<--", "NAMOE"))
+        self.sig_right(ChipSig("+===", "NAM", 0, 31))
+        self.sig_right(ChipSig("+-->", "PAR", 0, 3))
 
         self.finish()
 

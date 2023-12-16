@@ -25,9 +25,6 @@ class XHASH(FChip):
         self.sig_right(ChipSig("+-->", "P", 0, 3))
         self.sig_right(ChipSig("+-->", "L", 0, 11))
         self.sig_right(ChipSig("+-->", "TAG", 0, 13))
-        self.sig_right(ChipSig("+<--", "CLK2X"))
-        self.sig_right(ChipSig("+<--", "K12"))
-        self.sig_right(ChipSig("+<--", "K13"))
 
         self.finish()
 

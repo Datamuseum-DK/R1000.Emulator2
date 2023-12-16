@@ -47,16 +47,18 @@ class XCACHE(PartFactory):
         file.fmt('''
 		|	uint64_t ram[1<<BUS_A_WIDTH];
 		|	uint8_t rame[1<<BUS_A_WIDTH];
-		|	uint8_t raml[1<<BUS_A_WIDTH];
+		|	uint8_t par[1<<BUS_A_WIDTH];
 		|	bool zvq;
 		|	uint64_t vq;
 		|	bool zpq;
 		|	uint8_t pq;
+		|	uint8_t parq;
 		|	unsigned ae, al, be, bl, sr, la, lb;
 		|	bool nme;
 		|	bool ome;
 		|	bool nml;
 		|	bool oml;
+		|	bool k12, k13;
 		|''')
 
     def sensitive(self):
@@ -82,6 +84,7 @@ class XCACHE(PartFactory):
 		|		<< " oee " << PIN_OEE?
 		|		<< " oel " << PIN_OEL?
 		|		<< " eq " << PIN_EQ?
+		|		<< " j " << state->ctx.job
 		|	);
 		|
 		|	if (state->ctx.job) {
@@ -92,9 +95,8 @@ class XCACHE(PartFactory):
 		|		} else {
 		|			uint64_t v = state->vq & 0xffffffffffff80ff;	// VAL bits
 		|			v |= (state->pq & 0xfe) << 7;			// VAL49-55
-		|			uint8_t p = (state->vq >> 7) & 0xfc;		// P0-5
+		|			uint8_t p = state->parq & 0xfd;			// P0-5,7
 		|			p |= (state->pq & 1) << 1;			// P6
-		|			p |= (state->vq >> 8) & 1;			// P7
 		|			BUS_VQ_WRITE(v);
 		|			BUS_PQ_WRITE(p);
 		|		}
@@ -105,21 +107,27 @@ class XCACHE(PartFactory):
 		|	uint64_t data = 0;
 		|
 		|	BUS_A_READ(adr);
+		|	adr &= ~3;
+		|	if (state->k12)
+		|		adr |= 2;
+		|	if (state->k13)
+		|		adr |= 1;
 		|
 		|	data = state->ram[adr];
 		|	BUS_TQ_WRITE(data >> 6);
 		|
 		|	uint8_t pdata;
 		|	if (PIN_EVEN=>) {
-		|		pdata = state->rame[adr >> 1];
+		|		pdata = state->rame[adr & ~1];
 		|	} else {
-		|		pdata = state->raml[adr >> 1];
+		|		pdata = state->rame[adr | 1];
 		|	}
 		|	bool vqoe = !(PIN_DIR=> && PIN_TGOE=> && (PIN_EVEN=> || PIN_LVEN=>));
 		|	if (!vqoe && (data != state->vq || pdata != state->pq || state->zvq)) {
 		|		state->vq = data;
 		|		state->zvq = false;
 		|		state->pq = pdata;
+		|		state->parq = (state->par[adr] & 0xfd);
 		|		state->zpq = false;
 		|		state->ctx.job = 1;
 		|		next_trigger(5, SC_NS);
@@ -156,22 +164,20 @@ class XCACHE(PartFactory):
 		|		bpar = odd_parity64(tag);
 		|	}
 		|	if (pos) {
-		|		bool ts6l = odd_parity(state->raml[adr >> 1] & 0xfe);
+		|		bool ts6l = odd_parity(state->rame[adr | 1] & 0xfe);
 		|		ts6l ^= ((tag >> 15) & 1);
 		|		state->al = bpar & 0xfd;
 		|		state->al |= ts6l << 1;
-		|		state->bl = (tag >> 7) & 0xfc;
-		|		state->bl |= (tag >> 8) & 0x01;
-		|		state->bl |= (state->raml[adr >> 1] & 0x1) << 1;
+		|		state->bl = state->par[adr] & 0xfd;
+		|		state->bl |= (state->rame[adr | 1] & 0x1) << 1;
 		|	}
 		|	if (neg) {
-		|		bool ts6e = odd_parity(state->rame[adr >> 1] & 0xfe);
+		|		bool ts6e = odd_parity(state->rame[adr & ~1] & 0xfe);
 		|		ts6e ^= ((tag >> 15) & 1);
 		|		state->ae = bpar & 0xfd;
 		|		state->ae |= ts6e << 1;
-		|		state->be = (tag >> 7) & 0xfc;
-		|		state->be |= (tag >> 8) & 0x01;
-		|		state->be |= (state->rame[adr >> 1] & 0x1) << 1;
+		|		state->be = state->par[adr] & 0xfd;
+		|		state->be |= (state->rame[adr & ~1] & 0x1) << 1;
 		|	}
 		|
 		|
@@ -209,23 +215,17 @@ class XCACHE(PartFactory):
 		|		offset = (pg != (ta & BUS_PG_MASK)) || (sp != ts);
 		|	}
 		|	
-		|	PIN_NME<=(!state->nme);
-		|	PIN_OME<=(!(PIN_EQ=> && state->ome));
-		|	PIN_NML<=(!state->nml);
-		|	PIN_OML<=(!(PIN_EQ=> && state->oml));
+		|	PIN_NME<=(!state->nme && !(PIN_EQ=> && state->ome));
+		|	PIN_NML<=(!state->nml && !(PIN_EQ=> && state->oml));
 		|
 		|	if (PIN_CLK.negedge()) {
 		|		state->nme = name;
 		|		state->ome = offset;
 		|		next_trigger(5, SC_NS);
-		|		//PIN_NME<=(state->nme);
-		|		//PIN_OME<=(state->ome);
 		|	} else if (PIN_CLK.posedge()) {	 
 		|		state->nml = name;
 		|		state->oml = offset;
 		|		next_trigger(5, SC_NS);
-		|		//PIN_NML<=(state->nml);
-		|		//PIN_OML<=(state->oml);
 		|	}
 		|
 		|	uint64_t vd;
@@ -235,41 +235,46 @@ class XCACHE(PartFactory):
 		|
 		|	if (!PIN_OE=> && PIN_WE.posedge()) {
 		|		state->ram[adr] = vd & ~(0xfeULL << 7);	// VAL bits
-		|		state->ram[adr] |= (pd & 0xfc) << 7;	// P0-5
-		|		state->ram[adr] |= (pd & 0x01) << 8;	// P7
+		|		state->par[adr] = pd;
+		|		if (state->ctx.do_trace & 2) {
+		|			char buf[128];
+		|			snprintf(buf, sizeof buf, "W %x %jx %jx %x", adr, (uintmax_t)state->ram[adr], (uintmax_t)vd, pd);
+		|			sysc_trace(this->name(), buf);
+		|		}
 		|	}
 		|
-		|	if (PIN_ELCE=>) {
-		|		BUS_CRE_WRITE(0xff);
-		|	} else if (PIN_EWE.posedge()) {
+		|	if (!PIN_ELCE=> && PIN_EWE.posedge()) {
 		|		if (!PIN_DIR=> && PIN_EVEN=> && PIN_TGOE=>) {
 		|			data = (pd & 0x02) >> 1;	// P6
 		|			data |= (vd >> 7) & 0xfe;	// VAL49-55
 		|		} else {
 		|			BUS_CWE_READ(data);
+		|			data &= 0x3f;
+		|			data |= (state->rame[adr & ~1] & 0xc0);
 		|		}
-		|		state->rame[adr >> 1] = data;
-		|		BUS_CRE_WRITE(data);
-		|	} else if (PIN_EWE=>) {
-		|		data = state->rame[adr >> 1];
-		|		BUS_CRE_WRITE(data);
+		|		state->rame[adr & ~1] = data;
 		|	}
 		|
-		|	if (PIN_ELCE=>) {
-		|		BUS_CRL_WRITE(0xff);
-		|	} else if (PIN_LWE.posedge()) {
+		|	if (!PIN_ELCE=> && PIN_LWE.posedge()) {
 		|		if (!PIN_DIR=> && PIN_LVEN=> && PIN_TGOE=>) {
 		|			data = (pd & 0x02) >> 1;	// P6
 		|			data |= (vd >> 7) & 0xfe;	// VAL49-55
 		|		} else {
 		|			BUS_CWL_READ(data);
+		|			data &= 0x3f;
+		|			data |= (state->rame[adr | 1] & 0xc0);
 		|		}
-		|		state->raml[adr >> 1] = data;
-		|		BUS_CRL_WRITE(data);
-		|	} else if (PIN_LWE=>) {
-		|		data = state->raml[adr >> 1];
-		|		BUS_CRL_WRITE(data);
+		|		state->rame[adr | 1] = data;
 		|	}
+		|	data = state->rame[adr & ~1];
+		|	BUS_CRE_WRITE(data);
+		|	data = state->rame[adr | 1];
+		|	BUS_CRL_WRITE(data);
+		|
+		|	if (PIN_CLK.posedge())
+		|		state->k12 = PIN_K12=>;
+		|	else if (PIN_CLK.negedge())
+		|		state->k13 = PIN_K13=>;
 		|''')
 
 

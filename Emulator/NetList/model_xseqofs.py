@@ -40,11 +40,7 @@ class XSEQOFS(PartFactory):
 
     ''' SEQ offset generation '''
 
-    def state(self, file):
-        file.fmt('''
-		|	uint64_t offs;
-		|	unsigned par;
-		|''')
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -52,78 +48,28 @@ class XSEQOFS(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|#define DO_Z (1ULL << 32)
-		|
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		if (state->offs == DO_Z) {
-		|			BUS_ADR_Z();
-		|			next_trigger(PIN_OE.negedge_event());
-		|		} else {
-		|			BUS_ADR_WRITE(state->offs);
-		|		}
-		|		BUS_PAR_WRITE(state->par);
-		|	}
-		|
 		|	uint64_t offs;
 		|
-		|	if (PIN_OE=>) {
-		|		offs = DO_Z;
+		|	if (!PIN_RESDR=>) {
+		|		BUS_RES_READ(offs);
+		|	} else if (PIN_ADRIC=>) {
+		|		BUS_CODE_READ(offs);
 		|	} else {
-		|		if (!PIN_RESDR=>) {
-		|			BUS_RES_READ(offs);
-		|		} else if (PIN_ADRIC=>) {
-		|			BUS_CODE_READ(offs);
-		|		} else {
-		|			BUS_OFFS_READ(offs);
-		|		}
-		|		offs <<= 7;
-		|
-		|		unsigned branch;
-		|		BUS_BRNC_READ(branch);
-		|		branch ^= BUS_BRNC_MASK;
-		|		offs |= branch << 4;
+		|		BUS_OFFS_READ(offs);
 		|	}
+		|	offs <<= 7;
 		|
-		|	uint64_t tmp;
-		|	unsigned par = 0;
+		|	unsigned branch;
+		|	BUS_BRNC_READ(branch);
+		|	branch ^= BUS_BRNC_MASK;
+		|	offs |= branch << 4;
 		|
-		|	tmp = offs & 0x7f;
-		|	tmp = (tmp ^ (tmp >> 4)) & 0x0f;
-		|	tmp = (tmp ^ (tmp >> 2)) & 0x03;
-		|	tmp = (tmp ^ (tmp >> 1)) & 0x01;
-		|	par |= tmp;
-		|
-		|	tmp = offs & 0x1f80;
-		|	tmp = (tmp ^ (tmp >> 8)) & 0xff;
-		|	tmp = (tmp ^ (tmp >> 4)) & 0x0f;
-		|	tmp = (tmp ^ (tmp >> 2)) & 0x03;
-		|	tmp = (tmp ^ (tmp >> 1)) & 0x01;
-		|	tmp ^= 1;
-		|	par |= tmp << 1;
-		|
-		|	tmp = offs & 0xffe000;
-		|	tmp = (tmp ^ (tmp >> 16)) & 0xffff;
-		|	tmp = (tmp ^ (tmp >>  8)) & 0xff;
-		|	tmp = (tmp ^ (tmp >>  4)) & 0x0f;
-		|	tmp = (tmp ^ (tmp >>  2)) & 0x03;
-		|	tmp = (tmp ^ (tmp >>  1)) & 0x01;
-		|	par |= tmp << 2;
-		|
-		|	tmp = offs & 0xff000000;
-		|	tmp = (tmp ^ (tmp >> 16)) & 0xffff;
-		|	tmp = (tmp ^ (tmp >>  8)) & 0xff;
-		|	tmp = (tmp ^ (tmp >>  4)) & 0x0f;
-		|	tmp = (tmp ^ (tmp >>  2)) & 0x03;
-		|	tmp = (tmp ^ (tmp >>  1)) & 0x01;
-		|	tmp ^= 1;
-		|	par |= tmp << 3;
-		|
-		|	if (offs != state->offs || par != state->par) {
-		|		state->ctx.job = 1;
-		|		state->offs = offs;
-		|		state->par = par;
-		|		next_trigger(5, SC_NS);
+		|	output.z_adr = PIN_OE=>;
+		|	if (!output.z_adr) {
+		|		output.par = offset_parity(offs);
+		|		output.adr = offs;
+		|	} else {
+		|		next_trigger(PIN_OE.negedge_event());
 		|	}
 		|''')
 

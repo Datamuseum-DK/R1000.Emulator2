@@ -40,15 +40,15 @@ class XHASH(PartFactory):
 
     ''' MEM32 HASH generator '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
-		|	unsigned sr, tag;
-		|	bool k12, k13;
+		|	unsigned sr;
 		|''')
 
     def sensitive(self):
         yield "PIN_Q4.pos()"
-        yield "PIN_CLK2X"
         yield "BUS_TRC_SENSITIVE()"
 
     def doit(self, file):
@@ -59,18 +59,6 @@ class XHASH(PartFactory):
         file.fmt('''
 		|	uint64_t a;
 		|	uint32_t s, hash = 0, m, nxt = state->sr;
-		|
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		BUS_P_WRITE(state->sr >> 12);
-		|		BUS_L_WRITE(state->sr & 0xfff);
-		|		unsigned tag = state->tag;
-		|		if (state->k12)
-		|			tag |= 2;
-		|		if (state->k13)
-		|			tag |= 1;
-		|		BUS_TAG_WRITE(tag);
-		|	}
 		|
 		|	if (PIN_Q4.posedge()) {
 		|		nxt = state->sr;
@@ -128,42 +116,14 @@ class XHASH(PartFactory):
 		|		}
 		|	}
 		|
-		|	unsigned trc, tag;
-		|	BUS_TRC_READ(trc);
-		|	tag = ((nxt & trc) ^ 0xfff) << 2;
+		|	unsigned btrc;
+		|	BUS_TRC_READ(btrc);
+		|	output.tag = ((nxt & btrc) ^ 0xfff) << 2;
 		|
-		|	bool k12 = state->k12;
-		|	bool k13 = state->k13;
-		|	if (PIN_CLK2X.posedge())
-		|		k12 = PIN_K12=>;
-		|	else if (PIN_CLK2X.negedge())
-		|		k13 = PIN_K13=>;
+		|	state->sr = nxt;
 		|
-		|	if (nxt != state->sr || tag != state->tag || k12 != state->k12 || k13 != state->k13) {
-		|		state->ctx.job = 1;
-		|		state->sr = nxt;
-		|		state->tag = tag;
-		|		state->k12 = k12;
-		|		state->k13 = k13;
-		|		next_trigger(5, SC_NS);
-		|	}
-		|
-		|	TRACE(
-		|	    << " clk2x " << PIN_CLK2X?
-		|	    << " q4 " << PIN_Q4?
-		|	    << " trc " << BUS_TRC_TRACE()
-		|	    << " m " << BUS_M_TRACE()
-		|	    << " s " << BUS_S_TRACE()
-		|	    << " a " << BUS_A_TRACE()
-		|	    << " k12 " << PIN_K12?
-		|	    << " k13 " << PIN_K13?
-		|	    << " - "
-		|	    << " sr " << std::hex << state->sr
-		|	    << " tag " << std::hex << state->tag
-		|	    << " k12 " << state->k12
-		|	    << " k13 " << state->k13
-		|	    << " j " << state->ctx.job
-		|	);
+		|	output.p = state->sr >> 12;
+		|	output.l = state->sr & 0xfff;
 		|
 		|''')
 

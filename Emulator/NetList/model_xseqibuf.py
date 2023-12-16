@@ -44,11 +44,13 @@ class XSEQIBUF(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	uint64_t typ, val;
+		|	unsigned word;
+		|	unsigned mpc;
 		|''')
 
     def sensitive(self):
-        yield "PIN_CLK.pos()"
-        yield "BUS_IBOE_SENSITIVE()"
+        yield "PIN_ICLK.pos()"
+        yield "PIN_BCLK.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -57,39 +59,73 @@ class XSEQIBUF(PartFactory):
 
         file.fmt('''
 		|
-		|	unsigned iboe;
-		|
-		|	if (PIN_CLK.posedge()) {
+		|	if (PIN_ICLK.posedge()) {
 		|		BUS_TYP_READ(state->typ);
 		|		BUS_VAL_READ(state->val);
 		|	} 
 		|
-		|	BUS_IBOE_READ(iboe);
+		|	if (PIN_BCLK.posedge()) {
+		|		unsigned mode = 0;
+		|		unsigned u = 0;
+		|		if (PIN_CNDLD=>) u |= 1;
+		|		if (PIN_WDISP=>) u |= 2;
+		|		switch (u) {
+		|		case 0: mode = 1; break;
+		|		case 1: mode = 1; break;
+		|		case 3: mode = 0; break;
+		|		case 2:
+		|			if (PIN_MD0=>) mode |= 2;
+		|			if (PIN_RND1=>) mode |= 1;
+		|			break;
+		|		}
+		|		if (mode == 3) {
+		|			uint64_t tmp;
+		|			if (!PIN_MUX=>) {
+		|				BUS_VAL_READ(tmp);
+		|				state->word = (tmp >> 4) & 7;
+		|				state->mpc = (tmp >> 4) & 0x7fff;
+		|			} else {
+		|				BUS_BIDX_READ(state->word);
+		|				state->mpc = state->word;
+		|				BUS_BOF_READ(tmp);
+		|				state->mpc |= (tmp << 3);
+		|			}
+		|		} else if (mode == 2) {
+		|			state->mpc += 1;
+		|			state->word += 1;
+		|			if (state->word == 0x8)
+		|				state->word = 0;
+		|		} else if (mode == 1) {
+		|			state->mpc -= 1;
+		|			if (state->word == 0x0)
+		|				state->word = 7;
+		|			else
+		|				state->word -= 1;
+		|		}
+		|		output.mps = state->mpc;
+		|	}
 		|
-		|	if (!(iboe & 0x80))
+		|	PIN_EMP<=(state->word != 0);
+		|
+		|	if (state->word == 7)
 		|		output.disp = state->typ >> 48;
-		|	else if (!(iboe & 0x40))
+		|	else if (state->word == 6)
 		|		output.disp = state->typ >> 32;
-		|	else if (!(iboe & 0x20))
+		|	else if (state->word == 5)
 		|		output.disp = state->typ >> 16;
-		|	else if (!(iboe & 0x10))
+		|	else if (state->word == 4)
 		|		output.disp = state->typ >> 0;
-		|	else if (!(iboe & 0x08))
+		|	else if (state->word == 3)
 		|		output.disp = state->val >> 48;
-		|	else if (!(iboe & 0x04))
+		|	else if (state->word == 2)
 		|		output.disp = state->val >> 32;
-		|	else if (!(iboe & 0x02))
+		|	else if (state->word == 1)
 		|		output.disp = state->val >> 16;
-		|	else if (!(iboe & 0x01))
+		|	else if (state->word == 0)
 		|		output.disp = state->val >> 0;
 		|	else
 		|		output.disp = 0xffff;
-		|	TRACE(
-		|		<< " clk^ " << PIN_CLK.posedge()
-		|		<< " iboe " << BUS_IBOE_TRACE()
-		|		<< " disp " << std::hex << output.disp
-		|	);
-		|
+		|	output.disp &= 0xffff;
 		|
 		|''')
 
