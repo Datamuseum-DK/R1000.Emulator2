@@ -41,7 +41,7 @@ from node import Node
 from pin import Pin
 from scmod import ScSignal
 
-USE_MUXBUS = True
+USE_MUXBUS = False
 
 MIN_BUS_WIDTH = 3
 
@@ -363,13 +363,13 @@ class NetBus():
         if net.sc_type != "bool":
             yield ScSignal(
                 lname,
-                "sc_signal_rv <%d>" % (len(self.nets)),
+                "sc_core::sc_signal_rv <%d>" % (len(self.nets)),
                 '"' + "z" * len(self.nets) + '"'
             )
         else:
             yield ScSignal(
                 lname,
-                "sc_signal <" + self.ctype + ">",
+                "sc_core::sc_signal <" + self.ctype + ">",
                 '0x%xULL' % ((1 << len(self.nets)) - 1)
             )
 

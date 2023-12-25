@@ -345,26 +345,26 @@ class PartFactory(Part):
                         sctype = " <%s>" % node.netbus.ctype
 
                     if node.pin.type.input and node.pin.type.output:
-                        yield "sc_inout" + sctype + pbname
+                        yield "sc_core::sc_inout" + sctype + pbname
                     elif node.pin.type.output:
-                        yield "sc_out" + sctype + pbname
+                        yield "sc_core::sc_out" + sctype + pbname
                     else:
-                        yield "sc_in" + sctype + pbname
+                        yield "sc_core::sc_in" + sctype + pbname
 
             elif node.pin.type.input and node.pin.type.output:
-                yield "sc_inout_resolved\tPIN_%s;" % node.pin.name
+                yield "sc_core::sc_inout_resolved\tPIN_%s;" % node.pin.name
             elif node.pin.type.output and node.net.sc_type == "bool":
-                yield "sc_out <bool>\t\tPIN_%s;" % node.pin.name
+                yield "sc_core::sc_out <bool>\t\tPIN_%s;" % node.pin.name
             elif node.pin.type.output:
-                yield "sc_out <sc_logic>\tPIN_%s;" % node.pin.name
+                yield "sc_core::sc_out <sc_dt::sc_logic>\tPIN_%s;" % node.pin.name
             elif node.pin.pinbus is None and node.net.is_pu():
                 continue
             elif node.pin.pinbus is None and node.net.is_pd():
                 continue
             elif node.net.sc_type == "bool":
-                yield "sc_in <bool>\t\tPIN_%s;" % node.pin.name
+                yield "sc_core::sc_in <bool>\t\tPIN_%s;" % node.pin.name
             else:
-                yield "sc_in <sc_logic>\tPIN_%s;" % node.pin.name
+                yield "sc_core::sc_in <sc_dt::sc_logic>\tPIN_%s;" % node.pin.name
 
         for decl, _init in self.private():
             self.has_private = True
@@ -406,7 +406,7 @@ class PartFactory(Part):
             else:
                 j.append(pin + ".default_event()")
         init = name + " = " + " | ".join(j)
-        yield "sc_event_or_list\t" + name + ";", init
+        yield "sc_core::sc_event_or_list\t" + name + ";", init
 
     autopin = None
     autotrace = True
@@ -446,10 +446,10 @@ class PartFactory(Part):
                 nm = node.pin.name
                 file.fmt('''
 		|		if (output.z_%s)
-		|			PIN_%s = sc_logic_Z;
+		|			PIN_%s = sc_dt::sc_logic_Z;
 		|		else
 		|			PIN_%s<=(output.%s);
-		|''' % (nm.lower(), nm.upper(), nm.upper(), nm.lower()))
+		|''' % (nm.lower(), nm, nm, nm.lower()))
 
         file.write('\t\tstate->ctx.job &= ~1;\n')
         file.write('\t}\n')
@@ -464,7 +464,7 @@ class PartFactory(Part):
 		|	        state->output = output;
 		|	}
 		|	if (state->ctx.job) {
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	} else {
 		|''')
 

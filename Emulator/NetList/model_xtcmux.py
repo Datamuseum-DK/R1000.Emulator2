@@ -77,7 +77,7 @@ class XTCMUX(PartFactory):
 		|		if (c != state->c) {
 		|			state->ctx.job = 1;
 		|			state->c = c;
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		}
 		|		return;
 		|	}
@@ -145,7 +145,7 @@ class XTCMUX(PartFactory):
 		|	if (c != state->c) {
 		|		state->ctx.job = 1;
 		|		state->c = c;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|
 		|	TRACE(

@@ -85,7 +85,7 @@ class XMULT(PartFactory):
 		|		if (state->out != out) {
 		|			state->ctx.job = 1;
 		|			state->out = out;
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		}
 		|#else
 		|		state->out = out;
@@ -95,7 +95,7 @@ class XMULT(PartFactory):
 		|	if (PIN_OE.posedge()) {
 		|#ifdef DO_DLY
 		|		state->ctx.job = 2;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|#else
 		|		BUS_P_Z();
 		|#endif

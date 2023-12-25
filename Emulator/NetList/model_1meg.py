@@ -135,7 +135,7 @@ class DRAM1MEG(PartFactory):
 		|		mask = 1 << (adr & 0x1f);
 		|		adr >>= 5;
 		|		if (!PIN_WE=>) {
-		|			PIN_DQ = sc_logic_Z;
+		|			PIN_DQ = sc_dt::sc_logic_Z;
 		|			if (PIN_DQ=>)
 		|				state->bits[adr] |= mask;
 		|			else
@@ -146,7 +146,7 @@ class DRAM1MEG(PartFactory):
 		|		}
 		|	}
 		|	if (PIN_RAS.posedge() || PIN_CAS.posedge()) {
-		|		PIN_DQ = sc_logic_Z;
+		|		PIN_DQ = sc_dt::sc_logic_Z;
 		|	}
 		|	if (!PIN_CAS=> || (state->ctx.do_trace & 2)) {
 		|		TRACE(

@@ -271,11 +271,11 @@ class GAL(PartFactory):
 
     def extra(self, file):
         file.fmt('''
-		|static const sc_logic outs[4] = {
-		|	sc_logic_Z,
-		|	sc_logic_Z,
-		|	sc_logic_0,
-		|	sc_logic_1,
+		|static const sc_dt::sc_logic outs[4] = {
+		|	sc_dt::sc_logic_Z,
+		|	sc_dt::sc_logic_Z,
+		|	sc_dt::sc_logic_0,
+		|	sc_dt::sc_logic_1,
 		|};
 		|static const char traces[5] = "ZZ01";
 		|''')
@@ -433,7 +433,7 @@ class GAL(PartFactory):
         file.write('\tif (\n\t    %s) {\n' % (" ||\n\t    ".join(i)))
         file.write("\n".join(j) + "\n")
         file.write("\t\tstate->ctx.job = 1;\n")
-        file.write("\t\tnext_trigger(5, SC_NS);\n")
+        file.write("\t\tnext_trigger(5, sc_core::SC_NS);\n")
         file.write('\t}\n')
 
 class PalMacroCell16(PalMacroCell):

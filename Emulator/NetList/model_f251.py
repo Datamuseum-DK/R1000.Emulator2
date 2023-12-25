@@ -53,8 +53,8 @@ class F251(PartFactory):
 		|
 		|	if (PIN_OE=>) {
 		|		TRACE(<<"Z");
-		|		PIN_Y = sc_logic_Z;
-		|		PIN_Ynot = sc_logic_Z;
+		|		PIN_Y = sc_dt::sc_logic_Z;
+		|		PIN_Ynot = sc_dt::sc_logic_Z;
 		|		next_trigger(PIN_OE.negedge_event());
 		|		return;
 		|	}

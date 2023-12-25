@@ -92,7 +92,7 @@ class XBUSPAL(PartFactory):
 		|		PIN_TADIN<=(!state->p_taga_dir);
 		|		PIN_TBDIN<=(!state->p_tagb_dir);
 		|		state->ctx.job = 2;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|		return;
 		|	}
 		|	if (state->ctx.job == 2) {
@@ -207,7 +207,7 @@ class XBUSPAL(PartFactory):
 		|		state->p_dreg_oe = out_dreg_oe;
 		|		state->p_wdrb_sel = out_wdrb_sel;
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|''')
 

@@ -146,7 +146,7 @@ class F74(PartFactory):
 		|		);
 		|	}
 		|	if (state->job)
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	else if (!(PIN_D=> ^ state->dreg[0]))
 		|		next_trigger(«d_or_pr_or_cl»);
 		|''')

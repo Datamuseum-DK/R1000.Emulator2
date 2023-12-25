@@ -83,7 +83,7 @@ class XSEQ52CSA(PartFactory):
 		|		state->underflow = underflow;
 		|		state->overflow = overflow;
 		|		state->in_csa = in_csa;;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|		
 		|''')

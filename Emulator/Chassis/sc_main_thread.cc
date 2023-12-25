@@ -38,9 +38,9 @@ SC_MODULE(PowerSequencer)
 	{
 		clamp = false;
 		reset = sc_logic_0;
-		wait(100, SC_NS);
+		wait(100, sc_core::SC_NS);
 		clamp = true;
-		wait(200, SC_NS);
+		wait(200, sc_core::SC_NS);
 		/*
 		 * When running IOC experiments without the IOP we need
 		 * to force the reset signal high because DREG4 pulls it
@@ -122,7 +122,7 @@ sc_main(int argc, char *argv[])
 	planes->EXT_ID2 = false;
 #endif
 
-	sc_set_time_resolution(1, SC_NS);
+	sc_set_time_resolution(1, sc_core::SC_NS);
 
 	cout << sc_get_time_resolution() <<  " Resolution\n";
 

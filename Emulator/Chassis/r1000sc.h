@@ -53,9 +53,9 @@ uint8_t offset_parity(uint64_t);
 
 #define DEBUG TRACE
 
-#define IS_H(cond) (!((cond) == sc_logic_0))
-#define IS_L(cond) ((cond) == sc_logic_0)
-#define AS(cond) ((cond) ? sc_logic_1 : sc_logic_0)
+#define IS_H(cond) (!((cond) == sc_dt::sc_logic_0))
+#define IS_L(cond) ((cond) == sc_dt::sc_logic_0)
+#define AS(cond) ((cond) ? sc_dt::sc_logic_1 : sc_dt::sc_logic_0)
 
 #endif /* __cplusplus */
 

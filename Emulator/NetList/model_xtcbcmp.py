@@ -74,7 +74,7 @@ class XTCBCMP(PartFactory):
 		|		state->ctx.job = 1;
 		|		state->pfr = pfr;
 		|		state->below = below;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|
 		|	TRACE(

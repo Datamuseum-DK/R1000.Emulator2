@@ -60,7 +60,7 @@ class XSCLK(PartFactory):
 		|	if (PIN_Q4E.negedge()) {
 		|		state->data = BUS_D_MASK;
 		|		state->ctx.job = 2;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	} else if (PIN_Q4E=>) {
 		|		unsigned data;
 		|		if (!PIN_SCE=>) {
@@ -71,7 +71,7 @@ class XSCLK(PartFactory):
 		|		if (data != state->data) {
 		|			state->data = data;
 		|			state->ctx.job = 1;
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		}
 		|	}
 		|''')

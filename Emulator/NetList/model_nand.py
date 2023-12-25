@@ -123,7 +123,7 @@ class Nand(PartFactory):
 		|				PIN_Q<=(state->out);
 		|			} else {
 		|				state->job = true;
-		|				next_trigger(state->dly, SC_NS);
+		|				next_trigger(state->dly, sc_core::SC_NS);
 		|			}
 		|		}
 		|	} else {
@@ -133,7 +133,7 @@ class Nand(PartFactory):
 		|				PIN_Q<=(state->out);
 		|			} else {
 		|				state->job = true;
-		|				next_trigger(state->dly, SC_NS);
+		|				next_trigger(state->dly, sc_core::SC_NS);
 		|			}
 		|''')
 

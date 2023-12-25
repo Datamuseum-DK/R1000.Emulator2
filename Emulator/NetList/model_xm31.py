@@ -92,7 +92,7 @@ class XM31(PartFactory):
 		|			state->diag_sync = diag_sync;
 		|			state->diag_freeze = diag_freeze;
 		|			state->parity_error = parity_error;
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		}
 		|	}
 		|
@@ -112,7 +112,7 @@ class XM31(PartFactory):
 		|			if (cmdreg != state->cmdreg) {
 		|				state->ctx.job = 1;
 		|				state->cmdreg = cmdreg;
-		|				next_trigger(5, SC_NS);
+		|				next_trigger(5, sc_core::SC_NS);
 		|			}
 		|		}
 		|	} else if (!PIN_Q4=>) {

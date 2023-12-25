@@ -110,7 +110,7 @@ class XCMDPAL(PartFactory):
 		|		state->p_mcyc1 = out_mcyc1;
 		|		state->p_mcyc2 = out_mcyc2;
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	TRACE(
 		|	    << " h2 " << PIN_H2?
 		|	    << " mcmd " << BUS_MCMD_TRACE()

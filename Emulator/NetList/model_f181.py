@@ -66,9 +66,9 @@ class F181(PartFactory):
 		|	unsigned val = lut181[idx];
 		|	BUS_Y_WRITE(val >> 4);
 		|	if (val & 0x08)
-		|		PIN_AeqB = sc_logic_Z;
+		|		PIN_AeqB = sc_dt::sc_logic_Z;
 		|	else
-		|		PIN_AeqB = sc_logic_0;
+		|		PIN_AeqB = sc_dt::sc_logic_0;
 		|	PIN_P<=(val & 0x04);
 		|	PIN_CO<=(val & 0x02);
 		|	PIN_G<=(val & 0x01);

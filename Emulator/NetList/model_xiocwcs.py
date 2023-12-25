@@ -136,7 +136,7 @@ class XIOCWCS(PartFactory):
 		|		state->ctr &= 0xffff;
 		|
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|
 		|	uint32_t par_a, par_b;

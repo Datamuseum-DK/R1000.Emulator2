@@ -66,7 +66,7 @@ class XEQ(PartFactory):
         if "E" in self.comp.nodes:
             file.fmt('''
 		|	if (PIN_E=>) {
-		|		output.aeqb = true
+		|		output.aeqb = true;
 		|		TRACE ( << " e " << PIN_E?);
 		|		next_trigger(PIN_E.negedge_event());
 		|		return;

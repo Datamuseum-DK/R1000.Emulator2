@@ -100,7 +100,7 @@ class Xbuf(PartFactory):
 		|	if (tmp != state->data || state->job < 0) {
 		|		state->data = tmp;
 		|		state->job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|''')
         else:
@@ -118,7 +118,7 @@ class Xbuf(PartFactory):
 		|		if (tmp != state->data || state->job < 0) {
 		|			state->data = tmp;
 		|			state->job = 1;
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		}
 		|	}
 		|''')

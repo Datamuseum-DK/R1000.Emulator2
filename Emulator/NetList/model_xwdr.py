@@ -122,7 +122,7 @@ class XWDR(PartFactory):
 		|			else
 		|				state->data &= ~(1ULL<<11);
 		|		} else if (s1) {
-		|			cerr << "WDR shift left\\n";
+		|			std::cerr << "WDR shift left\\n";
 		|		}
 		|		output.qb = state->data;
 		|		// .P2 and .P6 are swapped and patching DIPROC's tbl is not enough. 

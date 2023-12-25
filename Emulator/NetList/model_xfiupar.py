@@ -75,7 +75,7 @@ class XFIUPAR(PartFactory):
 		|	if (perr != state->perr) {
 		|		state->ctx.job = 1;
 		|		state->perr = perr;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|		TRACE(
 		|		    << " fiu " << BUS_FIU_TRACE()
 		|		    << " fiup " << BUS_FIUP_TRACE()

@@ -50,13 +50,13 @@ class Nor(PartFactory):
 
         for node in self.comp:
             if node.pin.name == "Q" and node.net.sc_type == "bool":
-                yield "sc_out <bool>\t\tPIN_Q;"
+                yield "sc_core::sc_out <bool>\t\tPIN_Q;"
             elif node.pin.name == "Q":
-                yield "sc_out <sc_logic>\tPIN_Q;"
+                yield "sc_core::sc_out <sc_dt::sc_logic>\tPIN_Q;"
             elif node.net.sc_type == "bool":
-                yield "sc_in <bool>\t\tPIN_%s;" % node.pin.name
+                yield "sc_core::sc_in <bool>\t\tPIN_%s;" % node.pin.name
             else:
-                yield "sc_in <sc_logic>\tPIN_%s;" % node.pin.name
+                yield "sc_core::sc_in <sc_dt::sc_logic>\tPIN_%s;" % node.pin.name
 
     def state(self, file):
         ''' Extra state variable '''
@@ -120,7 +120,7 @@ class Nor(PartFactory):
 		|				PIN_Q<=(state->out);
 		|			} else {
 		|				state->job = true;
-		|				next_trigger(state->dly, SC_NS);
+		|				next_trigger(state->dly, sc_core::SC_NS);
 		|			}
 		|		}
 		|	} else {
@@ -135,7 +135,7 @@ class Nor(PartFactory):
 		|				PIN_Q<=(state->out);
 		|			} else {
 		|				state->job = true;
-		|				next_trigger(state->dly, SC_NS);
+		|				next_trigger(state->dly, sc_core::SC_NS);
 		|			}
 		|''')
 

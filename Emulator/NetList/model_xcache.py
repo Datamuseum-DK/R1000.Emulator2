@@ -130,12 +130,12 @@ class XCACHE(PartFactory):
 		|		state->parq = (state->par[adr] & 0xfd);
 		|		state->zpq = false;
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	} else if (vqoe && !state->zvq) {
 		|		state->zvq = true;
 		|		state->zpq = true;
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|
 		|	bool pos = PIN_CLK.posedge();
@@ -221,11 +221,11 @@ class XCACHE(PartFactory):
 		|	if (PIN_CLK.negedge()) {
 		|		state->nme = name;
 		|		state->ome = offset;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	} else if (PIN_CLK.posedge()) {	 
 		|		state->nml = name;
 		|		state->oml = offset;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|
 		|	uint64_t vd;

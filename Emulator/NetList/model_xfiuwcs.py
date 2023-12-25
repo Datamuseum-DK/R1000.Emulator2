@@ -215,7 +215,7 @@ class XFIUWCS(PartFactory):
 		|		    << " wcs " << std::hex << state->wcs
 		|		);
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|	if (!PIN_SUIR=>) {
 		|		unsigned dout = 0;

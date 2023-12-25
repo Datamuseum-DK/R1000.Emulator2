@@ -89,7 +89,7 @@ class XVCMUX(PartFactory):
 		|		if (c != state->c) {
 		|			state->ctx.job = 1;
 		|			state->c = c;
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		}
 		|		return;
 		|	}
@@ -171,7 +171,7 @@ class XVCMUX(PartFactory):
 		|	if (c != state->c) {
 		|		state->ctx.job = 1;
 		|		state->c = c;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|	TRACE(
 		|	    << " sel0 " << PIN_SEL0?

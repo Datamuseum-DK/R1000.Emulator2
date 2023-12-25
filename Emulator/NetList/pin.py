@@ -277,7 +277,7 @@ class PinBus():
         for pin in self.pins:
             node = nodes[pin]
             if not pin.netbus and node.net.sc_type != "bool":
-                file.fmt("\t\tPIN_%s = sc_logic_Z; \\\n" % pin.name)
+                file.fmt("\t\tPIN_%s = sc_dt::sc_logic_Z; \\\n" % pin.name)
             elif not pin.netbus:
                 pass
             elif pin.netbus.nets[0] != node.net:

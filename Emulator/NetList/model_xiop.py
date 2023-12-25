@@ -228,9 +228,9 @@ class XIOP(PartFactory):
 		|		/* WRITE CPU CONTROL */
 		|		TRACE("WR CPU CONTROL " << std::hex << state->xact->data);
 		|		if (state->xact->data & 1)
-		|			PIN_ORST = sc_logic_Z;
+		|			PIN_ORST = sc_dt::sc_logic_Z;
 		|		else
-		|			PIN_ORST = sc_logic_0;
+		|			PIN_ORST = sc_dt::sc_logic_0;
 		|		ioc_sc_bus_done(&state->xact);
 		|		return;
 		|	}

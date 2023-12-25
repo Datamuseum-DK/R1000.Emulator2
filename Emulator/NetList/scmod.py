@@ -104,7 +104,7 @@ class SystemCModule():
         self.scm_cname_pfx = ""
         self.scm_unique = 0
 
-        self.sf_cc.write("#include <systemc.h>\n")
+        self.sf_cc.write("#include <systemc>\n")
         self.sf_cc.include("Chassis/r1000sc.h")
         self.sf_cc.include("Infra/context.h")
         self.sf_cc.write("\n")
@@ -240,9 +240,10 @@ class SystemCModule():
 
         self.sf_hh.fmt('''
 		|
-		|	SC_HAS_PROCESS(SCM_«mmm»);
-		|
-		|	SCM_«mmm»(sc_module_name nm, const char *arg);
+		|//	SC_HAS_PROCESS(SCM_«mmm»);
+		|//
+		|	SCM_«mmm»(sc_core::sc_module_name nm, const char *arg);
+		|//	SC_CTOR(SCM_«mmm», const char *arg);
 		|
 		|	private:
 		|	struct scm_«lll»_state *state;
@@ -272,7 +273,7 @@ class SystemCModule():
 		|};
 		|
 		|SCM_«mmm» ::
-		|    SCM_«mmm»(sc_module_name nm, const char *arg)
+		|    SCM_«mmm»(sc_core::sc_module_name nm, const char *arg)
 		|	: sc_module(nm)
 		|{
 		|	state = (struct scm_«lll»_state *)
@@ -285,7 +286,9 @@ class SystemCModule():
             init(self.sf_cc)
 
         self.sf_cc.fmt('''
-		|
+		|#ifndef SC_CURRENT_USER_MODULE
+		|#  define SC_CURRENT_USER_MODULE SCM_«mmm»
+		|#endif
 		|	SC_METHOD(doit);
 		|''')
 
@@ -325,7 +328,7 @@ class SystemCModule():
     def create(self):
         ''' How to create ourselves '''
         txt = self.scm_lname + "("
-        txt += "sc_module_name name"
+        txt += "sc_core::sc_module_name name"
         for arg in self.scm_ctor_args:
             txt += ", " + arg.protoform()
         txt += ");"
@@ -342,7 +345,7 @@ class SystemCModule():
 
         self.sf_pub.write("\n")
 
-        self.sf_pub.fmt("struct «lll» *make_«lll»(\n    sc_module_name name")
+        self.sf_pub.fmt("struct «lll» *make_«lll»(\n    sc_core::sc_module_name name")
         for arg in self.scm_ctor_args:
             self.sf_pub.fmt(",\n    " + arg.protoform())
         self.sf_pub.write("\n);\n")
@@ -380,7 +383,7 @@ class SystemCModule():
         ''' Produce the .cc file '''
         self.sf_cc.include(self.sf_pub)
         self.sf_cc.write("\n")
-        self.sf_cc.fmt("struct «lll» *make_«lll»(\n    sc_module_name name")
+        self.sf_cc.fmt("struct «lll» *make_«lll»(\n    sc_core::sc_module_name name")
         for arg in self.scm_ctor_args:
             self.sf_cc.fmt(",\n    " + arg.protoform())
         self.sf_cc.write("\n)\n")
@@ -391,7 +394,7 @@ class SystemCModule():
         self.sf_cc.write(');\n}\n\n')
 
         self.sf_cc.fmt('''«lll» :: «lll»(\n''')
-        self.sf_cc.fmt('''    sc_module_name name''')
+        self.sf_cc.fmt('''    sc_core::sc_module_name name''')
         for arg in self.scm_ctor_args:
             self.sf_cc.fmt(',\n    ' + arg.protoform())
         self.sf_cc.write('\n) :\n')

@@ -112,7 +112,7 @@ class XCPURAM(PartFactory):
 		|			state->acnt &= 0xfff;
 		|		}
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|	TRACE(
 		|	    << " clk^ " << PIN_SCLK.posedge()

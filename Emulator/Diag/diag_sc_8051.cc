@@ -52,7 +52,7 @@
 	do { \
 		if (arg##mask & (bit)) \
 			pin = (arg##val & (bit)) ? \
-			    sc_logic_Z : sc_logic_0; \
+			    sc_dt::sc_logic_Z : sc_dt::sc_logic_0; \
 	} while (0)
 
 #define DBG() \

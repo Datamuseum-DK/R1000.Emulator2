@@ -229,7 +229,7 @@ class XFIUROTV(PartFactory):
 		|		state->fip = fip;
 		|		state->fipz = fipz;
 		|#endif
-		|		next_trigger(10, SC_NS);
+		|		next_trigger(10, sc_core::SC_NS);
 		|	} else if («rot_typ» && !PIN_TVF=>) {
 		|		next_trigger(fiu_event);
 		|	}

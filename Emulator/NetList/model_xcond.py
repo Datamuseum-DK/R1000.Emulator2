@@ -93,7 +93,7 @@ class XCOND(PartFactory):
 		|	bool is_e_ml = (pa042 >> 7) & 1;
 		|
 		|	bool cond;
-		|	sc_event_or_list *next = NULL;
+		|	sc_core::sc_event_or_list *next = NULL;
 		|	switch(condsel >> 3) {
 		|''')
 

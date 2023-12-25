@@ -205,7 +205,7 @@ class XVALWCS(PartFactory):
 		|			TOWCS();
 		|		}
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	} else if (!PIN_FPA=>) {
 		|		TOSR();
 		|		state->sr1 = 0;

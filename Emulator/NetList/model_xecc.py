@@ -179,7 +179,7 @@ class XECC64(PartFactory):
 
         file.fmt('''
 		|	} else {
-		|		cout << this->name() << " :: " << arg << "\\n";
+		|		std::cout << this->name() << " :: " << arg << "\\n";
 		|		exit(3);
 		|	}
 		|''')

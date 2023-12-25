@@ -111,17 +111,17 @@ class Net():
         else:
             retval = [self.bare_cname]
             if self.sc_type == "bool":
-                retval.append("sc_signal <bool>")
+                retval.append("sc_core::sc_signal <bool>")
             else:
-                retval.append("sc_signal_resolved")
+                retval.append("sc_core::sc_signal_resolved")
             if self.sc_type == "bool" and self.default:
                 retval.append("true")
             elif self.sc_type == "bool":
                 retval.append("false")
             elif self.default:
-                retval.append("sc_logic_1")
+                retval.append("sc_dt::sc_logic_1")
             else:
-                retval.append("sc_logic_1")
+                retval.append("sc_dt::sc_logic_1")
             yield scmod.ScSignal(*retval)
 
     def find_cname(self):

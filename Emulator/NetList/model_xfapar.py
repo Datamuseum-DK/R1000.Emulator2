@@ -114,12 +114,12 @@ class XFAPAR(PartFactory):
 		|		state->moe = PIN_FAE=>;
 		|		if (!state->moe) {
 		|			state->ctx.job = 1;
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		}
 		|	} else if (PIN_Q4.negedge() && !state->moe) {
 		|		state->moe = true;
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|''')
 

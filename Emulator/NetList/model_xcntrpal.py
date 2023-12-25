@@ -162,7 +162,7 @@ class XCNTRPAL(PartFactory):
 		|		state->cnt1 = cnt1;
 		|		state->cnt8_en = cnt8_en;
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|''')
 

@@ -131,7 +131,7 @@ class XClkGen(PartFactory):
 		|		PIN_Q3<=(1); PIN_Q4<=(0);
 		|		state->when = 200;
 		|	}
-		|	next_trigger((state->when - now) % 200, SC_NS);
+		|	next_trigger((state->when - now) % 200, sc_core::SC_NS);
 		|	state->when = state->when % 200;
 		|''')
 

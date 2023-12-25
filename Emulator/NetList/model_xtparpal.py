@@ -173,7 +173,7 @@ class XTPARPAL(PartFactory):
 		|		state->p_par_err = out_par_err;
 		|		state->p_ts_par_s1 = out_ts_par_s1;
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|		TRACE(
 		|		    << PIN_H1?
 		|		    << " ctsp " << PIN_CTSP?

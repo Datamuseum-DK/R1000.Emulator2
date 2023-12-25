@@ -164,7 +164,7 @@ class XSRN(PartFactory):
 		|	if (nxt != state->out) {
 		|		state->out = nxt;
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|''')
 

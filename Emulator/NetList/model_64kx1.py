@@ -56,7 +56,7 @@ class SRAM64KX1(PartFactory):
         file.fmt('''
 		|	struct ctx *c1 = CTX_Find("IOP.ram_space");
 		|	if (c1 == NULL)
-		|		cerr << "IOP.iop_ram_space not found\\n";
+		|		std::cerr << "IOP.iop_ram_space not found\\n";
 		|	assert(c1 != NULL);
 		|	state->iopram = (uint32_t*)(c1 + 1);
 		|	const char *p = strchr(this->name(), 'M');
@@ -80,7 +80,7 @@ class SRAM64KX1(PartFactory):
 		|		}
 		|		state->mymask = 1U << (31 - nbr);
 		|	}
-		|	cout
+		|	std::cout
 		|		<< this->name()
 		|		<< " "
 		|		<< nbr
@@ -135,7 +135,7 @@ class SRAM64KX1(PartFactory):
 		|		else
 		|			PIN_Q<=(false);
 		|	} else {
-		|		PIN_Q = sc_logic_Z;
+		|		PIN_Q = sc_dt::sc_logic_Z;
 		|		next_trigger(PIN_CS.negedge_event());
 		|	}
 		|''')

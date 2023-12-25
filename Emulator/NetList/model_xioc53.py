@@ -132,7 +132,7 @@ class XIOC53(PartFactory):
 		|	if (PIN_Q2.posedge() && adrbs != state->adrbs) {
 		|		state->adrbs = adrbs;
 		|		state->ctx.job = 1;
-		|		next_trigger(15, SC_NS);
+		|		next_trigger(15, sc_core::SC_NS);
 		|	}
 		|	if (fiubs != state->fiubs ||
 		|	    tvbs != state->tvbs ||
@@ -148,7 +148,7 @@ class XIOC53(PartFactory):
 		|		state->diag_on = diag_on;
 		|		state->diag_off = diag_off;
 		|		state->ctx.job = 1;
-		|		next_trigger(20, SC_NS);
+		|		next_trigger(20, sc_core::SC_NS);
 		|	}
 		|	
 		|''')

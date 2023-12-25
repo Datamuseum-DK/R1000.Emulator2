@@ -325,7 +325,7 @@ class XTCOND(PartFactory):
 		|		state->cond3 = cond3;
 		|		state->cond4 = cond4;
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|''')
 

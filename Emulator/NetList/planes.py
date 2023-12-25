@@ -227,7 +227,7 @@ class Planes(SystemCModule):
     def produce(self):
         ''' Produce the SystemC sources '''
         self.make_table(self.sf_cc)
-        self.add_member("sc_trace_file *tf;")
+        self.add_member("sc_core::sc_trace_file *tf;")
         super().produce()
 
     def make_table(self, dst):

@@ -111,7 +111,7 @@ class XSEQ79(PartFactory):
 		|		state->aclk = aclk;
 		|		state->pclk = pclk;
 		|		state->lclk = lclk;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|''')
 

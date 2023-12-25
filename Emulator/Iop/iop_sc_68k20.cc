@@ -98,7 +98,7 @@
 		PIN_ECS = 1;
 		PIN_DBEN = 0;
 		PIN_AS = 0;
-		next_trigger(10, SC_NS);
+		next_trigger(10, sc_core::SC_NS);
 		state->xact->sc_state++;
 		break;
 	case 202:

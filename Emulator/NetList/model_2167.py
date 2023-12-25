@@ -56,7 +56,7 @@ class SRAM2167(PartFactory):
             file.fmt('''
 		|	if (PIN_CS=>) {
 		|		TRACE("Z");
-		|		PIN_Q = sc_logic_Z;
+		|		PIN_Q = sc_dt::sc_logic_Z;
 		|		next_trigger(PIN_CS.negedge_event());
 		|		return;
 		|	}

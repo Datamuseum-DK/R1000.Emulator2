@@ -129,11 +129,11 @@ class Xreg(PartFactory):
 		|	if (IS_L(PIN_OE)) {
 		|		if (state->job < 0) {
 		|			state->job = 1;
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		}
 		|	} else if (state->job != -2) {
 		|		state->job = -1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|''')
         else:
@@ -141,7 +141,7 @@ class Xreg(PartFactory):
 		|		if (tmp != state->data) {
 		|			state->data = tmp;
 		|			state->job = 1;
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		}
 		|	}
 		|''')

@@ -102,7 +102,7 @@ class XTVBSIDE(PartFactory):
 		|	if (b != state->b) {
 		|		state->ctx.job = 1;
 		|		state->b = b;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|#else
 		|	BUS_B_WRITE(b);

@@ -70,7 +70,7 @@ class XM30(PartFactory):
 		|		PIN_VBCE<=(state->vbdr);
 		|		PIN_VPCE<=(state->vpdr);
 		|		if (state->ctx.job & 2)
-		|			next_trigger(30, SC_NS);
+		|			next_trigger(30, sc_core::SC_NS);
 		|		return;
 		|	}
 		|	if (state->ctx.job & 2) {
@@ -181,9 +181,9 @@ class XM30(PartFactory):
 		|			state->vpdr = vpdr;
 		|		}
 		|		if (state->ctx.job & 1)
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		else if (state->ctx.job & 2)
-		|			next_trigger(35, SC_NS);
+		|			next_trigger(35, sc_core::SC_NS);
 		|
 		|	}
 		|''')

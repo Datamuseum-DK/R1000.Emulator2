@@ -46,7 +46,7 @@ class XTRACE(PartFactory):
 
         file.fmt('''
 		|	if (!state->ctx.do_trace) {
-		|		next_trigger(1000000, SC_NS);
+		|		next_trigger(1000000, sc_core::SC_NS);
 		|		return;
 		|	}
 		|	TRACE(

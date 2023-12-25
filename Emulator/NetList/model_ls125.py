@@ -55,7 +55,7 @@ class LS125(PartFactory):
 		|	if (!PIN_E=>)
 		|		PIN_Q = AS(PIN_D=>);
 		|	else
-		|		PIN_Q = sc_logic_Z;
+		|		PIN_Q = sc_dt::sc_logic_Z;
 		|''')
 
 def register(part_lib):

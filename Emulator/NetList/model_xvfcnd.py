@@ -63,7 +63,7 @@ class XVFCND(PartFactory):
 		|		} else {
 		|			state->fcsel = 7;
 		|			state->ctx.job = 1;
-		|			next_trigger(5, SC_NS);
+		|			next_trigger(5, sc_core::SC_NS);
 		|		}
 		|		return;
 		|	}
@@ -120,7 +120,7 @@ class XVFCND(PartFactory):
 		|		state->fcsel = fcsel;
 		|		state->fcond = fcond;
 		|		state->ctx.job = 1;
-		|		next_trigger(5, SC_NS);
+		|		next_trigger(5, sc_core::SC_NS);
 		|	} else if (sel & 0x2) {
 		|		//next_trigger(b5_event);
 		|	}

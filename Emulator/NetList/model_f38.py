@@ -50,7 +50,7 @@ class F38(PartFactory):
         file.fmt('''
 		|	bool s = !(PIN_D0=> && PIN_D1=>);
 		|	TRACE( << PIN_D0 << PIN_D1 << " " << s);
-		|	PIN_Q = s ? sc_logic_Z : sc_logic_0;
+		|	PIN_Q = s ? sc_dt::sc_logic_Z : sc_dt::sc_logic_0;
 		|''')
 
 def register(part_lib):
