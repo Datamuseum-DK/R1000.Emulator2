@@ -2493,6 +2493,11 @@
     (effects (font (size 2.54 2.54)) (justify left bottom))
     (uuid 5280f2cf-f6b2-471e-9dc7-9b2e0d47f4b1)
   )
+  (text "MAR_CNTL ENCODING \n0  NOP                 	8  LOAD_MAR_SYSTEM \n1  RESTORE RDR         	9  LOAD_MAR_CODE\n2  DISABLE_DUMMY_NEXT  	A  LOAD_MAR_IMPORT\n3  SPARE               	B  LOAR_MAR_DATA\n4  RESTORE_MAR         	C  LOAD_MAR_QUEUE\n5  RESTORE_MAR_REFRESH 	D  LOAD_MAR_TYPE\n6  INC_MAR             	E  LOAD_MAR_CONTROL\n7  INC_MAR_IF_INCMPLT  	F  LOAD_MAR_RESERVED\n"
+    (at 243.84 111.76 0)
+    (effects (font (size 2.54 2.54)) (justify left bottom))
+    (uuid bede9fe4-90e9-42e6-be5b-1682ab476f7b)
+  )
 
   (label "T.ADR.OFFS20" (at 127 284.48 0) (fields_autoplaced)
     (effects (font (size 2.54 2.54)) (justify left bottom))

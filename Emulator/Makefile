@@ -31,6 +31,10 @@ nobus:
 
 .PHONY: r1000sim
 
+R1000DEP= \
+	Infra/r1000.h \
+	Infra/microtrace.h \
+
 r1000sim:
 	@echo "WORKDIR ${WORKDIR}"
 	@echo "BRANCH ${BRANCH}"
@@ -44,6 +48,7 @@ r1000sim:
 		WORKDIR=${WORKDIR} \
 		BRANCH=${BRANCH} \
 		OPTIMIZE=${OPTIMIZE} \
+		R1000DEP="${R1000DEP}" \
 		r1000sim
 
 flint:

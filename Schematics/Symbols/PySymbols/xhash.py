@@ -14,7 +14,7 @@ class XHASH(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "S", 0, 2))
-        self.sig_left(ChipSig("-->+", "A", 0, 55))
+        self.sig_left(ChipSig("-->+", "A", 0, 56))
         self.sig_left(ChipSig("-->+", "T", 0, 3))
         self.sig_left(ChipSig("-->+", "TE"))
 

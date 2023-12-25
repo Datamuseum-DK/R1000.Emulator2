@@ -240,10 +240,7 @@ class SystemCModule():
 
         self.sf_hh.fmt('''
 		|
-		|//	SC_HAS_PROCESS(SCM_«mmm»);
-		|//
 		|	SCM_«mmm»(sc_core::sc_module_name nm, const char *arg);
-		|//	SC_CTOR(SCM_«mmm», const char *arg);
 		|
 		|	private:
 		|	struct scm_«lll»_state *state;

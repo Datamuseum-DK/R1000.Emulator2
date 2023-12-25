@@ -148,7 +148,7 @@ TRACERS
 
 cli_func_f cli_trace;
 
-void microtrace(const void *p, size_t l);
+#include "Infra/microtrace.h"
 
 /* CALLOUTS ***********************************************************/
 

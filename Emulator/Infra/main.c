@@ -58,8 +58,19 @@ static FILE *utrace_file;
 static struct timespec t0;
 
 void
-microtrace(const void *p, size_t l)
+microtrace(const uint8_t *p, size_t l)
 {
+	if (l == 18) {
+		assert((p[0] & 0xf0) == 0x70);
+	} else if (l == 10) {
+		assert((p[0] & 0xf0) == 0x60);
+	} else if (l == 4) {
+		assert((p[0] & 0x80) || (p[0] & 0xf0) == 0x50);
+	} else if (l == 2) {
+		assert(p[0] < 0x50);
+	} else {
+		assert(l != 2);
+	}
 	(void)fwrite(p, l, 1, utrace_file);
 }
 

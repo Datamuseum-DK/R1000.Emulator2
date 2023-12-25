@@ -19,7 +19,7 @@ void sc_tracef(const char *me, const char *fmt, ...) __printflike(2, 3);
 
 void pit_clock(void);
 
-void microtrace(const void *p, size_t l);
+#include "Infra/microtrace.h"
 
 double sc_now(void);
 

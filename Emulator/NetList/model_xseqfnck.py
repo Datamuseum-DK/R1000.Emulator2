@@ -55,7 +55,7 @@ class XSEQFNCK(PartFactory):
 		|	unsigned tmp = (val >> 7) ^ cur_instr;
 		|	tmp &= 0x3ff;
 		|	output.fner = tmp != 0x3ff;
-		|	output.ferr = !(output.fner && !(PIN_FCHR=> || PIN_ENFU=>));
+		|	output.ferr = !(output.fner && !(PIN_FCHR=> || !PIN_ENFU=>));
 		|''')
 
 def register(part_lib):
