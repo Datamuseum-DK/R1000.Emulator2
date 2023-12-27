@@ -82,13 +82,20 @@ class XCPURAM(PartFactory):
 		|		BUS_OTYP_Z();
 		|	}
 		|	if (PIN_SCLK.posedge()) {
+		|		unsigned adr = (state->areg | state->acnt) << 2;
 		|		if (!PIN_RD=>) {
-		|			state->rdata =
-		|			    vbe32dec(state->ram + ((state->areg | state->acnt) << 2));
+		|			state->rdata = vbe32dec(state->ram + adr);
 		|			if (state->ctx.do_trace & 4) {
 		|				sc_tracef(this->name(), "RD 0x%08x 0x%08x",
 		|				    ((state->areg | state->acnt) << 2), state->rdata);
 		|			}
+		|
+		|			uint8_t utrc[10];
+		|			utrc[0] = UT_RAM_RD;
+		|			utrc[1] = 0;
+		|			vbe32enc(utrc + 2, adr);
+		|			vbe32enc(utrc + 6, state->rdata);
+		|			microtrace(utrc, sizeof utrc);
 		|		}
 		|		if (PIN_WR=>) {
 		|			// XXX: Missing check on DIAG.RAM_EN which is high only 15...115ns
@@ -100,7 +107,15 @@ class XCPURAM(PartFactory):
 		|				sc_tracef(this->name(), "WR 0x%08x 0x%08x",
 		|				    ((state->areg | state->acnt) << 2), data);
 		|			}
-		|			vbe32enc(state->ram + ((state->areg | state->acnt) << 2), data);
+		|
+		|			vbe32enc(state->ram + adr, data);
+		|
+		|			uint8_t utrc[10];
+		|			utrc[0] = UT_RAM_WR;
+		|			utrc[1] = 0;
+		|			vbe32enc(utrc + 2, adr);
+		|			vbe32enc(utrc + 6, data);
+		|			microtrace(utrc, sizeof utrc);
 		|		}
 		|		if (!PIN_LDA=>) {
 		|			uint64_t typ;

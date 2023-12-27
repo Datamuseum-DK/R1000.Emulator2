@@ -79,6 +79,12 @@ class XCODSEG(PartFactory):
 		|		output.cseg = state->retseg;
 		|	}
 		|	if (output.cseg && state->last != output.cseg) {
+		|		uint8_t utrc[4];
+		|		utrc[0] = UT_CSEG;
+		|		utrc[1] = (output.cseg>>16) & 0xff;
+		|		utrc[2] = (output.cseg>>8) & 0xff;
+		|		utrc[3] = output.cseg & 0xff;
+		|		microtrace(utrc, sizeof utrc);
 		|		state->last = output.cseg;
 		|	}
 		|''')

@@ -194,7 +194,15 @@ dump_mailbox(const char *dir, uint32_t mb)
 	uint32_t adr;
 
 	if (mb < 0x10) {
+
 		adr = 0xe600 + 0x20 * mb;
+
+		uint8_t utrc[18];
+		utrc[0] = UT_MAILBOX;
+		utrc[1] = mb;
+		memcpy(utrc + 2, ram_space + adr + 0x10, 0x10);
+		microtrace(utrc, sizeof utrc);
+
 		TraceDump(
 		    1,
 		    ram_space + adr,

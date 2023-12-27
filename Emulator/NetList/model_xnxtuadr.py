@@ -155,6 +155,12 @@ class XNXTUADR(PartFactory):
 		|	}
 		|	if (PIN_Q1not.posedge()) {
 		|
+		|		uint8_t utrc[2];
+		|		utrc[0] = UT_UADR;
+		|		utrc[0] |= (data >> 8) & 0x3f;
+		|		utrc[1] = data & 0xff;
+		|		microtrace(utrc, sizeof utrc);
+		|
 		|		output.nu = data;
 		|		p0 = (data >> 8) & 0x3f;
 		|		p0 = (p0 ^ (p0 >> 4)) & 0xf;

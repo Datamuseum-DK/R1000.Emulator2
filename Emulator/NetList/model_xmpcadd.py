@@ -45,6 +45,7 @@ class XMPCADD(PartFactory):
         file.fmt('''
 		|	unsigned retrn_pc_ofs;
 		|	unsigned last;
+		|	uint8_t lutrc[4];
 		|''')
 
     def doit(self, file):
@@ -107,6 +108,16 @@ class XMPCADD(PartFactory):
 		|	if (coff != state->last) {
 		|		unsigned disp;
 		|		BUS_DISP_READ(disp);
+		|		uint8_t utrc[4];
+		|		utrc[0] = UT_DISP;
+		|		utrc[0] |= (macro_pc_ofs >> 8) ^ 0xff;
+		|		utrc[1] = (macro_pc_ofs & 0xff) ^ 0xff;
+		|		utrc[2] = (disp >> 8) ^ 0xff;
+		|		utrc[3] = (disp & 0xff) ^ 0xff;
+		|		if (memcmp(utrc, state->lutrc, sizeof utrc)) {
+		|			microtrace(utrc, sizeof utrc);
+		|			memcpy(state->lutrc, utrc, sizeof utrc);
+		|		}
 		|		state->last = coff;
 		|	}
 		|	BUS_COFF_WRITE(coff);

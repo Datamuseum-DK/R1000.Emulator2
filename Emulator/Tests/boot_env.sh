@@ -25,6 +25,12 @@ fi
 
 mkdir -p ${rundir}
 
+make -j 7 && make -j 7
+
+# Enable kernel debugger
+# cli dfs patch STANDARD.M200_CONFIG 0xbc 0x52
+# cli dfs patch STANDARD.M200_CONFIG 0xb9 0x30
+
 sc_boards ioc fiu mem0 seq typ val
 
 cli 'sc trace DI*PROC 0x14'

@@ -43,8 +43,14 @@ class XCACHE(PartFactory):
 
     ''' MEM32 CACHE '''
 
+    def extra(self, file):
+        file.include("Infra/vend.h")
+        super().extra(file)
+
     def state(self, file):
         file.fmt('''
+		|	bool utrace_set;
+		|	enum microtrace utrace;
 		|	uint64_t ram[1<<BUS_A_WIDTH];
 		|	uint8_t rame[1<<BUS_A_WIDTH];
 		|	uint8_t par[1<<BUS_A_WIDTH];
@@ -61,6 +67,7 @@ class XCACHE(PartFactory):
 		|	bool k12, k13;
 		|''')
 
+
     def sensitive(self):
         yield "PIN_WE.pos()"
         yield "PIN_EWE.pos()"
@@ -75,6 +82,16 @@ class XCACHE(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|	if (!state->utrace_set) {
+		|		if (strstr(this->name(), ".ACACHE") != NULL)
+		|			state->utrace = UT_ATAGMEM;
+		|		else if (strstr(this->name(), ".BCACHE") != NULL)
+		|			state->utrace = UT_BTAGMEM;
+		|		else
+		|			std::cerr << "PPP " << this->name() << "  " << std::hex << state->utrace << "\\n";
+		|		assert (state->utrace > 0);
+		|		state->utrace_set = true;
+		|	}
 		|	TRACE(
 		|		<< " we^ " << PIN_WE.posedge()
 		|		<< " ewe^ " << PIN_EWE.posedge()
@@ -236,11 +253,15 @@ class XCACHE(PartFactory):
 		|	if (!PIN_OE=> && PIN_WE.posedge()) {
 		|		state->ram[adr] = vd & ~(0xfeULL << 7);	// VAL bits
 		|		state->par[adr] = pd;
-		|		if (state->ctx.do_trace & 2) {
-		|			char buf[128];
-		|			snprintf(buf, sizeof buf, "W %x %jx %jx %x", adr, (uintmax_t)state->ram[adr], (uintmax_t)vd, pd);
-		|			sysc_trace(this->name(), buf);
-		|		}
+		|
+		|		assert(state->utrace > 0);
+		|		uint8_t utrc[18];
+		|		memset(utrc, 0, sizeof utrc);
+		|		utrc[0] = state->utrace;
+		|		utrc[1] = state->par[adr];
+		|		vbe32enc(utrc + 2, adr);
+		|		vbe64enc(utrc + 6, state->ram[adr]);
+		|		microtrace(utrc, sizeof utrc);
 		|	}
 		|
 		|	if (!PIN_ELCE=> && PIN_EWE.posedge()) {

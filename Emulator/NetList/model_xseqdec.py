@@ -279,6 +279,12 @@ class XSEQDEC(PartFactory):
 		|
 		|	output.dsp = cur_instr;
 		|	if (state->prev_dsp != cur_instr) {
+		|		uint8_t utrc[4];
+		|		utrc[0] = UT_CURINS;
+		|		utrc[1] = 0;
+		|		utrc[2] = cur_instr >> 8;
+		|		utrc[3] = cur_instr;
+		|		microtrace(utrc, sizeof utrc);
 		|		state->prev_dsp = cur_instr;
 		|	}
 		|

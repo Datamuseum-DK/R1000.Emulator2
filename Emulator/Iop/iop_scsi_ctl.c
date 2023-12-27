@@ -166,7 +166,15 @@ scsi_thread(void *priv)
 			    sp->regs[0x6], sp->regs[0x7], sp->regs[0x8]
 			);
 		}
+
 		sd = sp->dev[id];
+
+		uint8_t utrc[10];
+		utrc[0] = sp->utrace;
+		utrc[1] = id;
+		memcpy(utrc + 2, sp->regs + 3, 8);
+		microtrace(utrc, sizeof utrc);
+
 		if (sd == NULL) {
 			trace_scsi_ctl(sp, "No Device at ID");
 			sp->regs[0x17] = 0x42;
@@ -288,6 +296,7 @@ void
 ioc_scsi_d_init(void)
 {
 	scsi_d->name = "SCSI_D";
+	scsi_d->utrace = UT_SCSI_D;
 	scsi_d->irq_vector = &IRQ_SCSI_D;
 	AZ(pthread_mutex_init(&scsi_d->mtx, NULL));
 	AZ(pthread_cond_init(&scsi_d->cond, NULL));
@@ -316,6 +325,7 @@ void
 ioc_scsi_t_init(void)
 {
 	scsi_t->name = "SCSI_T";
+	scsi_t->utrace = UT_SCSI_T;
 	scsi_t->irq_vector = &IRQ_SCSI_T;
 	AZ(pthread_mutex_init(&scsi_t->mtx, NULL));
 	AZ(pthread_cond_init(&scsi_t->cond, NULL));

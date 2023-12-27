@@ -95,6 +95,12 @@ class XIOP(PartFactory):
 		|		BUS_ITYP_READ(ityp);
 		|		state->reqfifo[state->reqwrp++] = ityp;
 		|		state->reqwrp &= 0x3ff;
+		|
+		|		uint8_t utrc[2];
+		|		utrc[0] = UT_REQ_FIFO_WR;
+		|		utrc[1] = ityp;
+		|		microtrace(utrc, sizeof utrc);
+		|
 		|		TRACE(
 		|			<< "FIFO REQ " << std::hex << ityp
 		|			<< " wr " << state->reqwrp
@@ -105,6 +111,12 @@ class XIOP(PartFactory):
 		|
 		|	if (PIN_OTYPOE.negedge()) {
 		|		TRACE(<< "OE FIFO RSP " << std::hex << state->rspfifo[state->rsprdp]);
+		|
+		|		uint8_t utrc[2];
+		|		utrc[0] = UT_RESP_FIFO_RD;
+		|		utrc[1] = state->rspfifo[state->rsprdp];
+		|		microtrace(utrc, sizeof utrc);
+		|
 		|		BUS_OTYP_WRITE(state->rspfifo[state->rsprdp]);
 		|	}
 		|	if (PIN_OTYPOE.posedge()) {
@@ -174,6 +186,12 @@ class XIOP(PartFactory):
 		|		TRACE("WR FIFO CPU RSP " << std::hex << state->xact->data);
 		|		state->rspfifo[state->rspwrp++] = state->xact->data;
 		|		state->rspwrp &= 0x3ff;
+		|
+		|		uint8_t utrc[2];
+		|		utrc[0] = UT_RESP_FIFO_WR;
+		|		utrc[1] = state->xact->data;
+		|		microtrace(utrc, sizeof utrc);
+		|
 		|		TRACE(
 		|			"WR FIFO RSP " << std::hex << state->xact->data
 		|			<< " wr " << state->rspwrp
@@ -194,6 +212,12 @@ class XIOP(PartFactory):
 		|				<< " rd " << state->reqrdp
 		|		);
 		|		PIN_REQEMP = state->reqwrp != state->reqrdp;
+		|
+		|		uint8_t utrc[2];
+		|		utrc[0] = UT_REQ_FIFO_RD;
+		|		utrc[1] = state->reqreg;
+		|		microtrace(utrc, sizeof utrc);
+		|
 		|		ioc_sc_bus_done(&state->xact);
 		|		return;
 		|	}

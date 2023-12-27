@@ -90,6 +90,10 @@ thr_console_rx(void *priv)
 			AZ(pthread_cond_wait(&cons_cond, &uart_mtx));
 		cons->rxhold = buf[0];
 		cons->status |= 0x02;
+		uint8_t utrc[2];
+		utrc[0] = UT_CONS_RX;
+		utrc[1] = buf[0];
+		microtrace(utrc, sizeof utrc);
 		irq_raise(&IRQ_CONSOLE_RXRDY);
 		AZ(pthread_mutex_unlock(&uart_mtx));
 		callout_sleep((1000000000/19200) * 10);
@@ -126,6 +130,10 @@ cons_txshift_done(void * priv)
 				(void)vis(visbuf, cons->txhold, VIS_WHITE | VIS_CSTYLE, '0');
 				Trace(trace_console, "CONSOLE TX %s", visbuf);
 				elastic_put(cons->ep, &cons->txhold, 1);
+				uint8_t utrc[2];
+				utrc[0] = UT_CONS_TX;
+				utrc[1] = cons->txhold;
+				microtrace(utrc, sizeof utrc);
 			}
 			cons->txshift = cons->txhold;
 			cons->txshiftfull = 1;
