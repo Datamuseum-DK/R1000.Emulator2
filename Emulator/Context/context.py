@@ -75,14 +75,15 @@ class Context():
         buf = file.read(128)
         if len(buf) != 128:
             raise EOFError
-        hdr = struct.unpack("<LLQLL104s", buf)
-        if not hdr[3]:
+        hdr = struct.unpack("<LLQqLL96s", buf)
+        if not hdr[4]:
             raise EOFError
-        if hdr[3] != 0x6e706c8e:
+        if hdr[4] != 0x6e706c8e:
             raise ValueError
-        self.length = hdr[4]
+        self.length = hdr[5]
         self.activations = hdr[2]
-        self.ident = hdr[5].rstrip(b'\x00').decode("utf-8")
+        self.wastage = hdr[3]
+        self.ident = hdr[6].rstrip(b'\x00').decode("utf-8")
         self.body = file.read(self.length - 128)
         return self
 
@@ -127,7 +128,7 @@ def main():
         if ucycles is None and "CLKGEN" in ctx.ident:
             ucycles = i / 14
         nact += i
-        lines.append((i, str(ctx)))
+        lines.append((i, ctx.wastage, str(ctx)))
         j = "page " + ctx.ident.split(".")[1]
         summ[j] = summ.get(j, 0) + i
         j = "board " + ctx.ident.split(".")[1].split('_')[0]
@@ -135,20 +136,29 @@ def main():
 
 
     for i, j in summ.items():
-        lines.append((j, i))
+        lines.append((j, 0, i))
 
-    for i, ctx in sorted(lines):
-        if i:
+    wasted = 0
+    for act, wastage, ctx in sorted(lines):
+        wastage /= ucycles
+        if wastage > .1:
+            wasted += wastage
+            i = "%12.3f" % wastage
+        else:
+            i = " " * 11 + "-"
+        if act:
             print(
-                "%8.3f" % (i / ucycles),
-                "%12d" % i,
-                "%7.4f" % (i / nact),
+                "%8.3f" % (act / ucycles),
+                "%12d" % act,
+                "%7.4f" % (act / nact),
+                i,
                 ctx
             )
     print(
         "%8.3f" % (nact / ucycles),
         "%12d" % nact,
         "%7.4f" % (nact / nact),
+        "%12.3f" % wasted,
         "Total"
     )
     print("UCYCLES %.1f" % ucycles)

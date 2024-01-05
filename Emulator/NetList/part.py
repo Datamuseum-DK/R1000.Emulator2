@@ -33,7 +33,8 @@
    =======================================
 '''
 
-from pin import PinSexp
+from pin import Pin, PinSexp
+from node import Node
 
 import util
 
@@ -192,6 +193,21 @@ class PartModel(Part):
         if ident not in part_lib:
             part_lib.add_part(ident, self.create(ident))
         comp.part = part_lib[ident]
+
+class PartModelDQ(PartModel):
+    ''' Split DQ* pins in D* and Q* '''
+
+    def assign(self, comp, part_lib):
+
+        for node in comp:
+            if node.pin.name[:2] == 'DQ':
+                pn = node.pin.name[2:]
+                new_pin = Pin("D" + pn, "D" + pn, "input")
+                Node(node.net, comp, new_pin)
+                new_pin = Pin("Q" + pn, "Q" + pn, "tri_state")
+                Node(node.net, comp, new_pin)
+                node.remove()
+
 
 class PartFactory(Part):
 
@@ -462,10 +478,12 @@ class PartFactory(Part):
 		|	if(memcmp(&output, &state->output, sizeof(output))) {
 		|		state->ctx.job |= 1;
 		|	        state->output = output;
+		|		state->ctx.wastage--;
 		|	}
 		|	if (state->ctx.job) {
 		|		next_trigger(5, sc_core::SC_NS);
 		|	} else {
+		|		state->ctx.wastage++;
 		|''')
 
         self.doit_idle(file)
@@ -509,7 +527,7 @@ class PartFactory(Part):
             if node.pin.pinbus:
                 lname = node.pin.pinbus.name.lower()
             file.write('\t\t\tif (output.z_' + lname + ') {\n')
-            file.write('\t\t\t\ttrcs << " ' + lname + ' z ";\n')
+            file.write('\t\t\t\ttrcs << " ' + lname + ' z";\n')
             file.write('\t\t\t} else {\n')
             file.write('\t\t\t\ttrcs << " ' + lname + ' " << output.' + lname + ';\n')
             file.write('\t\t\t}\n')
