@@ -100,8 +100,7 @@ class XCSACMP(PartFactory):
 		|	in_range = (!state->pdt && name_match) || (dif & 0xffff0);
 		|	output.inrg = in_range;
 		|
-		|	unsigned hofs = 0xf + state->nve - (dif & 0xf);
-		|	output.hofs = hofs;
+		|	output.hofs = 0xf + state->nve - (dif & 0xf);
 		|
 		|	output.chit = !(
 		|		co &&

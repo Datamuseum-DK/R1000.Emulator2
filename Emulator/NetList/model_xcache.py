@@ -49,11 +49,11 @@ class XCACHE(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	bool utrace_set;
-		|	enum microtrace utrace;
 		|	uint64_t ram[1<<BUS_A_WIDTH];
 		|	uint8_t rame[1<<BUS_A_WIDTH];
 		|	uint8_t par[1<<BUS_A_WIDTH];
+		|	bool utrace_set;
+		|	enum microtrace utrace;
 		|	bool zvq;
 		|	uint64_t vq;
 		|	bool zpq;

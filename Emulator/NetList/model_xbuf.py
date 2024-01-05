@@ -42,85 +42,34 @@ class Xbuf(PartFactory):
 
     ''' F24[04] Octal buffers (3-state) '''
 
-    def state(self, file):
-        ''' Extra state variable '''
-
-        file.write("\tuint64_t data;\n")
-        file.write("\tint job;\n")
-
-    def init(self, file):
-        ''' Extra initialization '''
-
-        file.fmt('''
-		|	state->job = -1;
-		|''')
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
-        file.fmt('''
-		|	uint64_t tmp;
-		|
-		|	if (state->ctx.do_trace & 2) {
-		|		TRACE(
-		|			<< " job " << state->job
+        if self.name[-2:] == "_I":
+            file.fmt('''
+		|	uint64_t mask = BUS_I_MASK;
+		|''')
+        else:
+            file.fmt('''
+		|	uint64_t mask = 0;
 		|''')
 
         if "OE" in self.comp:
             file.fmt('''
-		|			<< " oe " << PIN_OE?
-		|''')
-
-        file.fmt('''
-		|			<< " i " << BUS_I_TRACE()
-		|		);
-		|	}
-		|	if (state->job > 0) {
-		|		tmp = state->data;
-		|''')
-
-        if self.name[-2:] == "_I":
-            file.fmt('''
-		|		tmp ^= BUS_I_MASK;
-		|''')
-
-        file.fmt('''
-		|		TRACE(<< " out " << std::hex << tmp);
-		|		BUS_Y_WRITE(tmp);
-		|		state->job = 0;
-		|''')
-
-        if "OE" not in self.comp or self.comp.nodes["OE"].net.is_pd():
-            file.fmt('''
-		|	}
-		|
-		|	BUS_I_READ(tmp);
-		|	if (tmp != state->data || state->job < 0) {
-		|		state->data = tmp;
-		|		state->job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
+		|	output.z_y = PIN_OE=>;
+		|	if (!output.z_y) {
+		|		BUS_I_READ(output.y);
+		|		output.y ^= mask;
+		|	} else {
+		|		next_trigger(PIN_OE.negedge_event());
 		|	}
 		|''')
         else:
             file.fmt('''
-		|	} else if (state->job < 0) {
-		|		BUS_Y_Z();
-		|	}
-		|
-		|	if (PIN_OE=>) {
-		|		BUS_Y_Z();
-		|		state->job = -1;
-		|		next_trigger(PIN_OE.negedge_event());
-		|	} else {
-		|		BUS_I_READ(tmp);
-		|		if (tmp != state->data || state->job < 0) {
-		|			state->data = tmp;
-		|			state->job = 1;
-		|			next_trigger(5, sc_core::SC_NS);
-		|		}
-		|	}
+		|	BUS_I_READ(output.y);
+		|	output.y ^= mask;
 		|''')
 
 class ModelXbuf(PartModel):
@@ -237,9 +186,9 @@ def register(part_lib):
     part_lib.add_part("XBUF21", ModelXbuf(False))
     part_lib.add_part("XBUF24", ModelXbuf(False))
     part_lib.add_part("XBUF32", ModelXbuf(False))
-    part_lib.add_part("XFBUF32", ModelXbuf(False))
+    #part_lib.add_part("XFBUF32", ModelXbuf(False))
     part_lib.add_part("XBUF48", ModelXbuf(False))
     part_lib.add_part("XBUF56", ModelXbuf(False))
     part_lib.add_part("XBUF64", ModelXbuf(False))
-    part_lib.add_part("BUF64", ModelXbuf(False))
-    part_lib.add_part("XBUF67", ModelXbuf(False))
+    #part_lib.add_part("BUF64", ModelXbuf(False))
+    #part_lib.add_part("XBUF67", ModelXbuf(False))

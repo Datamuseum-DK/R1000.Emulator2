@@ -41,18 +41,30 @@ class Xreg(PartFactory):
 
     ''' F374 Octal D-Type Flip-Flop with 3-STATE Outputs '''
 
+    autopin = True
+
     def state(self, file):
         ''' Extra state variable '''
 
-        file.write("\tuint64_t data;\n")
-        file.write("\tint job;\n")
-
-    def init(self, file):
-        ''' Extra initialization '''
-
         file.fmt('''
-		|	state->job = -3;
+		|	uint64_t data;
+		|	bool running;
+		|	unsigned idle;
 		|''')
+
+    def private(self):
+        ''' private variables '''
+        if 'OE' in self.comp:
+            yield from self.event_or(
+                "idle_event",
+                "BUS_D",
+                "PIN_OE",
+            )
+        else:
+            yield from self.event_or(
+                "idle_event",
+                "BUS_D",
+            )
 
     def sensitive(self):
         ''' sensitivity list '''
@@ -62,90 +74,51 @@ class Xreg(PartFactory):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
-
-        file.fmt('''
-		|
-		|	if (state->job == -3) {
-		|		BUS_Q_WRITE(0ULL);
-		|		state->job = -1;
-		|	}
-		|
-		|	if (state->ctx.do_trace & 2) {
-		|		TRACE(
-		|			<< " job " << state->job
-		|			<< " clk " << PIN_CLK.posedge()
-		|''')
-        if 'OE' in self.comp:
-            file.fmt('''
-		|			<< " oe " << PIN_OE?
-		|''')
-
-        file.fmt('''
-		|			<< " in " << BUS_D_TRACE()
-		|			<< " reg " << std::hex << state->data
-		|		);
-		|	}
-		|
-		|	if (state->job > 0) {
-		|		uint64_t tmp = state->data;
-		|''')
-
         if self.name[-2:] == "_I":
             file.fmt('''
-		|		tmp ^= BUS_Q_MASK;
+		|	uint64_t mask = BUS_D_MASK;
 		|''')
-
-        file.fmt('''
-		|		TRACE(<< " out " << std::hex << tmp);
-		|		BUS_Q_WRITE(tmp);
-		|		state->job = 0;
-		|''')
-
-        if 'OE' in self.comp:
+        else:
             file.fmt('''
-		|	} else if (state->job == -1) {
-		|		BUS_Q_Z();
-		|		state->job = -2;
+		|	uint64_t mask = 0;
+		|''')
+
+        if 'OE' not in self.comp:
+            file.fmt('''
+		|	if (!state->running) {
+		|		state->running = true;
+		|		BUS_Q_WRITE(0);
+		|	}
 		|''')
 
         file.fmt('''
-		|	}
-		|
 		|	if (PIN_CLK.posedge()) {
-		|		uint64_t tmp = 0;
-		|		BUS_D_READ(tmp);
+		|		BUS_D_READ(state->data);
+		|	}
 		|''')
 
         if 'OE' in self.comp:
             file.fmt('''
-		|		if (tmp != state->data) {
-		|			state->data = tmp;
-		|			state->job = -1;
-		|		}
-		|	}
-		|
-		|	if (IS_L(PIN_OE)) {
-		|		if (state->job < 0) {
-		|			state->job = 1;
-		|			next_trigger(5, sc_core::SC_NS);
-		|		}
-		|	} else if (state->job != -2) {
-		|		state->job = -1;
-		|		next_trigger(5, sc_core::SC_NS);
+		|	output.z_q = PIN_OE=>;
+		|	if (!output.z_q) {
+		|		output.q = state->data ^ mask;
 		|	}
 		|''')
         else:
             file.fmt('''
-		|		if (tmp != state->data) {
-		|			state->data = tmp;
-		|			state->job = 1;
-		|			next_trigger(5, sc_core::SC_NS);
+		|	output.q = state->data ^ mask;
+		|''')
+
+    def doit_idle(self, file):
+        file.fmt('''
+		|	if (++state->idle > 100) {
+		|		state->idle = 0;
+		|		BUS_D_READ(mask);
+		|		if (mask == state->data) {
+		|			next_trigger(idle_event);
 		|		}
 		|	}
 		|''')
-
 
 class ModelXreg(PartModel):
     ''' Xreg registers '''

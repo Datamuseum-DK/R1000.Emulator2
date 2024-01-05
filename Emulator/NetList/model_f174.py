@@ -35,27 +35,36 @@
    Ref: Fairchild DS009489 April 1988 Revised September 2000
 '''
 
-
 from part import PartModel, PartFactory
 
 class F174(PartFactory):
 
-    ''' F174 9-Bit Parity Generator Checker '''
+    ''' F174 Hex D-Type Flip-Flop with Master Reset '''
+
+    autopin = True
 
     def state(self, file):
+        ''' Extra state variable '''
         file.fmt('''
-		|	unsigned dreg;
-		|	int job;
+		|       unsigned idle;
 		|''')
 
-    def init(self, file):
-        file.fmt('''
-		|	state->job = 1;
-		|''')
+    def private(self):
+        ''' private variables '''
+        if self.comp.nodes["CLR"].net.is_pu():
+            yield from self.event_or(
+                "idle_event",
+                "BUS_D",
+            )
+        else:
+            yield from self.event_or(
+                "idle_event",
+                "PIN_CLR",
+                "BUS_D",
+            )
 
     def sensitive(self):
-        if self.comp["CLK"].net.is_const():
-            return
+        assert not self.comp["CLK"].net.is_const()
         yield "PIN_CLK.pos()"
         if not self.comp.nodes["CLR"].net.is_pu():
             yield "PIN_CLR"
@@ -63,42 +72,25 @@ class F174(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        if self.comp["CLK"].net.is_const():
-            return
-        super().doit(file)
-
         file.fmt('''
-		|
-		|	const char *what = "";
-		|	unsigned nxt;
-		|
-		|	TRACE(
-		|	    << what
-		|	    << " clr_" << PIN_CLR?
-		|	    << " clk " << PIN_CLK?
-		|	    << " d " << BUS_D_TRACE()
-		|	    << " | " << std::hex << state->dreg
-		|	);
-		|	if (state->job) {
-		|		BUS_Q_WRITE(state->dreg);
-		|		state->job = 0;
-		|	}
 		|	if (!PIN_CLR=>) {
-		|		nxt = 0;
-		|		what = " CLR ";
+		|		output.q = 0;
 		|	} else if (PIN_CLK.posedge()) {
-		|		BUS_D_READ(nxt);
-		|		what = " CLK ";
-		|	} else {
-		|		nxt = state->dreg;
-		|		what = " ??? ";
-		|	}
-		|	if (nxt != state->dreg) {
-		|		state->job = 1;
-		|		state->dreg = nxt;
-		|		next_trigger(5, sc_core::SC_NS);
+		|		BUS_D_READ(output.q);
 		|	}
 		|''')
+
+    def doit_idle(self, file):
+        file.fmt('''
+		|       if (++state->idle > 100) {
+		|               state->idle = 0;
+		|		unsigned tmp;
+		|		BUS_D_READ(tmp);
+		|		if (tmp == output.q)
+		|               	next_trigger(idle_event);
+		|       }
+		|''')
+
 
 def register(part_lib):
     ''' Register component model '''

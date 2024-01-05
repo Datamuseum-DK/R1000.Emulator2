@@ -54,8 +54,6 @@ class XM30(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|
 		|	if (state->ctx.job & 1) {
