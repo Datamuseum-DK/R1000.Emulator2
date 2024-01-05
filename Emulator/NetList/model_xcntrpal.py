@@ -39,10 +39,10 @@ from part import PartModel, PartFactory
 class XCNTRPAL(PartFactory):
     ''' MEM32 CNTRPAL '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
-		|	bool cnt8_en;
-		|	bool d_cnt_ovf;
 		|	unsigned cnt1;
 		|	unsigned cnt2;
 		|''')
@@ -51,31 +51,12 @@ class XCNTRPAL(PartFactory):
         yield "PIN_CLK.pos()"
         yield "PIN_RFSH"
         yield "PIN_OVFI"
-        yield "BUS_DCNT_SENSITIVE()"
+        yield "BUS_DCNT"
 
     def doit(self, file):
 
-        super().doit(file)
-
         file.fmt('''
 		|
-		|	if (state->ctx.job) {
-		|		TRACE(
-		|		    << "clk " << PIN_CLK?
-		|		    << " rfsh " << PIN_RFSH?
-		|		    << " diag " << BUS_DIAG_TRACE()
-		|		    << " dcnt " << BUS_DCNT_TRACE()
-		|		    << " ovfi " << PIN_OVFI?
-		|		    << std::hex
-		|		    << " c1 "  << state->cnt1
-		|		    << " c2 "  << state->cnt2
-		|		    << " ovf " << state->d_cnt_ovf
-		|		    << " en " << state->cnt8_en
-		|		);
-		|		PIN_OVFO<=(state->d_cnt_ovf);
-		|		BUS_TRA_WRITE(state->cnt1);
-		|		PIN_CEN<=(state->cnt8_en);
-		|	}
 		|	bool refresh = PIN_RFSH=>;
 		|	unsigned diag;
 		|	BUS_DIAG_READ(diag);
@@ -87,25 +68,16 @@ class XCNTRPAL(PartFactory):
 		|
 		|	if (PIN_CLK.posedge()) {
 		|		if (!refresh) {
-		|			int out_traddr0 =
-		|			    (  (state->cnt2 & 1)  &&   (state->cnt1 & 0x4) ) ||
-		|			    (  (state->cnt1 & 0x4)  && (!(state->cnt1 & 0x1))) ||
-		|			    ((!(state->cnt2 & 1)) && (!(state->cnt1 & 0x4)) &&   (state->cnt1 & 0x1) )
-		|			;
-		|			int out_traddr1 =
-		|			    (  (state->cnt2 & 1)  &&   (state->cnt1 & 0x4) ) ||
-		|			    (  (state->cnt1 & 0x4)  && (!(state->cnt1 & 0x1))) ||
-		|			    ((!(state->cnt2 & 1)) && (!(state->cnt1 & 0x4)) &&   (state->cnt1 & 0x1) )
-		|			;
-		|			int out_traddr2 =
-		|			    (  (state->cnt2 & 1)  &&   (state->cnt1 & 0x1) ) ||
-		|			    ((!(state->cnt2 & 1)) && (!(state->cnt1 & 0x1)))
-		|			;
-		|			int out_traddr3 =
-		|			    (  (state->cnt2 & 1)  &&   (state->cnt1 & 0x1) ) ||
-		|			    ((!(state->cnt2 & 1)) && (!(state->cnt1 & 0x1)))
-		|			;
-		|			cnt1 = out_traddr0 * 8 + out_traddr1 * 4 + out_traddr2 * 2 + out_traddr3;
+		|			if (cnt2 & 1) {
+		|			} else if (cnt1 == 0x0) {
+		|				cnt1 = 0x3;
+		|			} else if (cnt1 == 0x3) {
+		|				cnt1 = 0xc;
+		|			} else if (cnt1 == 0xc) {
+		|				cnt1 = 0xf;
+		|			} else {
+		|				cnt1 = 0x0;
+		|			}
 		|			cnt2 ^= 0x1;
 		|		} else {
 		|			switch (dcnt) {
@@ -138,32 +110,24 @@ class XCNTRPAL(PartFactory):
 		|				break;
 		|			}
 		|		}
+		|		state->cnt1 = cnt1;
 		|		state->cnt2 = cnt2;
+		|		output.tra = cnt1;
 		|	}
-		|	bool d_cnt_ovf =
+		|	output.ovfo =
 		|	    !(
 		|		((dcnt == 0x05) && (!cnt8_ovf)) ||
 		|		(((dcnt & 0x1d) == 0x05) && (!cnt8_ovf) &&   cnt2 == 0xf ) ||
 		|		((dcnt == 0x06) &&  cnt2 == 0xf ) ||
 		|		(((dcnt & 0x1e) == 0x04) && (!cnt8_ovf) &&   cnt1 == 0xf )
 		|	    );
-		|	bool cnt8_en =
+		|	output.cen =
 		|	    !(
 		|		((!refresh) && (!(cnt2 & 1)) && ((cnt1) & 5) == 5) ||
 		|		(  refresh  && ((dcnt & 0x1d) == 0x05)) ||
 		|		(  refresh  && ((dcnt & 0x1e) == 0x04))
 		|	    );
 		|
-		|	if (
-		|	    (d_cnt_ovf != state->d_cnt_ovf) ||
-		|	    (cnt1 != state->cnt1) ||
-		|	    (cnt8_en != state->cnt8_en)) {
-		|		state->d_cnt_ovf = d_cnt_ovf;
-		|		state->cnt1 = cnt1;
-		|		state->cnt8_en = cnt8_en;
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
-		|	}
 		|''')
 
 
