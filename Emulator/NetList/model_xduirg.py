@@ -34,78 +34,32 @@
 
 '''
 
-
 from part import PartModel, PartFactory
 
-class PAxxx(PartFactory):
+class XDUIRG(PartFactory):
 
     ''' 4096 (512 Words by 8 bits) PROM '''
 
     autopin = True
 
-    def state(self, file):
-        ''' Extra state variable '''
-
-        file.fmt('''
-		|	uint8_t prom[512];
-		|	bool asap;
-		|''')
-
-    def init(self, file):
-        ''' Extra initialization '''
-
-        file.fmt('''
-		|	load_programmable(this->name(),
-		|	    state->prom, sizeof state->prom, arg);
-		|	state->asap = false;
-		|	if (strstr(this->name(), "MMPRM3"))
-		|		state->asap = true;
-		|	if (state->asap) {
-		|		std::cerr << "ASAP " << arg << " " << this->name() << "\\n";
-		|	}
-		|''')
-
-    def doit(self, file):
-        ''' The meat of the doit() function '''
-
-        file.fmt('''
-		|	unsigned adr = 0;
-		|
-		|	BUS_A_READ(adr);
-		|	output.y = state->prom[adr];
-		|	if (state->asap)
-		|		BUS_Y_WRITE(output.y);
-		|''')
-
-class ModelPAxxx(PartModel):
-    ''' PAxxx Rom '''
-
-    def assign(self, comp, part_lib):
-        assert comp.nodes["OE"].net.is_pd()
-        del comp.nodes["OE"]
-        for node in comp:
-            if node.pin.name[0] == "Y":
-                node.pin.set_role("output")
-        super().assign(comp, part_lib)
-
-class XPAxxxL(PartFactory):
-
-    ''' 4096 (512 Words by 8 bits) PROM '''
-
-    autopin = True
-
-    def state(self, file):
-        ''' Extra state variable '''
-
-        file.fmt('''
-		|	uint8_t prom[512];
-		|''')
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+                "adr_event",
+                "BUS_A",
+            )
 
     def sensitive(self):
         yield "PIN_CLK.pos()"
 
+    def state(self, file):
+        ''' Extra state variable '''
+
+        file.fmt('''
+		|	uint8_t prom[512];
+		|''')
+
     def init(self, file):
-        ''' Extra initialization '''
 
         file.fmt('''
 		|	load_programmable(this->name(),
@@ -117,13 +71,22 @@ class XPAxxxL(PartFactory):
 
         file.fmt('''
 		|	unsigned adr = 0;
-		|
 		|	BUS_A_READ(adr);
-		|	output.y = state->prom[adr];
+		|	adr <<= 1;
+		|	adr |= PIN_H1=>;
+		|	if (PIN_CLK.posedge()) {
+		|		output.d = state->prom[adr];
+		|	}
+		|''')
+
+    def doit_idle(self, file):
+        file.fmt('''
+		|	if (output.d == state->prom[adr] &&
+		|	    output.d == state->prom[adr ^ 1])
+		|		next_trigger(adr_event);
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("PAxxx", ModelPAxxx("PAXXX", PAxxx))
-    part_lib.add_part("XPAXXXL", PartModel("PAXXXL", XPAxxxL))
+    part_lib.add_part("XDUIRG", PartModel("XDUIRG", XDUIRG))
