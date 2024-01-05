@@ -75,17 +75,13 @@ class F175(PartFactory):
         file.fmt('''
 		|	if (!PIN_CLR=>) {
 		|		output.q = 0;
-		|		output.q0not = true;
-		|		output.q1not = true;
-		|		output.q2not = true;
-		|		output.q3not = true;
 		|	} else if (PIN_CLK.posedge()) {
 		|		BUS_D_READ(output.q);
-		|		output.q0not = !((output.q >> 3) & 1);
-		|		output.q1not = !((output.q >> 2) & 1);
-		|		output.q2not = !((output.q >> 1) & 1);
-		|		output.q3not = !((output.q >> 0) & 1);
 		|	}
+		|	output.q0not = !(output.q & 8);
+		|	output.q1not = !(output.q & 4);
+		|	output.q2not = !(output.q & 2);
+		|	output.q3not = !(output.q & 1);
 		|''')
 
     def doit_idle(self, file):
