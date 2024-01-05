@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XTVBSIDE(PartFactory):
     ''' TYP/VAL B-side of RF '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t bram[1 << BUS_A_WIDTH];
@@ -46,13 +48,11 @@ class XTVBSIDE(PartFactory):
 		|	uint64_t b;
 		|''')
 
-    def xxsensitive(self):
-        yield "PIN_FIU_CLK.pos()"
-        yield "PIN_LOCAL_CLK.pos()"
-        yield "PIN_Q1not.pos()"
-        yield "PIN_DV_U"
-        yield "PIN_BAD_HINT"
-        yield "PIN_U_PEND"
+    def sensitive(self):
+        yield "BUS_BUS"
+        yield "BUS_C"
+        yield "PIN_BLE.pos()"
+        yield "PIN_RFWE.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -60,10 +60,6 @@ class XTVBSIDE(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		BUS_B_WRITE(state->b);
-		|	}
 		|	uint64_t cbuf, b = 0, bus;
 		|	unsigned adr;
 		|
@@ -98,15 +94,7 @@ class XTVBSIDE(PartFactory):
 		|	if (!PIN_BROE7=>) {
 		|		b |= bus & 0xffULL;
 		|	}
-		|#if 0
-		|	if (b != state->b) {
-		|		state->ctx.job = 1;
-		|		state->b = b;
-		|		next_trigger(5, sc_core::SC_NS);
-		|	}
-		|#else
-		|	BUS_B_WRITE(b);
-		|#endif
+		|	output.b = b;
 		|''')
 
 def register(part_lib):

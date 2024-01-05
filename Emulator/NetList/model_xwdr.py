@@ -144,23 +144,6 @@ class XWDR(PartFactory):
 		|	} else {
 		|		output.z_diag = true;
 		|	}
-		|	if (s0 || s1 || !PIN_SCANWDR=>) {
-		|		TRACE(
-		|			<< " sclken " << PIN_SCLKEN?
-		|			<< " den " << PIN_DIAGWDREN?
-		|			<< " ds0 " << PIN_DIAGWDRS0?
-		|			<< " ds1 " << PIN_DIAGWDRS1?
-		|			<< " swdr " << PIN_SCANWDR?
-		|			<< " diag " << BUS_DIAG_TRACE()
-		|			<< " db " << BUS_DB_TRACE()
-		|			<< " dp " << BUS_DP_TRACE()
-		|			<< " s0 " << s0
-		|			<< " s1 " << s1
-		|			<< " - b " << std::hex << state->data
-		|			<< " p " << std::hex << state->parity
-		|			<< " d " << std::hex << diag
-		|		);
-		|	}
 		|''')
 
 def register(part_lib):
