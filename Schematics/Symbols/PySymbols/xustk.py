@@ -26,13 +26,22 @@ class XUSTK(FChip):
 
         self.sig_left(ChipSig("-->+", "CURU", 0, 13))
 
-        self.sig_left(ChipSig("-->+", "FIU", 0, 15))
         self.sig_left(ChipSig("-->+", "BRNCH", 0, 13))
+
+        self.sig_left(ChipSig("-->+", "QVOE"))
+        self.sig_left(ChipSig("===+", "QV", 0, 15))
+        self.sig_left(ChipSig("-->+", "QPOE"))
+        self.sig_left(ChipSig("===+", "DQP", 0, 7))
+        self.sig_left(ChipSig("-->+", "LCLK"))
+        self.sig_left(ChipSig("<--+", "PERR"))
         
         self.sig_right(ChipSig("+-->", "TOPU", 0, 15))
         self.sig_right(ChipSig("+<--", "CSR"))
         self.sig_right(ChipSig("+<--", "STOP"))
         self.sig_right(ChipSig("+-->", "SSZ"))
+
+        self.sig_right(ChipSig("+<--", "QFOE"))
+        self.sig_right(ChipSig("+===", "DQF", 0, 63))
 
         self.finish()
 

@@ -34,7 +34,7 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XUSTK(PartFactory):
     ''' Micro Stack '''
@@ -51,6 +51,9 @@ class XUSTK(PartFactory):
     def sensitive(self):
         yield "PIN_Q2.pos()"
         yield "PIN_Q4.pos()"
+        yield "PIN_QFOE"
+        yield "PIN_QVOE"
+        yield "PIN_QPOE"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -74,7 +77,8 @@ class XUSTK(PartFactory):
 		|				what = "0";
 		|				break;
 		|			case 1:
-		|				BUS_FIU_READ(state->topu);
+		|				BUS_DF_READ(state->topu);
+		|				state->topu &= 0xffff;
 		|				what = "1";
 		|				break;
 		|			case 2:
@@ -97,7 +101,9 @@ class XUSTK(PartFactory):
 		|			what = "4";
 		|			state->topu = state->ram[state->adr];
 		|		}
-		|		output.topu = ~state->topu;
+		|		output.topu = state->topu ^ 0xffff;
+		|		uint8_t par = odd_parity64(output.topu);
+		|		output.qp = par;
 		|	}
 		|	if (PIN_Q2.posedge()) {
 		|		state->ram[(state->adr + 1) & 0xf] = state->topu;
@@ -115,23 +121,31 @@ class XUSTK(PartFactory):
 		|		}
 		|		output.ssz = state->adr == 0;
 		|	}
-		|	TRACE(
-		|		<< " w " << what
-		|		<< " q2^ " << PIN_Q2.posedge()
-		|		<< " q4^ " << PIN_Q4.posedge()
-		|		<< " h2 " << PIN_H2
-		|		<< " wr " << PIN_WRITE
-		|		<< " sel " << BUS_SEL_TRACE()
-		|		<< " q3c " << PIN_Q3COND
-		|		<< " lted " << PIN_LATCHED
-		|		<< " curu " << BUS_CURU_TRACE()
-		|		<< " fiu " << BUS_FIU_TRACE()
-		|		<< " brnch " << BUS_BRNCH_TRACE()
-		|	);
+		|
+		|	if (PIN_LCLK.posedge()) {
+		|		uint64_t fiu;
+		|		BUS_DF_READ(fiu);
+		|		uint8_t parc, pari;
+		|		BUS_DP_READ(pari);
+		|		parc = odd_parity64(fiu);
+		|		output.perr = parc != pari;
+		|	}
+		|
+		|	output.z_qf = PIN_QFOE=>;
+		|	output.z_qp = PIN_QPOE=>;
+		|	if (!output.z_qf) {
+		|		output.qf = output.topu;
+		|		output.qf ^= 0xffff;
+		|	}
+		|	output.z_qv = PIN_QVOE=>;
+		|	if (!output.z_qv) {
+		|		output.qv = output.topu;
+		|		output.qv ^= BUS_QV_MASK;
+		|	}
 		|
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XUSTK", PartModel("XUSTK", XUSTK))
+    part_lib.add_part("XUSTK", PartModelDQ("XUSTK", XUSTK))
