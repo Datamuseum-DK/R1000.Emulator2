@@ -21,6 +21,8 @@ class XVCMUX(FChip):
         self.sig_left(ChipSig("-->+", "DGMS"))
         self.sig_left(ChipSig("-->+", "DGCO"))
         self.sig_left(ChipSig("-->+", "FPA"))
+        self.sig_left(ChipSig("<--+", "P", 0, 7))
+        self.sig_left(ChipSig("-->+", "CLK"))
 
         self.sig_right(ChipSig("+-->", "C", 0, 63))
         self.sig_right(ChipSig("+<--", "WDR", 0, 63))

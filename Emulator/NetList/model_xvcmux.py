@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XVCMUX(PartFactory):
     ''' VAL C-bus mux '''
 
+    autopin = True
+
     def state(self, file):
  
         file.fmt('''
@@ -46,13 +48,9 @@ class XVCMUX(PartFactory):
 		|	uint64_t c;
 		|''')
 
-    def xxsensitive(self):
-        yield "PIN_FIU_CLK.pos()"
-        yield "PIN_LOCAL_CLK.pos()"
-        yield "PIN_Q1not.pos()"
-        yield "PIN_DV_U"
-        yield "PIN_BAD_HINT"
-        yield "PIN_U_PEND"
+    def sensitive(self):
+        yield "PIN_CLK.neg()"
+        yield "PIN_WE.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -61,10 +59,6 @@ class XVCMUX(PartFactory):
 
         file.fmt('''
 		|
-		|	if (state->ctx.job) {
-		|		BUS_C_WRITE(state->c);
-		|		state->ctx.job = 0;
-		|	}
 		|	uint64_t c = 0;
 		|	uint64_t fiu = 0, alu = 0, wdr = 0;
 		|	bool fiu_valid = false, alu_valid = false, wdr_valid = false;
@@ -81,18 +75,6 @@ class XVCMUX(PartFactory):
 		|	bool efiu1 = cm_diag_on && (c_source != split_c_src);
 		|	bool chi = false;
 		|	bool clo = false;
-		|
-		|	if (!PIN_OE=>) {
-		|		unsigned adr;
-		|		BUS_A_READ(adr);
-		|		c = state->aram[adr];
-		|		if (c != state->c) {
-		|			state->ctx.job = 1;
-		|			state->c = c;
-		|			next_trigger(5, sc_core::SC_NS);
-		|		}
-		|		return;
-		|	}
 		|
 		|	if (efiu0) {
 		|		BUS_FIU_READ(fiu);
@@ -168,24 +150,15 @@ class XVCMUX(PartFactory):
 		|		BUS_A_READ(adr);
 		|		state->aram[adr] = c;
 		|	}
-		|	if (c != state->c) {
-		|		state->ctx.job = 1;
-		|		state->c = c;
-		|		next_trigger(5, sc_core::SC_NS);
+		|	if (!PIN_OE=>) {
+		|		unsigned adr;
+		|		BUS_A_READ(adr);
+		|		output.c = state->aram[adr];
+		|	} else {
+		|		output.c = c;
 		|	}
-		|	TRACE(
-		|	    << " sel0 " << PIN_SEL0?
-		|	    << " sel1 " << PIN_SEL1?
-		|	    << " csrc " << PIN_CSRC?
-		|	    << " cspl " << PIN_CSPL?
-		|	    << " dgms " << PIN_DGMS?
-		|	    << " dgco " << PIN_DGCO?
-		|	    << " fpa " << PIN_FPA?
-		|	    << " fiu " << BUS_FIU_TRACE()
-		|	    << " wdr " << BUS_WDR_TRACE()
-		|	    << " alu " << BUS_ALU_TRACE()
-		|	    << " c " << std::hex << c
-		|	);
+		|	output.p = odd_parity64(output.c) ^ 0xff;
+		|
 		|''')
 
 def register(part_lib):

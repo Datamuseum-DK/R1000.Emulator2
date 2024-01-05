@@ -23,12 +23,14 @@ class XTCMUX(FChip):
         self.sig_left(ChipSig("-->+", "CSRC"))
         self.sig_left(ChipSig("-->+", "CSPL"))
         self.sig_left(ChipSig("-->+", "DGCM"))
+        self.sig_left(ChipSig("-->+", "A", 0, 9))
 
         self.sig_right(ChipSig("+-->", "C", 0, 63))
         self.sig_right(ChipSig("+<--", "WDR", 0, 63))
         self.sig_right(ChipSig("+<--", "OE"))
         self.sig_right(ChipSig("+<--", "WE"))
-        self.sig_right(ChipSig("+<--", "A", 0, 9))
+        self.sig_right(ChipSig("+-->", "P", 0, 7))
+        self.sig_right(ChipSig("+<--", "CLK"))
 
         self.finish()
 
