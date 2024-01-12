@@ -42,77 +42,52 @@ class Xlat(PartFactory):
 
     ''' F373 Octal Transparant Latch with 3-STATE Outputs '''
 
-    def state(self, file):
-        ''' Extra state variable '''
+    autopin = True
 
-        file.write("\tuint64_t data;\n")
-        file.write("\tint job;\n")
-        file.write("\tbool z;\n")
+    def private(self):
+        ''' private variables '''
+        if "OE" in self.comp:
+            yield from self.event_or(
+                "idle_event",
+                "PIN_OE",
+                "PIN_LE",
+            )
+        else:
+            yield from self.event_or(
+                "idle_event",
+                "PIN_LE",
+            )
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
-        file.fmt('''
-		|	uint64_t tmp;
-		|	bool upd = false;
-		|
-		|	if (state->job) {
-		|		tmp = state->data;
-		|''')
-
         if self.comp.part.name[-2:] == "_I":
             file.fmt('''
-		|		tmp ^= BUS_Q_MASK;
+		|		uint64_t mask = BUS_Q_MASK;
 		|''')
-
-        file.fmt('''
-		|		TRACE(" W 0x" << std::hex << tmp);
-		|		BUS_Q_WRITE(tmp);
-		|		state->job = 0;
-		|	}
-		|
-		|	if (PIN_LE=>) {
-		|		BUS_D_READ(tmp);
-		|		if (tmp != state->data) {
-		|			TRACE(<< " D 0x" << std::hex << tmp);
-		|			state->data = tmp;
-		|			upd = true;
-		|		}
-		|	} else {
-		|''')
-
-        i = [ "PIN_LE.posedge_event()"]
-        if "OE" in self.comp and not self.comp["OE"].net.is_const():
-            i.append("PIN_OE.default_event()")
-
-        file.write("\t\tnext_trigger(%s);\n" % (" | ".join(i)))
-
-        file.fmt('''
-		|	}
-		|''')
-
-        if 'OE' in self.comp:
+        else:
             file.fmt('''
-		|	if (PIN_OE=>) {
-		|		if (!state->z) {
-		|			TRACE(" Z ");
-		|			BUS_Q_Z();
-		|			state->z = true;
-		|		}
-		|		return;
-		|	}
+		|		uint64_t mask = 0;
 		|''')
 
         file.fmt('''
-		|	if (!state->z && !upd)
-		|		return;
-		|	state->z = false;
-		|	state->job = 1;
-		|	next_trigger(5, sc_core::SC_NS);
+		|	if (PIN_LE=>) {
+		|		BUS_D_READ(output.q);
+		|		output.q ^= mask;
+		|	}
 		|''')
 
+        if "OE" in self.comp:
+            file.fmt('''
+		|	output.z_q = PIN_OE=>;
+		|''')
+
+    def doit_idle(self, file):
+        file.fmt('''
+		|	if (!PIN_LE=>) {
+		|               next_trigger(idle_event);
+		|	}
+		|''')
 
 class ModelXlat(PartModel):
     ''' Xlat registers '''
@@ -124,6 +99,8 @@ class ModelXlat(PartModel):
             for node in comp:
                 if node.pin.name[0] == "Q":
                     node.pin.set_role("output")
+        else:
+            assert not oe_node.net.is_const()
         super().assign(comp, part_lib)
 
     def configure(self, comp, part_lib):

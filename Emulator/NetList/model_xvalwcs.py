@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XVALWCS(PartFactory):
     ''' VAL Writable Control Store '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t ram[1<<14];
@@ -46,18 +48,19 @@ class XVALWCS(PartFactory):
 		|	uint64_t wcs, ff1, ff2, ff3, sr0, sr1, sr2, sr4;
 		|''')
 
-    def xxsensitive(self):
-        yield "PIN_UCLK.pos()"
-        yield "PIN_WE.pos()"
+    def sensitive(self):
+        yield "BUS_DGI"
+        yield "PIN_DGOOE"
+        yield "PIN_DUAS"
         yield "PIN_FPA"
-        yield "PIN_SUIR"
-        yield "BUS_UAC_SENSITIVE()"
-        yield "BUS_UAD_SENSITIVE()"
+        yield "BUS_UAC"
+        yield "BUS_UAD"
+        yield "PIN_UCLK.pos()"
+        yield "PIN_USEL"
+        yield "PIN_WE.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|
@@ -127,25 +130,6 @@ class XVALWCS(PartFactory):
 		|		PERMUTE(SR2WCS); \\
 		|	} while (0)
 		|
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		BUS_UIR_WRITE(state->wcs);
-		|		uint64_t tmp = state->ram[state->addr];
-		|		unsigned aadr = (tmp >> BUS_UIR_LSB(5)) & 0x3f;
-		|		PIN_ALD<=(aadr == 0x13);
-		|		unsigned badr = (tmp >> BUS_UIR_LSB(11)) & 0x3f;
-		|		PIN_BLD<=(badr == 0x13);
-		|		uint64_t par;
-		|		par = state->wcs & BUS_UIR_MASK;
-		|		par = ((par >> 32) ^ par) & 0xffffffff;
-		|		par = ((par >> 16) ^ par) & 0xffff;
-		|		par = ((par >> 8) ^ par) & 0xff;
-		|		par = ((par >> 4) ^ par) & 0xf;
-		|		par = ((par >> 2) ^ par) & 0x3;
-		|		par = ((par >> 1) ^ par) & 0x1;
-		|		PIN_PERR<=(par);
-		|	}
-		|
 		|	unsigned uad, cnt;
 		|	BUS_UAC_READ(cnt);
 		|	BUS_UAD_READ(uad);
@@ -168,7 +152,7 @@ class XVALWCS(PartFactory):
 		|	upar1 = ((upar1 >> 1) | upar1) & 0x1;
 		|	upar0 ^= 1;
 		|	upar1 ^= 1;
-		|	PIN_UPER<=!(upar0 | upar1);
+		|	output.uper = !(upar0 | upar1);
 		|
 		|	if (PIN_UCLK.posedge()) {
 		|		if (PIN_USEL=>) {
@@ -212,24 +196,36 @@ class XVALWCS(PartFactory):
 		|		state->sr4 = 0;
 		|		TOWCS();
 		|	}
-		|	if (!PIN_SUIR=>) {
-		|		unsigned dout = 0;
+		|
+		|	output.z_dgo = PIN_DGOOE=>;
+		|	if (!output.z_dgo) {
 		|		TOSR();
-		|		dout |= (state->ff1 & 1) << 7;
-		|		dout |= (state->ff2 & 1) << 6;
-		|		dout |= (state->sr1 & 1) << 5;
-		|		dout |= (state->sr2 & 1) << 4;
-		|		dout |= (state->sr4 & 1) << 3;
-		|		dout ^= 0xc0;
-		|		dout ^= 0xff;
-		|		dout |= 0x07;
-		|		BUS_DGO_WRITE(dout);
-		|	} else if (PIN_SUIR.posedge()) {
-		|		BUS_DGO_Z();
+		|		output.dgo = 0;
+		|		output.dgo |= (state->ff1 & 1) << 7;
+		|		output.dgo |= (state->ff2 & 1) << 6;
+		|		output.dgo |= (state->sr1 & 1) << 5;
+		|		output.dgo |= (state->sr2 & 1) << 4;
+		|		output.dgo |= (state->sr4 & 1) << 3;
+		|		output.dgo ^= 0xc0;
+		|		output.dgo ^= 0xff;
+		|		output.dgo |= 0x07;
 		|	}
+		|
 		|	if (PIN_WE.posedge()) {
 		|		state->ram[state->addr] = state->wcs;
 		|	}
+		|
+		|	output.uir = state->wcs;
+		|	output.perr = odd_parity(odd_parity64(state->wcs ^ BUS_UIR_MASK));
+		|
+		|	uint64_t tmp = state->ram[state->addr];
+		|
+		|	unsigned aadr = (tmp >> BUS_UIR_LSB(5)) & 0x3f;
+		|	output.ald = (aadr == 0x13);
+		|
+		|	unsigned badr = (tmp >> BUS_UIR_LSB(11)) & 0x3f;
+		|	output.bld = (badr == 0x13);
+		|
 		|''')
 
 def register(part_lib):

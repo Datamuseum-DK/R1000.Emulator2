@@ -441,6 +441,7 @@ class PartFactory(Part):
     def autopin_state(self, file):
         ''' Extra state variable '''
         file.write('\tstruct output_pins output;\n')
+        file.write('\tint64_t idle;\n')
 
     def autopin_doit_before(self, file):
         file.write('\tstruct output_pins output = state->output;\n')
@@ -479,11 +480,13 @@ class PartFactory(Part):
 		|		state->ctx.job |= 1;
 		|	        state->output = output;
 		|		state->ctx.wastage--;
+		|		state->idle = 0;
 		|	}
 		|	if (state->ctx.job) {
 		|		next_trigger(5, sc_core::SC_NS);
 		|	} else {
 		|		state->ctx.wastage++;
+		|		state->idle++;
 		|''')
 
         self.doit_idle(file)

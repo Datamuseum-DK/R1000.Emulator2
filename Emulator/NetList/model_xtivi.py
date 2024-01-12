@@ -39,22 +39,12 @@ from part import PartModel, PartFactory
 class XTIVI(PartFactory):
     ''' FIU TIVI decoder '''
 
-    def state(self, file):
-        file.fmt('''
-		|	unsigned tvoe;
-		|''')
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		BUS_TVOE_WRITE(state->tvoe);
-		|		state->ctx.job = 0;
-		|	}
-		|
 		|	unsigned tvoe = 0xff;
 		|
 		|	if (!PIN_EN=>) {
@@ -81,20 +71,17 @@ class XTIVI(PartFactory):
 		|	if (!(tvoe & 0x40)) {
 		|		tvoe &= 0x7f;
 		|	}
-		|	if (1 && !(tvoe & 0x02)) {
+		|	if (!(tvoe & 0x02)) {
 		|		tvoe &= 0xf7;
 		|	}
-		|
-		|	if (tvoe != state->tvoe) {
-		|		state->ctx.job = 1;
-		|		state->tvoe = tvoe;
-		|		next_trigger(5, sc_core::SC_NS);
+		|	output.tvoe = tvoe;
+		|''')
+
+    def doit_idle(self, file):
+        file.fmt('''
+		|	if (PIN_EN=>) {
+		|		next_trigger(PIN_EN.negedge_event());
 		|	}
-		|
-		|	TRACE(
-		|	    << " en " << PIN_EN
-		|	    << " tivi " << BUS_TIVI_TRACE()
-		|	);
 		|''')
 
 def register(part_lib):

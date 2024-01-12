@@ -42,14 +42,13 @@ class F182(PartFactory):
 
     ''' F182 Carry Lookahead Generator '''
 
+    autopin = True
+
     def extra(self, file):
         file.include("Components/tables.h")
-        super().extra(file)
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|
@@ -65,24 +64,12 @@ class F182(PartFactory):
 		|	if (PIN_G0=>) adr |= 1 << 1;
 		|	if (PIN_P0=>) adr |= 1 << 0;
 		|	unsigned val = lut182[adr];
-		|	TRACE(
-		|	    << PIN_CI?
-		|	    << PIN_G3?
-		|	    << PIN_P3?
-		|	    << PIN_G2?
-		|	    << PIN_P2?
-		|	    << PIN_G1?
-		|	    << PIN_P1?
-		|	    << PIN_G0?
-		|	    << PIN_P0?
-		|	    << " | "
-		|	    << std::hex << val
-		|	);
-		|	PIN_CO3<=(val & 0x10);
-		|	PIN_CO2<=(val & 0x8);
-		|	PIN_CO1<=(val & 0x4);
-		|	PIN_CG<=(val & 0x2);
-		|	PIN_CP<=(val & 0x1);
+		|	output.co = 0;
+		|	if (val & 0x10) output.co |= 1;
+		|	if (val & 0x08) output.co |= 2;
+		|	if (val & 0x04) output.co |= 4;
+		|	output.cg =(val >> 1) & 0x1;
+		|	output.cp =val & 0x1;
 		|''')
 
 def register(part_lib):

@@ -61,14 +61,39 @@ class XUSTK(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|	uint16_t tmp;
 		|	const char *what = "?";
 		|	bool stkclk = PIN_Q4.posedge() && !PIN_STKEN=>;
+		|	bool uevent = PIN_UEVENT=>;
 		|
-		|	if (stkclk && !PIN_CNTENA=>) {
-		|		if (PIN_H2 && PIN_WRITE) {
-		|			BUS_SEL_READ(tmp);
-		|			switch(tmp) {
+		|	bool xwrite;
+		|	bool pop;
+		|	bool stkcnt_ena;
+		|	bool stkinpsel_0;
+		|	bool stkinpsel_1;
+		|	if (uevent) {
+		|		xwrite = true;
+		|		pop = true;
+		|		stkinpsel_0 = true;
+		|		stkinpsel_1 = true;
+		|	} else if (!PIN_PUSH=>) {
+		|		xwrite = true;
+		|		pop = false;
+		|		stkinpsel_0 = !PIN_PUSHBR=>;
+		|		stkinpsel_1 = !PIN_BADHINT=>;
+		|	} else {
+		|		xwrite = !PIN_PUSHRND=>;
+		|		pop = !!(PIN_RETURN=> || PIN_POPRND=>);
+		|		stkinpsel_0 = false;
+		|		stkinpsel_1 = true;
+		|	}
+		|	stkcnt_ena = !(xwrite || pop);
+		|	unsigned stkinpsel = 0;
+		|	if (stkinpsel_0) stkinpsel |= 2;
+		|	if (stkinpsel_1) stkinpsel |= 1;
+		|
+		|	if (stkclk && !stkcnt_ena) {
+		|		if (PIN_H2 && xwrite) {
+		|			switch(stkinpsel) {
 		|			case 0:
 		|				BUS_BRNCH_READ(state->topu);
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
@@ -109,11 +134,10 @@ class XUSTK(PartFactory):
 		|		state->ram[(state->adr + 1) & 0xf] = state->topu;
 		|	}
 		|	if (stkclk) {
-		|		bool write = PIN_WRITE=>;
 		|		if (PIN_CSR=> && PIN_STOP=>) {
-		|			state->adr = write;
-		|		} else if (!PIN_CNTENA=>) {
-		|			if (write) {
+		|			state->adr = xwrite;
+		|		} else if (!stkcnt_ena) {
+		|			if (xwrite) {
 		|				state->adr = (state->adr + 1) & 0xf;
 		|			} else {
 		|				state->adr = (state->adr + 0xf) & 0xf;

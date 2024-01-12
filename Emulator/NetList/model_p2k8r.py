@@ -41,59 +41,55 @@ class P2K8R(PartFactory):
 
     ''' 2KX8 Latched EPROM '''
 
+    autopin = True
+
     def state(self, file):
         ''' Extra state variable '''
-
-        file.write("\tuint8_t prom[2050];\n")
-        file.write("\tint last, nxt;\n")
+        file.fmt('''
+		|	uint8_t prom[2050];
+		|	bool running;
+		|''')
 
     def sensitive(self):
         yield "PIN_CK.pos()"
         yield "PIN_MR"
 
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+            "idle_event",
+            "PIN_MR",
+            "BUS_A",
+        )
+
     def init(self, file):
         ''' Extra initialization '''
 
         file.fmt('''
-		|	load_programmable(this->name(), state->prom, sizeof state->prom, arg);
-		|	state->nxt = 2048;
+		|	load_programmable(this->name(),
+		|	    state->prom, sizeof state->prom, arg);
 		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
+        file.fmt('''
+		|	if (!state->running || !PIN_MR=>) {
+		|		output.y = state->prom[2048];
+		|		state->running = true;
+		|	} else if (PIN_CK.posedge()) {
+		|		unsigned adr;
+		|		BUS_A_READ(adr);
+		|		output.y = state->prom[adr];
+		|	}
+		|''')
+    def doit_idle(self, file):
 
         file.fmt('''
-		|	const char *what = NULL;
-		|	int adr = 0;
-		|
-		|	if (state->nxt >= 0) {
-		|		TRACE(
-		|		    << " CK " << PIN_CK?
-		|		    << " A " << BUS_A_TRACE()
-		|		    << " MR_ " << PIN_MR?
-		|		    << std::hex << " nxt "
-		|		    << state->nxt
-		|		    << " D "
-		|		    << std::hex << (unsigned)state->prom[state->nxt]
-		|		);
-		|		BUS_Y_WRITE(state->prom[state->nxt]);
-		|		state->last = state->nxt;
-		|		state->nxt = -1;
+		|	if (state->idle > 100) {
+		|		state->idle = 0;
+		|		next_trigger(idle_event);
 		|	}
-		|	if (!PIN_MR=>) {
-		|		if (state->last != 2048)
-		|			state->nxt = 2048;
-		|		what = " MR ";
-		|	} else if (PIN_CK.posedge()) {
-		|		BUS_A_READ(adr);
-		|		if (adr != state->last)
-		|			state->nxt = adr;
-		|		what = " CLK ";
-		|	}
-		|	if (state->nxt >= 0)
-		|		next_trigger(5, sc_core::SC_NS);
 		|''')
 
 class ModelP2K8R(PartModel):

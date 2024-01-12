@@ -40,78 +40,39 @@ class XSEQ79(PartFactory):
 
     ''' XSEQ79 (Dual) D-Type Positive Edge-Triggered Flip-Flop '''
 
+    autopin = True
+
     def sensitive(self):
         yield "PIN_C2EN"
-
-    def state(self, file):
-        ''' Extra state variable '''
-
-        file.fmt('''
-		|	bool diag_enable;
-		|	bool aclk;
-		|	bool pclk;
-		|	bool lclk;
-		|	bool bad_hint_en;
-		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		PIN_DGET<=(state->diag_enable);
-		|		PIN_ACLK<=(state->aclk);
-		|		PIN_PCLK<=(state->pclk);
-		|		PIN_LCLK<=(state->lclk);
-		|		PIN_BHEN<=(state->bad_hint_en);
-		|		return;
-		|	}
-		|
-		|	bool diag_enable = state->diag_enable;
-		|	bool aclk = state->aclk;
-		|	bool pclk = state->pclk;
-		|	bool lclk = state->lclk;
-		|
 		|	bool bad_hint_en = (PIN_DUADR=> && PIN_LLMC=> && PIN_BHNT=>);
-		|	bad_hint_en = !(bad_hint_en || PIN_UEVNT);
 		|
 		|	if (PIN_C2EN.posedge()) {
-		|		diag_enable = true;
+		|		output.bhen = !(bad_hint_en || PIN_UEVNT);
+		|		output.dget = true;
 		|		if (PIN_H1E=>) {
-		|			diag_enable = false;
+		|			output.dget = false;
 		|		} else if (PIN_DSTOP=>) {
-		|			diag_enable = false;
+		|			output.dget = false;
 		|		}
 		|		if (!PIN_DCLK=> && !PIN_SFSTP=>) {
-		|			aclk = false;
+		|			output.aclk = false;
 		|		}
 		|		if (!PIN_PRDEC=> && !PIN_SFSTP=>) {
-		|			pclk = false;
+		|			output.pclk = false;
 		|		}
-		|		if (diag_enable && !PIN_LCLKE=>) {
-		|			lclk = false;
+		|		if (output.dget && !PIN_LCLKE=>) {
+		|			output.lclk = false;
 		|		}
 		|	} else if (PIN_C2EN.negedge()) {
-		|		aclk = true;
-		|		pclk = true;
-		|		lclk = true;
-		|	}
-		|	if (diag_enable != state->diag_enable ||
-		|	    bad_hint_en != state->bad_hint_en ||
-		|	    aclk != state->aclk ||
-		|	    pclk != state->pclk ||
-		|	    lclk != state->lclk) {
-		|		state->ctx.job = 1;
-		|		state->diag_enable = diag_enable;
-		|		state->bad_hint_en = bad_hint_en;
-		|		state->aclk = aclk;
-		|		state->pclk = pclk;
-		|		state->lclk = lclk;
-		|		next_trigger(5, sc_core::SC_NS);
+		|		output.bhen = !(bad_hint_en || PIN_UEVNT);
+		|		output.aclk = true;
+		|		output.pclk = true;
+		|		output.lclk = true;
 		|	}
 		|''')
 

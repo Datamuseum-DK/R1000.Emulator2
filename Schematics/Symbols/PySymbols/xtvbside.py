@@ -13,7 +13,7 @@ class XTVBSIDE(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "BUS", 0, 63))
+        self.sig_left(ChipSig("<->+", "DQX", 0, 63))
         self.sig_left(ChipSig("-->+", "C", 0, 63))
 
         self.sig_right(ChipSig("+-->", "B", 0, 63))
@@ -25,6 +25,9 @@ class XTVBSIDE(FChip):
         self.sig_right(ChipSig("+<--", "RFWE"))
         self.sig_right(ChipSig("+<--", "RFCS"))
         self.sig_right(ChipSig("+<--", "A", 0, 9))
+        self.sig_right(ChipSig("+<--", "QXOE"))
+        self.sig_right(ChipSig("+-->", "BB0"))
+        self.sig_right(ChipSig("+-->", "PAR", 0, 7))
 
         self.finish()
 

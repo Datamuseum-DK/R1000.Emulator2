@@ -77,15 +77,20 @@ class PAxxx(PartFactory):
 		|		BUS_Y_WRITE(output.y);
 		|''')
 
+        if "OE" in self.comp:
+            file.fmt('''
+		|	output.z_y = PIN_OE=>;
+		|''')
+
 class ModelPAxxx(PartModel):
     ''' PAxxx Rom '''
 
     def assign(self, comp, part_lib):
-        assert comp.nodes["OE"].net.is_pd()
-        del comp.nodes["OE"]
-        for node in comp:
-            if node.pin.name[0] == "Y":
-                node.pin.set_role("output")
+        if comp.nodes["OE"].net.is_pd():
+            del comp.nodes["OE"]
+            for node in comp:
+                if node.pin.name[0] == "Y":
+                    node.pin.set_role("output")
         super().assign(comp, part_lib)
 
 class XPAxxxL(PartFactory):

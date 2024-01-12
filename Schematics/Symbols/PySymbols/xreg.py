@@ -46,6 +46,7 @@ class XREG(Chip):
         file.write("#endif\n")
            
 def register():
+    yield XREG(4)
     yield XREG(9)
     yield XREG(10)
     yield XREG(14)

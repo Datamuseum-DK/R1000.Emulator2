@@ -41,18 +41,32 @@ class XTASIDE(PartFactory):
 
     autopin = True
 
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+            "nolat_event",
+            "PIN_AODIAG",
+            "BUS_UA",
+            "BUS_LOOP",
+        )
+        yield from self.event_or(
+            "lat_event",
+            "PIN_AODIAG",
+            "BUS_UA",
+            #"BUS_C",
+            "PIN_LE",
+        )
+
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t alat;
 		|''')
 
-    def xxsensitive(self):
-        yield "PIN_FIU_CLK.pos()"
-        yield "PIN_LOCAL_CLK.pos()"
-        yield "PIN_Q1not.pos()"
-        yield "PIN_DV_U"
-        yield "PIN_BAD_HINT"
-        yield "PIN_U_PEND"
+    def sensitive(self):
+        yield "PIN_AODIAG"
+        yield "BUS_UA"
+        yield "BUS_LOOP"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -61,7 +75,8 @@ class XTASIDE(PartFactory):
 
         file.fmt('''
 		|	unsigned uir_a, loop;
-		|	uint64_t a = 0, p;
+		|	uint64_t a = 0;
+		|	bool is_lat = false;
 		|
 		|	if (PIN_LE) {
 		|		BUS_C_READ(state->alat);
@@ -70,6 +85,7 @@ class XTASIDE(PartFactory):
 		|	if ((uir_a & 0x3c) != 0x28 || !PIN_AODIAG) {
 		|		a = state->alat;
 		|		output.aout = 0;
+		|		is_lat = true;
 		|	} else if (uir_a == 0x28) {
 		|		BUS_LOOP_READ(loop);
 		|		a = BUS_A_MASK;
@@ -82,24 +98,14 @@ class XTASIDE(PartFactory):
 		|	}
 		|	output.a = a;
 		|	output.ab0 = a >> 63;
-		|	p = (a ^ (a >> 4)) & 0x0f0f0f0f0f0f0f0fULL;
-		|	p = (p ^ (p >> 2)) & 0x0303030303030303ULL;
-		|	p = (p ^ (p >> 1)) & 0x0101010101010101ULL;
-		|	p |= (p >> 7);
-		|	p |= (p >> 14);
-		|	p |= (p >> 28);
-		|	p &= 0xff;
-		|	p ^= 0xff;
-		|	output.ap = p;
-		|	TRACE(
-		|	    << " aod " << PIN_AODIAG?
-		|	    << " uira " << BUS_UA_TRACE()
-		|	    << " loop " << BUS_LOOP_TRACE()
-		|	    << " c " << BUS_C_TRACE()
-		|	    << " - a " << BUS_A_TRACE()
-		|	    << " " << std::hex << a
-		|	    << " p " << std::hex << p
-		|	);
+		|	output.ap = odd_parity64(output.a) ^ 0xff;
+		|''')
+
+    def doit_idle(self, file):
+        file.fmt('''
+		|	if (is_lat) {
+		|		next_trigger(lat_event);
+		|	}
 		|''')
 
 def register(part_lib):

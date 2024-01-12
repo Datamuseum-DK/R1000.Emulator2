@@ -39,11 +39,7 @@ from part import PartModel, PartFactory
 class XSEQ52CSA(PartFactory):
     ''' SEQ 52 CSA '''
 
-    def state(self, file):
-        file.fmt('''
-		|	bool overflow, underflow;
-		|	unsigned in_csa;
-		|''')
+    autopin = True
 
     def xxsensitive(self):
         yield "PIN_FIU_CLK.pos()"
@@ -59,32 +55,16 @@ class XSEQ52CSA(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		BUS_CSA_WRITE(state->in_csa);
-		|		PIN_UFL<=(state->underflow);
-		|		PIN_OFL<=(state->overflow);
-		|	}
 		|		
 		|	unsigned csa_nve, csa_dec;
-		|	unsigned in_csa = state->in_csa;
 		|
 		|	BUS_NVE_READ(csa_nve);
 		|	BUS_DEC_READ(csa_dec);
 		|	if (PIN_CLK.posedge()) {
-		|		in_csa = csa_nve;
+		|		output.csa = csa_nve;
 		|	}
-		|	bool underflow = csa_nve >= (csa_dec & 7);
-		|	bool overflow = csa_nve <= ((csa_dec >> 3) | 12);
-		|	if (underflow != state->underflow ||
-		|	    overflow != state->overflow ||
-		|	    in_csa != state->in_csa) {
-		|		state->ctx.job = 1;
-		|		state->underflow = underflow;
-		|		state->overflow = overflow;
-		|		state->in_csa = in_csa;;
-		|		next_trigger(5, sc_core::SC_NS);
-		|	}
+		|	output.ufl = csa_nve >= (csa_dec & 7);
+		|	output.ofl = csa_nve <= ((csa_dec >> 3) | 12);
 		|		
 		|''')
 

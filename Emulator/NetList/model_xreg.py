@@ -49,7 +49,6 @@ class Xreg(PartFactory):
         file.fmt('''
 		|	uint64_t data;
 		|	bool running;
-		|	unsigned idle;
 		|''')
 
     def private(self):
@@ -111,7 +110,7 @@ class Xreg(PartFactory):
 
     def doit_idle(self, file):
         file.fmt('''
-		|	if (++state->idle > 100) {
+		|	if (state->idle > 50) {
 		|		state->idle = 0;
 		|		BUS_D_READ(mask);
 		|		if (mask == state->data) {
@@ -149,6 +148,7 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("F374", ModelXreg("F374"))
+    part_lib.add_part("XREG4", ModelXreg("XREG4"))
     part_lib.add_part("XREG9", ModelXreg("XREG9"))
     part_lib.add_part("XREG10", ModelXreg("XREG10"))
     part_lib.add_part("XREG14", ModelXreg("XREG14"))

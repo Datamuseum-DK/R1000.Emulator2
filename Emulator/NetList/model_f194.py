@@ -38,109 +38,86 @@
 from part import PartModel, PartFactory
 
 class F194(PartFactory):
-
     ''' F194 4-bit bidirectional universal shift register '''
+
+    autopin = True
 
     def sensitive(self):
         if not self.comp.nodes["CLR"].net.is_pu():
             yield "PIN_CLR"
         yield "PIN_CLK.pos()"
 
+    def private(self):
+        if not self.comp.nodes["CLR"].net.is_pu():
+            yield from self.event_or(
+                "idle_event",
+                "BUS_S",
+                "PIN_CLR",
+            )
+        else:
+            yield from self.event_or(
+                "idle_event",
+                "BUS_S",
+            )
+
     def state(self, file):
         ''' Extra state variable '''
 
-        file.write("\tunsigned out;\n")
-        file.write("\tint job;\n")
+        file.fmt('''
+		|	unsigned out;
+		|''')
 
     def init(self, file):
         ''' Extra initialization '''
 
         file.fmt('''
-		|	state->out = ((1<<BUS_D_WIDTH) - 1);
-		|	state->job = 1;
+		|	state->out = BUS_D_MASK;
 		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	const char *what = NULL;
-		|	unsigned nxt, mode = 0;
+		|	unsigned mode = 0;
+		|	BUS_S_READ(mode);
 		|
-		|	if (state->job) {
-		|		BUS_Q_WRITE(state->out);
-		|		state->job = 0;
-		|	}
-		|	nxt = state->out;
 		|	if (!PIN_CLR=>) {
-		|		what = " clr ";
-		|		if (nxt)
-		|			nxt = 0;
-		|''')
-
-        if not self.comp.nodes["CLR"].net.is_pu():
-            file.fmt('''
-		|		else
-		|			next_trigger(PIN_CLR.posedge_event());
-		|''')
-
-        file.fmt('''
+		|		state->out = 0;
 		|	} else if (PIN_CLK.posedge()) {
-		|		BUS_S_READ(mode);
 		|		switch (mode) {
 		|		case 3:
-		|			what = " load ";
-		|			BUS_D_READ(nxt);
+		|			BUS_D_READ(state->out);
 		|			break;
 		|		case 2:
-		|			what = " >> ";
-		|			nxt >>= 1;
-		|			if (PIN_RSI=>) nxt |= (1<<(BUS_D_WIDTH-1));
+		|			state->out >>= 1;
+		|			if (PIN_RSI=>)
+		|				state->out |= (1<<(BUS_D_WIDTH-1));
 		|			break;
 		|		case 1:
-		|			what = " <<ft ";
-		|			nxt <<= 1;
-		|			nxt &= ((1<<BUS_D_WIDTH) - 1);
-		|			if (PIN_LSI=>) nxt |= (1<<0);
+		|			state->out <<= 1;
+		|			state->out &= BUS_D_MASK;
+		|			if (PIN_LSI=>)
+		|				state->out |= (1<<0);
 		|			break;
 		|		case 0:
-		|''')
-
-        i = []
-        if not self.comp.nodes["CLR"].net.is_pu():
-            i.append("PIN_CLR.negedge_event()")
-        i.append("BUS_S_EVENTS()")
-
-        if i:
-            file.write("\t\t\tnext_trigger(%s);\n" % (" | ".join(i)))
-
-        file.fmt('''
 		|			break;
 		|		}
 		|	}
-		|	if ((state->ctx.do_trace & 2) && what == NULL)
-		|		what = " - ";
-		|	if (what != NULL) {
-		|		TRACE(
-		|		    << what
-		|		    << " mr_ " << PIN_CLR?
-		|		    << " rsi " << PIN_RSI?
-		|		    << " d " << BUS_D_TRACE()
-		|		    << " lsi " << PIN_LSI?
-		|		    << " s " << BUS_S_TRACE()
-		|		    << " cp " << PIN_CLK?
-		|		    << " r "
-		|		    << std::hex << state->out
-		|		    << " nxt "
-		|		    << std::hex << nxt
-		|		);
-		|	}
-		|	if (nxt != state->out) {
-		|		state->out = nxt;
-		|		state->job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
+		|	output.q = state->out;
+		|''')
+
+    def doit_idle(self, file):
+        if not self.comp.nodes["CLR"].net.is_pu():
+            file.fmt('''
+		|	if (!PIN_CLR=>) {
+		|		next_trigger(PIN_CLR.posedge_event());
+		|	} else
+		|''')
+
+        file.fmt('''
+		|	if (state->idle > 10 && mode == 0) {
+		|		state->idle = 0;
+		|		next_trigger(idle_event);
 		|	}
 		|''')
 

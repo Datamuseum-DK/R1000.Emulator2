@@ -17,9 +17,6 @@ class XUSTK(FChip):
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
         self.sig_left(ChipSig("-->+", "STKEN"))
-        self.sig_left(ChipSig("-->+", "WRITE"))
-        self.sig_left(ChipSig("-->+", "CNTENA"))
-        self.sig_left(ChipSig("-->+", "SEL", 0, 1))
 
         self.sig_left(ChipSig("-->+", "Q3COND"))
         self.sig_left(ChipSig("-->+", "LATCHED"))
@@ -34,6 +31,15 @@ class XUSTK(FChip):
         self.sig_left(ChipSig("===+", "DQP", 0, 7))
         self.sig_left(ChipSig("-->+", "LCLK"))
         self.sig_left(ChipSig("<--+", "PERR"))
+
+        self.sig_left(ChipSig("-->+", "PUSH"))
+        self.sig_left(ChipSig("-->+", "UEVENT"))
+        self.sig_left(ChipSig("-->+", "PUSHBR"))
+        self.sig_left(ChipSig("-->+", "BADHINT"))
+        self.sig_left(ChipSig("-->+", "PUSHRND"))
+        self.sig_left(ChipSig("-->+", "RETURN"))
+        self.sig_left(ChipSig("-->+", "POPRND"))
+
         
         self.sig_right(ChipSig("+-->", "TOPU", 0, 15))
         self.sig_right(ChipSig("+<--", "CSR"))

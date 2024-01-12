@@ -43,12 +43,6 @@ class F174(PartFactory):
 
     autopin = True
 
-    def state(self, file):
-        ''' Extra state variable '''
-        file.fmt('''
-		|       unsigned idle;
-		|''')
-
     def private(self):
         ''' private variables '''
         if self.comp.nodes["CLR"].net.is_pu():
@@ -82,7 +76,7 @@ class F174(PartFactory):
 
     def doit_idle(self, file):
         file.fmt('''
-		|       if (++state->idle > 100) {
+		|       if (state->idle > 100) {
 		|               state->idle = 0;
 		|		unsigned tmp;
 		|		BUS_D_READ(tmp);

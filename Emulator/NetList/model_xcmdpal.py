@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XCMDPAL(PartFactory):
     ''' MEM32 CMDPAL '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		unsigned cmd;
@@ -53,18 +55,9 @@ class XCMDPAL(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		BUS_CMD_WRITE(state->cmd);
-		|		PIN_MC2N<=(state->p_mcyc2_next);
-		|		PIN_MC1<=(state->p_mcyc1);
-		|		PIN_MC2<=(state->p_mcyc2);
-		|		return;
-		|	}
+		|if (PIN_H2.negedge()) {
 		|	bool p_h2 = PIN_H2=>;
 		|	unsigned mcmd;
 		|	BUS_MCMD_READ(mcmd);
@@ -100,30 +93,15 @@ class XCMDPAL(PartFactory):
 		|	        ((!p_h2) && (!p_mcyc2_next_hd)) ||
 		|	        (  p_h2  && (!p_mcyc2_hd))
 		|	    );
-		|	if (
-		|	    (cmd != state->cmd) ||
-		|	    (out_mcyc2_next != state->p_mcyc2_next) ||
-		|	    (out_mcyc1 != state->p_mcyc1) ||
-		|	    (out_mcyc2 != state->p_mcyc2)) {
-		|		state->cmd = cmd;;
-		|		state->p_mcyc2_next = out_mcyc2_next;
-		|		state->p_mcyc1 = out_mcyc1;
-		|		state->p_mcyc2 = out_mcyc2;
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
-		|	TRACE(
-		|	    << " h2 " << PIN_H2?
-		|	    << " mcmd " << BUS_MCMD_TRACE()
-		|	    << " ccnt " << PIN_CCNT?
-		|	    << " abrt " << PIN_ABRT?
-		|	    << " | "
-		|	    << " j " << state->ctx.job
-		|	    << " cmd " << state->cmd
-		|	    << " mc1 " << state->p_mcyc1
-		|	    << " mc2 " << state->p_mcyc2
-		|	    << " mc2n " << state->p_mcyc2_next
-		|	);
-		|	}
+		|
+		|	state->cmd = output.cmd = cmd;
+		|	state->p_mcyc2_next = output.mc2n = out_mcyc2_next;
+		|	state->p_mcyc1 = out_mcyc1;
+		|	state->p_mcyc2 = out_mcyc2;
+		|	output.mc = 0;
+		|	if (out_mcyc1) output.mc |= 2;
+		|	if (out_mcyc2) output.mc |= 1;
+		|}
 		|''')
 
 def register(part_lib):

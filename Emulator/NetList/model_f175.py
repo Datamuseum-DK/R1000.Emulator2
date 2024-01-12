@@ -37,18 +37,16 @@
 
 
 from part import PartModel, PartFactory
+from component import Component
+from node import Node
+from pin import Pin
+from net import Net
 
 class F175(PartFactory):
 
     ''' F175 D-Type Flip-Flop '''
 
     autopin = True
-
-    def state(self, file):
-        ''' Extra state variable '''
-        file.fmt('''
-		|       unsigned idle;
-		|''')
 
     def private(self):
         ''' private variables '''
@@ -86,7 +84,7 @@ class F175(PartFactory):
 
     def doit_idle(self, file):
         file.fmt('''
-		|       if (++state->idle > 100) {
+		|       if (state->idle > 10) {
 		|               state->idle = 0;
 		|		unsigned tmp;
 		|		BUS_D_READ(tmp);
@@ -95,8 +93,54 @@ class F175(PartFactory):
 		|       }
 		|''')
 
+class ModelF175(PartModel):
+    ''' ... '''
+
+    def xassign(self, comp, part_lib):
+        ''' Wholesale conversion runs slower '''
+        punet = None
+        for node in comp:
+            if node.net.is_pu():
+                punet = node.net
+        if not punet:
+            print("Need PU to split", comp)
+            super().assign(comp, part_lib)
+            return
+        print("C", comp, comp["D0"].net.netbus, comp["Q0"].net.netbus)
+        clknode = comp["CLK"]
+        clrnode = comp["CLR"]
+        for i in range(4):
+            dnode = comp["D%d" % i]
+
+            if dnode.net.is_const():
+                print("  C", i, dnode.net)
+                continue
+
+            ff_comp = Component(
+                compref = comp.ref + "_%c" % (65+i),
+                compvalue = comp.value,
+                comppart = "F74",
+            )
+            ff_comp.name = comp.name + "_%c" % (65+i)
+            ff_comp.part = part_lib[ff_comp.partname]
+            comp.scm.add_component(ff_comp)
+
+            Node(clknode.net, ff_comp, Pin("CLK", "CLK", "input"))
+            Node(clrnode.net, ff_comp, Pin("CL_", "CL_", "input"))
+            Node(punet, ff_comp, Pin("PR_", "PR_", "input"))
+            Node(dnode.net, ff_comp, Pin("D", "D", "input"))
+
+            qnet = comp["Q%d" % i].net
+            Node(qnet, ff_comp, Pin("Q", "Q", "output"))
+
+            rnet = comp["Q%dnot" % i].net
+            Node(rnet, ff_comp, Pin("Q_", "Q_", "output"))
+
+            ff_comp.part.assign(ff_comp, part_lib)
+        comp.eliminate()
+
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("F175", PartModel("F175", F175))
+    part_lib.add_part("F175", ModelF175("F175", F175))

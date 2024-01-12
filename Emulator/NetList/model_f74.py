@@ -42,26 +42,32 @@ class F74(PartFactory):
 
     ''' F74 (Dual) D-Type Positive Edge-Triggered Flip-Flop '''
 
+    autopin = True
+
+    def private(self):
+        l = [ "PIN_D" ]
+        if "PR_" in self.comp:
+            l.append("PIN_PR_")
+        if "CL_" in self.comp:
+            l.append("PIN_CL_")
+        yield from self.event_or(
+            "idle_event",
+            *l,
+        )
+
     def sensitive(self):
-        if self.comp["CLK"].net.is_const():
-            return
         yield "PIN_CLK.pos()"
-        if not self.comp.nodes["PR_"].net.is_const():
+        if "PR_" in self.comp:
             yield "PIN_PR_"
-        if not self.comp.nodes["CL_"].net.is_const():
+        if "CL_" in self.comp:
             yield "PIN_CL_"
 
     def state(self, file):
-        ''' Extra state variable '''
-
         file.write("\tbool dreg[2];\n")
-        file.write("\tint job;\n")
 
     def init(self, file):
-        ''' Extra initialization '''
 
         file.fmt('''
-		|	state->job = 1;
 		|	state->dreg[0] = true;
 		|	state->dreg[1] = false;
 		|''')
@@ -69,89 +75,73 @@ class F74(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        if self.comp["CLK"].net.is_const():
-            return
-        super().doit(file)
-
-        events = []
-        if not self.comp.nodes["PR_"].net.is_const():
-            events.append("PIN_PR_.default_event()")
-        if not self.comp.nodes["CL_"].net.is_const():
-            events.append("PIN_CL_.default_event()")
-
-        file.add_subst("«pr_or_cl»", " | ".join(events))
-
-        if not self.comp.nodes["D"].net.is_const():
-            events.append("PIN_D.default_event()")
-
-        file.add_subst("«d_or_pr_or_cl»", " | ".join(events))
-
-        # file.write("\t\tnext_trigger(%s);\n" % (" | ".join(i)))
         file.fmt('''
-		|	bool oldreg[2], now;
-		|	const char *what = " ? ";
-		|
-		|	if (state->job) {
-		|		PIN_Q<=(state->dreg[0]);
-		|		PIN_Q_<=(state->dreg[1]);
-		|		state->job = 0;
-		|	}
-		|	memcpy(oldreg, state->dreg, sizeof oldreg);
-		|	if (!(PIN_CL_=>) && !(PIN_PR_=>)) {
-		|		if (!state->dreg[0] || !state->dreg[1]) {
-		|			state->dreg[0] = state->dreg[1] = true;
-		|			state->job = 1;
-		|			what = " 2L ";
-		|		} else {
-		|			next_trigger(«pr_or_cl»);
-		|		}
-		|	} else if (!(PIN_CL_=>)) {
-		|		if (state->dreg[0]) {
-		|			state->dreg[0] = false;
-		|			state->dreg[1] = true;
-		|			state->job = 1;
-		|		} else {
-		|			next_trigger(«pr_or_cl»);
-		|		}
-		|		what = " CLR ";
-		|	} else if (!(PIN_PR_=>)) {
-		|		if (!state->dreg[0]) {
-		|			state->dreg[0] = true;
-		|			state->dreg[1] = false;
-		|			state->job = 1;
-		|		} else {
-		|			next_trigger(«pr_or_cl»);
-		|		}
-		|		what = " SET ";
-		|	} else if (PIN_CLK.posedge()) {
-		|		now = PIN_D=>;
-		|		if (state->dreg[0] != now) {
-		|			state->dreg[0] = now;
-		|			state->dreg[1] = !now;
-		|			state->job = 1;
-		|			what = " CHG ";
-		|		}
-		|	}
-		|	if (memcmp(oldreg, state->dreg, sizeof oldreg) || (state->ctx.do_trace & 2)) {
-		|		TRACE(
-		|		    << what
-		|		    << " clr " << PIN_CL_=>
-		|		    << " set " << PIN_PR_=>
-		|		    << " data " << PIN_D=>
-		|		    << " clk " << PIN_CLK=>
-		|		    << " job " << state->job
-		|		    << " | "
-		|		    << state->dreg[0]
-		|		    << state->dreg[1]
-		|		);
-		|	}
-		|	if (state->job)
-		|		next_trigger(5, sc_core::SC_NS);
-		|	else if (!(PIN_D=> ^ state->dreg[0]))
-		|		next_trigger(«d_or_pr_or_cl»);
+		|	if (0) {
 		|''')
+
+        if "PR_" in self.comp and "CL_" in self.comp:
+            file.fmt('''
+		|	} else if (!(PIN_CL_=>) && !(PIN_PR_=>)) {
+		|		state->dreg[0] = true;
+		|		state->dreg[1] = true;
+		|''')
+
+        elif "PR_" in self.comp:
+            file.fmt('''
+		|	} else if (!PIN_PR_=>) {
+		|		state->dreg[0] = true;
+		|		state->dreg[1] = false;
+		|''')
+
+        elif "CL_" in self.comp:
+            file.fmt('''
+		|	} else if (!PIN_PR_=>) {
+		|		state->dreg[0] = false;
+		|		state->dreg[1] = true;
+		|''')
+
+        file.fmt('''
+		|	} else if (PIN_CLK.posedge()) {
+		|		state->dreg[0] = PIN_D=>;
+		|		state->dreg[1] = !state->dreg[0];
+		|	}
+		|''')
+
+        if "Q" in self.comp:
+            file.fmt('''
+		|	output.q = state->dreg[0];
+		|''')
+
+        if "Q_" in self.comp:
+            file.fmt('''
+		|	output.q_ = state->dreg[1];
+		|''')
+
+    def doit_idle(self, file):
+        file.fmt('''
+		|	if (state->idle > 10 && state->dreg[0] == PIN_D=>) {
+		|		state->idle = 0;
+		|		next_trigger(idle_event);
+		|	}
+		|''')
+
+
+class ModelF74(PartModel):
+    ''' ... '''
+
+    def assign(self, comp, part_lib):
+        if comp["CL_"].net.is_pu():
+            comp["CL_"].remove()
+        if comp["PR_"].net.is_pu():
+            comp["PR_"].remove()
+        if len(comp["Q"].net) == 1:
+            comp["Q"].remove()
+        if len(comp["Q_"].net) == 1:
+            comp["Q_"].remove()
+        assert not comp["CLK"].net.is_const()
+        super().assign(comp, part_lib)
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("F74", PartModel("F74", F74))
+    part_lib.add_part("F74", ModelF74("F74", F74))

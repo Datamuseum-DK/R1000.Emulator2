@@ -34,7 +34,7 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XTVBSIDE(PartFactory):
     ''' TYP/VAL B-side of RF '''
@@ -49,10 +49,11 @@ class XTVBSIDE(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "BUS_BUS"
+        yield "BUS_DX"
         yield "BUS_C"
         yield "PIN_BLE.pos()"
         yield "PIN_RFWE.pos()"
+        yield "PIN_QXOE"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -85,8 +86,8 @@ class XTVBSIDE(PartFactory):
 		|		b |= state->blat & 0xffULL;
 		|	}
 		|	if (!PIN_BROE=> || !PIN_BROE7=>) {
-		|		BUS_BUS_READ(bus);
-		|		bus ^= BUS_BUS_MASK;
+		|		BUS_DX_READ(bus);
+		|		bus ^= BUS_DX_MASK;
 		|	}
 		|	if (!PIN_BROE=>) {
 		|		b |= bus & 0xffffffffffffff00ULL;
@@ -95,9 +96,15 @@ class XTVBSIDE(PartFactory):
 		|		b |= bus & 0xffULL;
 		|	}
 		|	output.b = b;
+		|	output.bb0 = b >> 63;
+		|	output.z_qx = PIN_QXOE=>;
+		|	output.par = odd_parity64(b) ^ BUS_PAR_MASK;
+		|	if (!output.z_qx) {
+		|		output.qx = b ^ BUS_QX_MASK;
+		|	}
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XTVBSIDE", PartModel("XTVBSIDE", XTVBSIDE))
+    part_lib.add_part("XTVBSIDE", PartModelDQ("XTVBSIDE", XTVBSIDE))

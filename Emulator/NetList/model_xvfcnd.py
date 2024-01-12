@@ -39,90 +39,70 @@ from part import PartModel, PartFactory
 class XVFCND(PartFactory):
     ''' VAL FIU conditions '''
 
-    def state(self, file):
-        file.fmt('''
-		|	unsigned fcsel;
-		|	bool fcond;
-		|''')
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		BUS_FCSEL_WRITE(state->fcsel);
-		|		PIN_FCOND<=(state->fcond);
-		|	}
 		|
-		|	if (PIN_SNK=>) {
-		|		if (state->fcsel == 7) {
-		|			next_trigger(PIN_SNK.negedge_event());
-		|		} else {
-		|			state->fcsel = 7;
-		|			state->ctx.job = 1;
-		|			next_trigger(5, sc_core::SC_NS);
-		|		}
-		|		return;
-		|	}
-		|	unsigned sel;
-		|	BUS_SEL_READ(sel);
-		|	bool fcond = false;
-		|
-		|	unsigned fcsel = 0;
-		|
-		|	if (!(sel & 0x02))
-		|		fcsel |= 0x4;
-		|
-		|	if ((sel & 0x2) && (PIN_BAD0=> ^ PIN_BBD0=>))
-		|		fcsel |= 0x2;
-		|
-		|	if ((sel & 3) == 1)
-		|		fcsel |= 0x2;
-		|
-		|	if (sel & 0x10)
-		|		fcsel |= 0x1;
-		|
-		|	if ((sel & 0x06) == 0x06)
-		|		fcsel |= 0x1;
-		|
+		|	output.fcond = false;
 		|	unsigned zero = 0;
-		|	switch (state->fcsel) {
+		|	switch (output.fcsel) {
 		|	case 0:
-		|		fcond = !PIN_ACO=>;
+		|		output.fcond = !PIN_ACO=>;
 		|		break;
 		|	case 1:
 		|	case 3:
-		|		fcond = PIN_LVAL=>;
+		|		output.fcond = PIN_LVAL=>;
 		|		break;
 		|	case 2:
-		|		fcond = PIN_BBD0=>;
+		|		output.fcond = PIN_BBD0=>;
 		|		break;
 		|	case 4:
 		|		BUS_AZ_READ(zero);
-		|		fcond = (zero == 0xff);
+		|		output.fcond = (zero == 0xff);
 		|		break;
 		|	case 6:
 		|		BUS_AZ_READ(zero);
-		|		fcond = (zero != 0xff);
+		|		output.fcond = (zero != 0xff);
 		|		break;
 		|
 		|	default:
-		|		fcond = true;
+		|		output.fcond = true;
 		|		break;
 		|	}
-		|	fcond = !fcond;
+		|	output.fcond = !output.fcond;
 		|
-		|	if (fcsel != state->fcsel ||
-		|	    fcond != state->fcond) {
-		|		state->fcsel = fcsel;
-		|		state->fcond = fcond;
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
-		|	} else if (sel & 0x2) {
-		|		//next_trigger(b5_event);
+		|	unsigned sel;
+		|	BUS_SEL_READ(sel);
+		|
+		|	output.fcsel = 0;
+		|
+		|	if (!(sel & 0x02))
+		|		output.fcsel |= 0x4;
+		|
+		|	if ((sel & 0x2) && (PIN_BAD0=> ^ PIN_BBD0=>))
+		|		output.fcsel |= 0x2;
+		|
+		|	if ((sel & 3) == 1)
+		|		output.fcsel |= 0x2;
+		|
+		|	if (sel & 0x10)
+		|		output.fcsel |= 0x1;
+		|
+		|	if ((sel & 0x06) == 0x06)
+		|		output.fcsel |= 0x1;
+		|
+		|	if (PIN_SNK=>) {
+		|		output.fcsel = 0x7;
+		|	}
+		|''')
+
+    def doit_idle(self, file):
+        file.fmt('''
+		|	if (PIN_SNK=> && output.fcsel == 7) {
+		|		next_trigger(PIN_SNK.negedge_event());
 		|	}
 		|''')
 

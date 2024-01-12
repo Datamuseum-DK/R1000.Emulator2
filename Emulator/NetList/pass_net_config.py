@@ -494,6 +494,8 @@ class PassNetConfig():
         cnames = set()
         for net in scm.iter_nets():
             net.find_cname()
+            if net.cname in cnames:
+                print("Dup net.cname", self, net.cname, cnames)
             assert net.cname not in cnames
             cnames.add(net.cname)
 
