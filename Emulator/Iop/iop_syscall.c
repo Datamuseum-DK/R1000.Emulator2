@@ -233,6 +233,7 @@ sc_bpt_ret(void *priv, uint32_t adr)
 {
 	unsigned a7;
 	struct sc_call *scc = priv;
+	struct sc_ctx *sctx;
 
 	if (scc->ctx != VTAILQ_FIRST(&sc_ctxs))
 		return (0);
@@ -242,8 +243,9 @@ sc_bpt_ret(void *priv, uint32_t adr)
 
 	sc_render(1, scc->def);
 	a7 = m68k_get_reg(NULL, M68K_REG_A7);
+	sctx = VTAILQ_FIRST(&sc_ctxs);
 	Trace(1, "SCEXIT %2d %d SC=0x%08x A7=0x%08x RET=0x%08x %s",
-	    VTAILQ_FIRST(&sc_ctxs)->nbr, ctx_level,
+	    sctx ? sctx->nbr : -1, ctx_level,
 	    scc->def->address, a7, adr, VSB_data(sc_vsb));
 	return (1);
 }
@@ -265,8 +267,9 @@ sc_bpt(void *priv, uint32_t adr)
 		/* Experiment() return to previous frame */
 		u = m68k_debug_read_memory_32(a7 + 4);
 	}
+	sctx = VTAILQ_FIRST(&sc_ctxs);
 	Trace(1, "SCCALL %2d %d SC=0x%08x A7=0x%08x RET=0x%08x %s",
-	    VTAILQ_FIRST(&sc_ctxs)->nbr, ctx_level,
+	    sctx ? sctx->nbr : -1, ctx_level,
 	    scd->address, a7, u, VSB_data(sc_vsb));
 	if (scd->address == 0x103b8) {	// PopProgram
 		ctx_level--;
