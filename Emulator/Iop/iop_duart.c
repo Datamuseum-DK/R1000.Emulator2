@@ -450,7 +450,7 @@ void
 ioc_duart_init(void)
 {
 
-	ioc_duart->chan[0].ep = elastic_new(O_RDWR);
+	ioc_duart->chan[0].ep = elastic_new(O_RDWR, "comm");
 	ioc_duart->chan[0].rx_irq = &IRQ_MODEM_RXRDY;
 	ioc_duart->chan[0].tx_irq = &IRQ_MODEM_TXRDY;
 	ioc_duart->chan[0].name = "MODEM";

@@ -55,6 +55,7 @@ struct elastic {
 	VTAILQ_HEAD(,elastic_subscriber)	subscribers;
 	VTAILQ_HEAD(,chunk)		chunks_out;
 	VTAILQ_HEAD(,chunk)		chunks_in;
+	const char			*name;
 	int				text;
 	int				mode;
 	nanosec				bits_per_char;
@@ -68,7 +69,7 @@ struct elastic {
 	cli_func_f			*break_function;
 };
 
-struct elastic *elastic_new(int mode);
+struct elastic *elastic_new(int mode, const char *name);
 nanosec elastic_nsec_per_char(const struct elastic *ep);
 
 /* "output" side */

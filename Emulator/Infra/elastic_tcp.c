@@ -58,6 +58,35 @@ elastic_fd_txfunc(void *priv, const void *src, size_t len)
 	(void)write(aa->fd2, src, len);
 }
 
+/*--------------------------------------------------------------------*/
+
+static void
+report_sockadr(const char *name, int fd)
+{
+	int i;
+	struct sockaddr_storage ss;
+	socklen_t sl;
+	char abuf[1024];
+	char pbuf[1024];
+
+	i = getsockname(fd, (void*)&ss, &sl);
+	assert(i == 0);
+
+	i = getnameinfo((void*)&ss, sl, abuf, sizeof abuf, pbuf, sizeof pbuf,
+	   NI_NUMERICHOST | NI_NUMERICSERV);
+	if (i) {
+		/*
+		 * XXX this printf is shitty, but we may not have space
+		 * for the gai_strerror in the bufffer :-(
+		 */
+		fprintf(stderr, "getnameinfo = %d %s\n", i, gai_strerror(i));
+		if (i == EAI_SYSTEM)
+			fprintf(stderr, "errno = %d %s\n", errno, strerror(errno));
+		return;
+	}
+	printf("%s listening on %s %s\n", name, abuf, pbuf);
+}
+
 static void *
 elastic_telnet_acceptor(void *priv)
 {
@@ -156,6 +185,7 @@ elastic_telnet_passive(struct elastic *ep, struct cli *cli, const char *where)
 		aa->ep = ep;
 		aa->fd = s;
 		aa->telnet = 1;
+		report_sockadr(aa->ep->name, aa->fd);
 		AZ(pthread_create(&pt, NULL, elastic_telnet_acceptor, aa));
 	}
 	free(a);

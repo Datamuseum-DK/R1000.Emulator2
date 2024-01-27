@@ -257,7 +257,7 @@ void
 ioc_console_init(void)
 {
 
-	cons->ep = elastic_new(O_RDWR);
+	cons->ep = elastic_new(O_RDWR, "console");
 	cons->ep->break_function = cli_ioc_console_break;
 	AZ(pthread_create(&cons_rx, NULL, thr_console_rx, NULL));
 }

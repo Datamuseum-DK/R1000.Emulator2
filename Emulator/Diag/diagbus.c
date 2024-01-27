@@ -209,6 +209,6 @@ cli_diproc(struct cli *cli)
 void
 diagbus_init(void)
 {
-	diag_elastic = elastic_new(O_RDWR);
+	diag_elastic = elastic_new(O_RDWR, "diagbus");
 	AN(diag_elastic);
 }

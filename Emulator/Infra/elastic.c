@@ -37,10 +37,11 @@
 #include "Infra/elastic.h"
 
 struct elastic *
-elastic_new(int mode)
+elastic_new(int mode, const char *name)
 {
 	struct elastic *ep;
 
+	AN(name);
 	ep = calloc(1, sizeof *ep);
 	AN(ep);
 	VTAILQ_INIT(&ep->chunks_in);
@@ -53,6 +54,8 @@ elastic_new(int mode)
 	ep->text = 1;
 	ep->mode = mode;
 	ep->bits_per_char = 8;
+	ep->name = strdup(name);
+	AN(ep->name);
 	return (ep);
 }
 
