@@ -51,6 +51,9 @@ do
 done
 
 cli 'console >' ${R1K_PFX}.console
+cli 'console telnet :0'
+cli 'modem telnet :0'
+
 standard_patches
 
 sc_boards() {
