@@ -7,6 +7,7 @@
 	TRACER(ioc_io, "IOC IO")					\
 	TRACER(ioc_pit, "IOC PIT timer")				\
 	TRACER(ioc_sc, "IOC SystemC cycles")				\
+	TRACER(ioc_duart, "IOC Duart")					\
 	TRACER(ioc_modem, "IOC Internal Modem")				\
 	TRACER(diagbus, "All bytes transmitted on DiagBus")		\
 	TRACER(disk_data, "Data to/from disk(s)")			\

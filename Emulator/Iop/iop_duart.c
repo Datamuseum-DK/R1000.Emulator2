@@ -4,6 +4,15 @@
  *
  * Chip Select: 0xffffaxxx
  *
+ *	IP0	MODEM_CTS		OP0	MODEM_RTS
+ * 	IP1	MODEM_DSR		OP1	MODEM_DTR
+ * 	IP2	PITCLK			OP2	IOP.BLOOP~
+ * 	IP3	MODEM_DCD		OP3	PITINT
+ * 	IP4	n/c			OP4	MODEM.RXRDY
+ * 	IP5	CLK			OP5	DIAGBUS.RXDRY
+ * 	IP6	CLK			OP6	MODEM.TXRDY
+ *					OP7	DIAGBUS.TXRDY
+ *
  */
 
 #include <fcntl.h>
@@ -18,6 +27,10 @@
 #include "Iop/memspace.h"
 #include "Diag/diag.h"
 #include "Chassis/r1000sc.h"
+
+#define IP0_CTS		0x01
+#define IP1_DSR		0x02
+#define IP3_DCD		0x08
 
 static const char * const rd_reg[] = {
 	"MODEM R MR1A_2A",
@@ -102,24 +115,32 @@ struct chan {
 	int			rxwaitforit;
 	int			txon;
 	int			rxon;
-	int			isdiag;
+	uint8_t			tx_isr_bit;
 	struct irq_vector	*rx_irq;
 	struct irq_vector	*tx_irq;
 	int			inflight;
 	struct vsb		*vsb;
+	pthread_cond_t		*cond;
 };
 
 static struct ioc_duart {
 	struct chan		chan[2];
 	uint8_t			opr;
 	uint16_t		counter;
+	uint8_t			acr;
+	uint8_t			imr;
+	uint8_t			isr;
+	uint8_t			ipcr, prev_ipcr;
 	int			pit_running;
 	int			pit_intr;
 } ioc_duart[1];
 
 static pthread_mutex_t duart_mtx = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t duart_cond = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t diagbus_cond = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t modem_cond = PTHREAD_COND_INITIALIZER;
 static pthread_t diag_rx;
+static pthread_t modem_rx;
+static pthread_t modem_sim;
 
 /**********************************************************************/
 
@@ -175,7 +196,7 @@ thr_duart_rx(void *priv)
 		callout_sleep(chp->inflight);
 		AZ(pthread_mutex_lock(&duart_mtx));
 		while (!(chp->rxon) || (chp->sr & 1) || chp->rxwaitforit)
-			AZ(pthread_cond_wait(&duart_cond, &duart_mtx));
+			AZ(pthread_cond_wait(chp->cond, &duart_mtx));
 		chp->rxhold = buf[0];
 		chp->sr |= 0x01;
 		chp->rxwaitforit |= 0x01;
@@ -191,7 +212,7 @@ io_duart_rx_readh_cb(void *priv)
 
 	AZ(pthread_mutex_lock(&duart_mtx));
 	chp->rxwaitforit = 0;
-	AZ(pthread_cond_signal(&duart_cond));
+	AZ(pthread_cond_signal(chp->cond));
 	AZ(pthread_mutex_unlock(&duart_mtx));
 }
 
@@ -259,6 +280,7 @@ ioc_duart_tx_callback(void *priv)
 			}
 		}
 	} else {
+		Trace(trace_ioc_modem, "MODEM TX %02x %02x %02x", chp->txshift[0], chp->txshift[1], chp->txshift_valid);
 		elastic_put(chp->ep, chp->txshift, chp->txshift_valid);
 	}
 	chp->txshift_valid = 0;
@@ -267,6 +289,93 @@ ioc_duart_tx_callback(void *priv)
 	if (chp->txon)
 		irq_raise(chp->tx_irq);
 }
+
+/*********************************************************************/
+
+static void
+io_duart_dschg(void)
+{
+	uint8_t events, event_mask;
+
+	Trace(trace_ioc_duart, "MODEM dschg IMR=%02x ISR=%02x ACR=%02x IPCR=%02x/%02x OP=%02x",
+	    ioc_duart->imr,
+	    ioc_duart->isr,
+	    ioc_duart->acr,
+	    ioc_duart->ipcr,
+	    ioc_duart->prev_ipcr,
+	    ioc_duart->opr
+	);
+
+	event_mask = ioc_duart->acr & 0xf;
+	events = (ioc_duart->ipcr ^ ioc_duart->prev_ipcr) & 0xf;
+	ioc_duart->prev_ipcr = ioc_duart->ipcr;
+
+	ioc_duart->ipcr |= events << 4;
+	Trace(trace_ioc_duart, "MODEM IPCR=%02x", ioc_duart->ipcr);
+	if ((ioc_duart->ipcr >> 4) & event_mask) {
+		ioc_duart->isr |= 0x80;
+		Trace(trace_ioc_duart, "MODEM ISR=%02x", ioc_duart->isr);
+	}
+	if (ioc_duart->isr & ioc_duart->imr) {
+		irq_raise(&IRQ_MODEM_DSCHG);
+	} else if (!(ioc_duart->isr & ioc_duart->imr)) {
+		irq_lower(&IRQ_MODEM_DSCHG);
+	}
+}
+
+static void*
+thr_modem_sim(void *priv)
+{
+	struct chan *chp = priv;
+	int state = 0;
+
+	// ioc_wait_cpu_running();		// Dont hog diagbus until IOC owns it
+	while (1) {
+		AZ(pthread_mutex_lock(&duart_mtx));
+		switch (state) {
+		case 0:
+			AZ(pthread_cond_wait(&modem_cond, &duart_mtx));
+			if ((ioc_duart->ipcr & 3) == (ioc_duart->opr & 3)) {
+				break;
+			}
+			AZ(pthread_mutex_unlock(&duart_mtx));
+			callout_sleep(1000000); 
+			AZ(pthread_mutex_lock(&duart_mtx));
+			ioc_duart->ipcr &= ~0xb;
+			ioc_duart->ipcr |= ioc_duart->opr & 0x3;
+			Trace(trace_ioc_duart,
+			    "MODEM SIG CHG IPCR=%02x", ioc_duart->ipcr);
+			io_duart_dschg();
+			if (ioc_duart->ipcr & 3)
+				state = 1;
+			break;
+		case 1:
+#define SIMTX(str) \
+	do { \
+		AZ(pthread_mutex_unlock(&duart_mtx)); \
+		callout_sleep(100000); \
+		AZ(pthread_mutex_lock(&duart_mtx)); \
+		elastic_inject(chp->ep, str, -1); \
+	} while (0)
+			SIMTX("S");
+			SIMTX("E");
+			SIMTX("R");
+			SIMTX("V");
+			SIMTX("I");
+			SIMTX("C");
+			SIMTX("E");
+			SIMTX(":");
+			SIMTX("\r");
+			SIMTX("\n");
+			state = 0;
+			break;
+		}
+		AZ(pthread_mutex_unlock(&duart_mtx));
+	}
+}
+
+// void elastic_inject(struct elastic *ep, const void *ptr, ssize_t len);
+
 
 /**********************************************************************/
 
@@ -282,6 +391,20 @@ io_duart_pre_read(int debug, uint8_t *space, unsigned width, unsigned adr)
 	AZ(pthread_mutex_lock(&duart_mtx));
 	chp = &ioc_duart->chan[adr>>3];
 	switch(adr) {
+	case REG_R_ISR:
+		space[adr] = ioc_duart->isr;
+		break;
+	case REG_R_IPCR:
+		space[adr] = ioc_duart->ipcr;
+		ioc_duart->ipcr &= 0xf;
+		ioc_duart->isr &= 0x7f;
+		if (!(ioc_duart->isr & ioc_duart->imr)) {
+			irq_lower(&IRQ_MODEM_DSCHG);
+		}
+		break;
+	case REG_R_INPUT:
+		space[adr] = ioc_duart->ipcr & 0xf;
+		break;
 	case REG_R_SRA:
 	case REG_R_SRB:
 		space[adr] = chp->sr;
@@ -321,7 +444,7 @@ io_duart_pre_read(int debug, uint8_t *space, unsigned width, unsigned adr)
 		break;
 	}
 	AZ(pthread_mutex_unlock(&duart_mtx));
-	Trace(trace_ioc_io, "%s [%x] -> %x", rd_reg[adr], adr, space[adr]);
+	Trace(trace_ioc_duart, "%s [%x] -> %x", rd_reg[adr], adr, space[adr]);
 }
 
 /**********************************************************************/
@@ -334,7 +457,7 @@ io_duart_post_write(int debug, uint8_t *space, unsigned width, unsigned adr)
 	if (debug) return;
 	assert (width == 1);
 	assert (adr < 16);
-	Trace(trace_ioc_io, "%s [%x] <- %x", wr_reg[adr], adr, space[adr]);
+	Trace(trace_ioc_duart, "%s [%x] <- %x", wr_reg[adr], adr, space[adr]);
 	AZ(pthread_mutex_lock(&duart_mtx));
 	chp = &ioc_duart->chan[adr>>3];
 	switch(adr) {
@@ -353,6 +476,7 @@ io_duart_post_write(int debug, uint8_t *space, unsigned width, unsigned adr)
 			break;
 		case 0x3:
 			chp->txon = 0;
+			ioc_duart->isr &= ~chp->tx_isr_bit;
 			chp->sr &= ~4;
 			irq_lower(chp->tx_irq);
 			break;
@@ -371,6 +495,7 @@ io_duart_post_write(int debug, uint8_t *space, unsigned width, unsigned adr)
 		if (space[adr] & 4) {
 			if (!chp->txon) {
 				chp->txon = 1;
+				ioc_duart->isr |= chp->tx_isr_bit;
 				chp->sr |= 4;
 				chp->sr |= 8;
 				irq_raise(chp->tx_irq);
@@ -378,14 +503,27 @@ io_duart_post_write(int debug, uint8_t *space, unsigned width, unsigned adr)
 		}
 		if (space[adr] & 8) {
 			chp->txon = 0;
+			ioc_duart->isr &= ~chp->tx_isr_bit;
 			chp->sr &= ~4;
 			chp->sr |= 8;
 			irq_lower(chp->tx_irq);
 		}
 		break;
+	case REG_W_IMR:
+		ioc_duart->imr = space[adr];
+		io_duart_dschg();
+		if (!(ioc_duart->isr & ioc_duart->imr)) {
+			irq_lower(&IRQ_MODEM_DSCHG);
+		}
+		break;
+	case REG_W_ACR:
+		ioc_duart->acr = space[adr];
+		ioc_duart->prev_ipcr = 0;
+		io_duart_dschg();
+		break;
 	case REG_W_THRA:
 	case REG_W_THRB:
-		if (chp->isdiag && ioc_duart->opr & 4) {
+		if (chp->is_diagbus && ioc_duart->opr & 4) {
 			// IOP.DLOOP~ on p21
 			chp->rxhold = space[adr];
 			chp->sr |= 1;
@@ -420,6 +558,8 @@ io_duart_post_write(int debug, uint8_t *space, unsigned width, unsigned adr)
 			irq_raise(&IRQ_DIAG_BUS_RXRDY);
 		if (ioc_duart->opr & 0x80)
 			irq_raise(&IRQ_DIAG_BUS_TXRDY);
+
+		AZ(pthread_cond_signal(&modem_cond));
 		break;
 	case REG_W_CLR_BITS:
 		ioc_duart->opr &= ~space[adr];
@@ -429,6 +569,8 @@ io_duart_post_write(int debug, uint8_t *space, unsigned width, unsigned adr)
 			irq_lower(&IRQ_DIAG_BUS_RXRDY);
 		if (!(ioc_duart->opr & 0x80))
 			irq_lower(&IRQ_DIAG_BUS_TXRDY);
+
+		AZ(pthread_cond_signal(&modem_cond));
 		break;
 	default:
 		break;
@@ -454,7 +596,9 @@ ioc_duart_init(void)
 	ioc_duart->chan[0].rx_irq = &IRQ_MODEM_RXRDY;
 	ioc_duart->chan[0].tx_irq = &IRQ_MODEM_TXRDY;
 	ioc_duart->chan[0].name = "MODEM";
-	ioc_duart->chan[0].inflight = 70400;		// 9600/1200 ?
+	ioc_duart->chan[0].inflight = 1041666;		// 9600
+	ioc_duart->chan[0].tx_isr_bit = 0x01;
+	ioc_duart->chan[0].cond = &modem_cond;
 
 	AN(diag_elastic);
 	ioc_duart->chan[1].ep = diag_elastic;
@@ -464,13 +608,19 @@ ioc_duart_init(void)
 	ioc_duart->chan[1].name = "DIAGBUS";
 	ioc_duart->chan[1].is_diagbus = 1;
 	ioc_duart->chan[1].vsb = VSB_new_auto();
+	ioc_duart->chan[1].tx_isr_bit = 0x10;
+	ioc_duart->chan[1].cond = &diagbus_cond;
 	AN(ioc_duart->chan[1].vsb);
+
+	ioc_duart->ipcr = IP0_CTS | IP1_DSR | IP3_DCD;
+	ioc_duart->ipcr = IP0_CTS | IP1_DSR;
 
 	// 1/10_MHz * (64 * 11_bits) = 70400 nsec
 	ioc_duart->chan[1].inflight = 70400;
 	ioc_duart->chan[1].inflight /= 2;		// hack
 
-	ioc_duart->chan[1].isdiag = 1;
 	callout_callback(ioc_duart_pit_callback, NULL, 0, 25600);
 	AZ(pthread_create(&diag_rx, NULL, thr_duart_rx, &ioc_duart->chan[1]));
+	AZ(pthread_create(&modem_rx, NULL, thr_duart_rx, &ioc_duart->chan[0]));
+	AZ(pthread_create(&modem_sim, NULL, thr_modem_sim, &ioc_duart->chan[0]));
 }
