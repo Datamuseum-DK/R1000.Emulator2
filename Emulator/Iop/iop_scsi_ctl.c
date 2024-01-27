@@ -96,11 +96,14 @@ void
 scsi_to_target(struct scsi_dev *sd, void *ptr, unsigned len)
 {
 	unsigned xlen;
+	uint8_t *pp = ptr;
 
 	assert(!(sd->ctl->regs[0x15] & 0x40));
 	xlen = vbe32dec(sd->ctl->regs + 0x11) & 0xffffff;
 	assert(len <= xlen);
-	dma_read(sd->ctl->dma_seg, sd->ctl->dma_adr, ptr, len);
+	for (xlen = 0; xlen < len; xlen += (1<<10)) {
+		dma_read(sd->ctl->dma_seg, sd->ctl->dma_adr + xlen, pp + xlen, 1<<10);
+	}
 	Trace(trace_scsi_cmd, "%s T %p <- R [%x]", sd->ctl->name, ptr, len);
 }
 
@@ -108,11 +111,14 @@ void
 scsi_fm_target(struct scsi_dev *sd, void *ptr, unsigned len)
 {
 	unsigned xlen;
+	uint8_t *pp = ptr;
 
 	assert((sd->ctl->regs[0x15] & 0x40));
 	xlen = vbe32dec(sd->ctl->regs + 0x11) & 0xffffff;
 	assert(len <= xlen);
-	dma_write(sd->ctl->dma_seg, sd->ctl->dma_adr, ptr, len);
+	for (xlen = 0; xlen < len; xlen += (1<<10)) {
+		dma_write(sd->ctl->dma_seg, sd->ctl->dma_adr + xlen, pp + xlen, 1<<10);
+	}
 	Trace(trace_scsi_cmd, "%s T %p -> R [%x]", sd->ctl->name, ptr, len);
 }
 
