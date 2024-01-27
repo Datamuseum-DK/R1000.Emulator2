@@ -39,7 +39,7 @@ from part import PartModel, PartFactory
 class XTVPAR(PartFactory):
     ''' TV RF parity RAM '''
 
-    # XXX: autopin fails
+    autopin = True
 
     def state(self, file):
         file.fmt('''
@@ -57,8 +57,6 @@ class XTVPAR(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|	if (PIN_CLKQ2.posedge()) {
 		|		BUS_AADR_READ(state->aaddr);
@@ -75,8 +73,10 @@ class XTVPAR(PartFactory):
 		|	if (PIN_BWE.posedge()) {
 		|		state->bpar[state->baddr] = state->cchk;
 		|	}
-		|	BUS_APAR_WRITE(state->apar[state->aaddr]);
-		|	BUS_BPAR_WRITE(state->bpar[state->baddr]);
+		|	output.apar = (state->apar[state->aaddr]);
+		|	BUS_APAR_WRITE(output.apar);
+		|	output.bpar = (state->bpar[state->baddr]);
+		|	BUS_BPAR_WRITE(output.bpar);
 		|	
 		|''')
 

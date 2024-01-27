@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XLRU(PartFactory):
     ''' MEM32 LRU logic '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	bool qhit;
@@ -212,7 +214,7 @@ class XLRU(PartFactory):
 		|
 		|		state->qlpar = odd_parity(state->qlru);
 		|
-		|		PIN_LOGQ<=(state->qlog);
+		|		output.logq = state->qlog;
 		|	}
 		|
 		|	hit = true;
@@ -228,16 +230,14 @@ class XLRU(PartFactory):
 		|		state->oeq = !(PIN_LRUP=> && (!PIN_H1=>) && (!hit));
 		|	}
 		|
-		|	unsigned hrlu;
 		|	if (!state->oeq) {
-		|		BUS_HLRU_WRITE(state->qlru);
-		|		hrlu = state->qlru;
+		|		output.hlru = state->qlru;
+		|		output.z_hlru = false;
 		|	} else if (!state->oeh) {
-		|		BUS_HLRU_WRITE(state->dlru);
-		|		hrlu = state->dlru;
+		|		output.hlru = state->dlru;
+		|		output.z_hlru = false;
 		|	} else {
-		|		BUS_HLRU_Z();
-		|		hrlu = BUS_HLRU_MASK + 1;
+		|		output.z_hlru = true;
 		|	}
 		|
 		|	unsigned wrd = BUS_WRD_MASK + 1;
@@ -257,50 +257,7 @@ class XLRU(PartFactory):
 		|		wrd |= state->para;
 		|	}
 		|	wrd ^= 0xff;
-		|	BUS_WRD_WRITE(wrd);
-		|
-		|	TRACE(
-		|		<< " late " << late
-		|		<< " clk^v " << pos << neg
-		|		<< " n " << PIN_NMAT?
-		|		<< " up " << PIN_LRUP?
-		|		<< " i " << BUS_LRI_TRACE()
-		|		<< " - "
-		|		<< " f " << PIN_MRIF?
-		|		<< " h1 " << PIN_H1?
-		|		<< " par " << PIN_PAR?
-		|		<< " fh " << PIN_FHIT?
-		|		<< " ph " << PIN_PHIT?
-		|		<< " c1 " << PIN_CYC1?
-		|		<< " cmd " << BUS_CMD_TRACE()
-		|		<< " tag " << BUS_TAG_TRACE()
-		|		<< " - "
-		|		<< " " << std::hex << state->qhit
-		|		<< " " << std::hex << state->qlog
-		|		<< " " << std::hex << state->qsoil
-		|		<< " " << std::hex << state->dsoil
-		|		<< " " << std::hex << state->qmod
-		|		<< " " << std::hex << state->qlpar
-		|		<< " " << std::hex << state->dlpar
-		|		<< " " << std::hex << state->dpar6
-		|		<< " " << std::hex << state->qlru
-		|		<< " " << std::hex << state->dlru
-		|		<< " " << std::hex << state->dhit
-		|		<< " " << std::hex << state->hhit
-		|		<< " " << std::hex << state->qpar
-		|		<< " " << std::hex << state->oeq
-		|		<< " " << std::hex << state->oeh
-		|		<< " " << std::hex << state->modd
-		|		<< " " << std::hex << state->modm
-		|		<< " " << std::hex << state->lrua
-		|		<< " " << std::hex << state->lrub
-		|		<< " " << std::hex << state->para
-		|		<< " " << std::hex << state->parb
-		|		<< " - "
-		|		<< " hrlu " << std::hex << hrlu
-		|		<< " hit " << hit
-		|		<< " wrd " << std::hex << wrd
-		|	);
+		|	output.wrd = wrd;
 		|''')
 
 def register(part_lib):

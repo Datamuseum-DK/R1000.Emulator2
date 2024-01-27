@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XTYPWCS(PartFactory):
     ''' TYP Writable Control Store '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t ram[1<<BUS_UAC_WIDTH];
@@ -46,18 +48,19 @@ class XTYPWCS(PartFactory):
 		|	uint64_t wcs, ff1, ff2, ff3, sr0, sr1, sr2, sr3;
 		|''')
 
-    def xxsensitive(self):
+    def sensitive(self):
         yield "PIN_UCLK.pos()"
         yield "PIN_WE.pos()"
-        yield "PIN_FPA"
+        yield "BUS_DGI"
+        yield "BUS_UAC"
+        yield "BUS_UAD"
+        yield "PIN_DUAS"
+        yield "PIN_PDCY"
         yield "PIN_SUIR"
-        yield "BUS_UAC_SENSITIVE()"
-        yield "BUS_UAD_SENSITIVE()"
+        yield "PIN_USEL"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|#define PERMUTE(MX) \\
@@ -135,30 +138,6 @@ class XTYPWCS(PartFactory):
 		|		state->wcs |= (state->sr3 & 1) << 63; \\
 		|	} while (0)
 		|
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		BUS_UIR_WRITE(state->wcs);
-		|		uint64_t tmp = state->ram[state->addr];
-		|		unsigned aadr = (tmp >> BUS_UIR_LSB(5)) & 0x3f;
-		|		PIN_ALD<=(aadr == 0x13);
-		|		unsigned badr = (tmp >> BUS_UIR_LSB(11)) & 0x3f;
-		|		PIN_BLD<=(badr == 0x13);
-		|		uint64_t par;
-		|		par = state->wcs & BUS_UIR_MASK;
-		|		par = ((par >> 32) ^ par) & 0xffffffff;
-		|		par = ((par >> 16) ^ par) & 0xffff;
-		|		par = ((par >> 8) ^ par) & 0xff;
-		|		par = ((par >> 4) ^ par) & 0xf;
-		|		par = ((par >> 2) ^ par) & 0x3;
-		|		par = ((par >> 1) ^ par) & 0x1;
-		|		par ^= 1;
-		|		PIN_PERR<=(par);
-		|		unsigned clit = 0;
-		|		clit |= (state->wcs >> BUS_UIR_LSB(16)) & 0x1f;
-		|		clit |= ((state->wcs >> BUS_UIR_LSB(18)) & 0x3) << 5;
-		|		BUS_CLIT_WRITE(clit);
-		|	}
-		|
 		|	unsigned uad, cnt;
 		|	BUS_UAC_READ(cnt);
 		|	BUS_UAD_READ(uad);
@@ -181,7 +160,7 @@ class XTYPWCS(PartFactory):
 		|	upar1 = ((upar1 >> 1) | upar1) & 0x1;
 		|	upar0 ^= 1;
 		|	upar1 ^= 1;
-		|	PIN_UPER<=!(upar0 | upar1);
+		|	output.uper = !(upar0 | upar1);
 		|
 		|	if (PIN_UCLK.posedge()) {
 		|		if (PIN_USEL=>) {
@@ -210,9 +189,11 @@ class XTYPWCS(PartFactory):
 		|			state->sr3 |= ((diag >> 2) & 1) << 7;
 		|			TOWCS();
 		|		}
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
+		|		output.uir = state->wcs;
+		|		output.perr =
+		|		    !odd_parity(odd_parity64(state->wcs & BUS_UIR_MASK));
 		|	}
+		|	output.z_dgo = PIN_SUIR=>;
 		|	if (!PIN_SUIR=>) {
 		|		unsigned dout = 0;
 		|		TOSR();
@@ -226,19 +207,28 @@ class XTYPWCS(PartFactory):
 		|		dout ^= 0x80;
 		|		dout ^= 0xff;
 		|		dout |= 0x01;
-		|		BUS_DGO_WRITE(dout);
-		|	} else if (PIN_SUIR.posedge()) {
-		|		BUS_DGO_Z();
+		|		output.dgo = dout;
 		|	}
 		|	if (PIN_WE.posedge()) {
 		|		state->ram[state->addr] = state->wcs;
 		|	}
 		|	unsigned csacntl0 = (state->ram[state->addr] >> BUS_UIR_LSB(45)) & 7;
 		|	unsigned csacntl1 = (state->wcs >> BUS_UIR_LSB(45)) & 6;
-		|	PIN_FPDT<=!(
+		|	output.fpdt = !(
 		|		(csacntl0 == 7) &&
 		|		(csacntl1 == 0)
 		|	);
+		|
+		|	uint64_t tmp = state->ram[state->addr];
+		|	unsigned aadr = (tmp >> BUS_UIR_LSB(5)) & 0x3f;
+		|	output.ald = (aadr == 0x13);
+		|	unsigned badr = (tmp >> BUS_UIR_LSB(11)) & 0x3f;
+		|	output.bld = (badr == 0x13);
+		|
+		|	unsigned clit = 0;
+		|	clit |= (state->wcs >> BUS_UIR_LSB(16)) & 0x1f;
+		|	clit |= ((state->wcs >> BUS_UIR_LSB(18)) & 0x3) << 5;
+		|	output.clit = clit;
 		|''')
 
 def register(part_lib):

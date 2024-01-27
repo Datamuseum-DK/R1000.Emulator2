@@ -39,11 +39,7 @@ from part import PartModel, PartFactory
 class XTCOND(PartFactory):
     ''' TYP conditions '''
 
-    def state(self, file):
-        file.fmt('''
-		|	bool cond0, cond1, cond2, cond3, cond4;
-		|	bool last_cond;
-		|''')
+    autopin = True
 
     def private(self):
         ''' private variables '''
@@ -128,19 +124,7 @@ class XTCOND(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		PIN_LVCND<=(state->last_cond);
-		|		PIN_VCOND0<=(!state->cond0);
-		|		PIN_VCOND1<=(!state->cond1);
-		|		PIN_VCOND2<=(!state->cond2);
-		|		PIN_VCOND3<=(!state->cond3);
-		|		PIN_VCOND4<=(!state->cond4);
-		|	}
-		|
 		|	bool sclk = PIN_SCLK.posedge();
 		|
 		|	unsigned sel;
@@ -157,13 +141,6 @@ class XTCOND(PartFactory):
 		|	default: break;
 		|	}
 		|
-		|	bool cond0 = state->cond0;
-		|	bool cond1 = state->cond1;
-		|	bool cond2 = state->cond2;
-		|	bool cond3 = state->cond3;
-		|	bool cond4 = state->cond4;
-		|	bool last_cond = state->last_cond;
-		|
 		|	unsigned bbit = 0;
 		|	unsigned loop = 0;
 		|	unsigned aluz = 0;
@@ -173,159 +150,222 @@ class XTCOND(PartFactory):
 		|#define SIGNS_EQ() (PIN_ABIT0=> ^ BBIT0())
 		|#define OVR_SIGN() (!((SIGNS_EQ() && PIN_ISBIN=>) || (!PIN_ISBIN=> && !PIN_ABIT0=>)))
 		|
+		|	bool cond;
 		|	switch (group) {
 		|	case 0:
 		|		switch (which) {
 		|		case 0:
 		|		case 6:
 		|			BUS_ALUZ_READ(aluz);
-		|			cond0 = aluz != BUS_ALUZ_MASK;
-		|			next_trigger(aluz_event);
+		|			cond = aluz != BUS_ALUZ_MASK;
+		|			idle_next = &aluz_event;
 		|			break;
 		|		case 1:
 		|			BUS_ALUZ_READ(aluz);
-		|			cond0 = aluz == BUS_ALUZ_MASK;
-		|			next_trigger(aluz_event);
+		|			cond = aluz == BUS_ALUZ_MASK;
+		|			idle_next = &aluz_event;
 		|			break;
 		|		case 2:
 		|			BUS_BBIT_READ(bbit);
-		|			cond0 = !(
+		|			cond = !(
 		|				(SIGNS_EQ() && PIN_ABIT0=>) ||
 		|				(PIN_C1A=> && (OVR_SIGN() ^ PIN_SELA=>))
 		|			);
-		|			next_trigger(c0c_event);
+		|			idle_next = &c0c_event;
 		|			break;
 		|		case 4:
 		|			BUS_LOOP_READ(loop);
-		|			cond0 = loop != BUS_LOOP_MASK;
-		|			next_trigger(loop_event);
+		|			cond = loop != BUS_LOOP_MASK;
+		|			idle_next = &loop_event;
 		|			break;
-		|		case 7: cond0 = PIN_C0H=>; next_trigger(c0h_event); break;
-		|		default: cond0 = true; break;
+		|		case 7:
+		|			cond = PIN_C0H=>;
+		|			idle_next = &c0h_event;
+		|			break;
+		|		default:
+		|			cond = true;
+		|			break;
 		|		}
 		|		if (sclk)
-		|			last_cond = cond0;
+		|			output.lvcnd = cond;
+		|		if (!cond)
+		|			output.vcond |= 0x10;
+		|		else
+		|			output.vcond &= ~0x10;
 		|		break;
 		|	case 1:
 		|		switch (which) {
-		|		case 0: cond1 = !PIN_C1A=>; next_trigger(c1a_event); break;
+		|		case 0:
+		|			cond = !PIN_C1A=>;
+		|			idle_next = &c1a_event;
+		|			break;
 		|		case 1:
 		|			BUS_BBIT_READ(bbit);
-		|			cond1 = PIN_OVREN=> || (
+		|			cond = PIN_OVREN=> || (
 		|				PIN_C1A=> ^ PIN_C1C=> ^ PIN_SELA=> ^ OVR_SIGN()
 		|			);
-		|			next_trigger(c1b_event);
+		|			idle_next = &c1b_event;
 		|			break;
-		|		case 2: cond1 = PIN_C1C=>; next_trigger(c1c_event); break;
+		|		case 2:
+		|			cond = PIN_C1C=>;
+		|			idle_next = &c1c_event;
+		|			break;
 		|		case 3:
 		|			BUS_ALUZ_READ(aluz);
-		|			cond1 = !(PIN_C1C=> && (aluz != BUS_ALUZ_MASK));
-		|			next_trigger(c1d_event);
+		|			cond = !(PIN_C1C=> && (aluz != BUS_ALUZ_MASK));
+		|			idle_next = &c1d_event;
 		|			break;
 		|		case 4:
 		|			BUS_BBIT_READ(bbit);
-		|			cond1 = SIGNS_EQ();
-		|			next_trigger(c1e_event);
+		|			cond = SIGNS_EQ();
+		|			idle_next = &c1e_event;
 		|			break;
-		|		case 5: cond1 = true; break;
-		|		case 6: cond1 = false; break;
-		|		case 7: cond1 = state->last_cond; break;
-		|		default: cond1 = true; break;
+		|		case 5:
+		|			cond = true;
+		|			break;
+		|		case 6:
+		|			cond = false;
+		|			break;
+		|		case 7:
+		|			cond = output.lvcnd;
+		|			break;
+		|		default:
+		|			cond = true;
+		|			break;
 		|		}
 		|		if (sclk)
-		|			last_cond = cond1;
+		|			output.lvcnd = cond;
+		|		if (!cond)
+		|			output.vcond |= 0x08;
+		|		else
+		|			output.vcond &= ~0x08;
 		|		break;
 		|	case 2:
 		|		switch (which) {
-		|		case 0: cond2 = PIN_C2A=>; next_trigger(c2a_event); break;
-		|		case 1: cond2 = PIN_C2B=>; next_trigger(c2b_event); break;
-		|		case 2: cond2 = PIN_C2C=>; next_trigger(c2c_event); break;
-		|		case 3: cond2 = PIN_C2D=>; next_trigger(c2d_event); break;
-		|		case 4: cond2 = PIN_C2E=>; next_trigger(c2e_event); break;
-		|		case 5: cond2 = PIN_C2F=>; next_trigger(c2f_event); break;
-		|		case 6: cond2 = PIN_C2G=>; next_trigger(c2g_event); break;
-		|		case 7:
-		|			cond2 = PIN_C3C=> && PIN_C3A;
-		|			next_trigger(c3d_event);	// 2h and 3d use same
+		|		case 0:
+		|			cond = PIN_C2A=>;
+		|			idle_next = &c2a_event;
 		|			break;
-		|		default: cond2 = true; break;
+		|		case 1:
+		|			cond = PIN_C2B=>;
+		|			idle_next = &c2b_event;
+		|			break;
+		|		case 2:
+		|			cond = PIN_C2C=>;
+		|			idle_next = &c2c_event;
+		|			break;
+		|		case 3:
+		|			cond = PIN_C2D=>;
+		|			idle_next = &c2d_event;
+		|			break;
+		|		case 4:
+		|			cond = PIN_C2E=>;
+		|			idle_next = &c2e_event;
+		|			break;
+		|		case 5:
+		|			cond = PIN_C2F=>;
+		|			idle_next = &c2f_event;
+		|			break;
+		|		case 6:
+		|			cond = PIN_C2G=>;
+		|			idle_next = &c2g_event;
+		|			break;
+		|		case 7:
+		|			cond = PIN_C3C=> && PIN_C3A;
+		|			idle_next = &c3d_event;	// 2h and 3d use same
+		|			break;
+		|		default:
+		|			cond = true;
+		|			break;
 		|		}
 		|		if (sclk)
-		|			last_cond = cond2;
+		|			output.lvcnd = cond;
+		|		if (!cond)
+		|			output.vcond |= 0x04;
+		|		else
+		|			output.vcond &= ~0x04;
 		|		break;
 		|	case 3:
 		|		switch (which) {
-		|		case 0: cond3 = PIN_C3A=>; next_trigger(c3a_event); break;
-		|		case 1: cond3 = PIN_C3B=>; next_trigger(c3b_event); break;
-		|		case 2: cond3 = PIN_C3C=>; next_trigger(c3c_event); break;
-		|		case 3:
-		|			cond3 = !(PIN_C3A=> || PIN_C3C=>);
-		|			next_trigger(c3d_event);
+		|		case 0:
+		|			cond = PIN_C3A=>;
+		|			idle_next = &c3a_event;
 		|			break;
-		|		case 4: cond3 = PIN_C3E=>; next_trigger(c3e_event); break;
+		|		case 1:
+		|			cond = PIN_C3B=>;
+		|			idle_next = &c3b_event;
+		|			break;
+		|		case 2:
+		|			cond = PIN_C3C=>;
+		|			idle_next = &c3c_event;
+		|			break;
+		|		case 3:
+		|			cond = !(PIN_C3A=> || PIN_C3C=>);
+		|			idle_next = &c3d_event;
+		|			break;
+		|		case 4:
+		|			cond = PIN_C3E=>;
+		|			idle_next = &c3e_event;
+		|			break;
 		|		case 5:
 		|			BUS_BBIT_READ(bbit);
-		|			cond3 = (bbit >> 4) & 1;
-		|			next_trigger(bbit_event);
+		|			cond = (bbit >> 4) & 1;
+		|			idle_next = &bbit_event;
 		|			break;
 		|		case 6:
 		|			BUS_BBIT_READ(bbit);
-		|			cond3 = (bbit >> 3) & 1;
-		|			next_trigger(bbit_event);
+		|			cond = (bbit >> 3) & 1;
+		|			idle_next = &bbit_event;
 		|			break;
 		|		case 7:
 		|			BUS_BBIT_READ(bbit);
-		|			cond3 = (bbit >> 2) & 1;
-		|			next_trigger(bbit_event);
+		|			cond = (bbit >> 2) & 1;
+		|			idle_next = &bbit_event;
 		|			break;
-		|		default: cond3 = true; break;
+		|		default:
+		|			cond = true;
+		|			break;
 		|		}
 		|		if (sclk)
-		|			last_cond = cond3;
+		|			output.lvcnd = cond;
+		|		if (!cond)
+		|			output.vcond |= 0x02;
+		|		else
+		|			output.vcond &= ~0x02;
 		|		break;
 		|	case 4:
 		|		switch (which) {
 		|		case 0:
 		|			BUS_BBIT_READ(bbit);
-		|			cond4 = (bbit >> 1) & 1;
-		|			next_trigger(bbit_event);
+		|			cond = (bbit >> 1) & 1;
+		|			idle_next = &bbit_event;
 		|			break;
 		|		case 1:
 		|			BUS_BBIT_READ(bbit);
-		|			cond4 = (bbit >> 0) & 1;
-		|			next_trigger(bbit_event);
+		|			cond = (bbit >> 0) & 1;
+		|			idle_next = &bbit_event;
 		|			break;
 		|		case 2:
 		|			BUS_BBIT_READ(bbit);
-		|			cond4 = (bbit & 0x0d) != 0x0d;
-		|			next_trigger(bbit_event);
+		|			cond = (bbit & 0x0d) != 0x0d;
+		|			idle_next = &bbit_event;
 		|			break;
 		|		case 7:
 		|			BUS_BBIT_READ(bbit);
-		|			cond4 = (bbit >> 5) & 1;
-		|			next_trigger(bbit_event);
+		|			cond = (bbit >> 5) & 1;
+		|			idle_next = &bbit_event;
 		|			break;
-		|		default: cond4 = true; break;
+		|		default:
+		|			cond = true;
+		|			break;
 		|		}
 		|		if (sclk)
-		|			last_cond = cond4;
+		|			output.lvcnd = cond;
+		|		if (!cond)
+		|			output.vcond |= 0x01;
+		|		else
+		|			output.vcond &= ~0x01;
 		|		break;
-		|	}
-		|	if (last_cond != state->last_cond ||
-		|	    cond0 != state->cond0 ||
-		|	    cond1 != state->cond1 ||
-		|	    cond2 != state->cond2 ||
-		|	    cond3 != state->cond3 ||
-		|	    cond4 != state->cond4
-		|	) {
-		|		state->last_cond = last_cond;
-		|		state->cond0 = cond0;
-		|		state->cond1 = cond1;
-		|		state->cond2 = cond2;
-		|		state->cond3 = cond3;
-		|		state->cond4 = cond4;
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|''')
 

@@ -39,12 +39,7 @@ from part import PartModel, PartFactory
 class XVCOND(PartFactory):
     ''' VAL conditions '''
 
-    def state(self, file):
-        file.fmt('''
-		|	bool cond0, cond1, cond2;
-		|	bool last_cond;
-		|	bool m_bit;
-		|''')
+    autopin = True
 
     def private(self):
         ''' private variables '''
@@ -119,18 +114,7 @@ class XVCOND(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		PIN_LVCND<=(state->last_cond);
-		|		PIN_VCOND0<=(!state->cond0);
-		|		PIN_VCOND1<=(!state->cond1);
-		|		PIN_VCOND2<=(!state->cond2);
-		|		PIN_MBIT<=(state->m_bit);
-		|	}
-		|
 		|	bool sclk = PIN_SCLK.posedge();
 		|
 		|	unsigned sel;
@@ -145,16 +129,10 @@ class XVCOND(PartFactory):
 		|	default: break;
 		|	}
 		|
-		|	bool cond0 = state->cond0;
-		|	bool cond1 = state->cond1;
-		|	bool cond2 = state->cond2;
-		|	bool last_cond = state->last_cond;
-		|	bool m_bit = state->m_bit;
+		|	bool cond;
 		|
 		|	if (sclk) {
-		|		m_bit = PIN_C1C=>;
-		|	} else {
-		|		m_bit = state->m_bit;
+		|		output.mbit = PIN_C1C=>;
 		|	}
 		|
 		|	bool ovrsgn = false;
@@ -175,98 +153,112 @@ class XVCOND(PartFactory):
 		|		switch (which) {
 		|		case 0:
 		|			BUS_AZ_READ(zero);
-		|			cond0 = (zero != 0xff);
-		|			next_trigger(zero_event);
+		|			cond = (zero != 0xff);
+		|			idle_next = &zero_event;
 		|			break;
 		|		case 1:
 		|		case 6:
 		|			BUS_AZ_READ(zero);
-		|			cond0 = (zero == 0xff);
-		|			next_trigger(zero_event);
+		|			cond = (zero == 0xff);
+		|			idle_next = &zero_event;
 		|			break;
 		|		case 2:
 		|			DO_OVRSGN();
-		|			cond0 = !(
+		|			cond = !(
 		|				(PIN_BBD0=> && (PIN_BAD0=> ^ PIN_BBD0=>)) ||
 		|				(!PIN_C1A=> && (ovrsgn ^ PIN_SELA=>))
 		|			);
-		|			next_trigger(c0c_event);
+		|			idle_next = &c0c_event;
 		|			break;
 		|		case 4:
 		|			unsigned loop;
 		|			BUS_LCN_READ(loop);
-		|			cond0 = loop != BUS_LCN_MASK;
-		|			next_trigger(c0e_event);
+		|			cond = loop != BUS_LCN_MASK;
+		|			idle_next = &c0e_event;
 		|			break;
-		|		case 7: cond0 = PIN_C0H=>; next_trigger(c0h_event); break;
-		|		default: cond0 = true; break;
+		|		case 7:
+		|			cond = PIN_C0H=>;
+		|			idle_next = &c0h_event;
+		|			break;
+		|		default:
+		|			cond = true;
+		|			break;
 		|		}
 		|		if (sclk)
-		|			last_cond = cond0;
+		|			output.lvcnd = cond;
+		|		output.vcond = !cond ? 4 : 0;
 		|		break;
 		|	case 1:
 		|		switch (which) {
-		|		case 0: cond1 = !PIN_C1A=>; next_trigger(c1a_event); break;
+		|		case 0:
+		|			cond = !PIN_C1A=>;
+		|			idle_next = &c1a_event;
+		|			break;
 		|		case 1:
 		|			DO_OVRSGN();
-		|			cond1 = PIN_OVRE=> || !(ovrsgn ^ PIN_SELA=> ^ (!PIN_C1A=>) ^ PIN_C1C=>);
-		|			next_trigger(c1b_event);
+		|			cond = PIN_OVRE=> || !(ovrsgn ^ PIN_SELA=> ^ (!PIN_C1A=>) ^ PIN_C1C=>);
+		|			idle_next = &c1b_event;
 		|			break;
-		|		case 2: cond1 = PIN_C1C=>; next_trigger(c1c_event); break;
+		|		case 2:
+		|			cond = PIN_C1C=>;
+		|			idle_next = &c1c_event;
+		|			break;
 		|		case 3:
 		|			BUS_AZ_READ(zero);
-		|			cond1 = !PIN_C1C=> || (zero == 0xff);
-		|			next_trigger(c1d_event);
+		|			cond = !PIN_C1C=> || (zero == 0xff);
+		|			idle_next = &c1d_event;
 		|			break;
 		|		case 4:
-		|			cond1 = (PIN_BAD0=> ^ PIN_BBD0);
-		|			next_trigger(c1e_event);
+		|			cond = (PIN_BAD0=> ^ PIN_BBD0);
+		|			idle_next = &c1e_event;
 		|			break;
-		|		case 7: cond1 = PIN_C1H=>; next_trigger(c1h_event); break;
-		|		default: cond1 = true; break;
+		|		case 7:
+		|			cond = PIN_C1H=>;
+		|			idle_next = &c1h_event;
+		|			break;
+		|		default:
+		|			cond = true;
+		|			break;
 		|		}
 		|		if (sclk)
-		|			last_cond = cond1;
+		|			output.lvcnd = cond;
+		|		output.vcond = !cond ? 2 : 0;
 		|		break;
 		|	case 2:
 		|		switch (which) {
 		|		case 0:
 		|			BUS_AZ_READ(zero);
-		|			cond2 = ((zero & 0xf0) != 0xf0);
-		|			next_trigger(zero_event);
+		|			cond = ((zero & 0xf0) != 0xf0);
+		|			idle_next = &zero_event;
 		|			break;
 		|		case 1:
 		|			BUS_AZ_READ(zero);
-		|			cond2 = ((zero & 0xfc) != 0xfc);
-		|			next_trigger(zero_event);
+		|			cond = ((zero & 0xfc) != 0xfc);
+		|			idle_next = &zero_event;
 		|			break;
 		|		case 2:
 		|			BUS_AZ_READ(zero);
-		|			cond2 = ((zero & 0x0c) != 0x0c);
-		|			next_trigger(zero_event);
+		|			cond = ((zero & 0x0c) != 0x0c);
+		|			idle_next = &zero_event;
 		|			break;
-		|		case 3: cond2 = PIN_C2D=>; next_trigger(c2d_event); break;
-		|		case 5: cond2 = m_bit; break;
-		|		case 6: cond2 = false; break;
-		|		default: cond2 = true; break;
+		|		case 3:
+		|			cond = PIN_C2D=>;
+		|			idle_next = &c2d_event;
+		|			break;
+		|		case 5:
+		|			cond = output.mbit;
+		|			break;
+		|		case 6:
+		|			cond = false;
+		|			break;
+		|		default:
+		|			cond = true;
+		|			break;
 		|		}
 		|		if (sclk)
-		|			last_cond = cond2;
+		|			output.lvcnd = cond;
+		|		output.vcond = !cond ? 1 : 0;
 		|		break;
-		|	}
-		|	if (last_cond != state->last_cond ||
-		|	    cond0 != state->cond0 ||
-		|	    cond1 != state->cond1 ||
-		|	    cond2 != state->cond2 ||
-		|	    m_bit != state->m_bit
-		|	) {
-		|		state->last_cond = last_cond;
-		|		state->cond0 = cond0;
-		|		state->cond1 = cond1;
-		|		state->cond2 = cond2;
-		|		state->m_bit = m_bit;
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|''')
 
