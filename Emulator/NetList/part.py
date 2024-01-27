@@ -440,12 +440,17 @@ class PartFactory(Part):
 
     def autopin_state(self, file):
         ''' Extra state variable '''
-        file.write('\tstruct output_pins output;\n')
-        file.write('\tint64_t idle;\n')
+        file.fmt('''
+		|	struct output_pins output;
+		|	int64_t idle;
+		|''')
 
     def autopin_doit_before(self, file):
-        file.write('\tstruct output_pins output = state->output;\n')
-        file.write('\tif (state->ctx.job & 1) {\n')
+        file.fmt('''
+		|	sc_core::sc_event_or_list *idle_next = NULL;
+		|	struct output_pins output = state->output;
+		|	if (state->ctx.job & 1) {
+		|''')
         for node in self.comp:
             if not self.is_autopin(node):
                 continue
@@ -484,6 +489,10 @@ class PartFactory(Part):
 		|	}
 		|	if (state->ctx.job) {
 		|		next_trigger(5, sc_core::SC_NS);
+		|	} else if (idle_next != NULL) {
+		|		state->ctx.wastage++;
+		|		state->idle++;
+		|		next_trigger(*idle_next);
 		|	} else {
 		|		state->ctx.wastage++;
 		|		state->idle++;
