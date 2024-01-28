@@ -53,58 +53,6 @@ class CY7C128(Chip):
         self.pins.append(Pin(4, "20", "OE", "T", True, "I"))
         self.pins.append(Pin(7, "21", "WE", "T", True, "I"))
 
-class CY7C128X2(Chip):
-
-    ''' Cypress CY7C128 - 2Kx8 Static RAM '''
-
-    symbol_name = "2KX16"
-
-    checked = "IOC 0033"
-
-    symbol = '''
-     |   |   |
-     |   |   |
-    %v  %v  %v
-   +-o---o---o-+
-   |           |
-   | CS  OE  WE|
-  %|           |%
--->+A0      IO0+<->
-  %|           |%
--->+A1      IO1+<->
-  %|           |%
--->+A2      IO2+<->
-  %|           |%
--->+A3      IO3+<->
-  %|           |%
--->+A4      IO4+<->
-  %|           |%
--->+A5      IO5+<->
-  %|           |%
--->+A6      IO6+<->
-  %|           |%
--->+A7      IO7+<->
-  %|           |%
--->+A8      IO8+<->
-  %|           |%
--->+A9      IO9+<->
-  %|           |%
--->+A10    IO10+<->
-   |           |%
-   |       IO11+<->
-   |           |%
-   |       IO12+<->
-   |           |%
-   |       IO13+<->
-   |           |%
-   |       IO14+<->
-   |  xnn      |%
-   |       IO15+<->
-   |  _        |
-   |           |
-   +-----------+
-'''
 
 def register():
     yield CY7C128(__file__)
-    yield CY7C128X2(__file__)

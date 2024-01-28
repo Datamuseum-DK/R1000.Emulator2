@@ -119,7 +119,4 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("F373", ModelXlat("F373"))
-    part_lib.add_part("XLAT16", ModelXlat("XLAT16"))
-    part_lib.add_part("XLAT32", ModelXlat("XLAT32"))
-    part_lib.add_part("XLAT56", ModelXlat("XLAT56"))
     part_lib.add_part("XLAT64", ModelXlat("XLAT64"))

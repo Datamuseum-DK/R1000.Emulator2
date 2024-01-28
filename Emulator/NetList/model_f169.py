@@ -122,6 +122,4 @@ def register(part_lib):
 
     part_lib.add_part("F169", ModelF169("F169", F169))
     part_lib.add_part("F169X2", ModelF169("F169X2", F169))
-    part_lib.add_part("F169X3", ModelF169("F169X3", F169))
     part_lib.add_part("F169X4", ModelF169("F169X4", F169))
-    part_lib.add_part("F169X5", ModelF169("F169X5", F169))

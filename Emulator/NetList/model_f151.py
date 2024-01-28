@@ -112,4 +112,3 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("F151", PartModel("F151", F151))
-    part_lib.add_part("F151V", PartModel("F151", F151))

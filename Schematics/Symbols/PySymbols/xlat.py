@@ -46,9 +46,4 @@ class XLAT(Chip):
         file.write("#endif\n")
            
 def register():
-    yield XLAT(16)
-    yield XLAT(20)
-    yield XLAT(24)
-    yield XLAT(32)
-    yield XLAT(56)
     yield XLAT(64)

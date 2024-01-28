@@ -105,5 +105,3 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("2149", PartModel("2149", SRAM2149))
-    part_lib.add_part("2149X2", PartModel("2149X2", SRAM2149))
-    part_lib.add_part("2149X4", PartModel("2149X4", SRAM2149))

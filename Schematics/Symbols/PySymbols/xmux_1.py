@@ -65,4 +65,3 @@ class XMUX_1(Chip):
            
 def register():
     yield XMUX_1(16)
-    yield XMUX_1(64)

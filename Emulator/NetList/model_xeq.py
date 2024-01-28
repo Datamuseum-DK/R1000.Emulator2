@@ -171,7 +171,3 @@ def register(part_lib):
     part_lib.add_part("F521", ModelXeq("F521", XEQ))
     part_lib.add_part("X521", ModelXeq("X521", XEQ))
     part_lib.add_part("XEQ9", ModelXeq("XEQ9", XEQ))
-    part_lib.add_part("XEQ16", ModelXeq("XEQ16", XEQ))
-    part_lib.add_part("XEQ20", ModelXeq("XEQ20", XEQ))
-    part_lib.add_part("XEQ32", ModelXeq("XEQ32", XEQ))
-    part_lib.add_part("XEQ40", ModelXeq("XEQ40", XEQ))

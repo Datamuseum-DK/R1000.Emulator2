@@ -62,7 +62,3 @@ class F245(Chip):
 
 def register():
     yield F245()
-    yield F245(11)
-    yield F245(16)
-    yield F245(32)
-    yield F245(64)

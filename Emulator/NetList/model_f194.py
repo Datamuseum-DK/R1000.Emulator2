@@ -126,5 +126,4 @@ def register(part_lib):
 
     part_lib.add_part("F194", PartModel("F194", F194))
     part_lib.add_part("XSR8", PartModel("XSR8", F194))
-    part_lib.add_part("XSR12", PartModel("XSR12", F194))
     part_lib.add_part("XSR16", PartModel("XSR16", F194))

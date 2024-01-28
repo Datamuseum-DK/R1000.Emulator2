@@ -66,6 +66,4 @@ class F169(Chip):
 def register():
     yield F169(4)
     yield F169(8)
-    yield F169(12)
     yield F169(16)
-    yield F169(20)

@@ -89,4 +89,3 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("F163", PartModel("F163", F163))
-    part_lib.add_part("F163X3", PartModel("F163X3", F163))

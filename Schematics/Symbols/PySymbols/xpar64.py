@@ -4,62 +4,6 @@
 
 from chip import Chip
 
-class XPAR18(Chip):
-
-    ''' 2x9 parity generator '''
-
-    symbol_name = "XPAR18"
-
-    symbol = '''
-         |
-         |
-        %v
-   +-----o-----+
-  %|     ODD   |%
--->+I0       P0+-->
-  %|           |%
--->+I1       P1+-->
-  %|           |
--->+I2         |
-  %|           |%
--->+I3     PALL+-->
-  %|           |
--->+I4         |
-  %|           |
--->+I5         |
-  %|           |
--->+I6         |
-  %|           |
--->+I7         |
-  %|           |
--->+I8         |
-  %|           |
--->+I9         |
-  %|           |
--->+I10        |
-  %|           |
--->+I11        |
-  %|           |
--->+I12        |
-  %|           |
--->+I13        |
-  %|           |
--->+I14        |
-  %|           |
--->+I15        |
-  %|           |
--->+I16        |
-  %|           |
--->+I17        |
-   |           |
-   |           |
-   |    xnn    |
-   |           |
-   | _         |
-   +-----------+
-'''
-
-
 class XPAR32(Chip):
 
     ''' 4x8 parity generator '''
@@ -331,7 +275,6 @@ class XADRPAR(Chip):
         super().__init__()
 
 def register():
-    yield XPAR18()
     yield XPAR64()
     yield XPAR32()
     yield XADRPAR()

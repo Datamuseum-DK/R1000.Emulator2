@@ -328,5 +328,4 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("F299", ModelF299("F299", F299))
-    part_lib.add_part("F299X2", ModelF299("F299X2", F299))
     part_lib.add_part("F299X8", ModelF299("F299X8", F299X8))

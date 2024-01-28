@@ -183,4 +183,3 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("64KX1", PartModel("64KX1", SRAM64KX1))
-    part_lib.add_part("64KX9", PartModel("64KX9", SRAM64KXN))

@@ -48,11 +48,5 @@ class XREG(Chip):
 def register():
     yield XREG(4)
     yield XREG(9)
-    yield XREG(10)
-    yield XREG(14)
     yield XREG(16)
-    yield XREG(20)
-    yield XREG(24)
     yield XREG(32)
-    yield XREG(36)
-    yield XREG(64)

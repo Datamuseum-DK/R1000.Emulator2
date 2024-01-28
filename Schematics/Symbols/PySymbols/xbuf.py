@@ -47,14 +47,10 @@ class XBUF(Chip):
            
 def register():
     yield XBUF(3)
-    yield XBUF(4)
-    yield XBUF(6)
     yield XBUF(8)
     yield XBUF(9)
     yield XBUF(16)
-    yield XBUF(20)
     yield XBUF(24)
     yield XBUF(32)
     yield XBUF(48)
-    yield XBUF(56)
     yield XBUF(64)

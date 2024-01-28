@@ -87,8 +87,4 @@ class XALUN(Chip):
         super().__init__()
 
 def register():
-    yield XALUN(8)
-    yield XALUN(20)
-    yield XALUN(24)
-    yield XALUN(32)
     yield XALUN(32, True)

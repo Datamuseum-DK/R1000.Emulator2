@@ -126,8 +126,4 @@ class XALU(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XALU8", PartModel("XALU8", XALU))
-    part_lib.add_part("XALU20", PartModel("XALU20", XALU))
-    part_lib.add_part("XALU24", PartModel("XALU20", XALU))
-    part_lib.add_part("XALU32", PartModel("XALU32", XALU))
     part_lib.add_part("XALU32C", PartModel("XALU32C", XALU))

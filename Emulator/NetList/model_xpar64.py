@@ -37,56 +37,6 @@
 
 from part import PartModel, PartFactory
 
-class XPAR18(PartFactory):
-
-    ''' 2x9 parity checker '''
-
-    autopin = True
-
-    def doit(self, file):
-        ''' The meat of the doit() function '''
-
-        super().doit(file)
-
-        file.fmt('''
-		|	uint32_t tmp, a, b, total = 0, par = 0;
-		|
-		|	BUS_I_READ(tmp);
-		|	a = tmp >> 9;
-		|	a = (a ^ (a >> 8)) & 0xff;
-		|	a = (a ^ (a >> 4)) & 0x0f;
-		|	a = (a ^ (a >> 2)) & 0x03;
-		|	a = (a ^ (a >> 1)) & 0x01;
-		|	b = tmp & 0x1ff;
-		|	b = (b ^ (b >> 8)) & 0xff;
-		|	b = (b ^ (b >> 4)) & 0x0f;
-		|	b = (b ^ (b >> 2)) & 0x03;
-		|	b = (b ^ (b >> 1)) & 0x01;
-		|
-		|	if (PIN_ODD=>) {
-		|		a ^= 1;
-		|		b ^= 1;
-		|	}
-		|
-		|	if (a) par |= 2;
-		|	if (b) par |= 1;
-		|	output.p = par;
-		|
-		|	total = a ^ b;
-		|
-		|	if (PIN_ODD=>)
-		|		total ^= 0x1;
-		|
-		|	TRACE(
-		|	    << " i " << BUS_I_TRACE()
-		|	    << " p " << std::hex << par
-		|	    << " a " << total
-		|	);
-		|
-		|	output.pall = total & 1;
-		|
-		|''')
-
 class XPAR64(PartFactory):
     ''' 8x8 parity checker '''
 
@@ -165,6 +115,5 @@ class XPAR32(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XPAR18", PartModel("XPAR18", XPAR18))
     part_lib.add_part("XPAR32", PartModel("XPAR32", XPAR32))
     part_lib.add_part("XPAR64", PartModel("XPAR64", XPAR64))

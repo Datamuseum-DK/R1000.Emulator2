@@ -221,6 +221,7 @@ class XTAGRAM(Chip):
 '''
 
 def register():
+    return
     yield XTAGRAM()
     yield XTAGRAM64()
     yield XTAGRAM8()

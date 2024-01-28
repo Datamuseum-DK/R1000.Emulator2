@@ -77,5 +77,3 @@ class DS8641XN(Chip):
 
 def register():
     yield DS8641(__file__)
-    yield DS8641XN(8)
-    yield DS8641XN(17)

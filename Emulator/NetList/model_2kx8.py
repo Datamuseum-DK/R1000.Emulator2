@@ -95,4 +95,3 @@ def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("2KX8", PartModel("2KX8", SRAM2KX8))
-    part_lib.add_part("2KX16", PartModel("2KX16", SRAM2KX8))

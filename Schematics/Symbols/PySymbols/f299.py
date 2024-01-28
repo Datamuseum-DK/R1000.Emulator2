@@ -50,68 +50,6 @@ class F299(Chip):
    +--------+
 '''
 
-class F299X2(Chip):
-
-    ''' 2 x 74x299 - 8-Bit Bidirectional Universal Shift Register '''
-
-    symbol_name = "F299X2"
-
-    checked = "IOC 0050"
-
-    symbol = '''
-      |  |
-      |  |
-     %v %v
-   +--+--o--+
-   |  v     |
-   | CLK CLR|
-  %|        |
--->+RSI     |
-  %|        |%
-<->+DQ0   G1o<--
-  %|        |%
-<->+DQ1   G2o<--
-  %|        |
-<->+DQ2     |
-  %|        |
-<->+DQ3     |
-  %|        |
-<->+DQ4     |
-  %|        |
-<->+DQ5     |
-  %|        |
-<->+DQ6     |
-  %|        |
-<->+DQ7     |
-  %|        |
-<->+DQ8     |
-  %|        |
-<->+DQ9     |
-  %|        |
-<->+DQ10    |
-  %|        |
-<->+DQ11    |
-  %|        |
-<->+DQ12    |
-  %|        |
-<->+DQ13    |
-  %|        |%
-<->+DQ14  Q0+-->
-  %|        |%
-<->+DQ15 Q15+-->
-  %|        |
--->+LSI     |
-   |        |
-   |        |
-  %|        |
--->+S0      |
-  %|        |
--->+S1 xnn  |
-   |        |
-   |  _     |
-   +--------+
-'''
-
 class F299X8(Chip):
 
     ''' 8 x 74x299 - 8-Bit Bidirectional Universal Shift Register '''
@@ -262,5 +200,4 @@ class F299X8(Chip):
 
 def register():
     yield F299()
-    yield F299X2()
     yield F299X8()

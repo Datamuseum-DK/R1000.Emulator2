@@ -14,8 +14,7 @@ class F163(Chip):
 
         self.checked = "IOC 0064"
 
-        if width == 4:
-            self.symbol = '''
+        self.symbol = '''
       |  |  |
       |  |  |
      2v 9v 1v
@@ -40,32 +39,7 @@ class F163(Chip):
    |    _      |
    +-----------+
 '''
-        else:
-
-            self.symbol = '''
-      |  |  |
-      |  |  |
-     %v %v %v
-   +--+--o--o--+
-   |  v        |
-   | CLK LD CLR|
-   |           |%
-   |         CO+-->
-'''
-            for i in range(width):
-                self.symbol += '  %|           |%\n'
-                self.symbol += '-->+D%-2d     %3s+-->\n' % (i, "Q%d" % i)
-            self.symbol += '''  %|           |
--->+ENP        |
-  %|           |
--->+ENT xnn    |
-   |           |
-   |    _      |
-   +-----------+
-'''
-
         super().__init__()
 
 def register():
     yield F163("F163", 4)
-    yield F163("F163X3", 12)

@@ -50,7 +50,3 @@ class XEQ(Chip):
            
 def register():
     yield XEQ(9)
-    yield XEQ(16)
-    yield XEQ(20)
-    yield XEQ(32)
-    yield XEQ(40)

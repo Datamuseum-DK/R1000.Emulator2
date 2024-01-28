@@ -147,6 +147,4 @@ class XSRN(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XSR8X4", PartModel("XSR8X4", XSRN))
-    part_lib.add_part("XSR8X5", PartModel("XSR8X5", XSRN))
     part_lib.add_part("XSR8X8", PartModel("XSR8X8", XSRN))
