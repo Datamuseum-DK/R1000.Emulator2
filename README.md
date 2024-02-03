@@ -10,9 +10,12 @@ The goal of this project is to preserve the R1000/400 machine,
 and the unique Rational Environment in software, while working
 hardware still exists.
 
-Please note that on a M2 MacBook Pro the emulation currently runs 420 times
-slower than the real hardware when busy, and 175 times slower when
-idling.
+The ``main`` branch of this repository is where development happens, when
+events dictate it, we will make ``releaseN`` branches and list them here:
+
+| Release  | Slowdown | Comment |
+| -------- | -------- | ---------------------------------------------- |
+| release1 |     420x | First working version of the emulator          |
 
 As time permits, we will continue to work on this emulation, hoping
 to make it at least as fast as the hardware, but for now the only
