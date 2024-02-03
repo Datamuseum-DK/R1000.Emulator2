@@ -1,6 +1,6 @@
-# R1000.Emulator2
+# R1000.Emulator2 - release1 - 20240203
 
-This is a software emulation of the Rational R1000/400 computer.
+This is the first release of our software emulation of the Rational R1000/400 computer.
 
 If you have never heard about the Rational R1000 computer before:
 
@@ -23,13 +23,14 @@ Copenhagen and see the real thing.
 
 0. This is known to run under FreeBSD and OS/X
 
-1. Install a C++ compiler, python3, SystemC and Kicad7 or later.
+1. Install a C++ compiler, python3, SystemC (Optional: Kicad7 or later.)
 
 2. Check out this git repository
 
-3. run `(cd Schematics && make)`
+3. Optional: Regenerate netlist files
 
-This produces netlists from the schematics
+In release branches we check in the NetList files produced by KiCad, this step
+is optional:  ``(cd Schematics && make)``
 
 4. run `(cd Emulator && make setup)`
 
