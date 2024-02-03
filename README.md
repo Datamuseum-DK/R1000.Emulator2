@@ -13,9 +13,9 @@ hardware still exists.
 The ``main`` branch of this repository is where development happens, when
 events dictate it, we will make ``releaseN`` branches and list them here:
 
-| Release  | Slowdown | Comment |
-| -------- | -------- | ---------------------------------------------- |
-| release1 |     420x | First working version of the emulator          |
+| Release  | Slowdown | Time to Idle | Comment |
+| -------- | -------- | -------------| ---------------------------------------------- |
+| release1 |     420x |         137h | First working version of the emulator          |
 
 As time permits, we will continue to work on this emulation, hoping
 to make it at least as fast as the hardware, but for now the only
