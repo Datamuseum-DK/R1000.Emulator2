@@ -43,6 +43,8 @@ class XIOCWCS(PartFactory):
 
     ''' IOC WCS '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t ram[1<<14];
@@ -52,7 +54,6 @@ class XIOCWCS(PartFactory):
 		|	unsigned sr0, sr1;
 		|	unsigned uadr;
 		|	unsigned tracnt;
-		|	bool dgo;
 		|	bool csa_hit;
 		|	bool dummy_en;
 		|''')
@@ -62,32 +63,13 @@ class XIOCWCS(PartFactory):
         yield "PIN_DGADR"
         yield "PIN_WE.pos()"
         yield "BUS_UADR_SENSITIVE()"
-        yield "PIN_WE.pos()"
         yield "PIN_TRRDD"
         yield "PIN_TRRDA"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		BUS_UIR_WRITE(state->uir);
-		|		PIN_ODG0<=(state->uir & 0x0100);
-		|		PIN_ODG1<=(state->uir & 0x0001);
-		|
-		|		unsigned par_w = state->uir;
-		|		par_w = (par_w ^ (par_w >> 8)) & 0xff;
-		|		par_w = (par_w ^ (par_w >> 4)) & 0x0f;
-		|		par_w = (par_w ^ (par_w >> 2)) & 0x03;
-		|		par_w = (par_w ^ (par_w >> 1)) & 0x01;
-		|
-		|		PIN_UDPERR<=(par_w == 0);
-		|		PIN_DUMEN<=(state->dummy_en);
-		|		PIN_CSAHIT<=(state->csa_hit);
-		|	}
 		|
 		|	unsigned uadr;
 		|
@@ -101,7 +83,9 @@ class XIOCWCS(PartFactory):
 		|
 		|	if (PIN_Q4.posedge()) {
 		|		state->dummy_en = !(PIN_DGDUEN=> && PIN_DUMNXT=>);
+		|		output.dumen = state->dummy_en;
 		|		state->csa_hit = !(PIN_DGCSAH=> && PIN_ICSAH=>);
+		|		output.csahit = state->csa_hit;
 		|		if (PIN_TRAWR=>) {
 		|			unsigned tmp = 0;
 		|			if (PIN_CLKSTP=>)
@@ -135,8 +119,6 @@ class XIOCWCS(PartFactory):
 		|		}
 		|		state->ctr &= 0xffff;
 		|
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|
 		|	uint32_t par_a, par_b;
@@ -152,9 +134,7 @@ class XIOCWCS(PartFactory):
 		|	par_b = (par_b ^ (par_b >> 2)) & 0x03;
 		|	par_b = (par_b ^ (par_b >> 1)) & 0x01;
 		|
-		|	PIN_UAPERR<=(!par_a && !par_b);
-		|
-		|	TRACE(<< BUS_IDG_TRACE() << std::hex << " u " << state->uir);
+		|	output.uaperr = (!par_a && !par_b);
 		|
 		|	if (uir_clk) {
 		|		unsigned uirs, diag;
@@ -204,30 +184,32 @@ class XIOCWCS(PartFactory):
 		|		assert(uir <= 0xffff);
 		|
 		|		state->uir = uir;
+		|		output.uir = state->uir;
 		|		state->uadr = uadr;
+		|		uint8_t par_w =
+		|		    odd_parity(state->uir >> 8) ^ odd_parity(state->uir & 0xff);
+		|		output.udperr = par_w == 0;
+		|		output.odg = state->uir & 0x0001;
+		|		output.odg |= (state->uir >>7) & 0x0002;
 		|
-		|		TRACE(
-		|		    << BUS_IDG_TRACE()
-		|		    << std::hex
-		|		    << " u " << uirs
-		|		    << " d " << diag
-		|		    << " sr0 " << state->sr0
-		|		    << " sr1 " << state->sr1
-		|		);
+		|		unsigned aen = (uir >> 6) & 3;
+		|		output.aen = (1 << aen) ^ 0xf;
+		|
+		|		unsigned fen = (uir >> 4) & 3;
+		|		output.fen = (1 << fen) ^ 0xf;
 		|	}
 		|
 		|	if (PIN_WE.posedge()) {
 		|		state->ram[uadr & 0x3fff] = state->uir;
 		|	}
 		|	if (!PIN_TRRDD=>) {
-		|		state->dgo = true;
-		|		BUS_DGO_WRITE(state->tram[state->tracnt]);
+		|		output.z_dgo = false;
+		|		output.dgo = state->tram[state->tracnt];
 		|	} else if (!PIN_TRRDA=>) {
-		|		state->dgo = true;
-		|		BUS_DGO_WRITE(state->tracnt | 0xb800);
-		|	} else if (state->dgo) {
-		|		state->dgo = false;
-		|		BUS_DGO_Z();
+		|		output.z_dgo = false;
+		|		output.dgo = state->tracnt | 0xb800;
+		|	} else {
+		|		output.z_dgo = true;
 		|	}
 		|
 		|''')

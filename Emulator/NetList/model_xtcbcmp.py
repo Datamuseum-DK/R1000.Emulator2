@@ -39,50 +39,25 @@ from part import PartModel, PartFactory
 class XTCBCMP(PartFactory):
     ''' IOC TCB comparator '''
 
-    def state(self, file):
-        file.fmt('''
-		|	bool pfr;
-		|	bool below;
-		|''')
+    autopin = True
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
         file.fmt('''
 		|	unsigned typ, top, tmp;
-		|
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		PIN_BELOW<=(state->below);
-		|		PIN_PFR<=(state->pfr);
-		|	}
 		|
 		|	BUS_TYP_READ(typ);
 		|	BUS_TOP_READ(top);
 		|
 		|	tmp = typ >> 7;
 		|	tmp &= 0xfffff;
-		|	bool below = (tmp >= top);
+		|	output.below = (tmp >= top);
 		|	tmp = typ & 0x80000047;
-		|	bool pfr = 
+		|	output.pfr = 
 		|	    tmp == 0x80000000 ||
 		|	    tmp == 0x80000040 ||
 		|	    tmp == 0x80000044;
-		|
-		|	if (below != state->below || pfr != state->pfr) {
-		|		state->ctx.job = 1;
-		|		state->pfr = pfr;
-		|		state->below = below;
-		|		next_trigger(5, sc_core::SC_NS);
-		|	}
-		|
-		|	TRACE(
-		|	    << " typ " << BUS_TYP_TRACE()
-		|	    << " top " << BUS_TOP_TRACE()
-		|	    << " - " << (tmp >= top)
-		|	    << " pfr " << pfr
-		|	);
 		|
 		|''')
 

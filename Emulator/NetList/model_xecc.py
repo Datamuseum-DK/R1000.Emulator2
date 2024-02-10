@@ -53,6 +53,8 @@ from part import PartModel, PartFactory
 class XECC(PartFactory):
     ''' IOC Full ECC/Parity implementation '''
 
+    autopin = True
+
     def getmasks(self):
         invert = [0, 0, 0, 0, 1, 1, 1, 0, 0]
         for i in CBITS.split("\n"):
@@ -63,16 +65,11 @@ class XECC(PartFactory):
             vmask = int(j[2].replace("-", "0").replace("+", "1"), 2)
             yield tmask, vmask, invert.pop(0)
 
-    def xsensitive(self):
-        yield "PIN_CLK.pos()"
-
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	uint64_t typ, val, tmp, tpar = 0, vpar = 0, cbo = 0, cbi;
+		|	uint64_t typ, val, tmp, cbo = 0, cbi;
 		|
 		|	BUS_T_READ(typ);
 		|	BUS_V_READ(val);
@@ -84,45 +81,16 @@ class XECC(PartFactory):
 		|		cbi = 0;
 		|	}
 		|
-		|	tmp = (typ ^ (typ >> 4)) & 0x0f0f0f0f0f0f0f0f;
-		|	tmp = (tmp ^ (tmp >> 2)) & 0x0303030303030303;
-		|	tmp = (tmp ^ (tmp >> 1)) & 0x0101010101010101;
-		|	tmp ^= 0x0101010101010101;
-		|	if (tmp & (1ULL<<56)) tpar |= 0x80;
-		|	if (tmp & (1ULL<<48)) tpar |= 0x40;
-		|	if (tmp & (1ULL<<40)) tpar |= 0x20;
-		|	if (tmp & (1ULL<<32)) tpar |= 0x10;
-		|	if (tmp & (1ULL<<24)) tpar |= 0x8;
-		|	if (tmp & (1ULL<<16)) tpar |= 0x4;
-		|	if (tmp & (1ULL<<8)) tpar |= 0x2;
-		|	if (tmp & (1ULL<<0)) tpar |= 0x1;
-		|	BUS_PT_WRITE(tpar);
+		|	output.pt = odd_parity64(typ) ^ 0xff;
 		|
-		|	tmp = (val ^ (val >> 4)) & 0x0f0f0f0f0f0f0f0f;
-		|	tmp = (tmp ^ (tmp >> 2)) & 0x0303030303030303;
-		|	tmp = (tmp ^ (tmp >> 1)) & 0x0101010101010101;
-		|	tmp ^= 0x0101010101010101;
-		|	if (tmp & (1ULL<<56)) vpar |= 0x80;
-		|	if (tmp & (1ULL<<48)) vpar |= 0x40;
-		|	if (tmp & (1ULL<<40)) vpar |= 0x20;
-		|	if (tmp & (1ULL<<32)) vpar |= 0x10;
-		|	if (tmp & (1ULL<<24)) vpar |= 0x8;
-		|	if (tmp & (1ULL<<16)) vpar |= 0x4;
-		|	if (tmp & (1ULL<<8)) vpar |= 0x2;
-		|	if (tmp & (1ULL<<0)) vpar |= 0x1;
-		|	BUS_PV_WRITE(vpar);
+		|	output.pv = odd_parity64(val) ^ 0xff;
 		|
 		|''')
 
         for tmask, vmask, invert in self.getmasks():
             file.fmt('\n\ttmp = (typ & 0x%016xULL) ^ (val & 0x%016xULL);\n' % (tmask, vmask))
             file.fmt('''
-		|	tmp = (tmp ^ (tmp >> 32)) & 0xffffffffULL;
-		|	tmp = (tmp ^ (tmp >> 16)) & 0xffffULL;
-		|	tmp = (tmp ^ (tmp >> 8)) & 0xffULL;
-		|	tmp = (tmp ^ (tmp >> 4)) & 0xfULL;
-		|	tmp = (tmp ^ (tmp >> 2)) & 0x3ULL;
-		|	tmp = (tmp ^ (tmp >> 1)) & 0x1ULL;
+		|	tmp = odd_parity(odd_parity64(tmp)) & 0x1;
 		|	cbo <<= 1;
 		|	cbo |= tmp;
 		|''')
@@ -130,19 +98,9 @@ class XECC(PartFactory):
                 file.fmt('\tcbo ^= 1;\n')
 
         file.fmt('''
-		|	BUS_CBO_WRITE(cbo ^ cbi);
-		|	PIN_ERR<=(cbo != cbi);
+		|	output.cbo = cbo ^ cbi;
+		|	output.err = output.cbo != 0;
 		|
-		|	TRACE(
-		|	    << " t " << BUS_T_TRACE()
-		|	    << " v " << BUS_V_TRACE()
-		|	    << " cbi " << BUS_CBI_TRACE()
-		|	    << " gen " << PIN_GEN?
-		|	    << " - "
-		|	    << " tp " << std::hex << tpar
-		|	    << " vp " << std::hex << vpar
-		|	    << " cbo " << std::hex << cbo
-		|	);
 		|''')
 
 def register(part_lib):

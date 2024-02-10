@@ -43,6 +43,8 @@ class XIOCWCS(FChip):
         self.sig_right(ChipSig("+===", "DGO", 0, 15))
         self.sig_right(ChipSig("+-->", "DUMEN"))
         self.sig_right(ChipSig("+-->", "CSAHIT"))
+        self.sig_right(ChipSig("+-->", "AEN", 0, 3))
+        self.sig_right(ChipSig("+-->", "FEN", 0, 3))
 
         self.finish()
 
