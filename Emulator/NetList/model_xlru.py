@@ -68,12 +68,10 @@ class XLRU(PartFactory):
         yield "PIN_CLK"
         yield "PIN_NMAT"
         yield "PIN_LRUP"
-        yield "BUS_LRI_SENSITIVE()"
+        yield "BUS_LRI"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|	bool late = PIN_LATE=>;
