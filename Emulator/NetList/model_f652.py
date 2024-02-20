@@ -73,8 +73,6 @@ class F652H(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|	uint64_t tmp;
 		|	bool read = false;
@@ -262,13 +260,10 @@ class F652(PartFactory):
 		|
 		|''')
 
-model = PartModel
-model = ModelF652
-
 def register(part_lib):
     ''' Register component model '''
 
     for width in ("", "_9", "_64",):
         dev = "F652" + width
-        part_lib.add_part(dev, model(dev, F652))
+        part_lib.add_part(dev, ModelF652(dev, F652))
         part_lib.add_part(dev + "_H", PartModel(dev + "_H", F652H))
