@@ -43,9 +43,9 @@ class NOVRAM(PartFactory):
     def state(self, file):
         ''' Extra state variable '''
 
-        file.write("\tbool writing;\n")
         file.write("\tuint8_t perm[256];\n")
         file.write("\tuint8_t ram[256];\n")
+        file.write("\tbool writing;\n")
 
     def init(self, file):
         ''' Extra initialization '''
@@ -129,8 +129,6 @@ class NOVRAM(PartFactory):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|
