@@ -113,33 +113,9 @@ class Mux2(PartFactory):
 
         if self.invert:
             file.fmt('''
-		|
 		|	tmp ^= BUS_A_MASK;
-		|
 		|''')
-
         file.fmt('''
-		|
-		|	TRACE (
-		|''')
-
-        if "OE" in self.comp.nodes:
-            file.fmt('''
-		|	    << " oe " << PIN_OE=>
-		|''')
-
-        if "E" in self.comp.nodes:
-            file.fmt('''
-		|	    << " e " << PIN_E=>
-		|''')
-
-        file.fmt('''
-		|	    << " s " << PIN_S=>
-		|	    << " a " << BUS_A_TRACE()
-		|	    << " b " << BUS_B_TRACE()
-		|	    << " | " << std::hex << tmp
-		|	);
-		|
 		|	output.y = tmp;
 		|''')
 
