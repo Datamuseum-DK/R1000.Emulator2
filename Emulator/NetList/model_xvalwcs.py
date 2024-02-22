@@ -216,7 +216,7 @@ class XVALWCS(PartFactory):
 		|	}
 		|
 		|	output.uir = state->wcs;
-		|	output.perr = odd_parity(odd_parity64(state->wcs ^ BUS_UIR_MASK));
+		|	output.perr = __builtin_parityll(output.uir & BUS_UIR_MASK);
 		|
 		|	uint64_t tmp = state->ram[state->addr];
 		|

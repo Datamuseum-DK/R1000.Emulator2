@@ -133,7 +133,8 @@ class XSEQWCS(PartFactory):
 		|			assert (!(state->srd6 & 0x3f));
 		|			if (!(PIN_HLR=> || PIN_SCE=>))
 		|				state->srd6 |= 0x20;
-		|			state->srd6 |= (PIN_NLM=>) << 4;
+		|			if (!(PIN_SCE=> || !PIN_LMAC=>))
+		|				state->srd6 |= 0x10;
 		|			// printf("Load [0x%04x] 0x%016jx %02jx\\n", ua, state->wcs, state->srd6);
 		|			break;
 		|		case 2: // >>

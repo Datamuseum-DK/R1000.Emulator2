@@ -41,7 +41,7 @@ class XM30(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	bool awe, nameq, row_adr_oe, col_adr_oe, tag_write, ras, cas_a, cas_b;
+		|	bool awe, nameq, row_adr_oe, col_adr_oe, ras, cas_a, cas_b;
 		|	bool vpdr;
 		|	bool vbdr;
 		|	bool vadr;
@@ -62,7 +62,6 @@ class XM30(PartFactory):
 		|		PIN_NMEQ<=(state->nameq);
 		|		PIN_RAOE<=(state->row_adr_oe);
 		|		PIN_CAOE<=(state->col_adr_oe);
-		|		PIN_TAGW<=(state->tag_write);
 		|		PIN_TRCE<=(state->trdr);
 		|		PIN_VACE<=(state->vadr);
 		|		PIN_VBCE<=(state->vbdr);
@@ -107,12 +106,6 @@ class XM30(PartFactory):
 		|		);
 		|		bool awe = !(((cmd & 0xd) == 0xd) && h1 && !mcyc2);
 		|		bool nameq = !(cmd == 0x3);
-		|		bool tag_write = (
-		|		    ((cmd == 0xc || cmd == 0xd) && !h1 && !mcyc2_next && mcyc2) ||
-		|		    (cmd == 0x7 && !h1 && !mcyc2_next && mcyc2) ||
-		|		    (cmd == 0x2 && !h1 && !mcyc2_next && mcyc2) ||
-		|		    (h1 && state->tag_write)
-		|		);
 		|		bool row_adr_oe = !(!h1 && mcyc2_next && !d_dis_adr);
 		|		bool col_adr_oe = !(
 		|		    (h1 && !d_dis_adr) ||
@@ -138,16 +131,16 @@ class XM30(PartFactory):
 		|		    );
 		|		bool vadr =
 		|		    !(
+		|		        (cmd == 0xc && !h1  && (!mcyc2_next)) ||
 		|		        (cmd == 0xe && !h1  && (!mcyc2_next)) ||
 		|		        (cmd == 0x6 && !h1  && (!mcyc2_next) &&   set_b ) ||
-		|		        (cmd == 0xc && !h1  && (!mcyc2_next)) ||
 		|		        (cmd == 0x5 && !h1 )
 		|		    );
 		|		bool vbdr =
 		|		    !(
+		|		        (cmd == 0xc && !h1  && (!mcyc2_next)) ||
 		|		        (cmd == 0xe && !h1  && (!mcyc2_next)) ||
 		|		        (cmd == 0x6 && !h1  && (!mcyc2_next) && (!set_b)) ||
-		|		        (cmd == 0xc && !h1  && (!mcyc2_next)) ||
 		|		        (cmd == 0x5 && !h1 )
 		|		    );
 		|		bool vpdr =
@@ -161,7 +154,6 @@ class XM30(PartFactory):
 		|		    nameq != state->nameq ||
 		|		    row_adr_oe != state->row_adr_oe ||
 		|		    col_adr_oe != state->col_adr_oe ||
-		|		    tag_write != state->tag_write ||
 		|		    trdr != state->trdr ||
 		|		    vadr != state->vadr ||
 		|		    vbdr != state->vbdr ||
@@ -172,7 +164,6 @@ class XM30(PartFactory):
 		|			state->nameq = nameq;
 		|			state->row_adr_oe = row_adr_oe;
 		|			state->col_adr_oe = col_adr_oe;
-		|			state->tag_write = tag_write;
 		|			state->trdr = trdr;
 		|			state->vadr = vadr;
 		|			state->vbdr = vbdr;

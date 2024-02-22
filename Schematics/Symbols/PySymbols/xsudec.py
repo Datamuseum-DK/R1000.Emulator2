@@ -22,11 +22,13 @@ class XSUDEC(FChip):
         self.sig_left(ChipSig("-->+", "MEVENT"))
         self.sig_left(ChipSig("-->+", "UEVENT"))
 
-        self.sig_left(ChipSig("-->+", "BRBH0"))
-        self.sig_left(ChipSig("-->+", "BRBH1"))
-        self.sig_left(ChipSig("-->+", "BRBH3"))
-
         self.sig_left(ChipSig("-->+", "SCLKEN"))
+
+        self.sig_left(ChipSig("-->+", "SCNMD", 0, 1))
+        self.sig_left(ChipSig("-->+", "BHCKE"))
+        self.sig_left(ChipSig("-->+", "DMODE"))
+        self.sig_left(ChipSig("-->+", "DIN"))
+        self.sig_left(ChipSig("-->+", "MPRND"))
 
         self.sig_right(ChipSig("+-->", "UASEL"))
         self.sig_right(ChipSig("+-->", "GSEL", 0, 1))
@@ -37,7 +39,12 @@ class XSUDEC(FChip):
         self.sig_right(ChipSig("+-->", "PUSHBR"))
         self.sig_right(ChipSig("+-->", "PUSH"))
 
-        self.sig_right(ChipSig("+-->", "ROM", 0, 7))
+        self.sig_right(ChipSig("+-->", "DTIME"))
+        self.sig_right(ChipSig("+-->", "DBHINT"))
+        self.sig_right(ChipSig("+-->", "DMDISP"))
+        self.sig_right(ChipSig("+-->", "MPCMB"))
+        self.sig_right(ChipSig("+-->", "LHINT"))
+        self.sig_right(ChipSig("+-->", "LHINTT"))
 
         self.finish()
 

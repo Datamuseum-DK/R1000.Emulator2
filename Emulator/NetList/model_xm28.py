@@ -84,9 +84,10 @@ class XM28(PartFactory):
 		|	bool drvhit = PIN_DRH=>;
 		|	bool exthit = PIN_EHIT=>;
 		|	bool high_board = PIN_HIGH=>;
-		|	bool mc2 = PIN_MC2=>;
 		|	unsigned cmd;
 		|	BUS_CMD_READ(cmd);
+		|	bool mcyc2 = PIN_MC2=>;
+		|	bool mcyc2_next = PIN_MC2N=>;
 		|
 		|	if (clk2x_neg && !h1) {
 		|		state->ahit0 = !aehit           &&  behit &&  blhit;
@@ -107,6 +108,14 @@ class XM28(PartFactory):
 		|		    (drvhit &&  behit && blhit &&  state->ahit0) ||
 		|		    (drvhit && !aehit && blhit && !state->ahit1 && !state->bhit5)
 		|		;
+		|	}
+		|	if (clk2x_neg && !h1) {
+		|		output.tagw = (
+		|		    (cmd == 0xc && !mcyc2_next && mcyc2) ||
+		|		    (cmd == 0xd && !mcyc2_next && mcyc2) ||
+		|		    (cmd == 0x7 && !mcyc2_next && mcyc2) ||
+		|		    (cmd == 0x2 && !mcyc2_next && mcyc2)
+		|		);
 		|	}
 		|	state->ah012 = !(state->ahit0 || state->ahit1 || !aehit);
 		|	state->bh456 = !(state->bhit4 || state->bhit5 || !behit);
@@ -181,7 +190,6 @@ class XM28(PartFactory):
 		|	bool labort_y = !(PIN_DLABT=> && PIN_LABT=> && PIN_ELABT=> && !h1);
 		|
 		|	if (clk2x_pos) {
-		|		bool mcyc2_next = PIN_MC2N=>;
 		|		bool late_abort = state->labort;
 		|
 		|		bool seta_sel = !(
@@ -194,25 +202,24 @@ class XM28(PartFactory):
 		|		);
 		|
 		|
-		|		output.txoen = mc2 || !h1 || (cmd != 0x7);
-		|		output.txeoe = !(pset & 1) && output.txoen;
-		|		output.txloe =  (pset & 1) && output.txoen;
+		|		bool txoen = mcyc2 || !h1 || (cmd != 0x7);
+		|		output.txeoe = !(pset & 1) && txoen;
+		|		output.txloe =  (pset & 1) && txoen;
 		|
-		|		output.txxwe = (cmd == 0x7 && !h1 && !mcyc2_next && mc2);
+		|		output.txxwe = (cmd == 0x7 && !h1 && !mcyc2_next && mcyc2);
 		|		bool cmd_2cd = (cmd == 0x2) || (cmd == 0xc) || (cmd == 0xd);
 		|		output.txewe = (
 		|			(output.txxwe && !(pset & 1)) ||
-		|			(cmd_2cd && !h1 &&  mc2 && !mcyc2_next) ||
-		|			(cmd_2cd &&  h1 && !mc2 && !late_abort && state->output.txewe)
+		|			(cmd_2cd && !h1 &&  mcyc2 && !mcyc2_next) ||
+		|			(cmd_2cd &&  h1 && !mcyc2 && !late_abort && state->output.txewe)
 		|		);
 		|		output.txlwe = (
 		|			(output.txxwe && (pset & 1)) ||
-		|			(cmd_2cd && !h1 &&  mc2 && !mcyc2_next) ||
-		|			(cmd_2cd &&  h1 && !mc2 && !late_abort && state->output.txlwe)
+		|			(cmd_2cd && !h1 &&  mcyc2 && !mcyc2_next) ||
+		|			(cmd_2cd &&  h1 && !mcyc2 && !late_abort && state->output.txlwe)
 		|		);
 		|		output.tgace = !(output.txxwe && seta_sel);
 		|		output.tgbce = !(output.txxwe && setb_sel);
-		|		output.tsc14 = !h1 && !mcyc2_next;
 		|
 		|		output.rclke = labort_y;
 		|	}
@@ -224,6 +231,9 @@ class XM28(PartFactory):
 		|		output.labrt = state->labort;
 		|		output.abort = !(state->labort || output.eabrt);
 		|	}
+		|	if (clk2x_pos) {
+		|		output.tsc14 = !h1 && !mcyc2_next && output.labrt;
+		|	}
 		|
 		|	if (clk2x_neg) {
 		|		bool d_dis_adr = PIN_DDISA=>;
@@ -233,46 +243,46 @@ class XM28(PartFactory):
 		|		bool lar_3 = PIN_LAR3=>;
 		|
 		|		output.da2sl =
-		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mc2 && blhit && behit && alhit && aehit ) ||
-		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mc2 && blhit && behit && alhit && aehit );
+		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mcyc2 && blhit && behit && alhit && aehit ) ||
+		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mcyc2 && blhit && behit && alhit && aehit );
 		|
 		|		output.daa1d =
 		|		    (  d_dis_adr  &&                    trace_dra1 ) ||
-		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa1d ) ||
-		|		    ((!d_dis_adr) &&   h1  &&   mc2  && lar_2 ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mc2  && blhit && behit && alhit && aehit );
+		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa1d ) ||
+		|		    ((!d_dis_adr) &&   h1  &&   mcyc2  && lar_2 ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && blhit && behit && alhit && aehit );
 		|
 		|		output.dba1d =
 		|		    (  d_dis_adr  &&                    trace_dra1 ) ||
-		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa1d ) ||
-		|		    ((!d_dis_adr) &&   h1  &&   mc2  && lar_2 ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mc2  && blhit && behit && alhit && aehit );
+		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa1d ) ||
+		|		    ((!d_dis_adr) &&   h1  &&   mcyc2  && lar_2 ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && blhit && behit && alhit && aehit );
 		|
 		|		output.daa2d =
 		|		    (  d_dis_adr  &&                    trace_dra2 ) ||
-		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa2d  && (!state->output.da2sl)) ||
-		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa2d  && (!state->dradpal_p22)) ||
-		|		    ((!d_dis_adr) &&   h1  &&   mc2  && lar_3 ) ||
-		|		    ((!d_dis_adr) &&          (!mc2) && behit && aehit && state->dradpal_p22 && state->output.da2sl ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mc2  && (!alhit) && behit && aehit ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mc2  && (!blhit) && behit && aehit ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mc2  && state->output.pht26 && behit && aehit ) ||
-		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mc2 && behit && aehit ) ||
-		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mc2 && behit && aehit );
+		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa2d  && (!state->output.da2sl)) ||
+		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa2d  && (!state->dradpal_p22)) ||
+		|		    ((!d_dis_adr) &&   h1  &&   mcyc2  && lar_3 ) ||
+		|		    ((!d_dis_adr) &&          (!mcyc2) && behit && aehit && state->dradpal_p22 && state->output.da2sl ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && (!alhit) && behit && aehit ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && (!blhit) && behit && aehit ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && state->output.pht26 && behit && aehit ) ||
+		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mcyc2 && behit && aehit ) ||
+		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mcyc2 && behit && aehit );
 		|
 		|		output.dba2d =
 		|		    (  d_dis_adr  &&   trace_dra2 ) ||
-		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa2d  && (!state->output.da2sl)) ||
-		|		    ((!d_dis_adr) &&          (!mc2) && state->output.daa2d  && (!state->dradpal_p22)) ||
-		|		    ((!d_dis_adr) &&   h1  &&   mc2  && lar_3 ) ||
-		|		    ((!d_dis_adr) &&          (!mc2) && behit && aehit && state->dradpal_p22 && state->output.da2sl ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mc2  && (!alhit) && behit && aehit ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mc2  && (!blhit) && behit && aehit ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mc2  && state->output.pht26 && behit && aehit ) ||
-		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mc2 && behit && aehit ) ||
-		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mc2 && behit && aehit );
+		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa2d  && (!state->output.da2sl)) ||
+		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa2d  && (!state->dradpal_p22)) ||
+		|		    ((!d_dis_adr) &&   h1  &&   mcyc2  && lar_3 ) ||
+		|		    ((!d_dis_adr) &&          (!mcyc2) && behit && aehit && state->dradpal_p22 && state->output.da2sl ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && (!alhit) && behit && aehit ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && (!blhit) && behit && aehit ) ||
+		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && state->output.pht26 && behit && aehit ) ||
+		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mcyc2 && behit && aehit ) ||
+		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mcyc2 && behit && aehit );
 		|
-		|		state->dradpal_p22 = mc2;
+		|		state->dradpal_p22 = mcyc2;
 		|
 		|	}
 		|

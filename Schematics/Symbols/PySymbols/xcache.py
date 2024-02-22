@@ -14,16 +14,15 @@ class XCACHE(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "A", 0, 13))
-        self.sig_left(ChipSig("<->+", "VDQ", 0, 63))
+        self.sig_left(ChipSig("<->+", "DQV", 0, 63))
         self.sig_left(ChipSig("-->+", "CWE", 0, 5))
         self.sig_left(ChipSig("-->+", "CWL", 0, 5))
-        self.sig_left(ChipSig("-->+", "PDQ", 0, 7))
+        self.sig_left(ChipSig("-->+", "DQP", 0, 7))
         self.sig_left(ChipSig("-->+", "DIR"))
         self.sig_left(ChipSig("-->+", "EVEN"))
         self.sig_left(ChipSig("-->+", "LVEN"))
         self.sig_left(ChipSig("-->+", "EWE"))
         self.sig_left(ChipSig("-->+", "LWE"))
-        self.sig_left(ChipSig("-->+", "ELCE"))
 
         self.sig_right(ChipSig("+<--", "WE"))
         self.sig_right(ChipSig("+<--", "OE"))
@@ -46,7 +45,7 @@ class XCACHE(FChip):
         self.sig_right(ChipSig("+-->", "NME"))
         self.sig_right(ChipSig("+-->", "NML"))
 
-        self.sig_right(ChipSig("+-->", "TQ", 0, 1))
+        self.sig_right(ChipSig("+-->", "QT", 0, 1))
 
         self.sig_right(ChipSig("+-->", "CRE", 0, 5))
         self.sig_right(ChipSig("+-->", "CRL", 0, 5))
@@ -54,8 +53,8 @@ class XCACHE(FChip):
         #self.sig_right(ChipSig("+-->", "PQ", 0, 7))
 
         self.sig_right(ChipSig("+-->", "DROE"))
-        self.sig_right(ChipSig("+<--", "VQOE"))
-        self.sig_right(ChipSig("+<--", "PQOE"))
+        self.sig_right(ChipSig("+<--", "QVOE"))
+        self.sig_right(ChipSig("+<--", "QPOE"))
         self.sig_right(ChipSig("+<--", "K12"))
         self.sig_right(ChipSig("+<--", "K13"))
 

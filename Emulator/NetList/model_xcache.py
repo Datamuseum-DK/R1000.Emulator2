@@ -31,11 +31,10 @@
 '''
    MEM32 CACHE
    ===========
-
 '''
 
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 from pin import Pin
 from node import Node
 
@@ -43,9 +42,10 @@ class XCACHE(PartFactory):
 
     ''' MEM32 CACHE '''
 
+    autopin = True
+
     def extra(self, file):
         file.include("Infra/vend.h")
-        super().extra(file)
 
     def state(self, file):
         file.fmt('''
@@ -54,11 +54,6 @@ class XCACHE(PartFactory):
 		|	uint8_t par[1<<BUS_A_WIDTH];
 		|	bool utrace_set;
 		|	enum microtrace utrace;
-		|	bool zvq;
-		|	uint64_t vq;
-		|	bool zpq;
-		|	uint8_t pq;
-		|	uint8_t parq;
 		|	unsigned ae, al, be, bl, sr, la, lb;
 		|	bool nme;
 		|	bool ome;
@@ -67,12 +62,11 @@ class XCACHE(PartFactory):
 		|	bool k12, k13;
 		|''')
 
-
     def sensitive(self):
         yield "PIN_WE.pos()"
         yield "PIN_EWE.pos()"
         yield "PIN_LWE.pos()"
-        yield "BUS_A_SENSITIVE()"
+        yield "BUS_A"
         yield "PIN_CLK"
         yield "PIN_OEE"
         yield "PIN_OEL"
@@ -87,37 +81,8 @@ class XCACHE(PartFactory):
 		|			state->utrace = UT_ATAGMEM;
 		|		else if (strstr(this->name(), ".BCACHE") != NULL)
 		|			state->utrace = UT_BTAGMEM;
-		|		else
-		|			std::cerr << "PPP " << this->name() << "  " << std::hex << state->utrace << "\\n";
 		|		assert (state->utrace > 0);
 		|		state->utrace_set = true;
-		|	}
-		|	TRACE(
-		|		<< " we^ " << PIN_WE.posedge()
-		|		<< " ewe^ " << PIN_EWE.posedge()
-		|		<< " lwe^ " << PIN_LWE.posedge()
-		|		<< " a " << BUS_A_TRACE()
-		|		<< " clk^v " << PIN_CLK.posedge() << PIN_CLK.negedge()
-		|		<< " oee " << PIN_OEE?
-		|		<< " oel " << PIN_OEL?
-		|		<< " eq " << PIN_EQ?
-		|		<< " j " << state->ctx.job
-		|	);
-		|
-		|	if (state->ctx.job) {
-		|		PIN_DROE<=(state->zvq);
-		|		if (state->zvq) {
-		|			BUS_VQ_Z();
-		|			BUS_PQ_Z();
-		|		} else {
-		|			uint64_t v = state->vq & 0xffffffffffff80ff;	// VAL bits
-		|			v |= (state->pq & 0xfe) << 7;			// VAL49-55
-		|			uint8_t p = state->parq & 0xfd;			// P0-5,7
-		|			p |= (state->pq & 1) << 1;			// P6
-		|			BUS_VQ_WRITE(v);
-		|			BUS_PQ_WRITE(p);
-		|		}
-		|		state->ctx.job = 0;
 		|	}
 		|
 		|	unsigned adr = 0;
@@ -131,7 +96,7 @@ class XCACHE(PartFactory):
 		|		adr |= 1;
 		|
 		|	data = state->ram[adr];
-		|	BUS_TQ_WRITE(data >> 6);
+		|	output.qt = data >> 6;
 		|
 		|	uint8_t pdata;
 		|	if (PIN_EVEN=>) {
@@ -139,20 +104,19 @@ class XCACHE(PartFactory):
 		|	} else {
 		|		pdata = state->rame[adr | 1];
 		|	}
-		|	bool vqoe = !(PIN_DIR=> && PIN_TGOE=> && (PIN_EVEN=> || PIN_LVEN=>));
-		|	if (!vqoe && (data != state->vq || pdata != state->pq || state->zvq)) {
-		|		state->vq = data;
-		|		state->zvq = false;
-		|		state->pq = pdata;
-		|		state->parq = (state->par[adr] & 0xfd);
-		|		state->zpq = false;
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
-		|	} else if (vqoe && !state->zvq) {
-		|		state->zvq = true;
-		|		state->zpq = true;
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
+		|
+		|	output.droe = !(PIN_DIR=> && PIN_TGOE=> && (PIN_EVEN=> || PIN_LVEN=>));
+		|
+		|	output.z_qv = output.droe;
+		|	if (!output.z_qv) {
+		|		output.qv = data & 0xffffffffffff80ff;	// VAL bits
+		|		output.qv |= (pdata & 0xfe) << 7;	// VAL49-55
+		|	}
+		|
+		|	output.z_qp = output.droe;
+		|	if (!output.z_qp) {
+		|		output.qp = state->par[adr] & 0xfd;	// P0-5,7
+		|		output.qp |= (pdata & 1) << 1;		// P6
 		|	}
 		|
 		|	bool pos = PIN_CLK.posedge();
@@ -174,7 +138,7 @@ class XCACHE(PartFactory):
 		|			state->sr <<= 1;
 		|			state->sr &= 0xf7f7;
 		|		}
-		|		PIN_TSPO<=(state->sr & 1);
+		|		output.tspo = state->sr & 1;
 		|	}
 		|
 		|	if (pos || neg) {
@@ -211,8 +175,7 @@ class XCACHE(PartFactory):
 		|		state->la = 0xff;
 		|		state->lb = 0xff;
 		|	}
-		|	PIN_PERR<=(state->la != state->lb);
-		|
+		|	output.perr = state->la != state->lb;
 		|
 		|	uint64_t ta, ts, nm, pg, sp;
 		|	bool name, offset;
@@ -232,23 +195,23 @@ class XCACHE(PartFactory):
 		|		offset = (pg != (ta & BUS_PG_MASK)) || (sp != ts);
 		|	}
 		|	
-		|	PIN_NME<=(!state->nme && !(PIN_EQ=> && state->ome));
-		|	PIN_NML<=(!state->nml && !(PIN_EQ=> && state->oml));
+		|	output.nme = !state->nme && !(PIN_EQ=> && state->ome);
+		|	output.nml = !state->nml && !(PIN_EQ=> && state->oml);
 		|
-		|	if (PIN_CLK.negedge()) {
+		|	if (neg) {
 		|		state->nme = name;
 		|		state->ome = offset;
 		|		next_trigger(5, sc_core::SC_NS);
-		|	} else if (PIN_CLK.posedge()) {	 
+		|	} else if (pos) {	 
 		|		state->nml = name;
 		|		state->oml = offset;
 		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|
 		|	uint64_t vd;
-		|	BUS_VD_READ(vd);
+		|	BUS_DV_READ(vd);
 		|	uint8_t pd;
-		|	BUS_PD_READ(pd);
+		|	BUS_DP_READ(pd);
 		|
 		|	if (!PIN_OE=> && PIN_WE.posedge()) {
 		|		state->ram[adr] = vd & ~(0xfeULL << 7);	// VAL bits
@@ -264,7 +227,7 @@ class XCACHE(PartFactory):
 		|		microtrace(utrc, sizeof utrc);
 		|	}
 		|
-		|	if (!PIN_ELCE=> && PIN_EWE.posedge()) {
+		|	if (!PIN_OE=> && PIN_EWE.posedge()) {
 		|		if (!PIN_DIR=> && PIN_EVEN=> && PIN_TGOE=>) {
 		|			data = (pd & 0x02) >> 1;	// P6
 		|			data |= (vd >> 7) & 0xfe;	// VAL49-55
@@ -276,7 +239,7 @@ class XCACHE(PartFactory):
 		|		state->rame[adr & ~1] = data;
 		|	}
 		|
-		|	if (!PIN_ELCE=> && PIN_LWE.posedge()) {
+		|	if (!PIN_OE=> && PIN_LWE.posedge()) {
 		|		if (!PIN_DIR=> && PIN_LVEN=> && PIN_TGOE=>) {
 		|			data = (pd & 0x02) >> 1;	// P6
 		|			data |= (vd >> 7) & 0xfe;	// VAL49-55
@@ -287,37 +250,16 @@ class XCACHE(PartFactory):
 		|		}
 		|		state->rame[adr | 1] = data;
 		|	}
-		|	data = state->rame[adr & ~1];
-		|	BUS_CRE_WRITE(data);
-		|	data = state->rame[adr | 1];
-		|	BUS_CRL_WRITE(data);
+		|	output.cre = state->rame[adr & ~1];
+		|	output.crl = state->rame[adr | 1];
 		|
-		|	if (PIN_CLK.posedge())
+		|	if (pos)
 		|		state->k12 = PIN_K12=>;
-		|	else if (PIN_CLK.negedge())
+		|	if (neg)
 		|		state->k13 = PIN_K13=>;
 		|''')
-
-
-
-
-class ModelXCACHE(PartModel):
-    ''' MEM32 CACHE '''
-
-    def assign(self, comp, part_lib):
-
-        for node in comp:
-            if node.pin.name[:3] in ('VDQ', 'PDQ'):
-                b = node.pin.name[0]
-                pn = node.pin.name[3:]
-                new_pin = Pin(b + "D" + pn, b + "D" + pn, "input")
-                Node(node.net, comp, new_pin)
-                new_pin = Pin(b + "Q" + pn, b + "Q" + pn, "tri_state")
-                Node(node.net, comp, new_pin)
-                node.remove()
-        super().assign(comp, part_lib)
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XCACHE", ModelXCACHE("XCACHE", XCACHE))
+    part_lib.add_part("XCACHE", PartModelDQ("XCACHE", XCACHE))

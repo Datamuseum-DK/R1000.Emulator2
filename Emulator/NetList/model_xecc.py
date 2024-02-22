@@ -90,9 +90,8 @@ class XECC(PartFactory):
         for tmask, vmask, invert in self.getmasks():
             file.fmt('\n\ttmp = (typ & 0x%016xULL) ^ (val & 0x%016xULL);\n' % (tmask, vmask))
             file.fmt('''
-		|	tmp = odd_parity(odd_parity64(tmp)) & 0x1;
 		|	cbo <<= 1;
-		|	cbo |= tmp;
+		|	cbo |= (uint64_t)__builtin_parityll(tmp);
 		|''')
             if invert:
                 file.fmt('\tcbo ^= 1;\n')

@@ -29,7 +29,6 @@ class XM30(FChip):
         self.sig_right(ChipSig("+-->", "CASB"))
         self.sig_right(ChipSig("+-->", "AWE"))
         self.sig_right(ChipSig("+-->", "NMEQ"))
-        self.sig_right(ChipSig("+-->", "TAGW"))
         self.sig_right(ChipSig("+-->", "RAOE"))
         self.sig_right(ChipSig("+-->", "CAOE"))
 

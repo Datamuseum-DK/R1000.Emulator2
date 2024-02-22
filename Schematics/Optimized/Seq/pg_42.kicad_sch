@@ -1021,7 +1021,6 @@
     )
   )
 
-
   (junction (at 355.6 149.86) (diameter 0) (color 0 0 0 0)
     (uuid 03ffebe5-5c61-4f47-832f-fe06b8a32e4e)
   )
@@ -1029,6 +1028,7 @@
   (no_connect (at 360.68 165.1) (uuid 542c2a64-5736-4c24-a2df-cbe69b2ddb60))
   (no_connect (at 406.4 172.72) (uuid 881a7736-d455-488a-8667-1652248d99fd))
   (no_connect (at 360.68 144.78) (uuid b364bc64-133e-4f7d-816a-73bb4fa96aae))
+  (no_connect (at 251.46 27.94) (uuid d53f2a1b-fbde-4e82-bc8a-7e9c5a2447ba))
 
   (bus_entry (at 165.1 116.84) (size 2.54 2.54)
     (stroke (width 0) (type default))
@@ -2548,10 +2548,6 @@
     (stroke (width 0) (type default))
     (uuid ea70f0be-c0c0-49aa-918f-1f58fbece498)
   )
-  (wire (pts (xy 251.46 27.94) (xy 292.1 27.94))
-    (stroke (width 0) (type default))
-    (uuid eb540bae-1534-495f-a854-d7ad28e75007)
-  )
   (wire (pts (xy 279.4 241.3) (xy 251.46 241.3))
     (stroke (width 0) (type default))
     (uuid edfecf48-b548-4f65-9783-de958d60140a)
@@ -2770,10 +2766,6 @@
   (label "Q.FIU.D5" (at 256.54 180.34 0) (fields_autoplaced)
     (effects (font (size 2.54 2.54)) (justify left bottom))
     (uuid 41f4fbef-cd45-4592-88d2-ea9a4018df7b)
-  )
-  (label "STACK_OUT.SPARE" (at 256.54 27.94 0) (fields_autoplaced)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4619322e-5e46-438c-a889-0adf37a7b5bb)
   )
   (label "Q.FIU.P7" (at 180.34 383.54 0) (fields_autoplaced)
     (effects (font (size 2.54 2.54)) (justify left bottom))

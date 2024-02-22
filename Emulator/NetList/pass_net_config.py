@@ -38,7 +38,7 @@ import util
 from component import Component
 from net import Net
 from node import Node
-from pin import Pin
+from pin import Pin, PinTypeOut
 from scmod import ScSignal
 
 USE_MUXBUS = False
@@ -64,11 +64,6 @@ class MuxBus():
 
         self.muxtype = "XBUSMUX%dX%d" % (self.length, self.width)
         self.part = self.cpu.part_lib[self.muxtype]
-
-        if 0 and net0.on_plane:
-            file.write("MUX candidate but is plane\t")
-            self.netbus.create_as_bus(file)
-            return
 
         if not self.part:
             file.write("MUX candidate but no mux-part (%s)\t" % self.muxtype)
@@ -503,6 +498,12 @@ class PassNetConfig():
         ''' Determine if network needs hiz state '''
         for net in scm.iter_nets():
             assert len(net)
+            if len(net) == 1:
+                for node in net.iter_nodes():
+                    if not node.pin.type.input and node.pin.type.output:
+                        #print("N2", net, node)
+                        net.sc_type = "bool"
+                        node.pin.type = PinTypeOut
             hizs = 0
             outputs = 0
             roles = set()

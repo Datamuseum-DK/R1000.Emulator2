@@ -455,7 +455,7 @@ odd_parity64(uint64_t inp)
 
 	int i;
 	for (i = 0; i < 8; i++) {
-		retval |= bit & odd[inp & 0xff];
+		retval |= bit * __builtin_parity(inp & 0xff);
 		bit += bit;
 		inp >>= 8;
 	}

@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XM31(PartFactory):
     ''' MEM32 pg 31 '''
 
+    autopin = ("TMP", "DSYNC", "DFRZE", "PARER", "CSTOP", "TLWDR",)
+
     def state(self, file):
         file.fmt('''
 		|	unsigned cmdreg;
@@ -57,19 +59,7 @@ class XM31(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		BUS_TMP_WRITE(state->cmdreg >> 2);
-		|		PIN_DSYNC<=(state->diag_sync);
-		|		PIN_DFRZE<=(state->diag_freeze);
-		|		PIN_PARER<=(state->parity_error);
-		|		PIN_CSTOP<=!(state->diag_sync || state->diag_freeze);
-		|		return;
-		|	}
-		|
 		|	unsigned cmdreg = 0;
 		|
 		|	if (PIN_Q2.posedge()) {
@@ -83,21 +73,14 @@ class XM31(PartFactory):
 		|		bool diag_sync = !PIN_BDISYN=>;
 		|		bool diag_freeze = !PIN_BDIFRZ=>;
 		|		bool parity_error = !PIN_PERR=>;
-		|		if (
-		|		    diag_sync != state->diag_sync ||
-		|		    diag_freeze != state->diag_freeze ||
-		|		    parity_error != state->parity_error
-		|		) {
-		|			state->ctx.job = 1;
-		|			state->diag_sync = diag_sync;
-		|			state->diag_freeze = diag_freeze;
-		|			state->parity_error = parity_error;
-		|			next_trigger(5, sc_core::SC_NS);
-		|		}
+		|		output.dsync = diag_sync;
+		|		output.dfrze = diag_freeze;
+		|		output.parer = parity_error;
+		|		output.cstop = !(diag_sync || diag_freeze);
 		|	}
 		|
 		|	if (PIN_Q4.posedge()) {
-		|		PIN_TLWDR<=1;
+		|		output.tlwdr = false;
 		|		if (PIN_CMDE=>) {
 		|			if (PIN_SEL=>) {
 		|				BUS_TRACE_READ(cmdreg);
@@ -109,11 +92,7 @@ class XM31(PartFactory):
 		|					cmdreg |= 8;
 		|				cmdreg |= 5;
 		|			}
-		|			if (cmdreg != state->cmdreg) {
-		|				state->ctx.job = 1;
-		|				state->cmdreg = cmdreg;
-		|				next_trigger(5, sc_core::SC_NS);
-		|			}
+		|			output.tmp = cmdreg >> 2;
 		|		}
 		|	} else if (!PIN_Q4=>) {
 		|		if (PIN_DLWDR=> || (
@@ -122,19 +101,9 @@ class XM31(PartFactory):
 		|		    !state->diag_freeze &&
 		|		    PIN_DENLW=>
 		|		)) {
-		|			PIN_TLWDR<=0;
+		|			output.tlwdr = true;
 		|		}
 		|	}
-		|	TRACE(
-		|		<< " q4 " << PIN_Q4?
-		|		<< " sel " << PIN_SEL?
-		|		<< " cmde " << PIN_CMDE?
-		|		<< " mcmd " << BUS_MCMD_TRACE()
-		|		<< " cont " << PIN_CONT?
-		|		<< " ldwdr " << PIN_LDWDR?
-		|		<< " trace " << BUS_TRACE_TRACE()
-		|		<< " | " << std::hex << cmdreg
-		|	);
 		|''')
 
 def register(part_lib):

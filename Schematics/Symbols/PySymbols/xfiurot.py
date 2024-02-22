@@ -14,13 +14,12 @@ class XFIUROT(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "RCLK"))
-        self.sig_left(ChipSig("-->+", "TVI", 0, 63))
         self.sig_left(ChipSig("-->+", "RD", 0, 63))
-        self.sig_left(ChipSig("-->+", "FII", 0, 63))
+        self.sig_left(ChipSig("-->+", "DFI", 0, 63))
 
-        self.sig_right(ChipSig("+<--", "TVOOE"))
+        self.sig_right(ChipSig("+<--", "QROE"))
         self.sig_right(ChipSig("+<--", "TVF"))
-        self.sig_right(ChipSig("+===", "TVO", 0, 63))
+        self.sig_right(ChipSig("+<->", "DQR", 0, 63))
 
         self.sig_right(ChipSig("+<--", "ZLEN"))
         self.sig_right(ChipSig("+<--", "SBIT", 0, 6))
@@ -39,13 +38,12 @@ class XFIUROV(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "RCLK"))
-        self.sig_left(ChipSig("-->+", "TVI", 0, 63))
         self.sig_left(ChipSig("-->+", "RD", 0, 63))
-        self.sig_left(ChipSig("-->+", "FII", 0, 63))
+        self.sig_left(ChipSig("<->+", "DQFI", 0, 63))
 
-        self.sig_right(ChipSig("+<--", "TVOOE"))
+        self.sig_right(ChipSig("+<--", "QROE"))
         self.sig_right(ChipSig("+<--", "TVF"))
-        self.sig_right(ChipSig("+===", "TVO", 0, 63))
+        self.sig_right(ChipSig("+<->", "DQR", 0, 63))
 
         self.sig_right(ChipSig("+<--", "ZLEN"))
         self.sig_right(ChipSig("+<--", "SBIT", 0, 6))
@@ -54,8 +52,7 @@ class XFIUROV(FChip):
         self.sig_right(ChipSig("+<--", "SIGN"))
         self.sig_right(ChipSig("+<--", "SEL", 0, 1))
 
-        self.sig_right(ChipSig("+<--", "FIOOE"))
-        self.sig_right(ChipSig("+===", "FIO", 0, 63))
+        self.sig_right(ChipSig("+<--", "QFIOE"))
 
         self.sig_right(ChipSig("+<--", "PDIAG"))
         self.sig_right(ChipSig("+<--", "FIPOE"))

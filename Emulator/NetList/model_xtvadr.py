@@ -90,11 +90,11 @@ class XTVADR(PartFactory):
 		|	if (q4pos) {
 		|		state->par = odd_parity64(alu) & 0xf8;
 		|
-		|		if (odd_parity(odd_parity64(alu & 0x00ffe000ULL)))
+		|		if (__builtin_parity(alu & 0x00ffe000ULL))
 		|			state->par |= 0x04;
-		|		if (odd_parity(odd_parity64(alu & 0x00001f80ULL)))
+		|		if (__builtin_parity(alu & 0x00001f80ULL))
 		|			state->par |= 0x02;
-		|		if (odd_parity(odd_parity64(alu & 0x0000007fULL)))
+		|		if (__builtin_parity(alu & 0x0000007fULL))
 		|			state->par |= 0x01;
 		|	}
 		|

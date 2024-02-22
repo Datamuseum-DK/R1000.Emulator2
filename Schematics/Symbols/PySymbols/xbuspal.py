@@ -20,8 +20,6 @@ class XBUSPAL(FChip):
         self.sig_left(ChipSig("-->+", "SETA"))
         self.sig_left(ChipSig("-->+", "SETB"))
 
-        self.sig_right(ChipSig("+-->", "TADIR"))
-        self.sig_right(ChipSig("+-->", "TBDIR"))
         self.sig_right(ChipSig("+-->", "INTB"))
         self.sig_right(ChipSig("+-->", "TAOE"))
         self.sig_right(ChipSig("+-->", "TBOE"))

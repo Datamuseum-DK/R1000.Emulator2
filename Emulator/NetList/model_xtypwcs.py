@@ -190,8 +190,7 @@ class XTYPWCS(PartFactory):
 		|			TOWCS();
 		|		}
 		|		output.uir = state->wcs;
-		|		output.perr =
-		|		    !odd_parity(odd_parity64(state->wcs & BUS_UIR_MASK));
+		|		output.perr = !__builtin_parityll(state->wcs & BUS_UIR_MASK);
 		|	}
 		|	output.z_dgo = PIN_SUIR=>;
 		|	if (!PIN_SUIR=>) {
