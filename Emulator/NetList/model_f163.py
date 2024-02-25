@@ -42,7 +42,6 @@ class F163(PartFactory):
 
     ''' F163 F163 SYNCHRONOUS 4-BIT BINARY COUNTER '''
 
-    # XXX: autopin => major slowdown
     autopin = True
 
     def state(self, file):
@@ -56,10 +55,7 @@ class F163(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|
 		|	if (PIN_CLK.posedge()) {
 		|		if (!PIN_CLR=>) {
 		|			state->state = 0;
