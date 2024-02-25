@@ -306,8 +306,7 @@ cpu_instr_callback(unsigned int pc)
 	do {
 		pc = m68k_get_reg(NULL, M68K_REG_PC);
 		if (pc == 0) {
-			fprintf(stderr, "IOP went to address zero\n");
-			AN(pc);
+			finish(4, "IOP PC==0");
 		}
 		peg = mem_find_peg(pc);
 		if (peg == NULL) {
