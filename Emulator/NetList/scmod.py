@@ -276,6 +276,8 @@ class SystemCModule():
 		|	state = (struct scm_«lll»_state *)
 		|	    CTX_Get("«lll»", this->name(), sizeof *state);
 		|	should_i_trace(this->name(), &state->ctx.do_trace);
+		|	/* Force pin-update on first activation */
+		|	state->ctx.job = 1;
 		|''')
 
         if init:
