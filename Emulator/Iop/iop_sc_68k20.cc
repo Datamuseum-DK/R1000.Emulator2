@@ -1,6 +1,5 @@
 // This source file is included in the IOC's 68K20's doit() SystemC function
 
-
 	unsigned ipl, dsack, data;
 
 	BUS_IPL_READ(ipl);
@@ -64,7 +63,16 @@
 		state->xact->sc_state++;
 		break;
 	case 102:
-		BUS_D_WRITE(state->xact->data);
+		data = state->xact->data;
+		if (state->xact->width == 2) {
+			data &= 0xffff;
+			data |= data << 16;
+		} else if (state->xact->width == 1) {
+			data &= 0xff;
+			data |= data << 16;
+			data |= data << 8;
+		}
+		BUS_D_WRITE(data);
 		next_trigger(PIN_CLK.negedge_event());
 		state->xact->sc_state++;
 		break;
@@ -114,6 +122,11 @@
 		BUS_DSACK_READ(dsack);
 		if (dsack != 3)
 			state->xact->sc_state++;
+		if (!PIN_BERR) {
+			TRACE("BERR");
+			state->xact->berr = 1;
+			state->xact->sc_state++;
+		}
 		next_trigger(PIN_CLK.posedge_event());
 		break;
 	case 205:

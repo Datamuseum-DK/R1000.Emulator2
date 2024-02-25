@@ -15,6 +15,7 @@ struct ioc_sc_bus_xact {
 	int			width;
 	int			is_write;
 	unsigned		sc_state;
+	int			berr;
 };
 
 struct ioc_sc_bus_xact * ioc_sc_bus_get_xact(void);
