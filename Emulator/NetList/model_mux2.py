@@ -54,69 +54,73 @@ class Mux2(PartFactory):
         ''' private variables '''
         j = []
         if "OE" in self.comp.nodes:
-            j.append("PIN_OE")
+            j = ["PIN_OE"]
+            yield from self.event_or(
+                "oe_event",
+                *j,
+            )
         if "E" in self.comp.nodes:
             j.append("PIN_E")
             yield from self.event_or(
                 "e_event",
-                *j
+                *j,
             )
         for  i in "ab":
             yield from self.event_or(
                 i + "_event",
                 "BUS_%s" % i.upper(),
                 "PIN_S",
-                *j
+                *j,
             )
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
+        file.fmt('''
+		|	unsigned tmp = 0;
+		|	bool oe = false;
+		|
+		|	if (false) {
+		|''')
+
+        if "OE" in self.comp.nodes:
+            file.fmt('''
+		|	} else if (PIN_OE=>) {
+		|		oe = true;
+		|		idle_next = &oe_event;
+		|''')
+
+        if "E" in self.comp.nodes:
+            file.fmt('''
+		|	} else if (PIN_E=>) {
+		|		tmp = 0;
+		|		idle_next = &e_event;
+		|''')
 
         file.fmt('''
-		|	unsigned tmp;
+		|	} else if (PIN_S=>) {
+		|		BUS_B_READ(tmp);
+		|		idle_next = &b_event;
+		|	} else {
+		|		BUS_A_READ(tmp);
+		|		idle_next = &a_event;
+		|	}
 		|
 		|''')
 
         if "OE" in self.comp.nodes:
             file.fmt('''
-		|	if (PIN_OE=>) {
-		|		TRACE( << "Z" );
-		|		BUS_Y_Z();
-		|		next_trigger(PIN_OE.negedge_event());
-		|		return;
-		|	}
-		|''')
-
-        if "E" in self.comp.nodes:
-            file.fmt('''
-		|	if (PIN_E=>) {
-		|		tmp = 0;
-		|		next_trigger(e_event);
-		|	} else if (PIN_S=>) {
-		|''')
-        else:
-            file.fmt('''
-		|	if (PIN_S=>) {
-		|''')
-
-        file.fmt('''
-		|		BUS_B_READ(tmp);
-		|		next_trigger(b_event);
-		|	} else {
-		|		BUS_A_READ(tmp);
-		|		next_trigger(a_event);
-		|	}
-		|
+		|	output.z_y = oe;
 		|''')
 
         if self.invert:
             file.fmt('''
 		|	tmp ^= BUS_A_MASK;
 		|''')
+
         file.fmt('''
-		|	output.y = tmp;
+		|	if (!oe)
+		|		output.y = tmp;
 		|''')
 
 class ModelMux2(PartModel):

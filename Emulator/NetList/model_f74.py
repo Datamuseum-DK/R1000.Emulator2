@@ -86,16 +86,16 @@ class F74(PartFactory):
 		|		state->dreg[1] = true;
 		|''')
 
-        elif "PR_" in self.comp:
+        if "PR_" in self.comp:
             file.fmt('''
 		|	} else if (!PIN_PR_=>) {
 		|		state->dreg[0] = true;
 		|		state->dreg[1] = false;
 		|''')
 
-        elif "CL_" in self.comp:
+        if "CL_" in self.comp:
             file.fmt('''
-		|	} else if (!PIN_PR_=>) {
+		|	} else if (!PIN_CL_=>) {
 		|		state->dreg[0] = false;
 		|		state->dreg[1] = true;
 		|''')

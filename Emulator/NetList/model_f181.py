@@ -42,14 +42,13 @@ class F181(PartFactory):
 
     ''' F181 4-bit Arithemtic Logic Unit '''
 
+    autopin = True
+
     def extra(self, file):
         file.include("Components/tables.h")
-        super().extra(file)
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|
@@ -64,28 +63,29 @@ class F181(PartFactory):
 		|	BUS_S_READ(tmp);
 		|	idx |= tmp;
 		|	unsigned val = lut181[idx];
-		|	BUS_Y_WRITE(val >> 4);
-		|	if (val & 0x08)
-		|		PIN_AeqB = sc_dt::sc_logic_Z;
-		|	else
-		|		PIN_AeqB = sc_dt::sc_logic_0;
-		|	PIN_P<=(val & 0x04);
-		|	PIN_CO<=(val & 0x02);
-		|	PIN_G<=(val & 0x01);
-		|
-		|	TRACE(
-		|	    << " s " << BUS_S_TRACE()
-		|	    << " m " << PIN_M?
-		|	    << " ci " << PIN_CI?
-		|	    << " a " << BUS_A_TRACE()
-		|	    << " b " << BUS_B_TRACE()
-		|	    << " idx " << std::hex << idx
-		|	    << " f " << AS(val & 0x80) << AS(val & 0x40) << AS(val & 0x20) << AS(val & 0x10)
-		|	    << " = " << AS(val & 0x08)
-		|	    << " p " << AS(val & 0x04)
-		|	    << " cn " << AS(val & 0x02)
-		|	    << " g " << AS(val & 0x01)
-		|	);
+		|	output.y = val >> 4;
+		|	output.p = (val & 0x04);
+		|	output.co = (val & 0x02);
+		|	output.g = (val & 0x01);
+		|''')
+
+        if self.comp["AeqB"].pin.type.hiz:
+            file.fmt('''
+		|	if (val & 0x08) {
+		|		output.z_aeqb = true;
+		|		output.aeqb = true;
+		|	} else {
+		|		output.z_aeqb = false;
+		|		output.aeqb = false;
+		|	}
+		|''')
+        else:
+            file.fmt('''
+		|	if (val & 0x08) {
+		|		output.aeqb = true;
+		|	} else {
+		|		output.aeqb = false;
+		|	}
 		|''')
 
 def register(part_lib):

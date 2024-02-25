@@ -41,21 +41,20 @@ class LS125(PartFactory):
 
     ''' LS125 '''
 
+    autopin = True
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
-        file.fmt('''
-		|
-		|	TRACE(
-		|	    << PIN_E?
-		|	    << PIN_D?
-		|	);
-		|	if (!PIN_E=>)
-		|		PIN_Q = AS(PIN_D=>);
-		|	else
-		|		PIN_Q = sc_dt::sc_logic_Z;
+        if self.comp["Q"].pin.type.hiz:
+            file.fmt('''
+		|	output.z_q = PIN_E=>;
+		|	if (!output.z_q)
+		|		output.q = PIN_D=>;
+		|''')
+        else:
+            file.fmt('''
+		|	output.q = PIN_D=>;
 		|''')
 
 def register(part_lib):

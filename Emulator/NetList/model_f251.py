@@ -43,22 +43,16 @@ class F251(PartFactory):
 
     autopin = True
 
+    def private(self):
+        ''' private variables '''
+        if self.comp["Y"].pin.type.hiz:
+            yield from self.event_or(
+                "idle_event",
+                "PIN_OE.negedge_event()",
+            )
+
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
-
-        if not self.comp['OE'].net.is_const():
-            file.fmt('''
-		|
-		|	if (PIN_OE=>) {
-		|		TRACE(<<"Z");
-		|		PIN_Y = sc_dt::sc_logic_Z;
-		|		PIN_Ynot = sc_dt::sc_logic_Z;
-		|		next_trigger(PIN_OE.negedge_event());
-		|		return;
-		|	}
-		|''')
 
         file.fmt('''
 		|	unsigned adr = 0;
@@ -75,20 +69,25 @@ class F251(PartFactory):
 		|	case 6: s = PIN_G=>; break;
 		|	case 7: s = PIN_H=>; break;
 		|	}
+		|''')
+
+        if self.comp["Y"].pin.type.hiz:
+            file.fmt('''
+		|	output.z_y = PIN_OE=>;
+		|	output.z_ynot = PIN_OE=>;
+		|	if (output.z_y) {
+		|		idle_next = &idle_event;
+		|	} else {
+		|		output.y = s;
+		|		output.ynot = !s;
+		|	}
+		|''')
+        else:
+            file.fmt('''
 		|	output.y = s;
 		|	output.ynot = !s;
-		|
-		|	TRACE(
-		|	    << " oe "
-		|	    << PIN_OE?
-		|	    << " i "
-		|	    << PIN_A? << PIN_B? << PIN_C? << PIN_D?
-		|	    << PIN_E? << PIN_F? << PIN_G? << PIN_H?
-		|	    << " s " << BUS_S_TRACE()
-		|	    << " | "
-		|	    << s
-		|	);
 		|''')
+
 
 def register(part_lib):
     ''' Register component model '''
