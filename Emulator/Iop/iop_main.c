@@ -129,9 +129,17 @@ cli_ioc_reset(struct cli *cli)
 	}
 	ioc_stop_cpu();
 	ioc_wait_cpu_stopped();
+
+	/*
+	 * The "BOOTTIME" signal on page ioc_03 inverts the MSB address bit
+	 * for the first few clock-cycles to get the RESET vector and SP
+	 * read from EEPROM instead of RAM.  We simulate this by copying the
+	 * first 8 bytes from EEPROM to RAM.
+	 */
 	if (!vbe64dec(ioc_eeprom_space))
 		ioc_load_eeproms();
-	memcpy(ram_space, ioc_eeprom_space, 8);
+	m68k_write_memory_32(0x0, m68k_read_memory_32(0x80000000));
+	m68k_write_memory_32(0x4, m68k_read_memory_32(0x80000004));
 	m68k_pulse_reset();
 	if (cli->ac == 1)
 		ioc_start_cpu(0);
@@ -297,6 +305,10 @@ cpu_instr_callback(unsigned int pc)
 
 	do {
 		pc = m68k_get_reg(NULL, M68K_REG_PC);
+		if (pc == 0) {
+			fprintf(stderr, "IOP went to address zero\n");
+			AN(pc);
+		}
 		peg = mem_find_peg(pc);
 		if (peg == NULL) {
 			fprintf(stderr, "No PEG at address 0x%08x\n", pc);
