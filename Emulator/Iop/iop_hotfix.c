@@ -95,7 +95,8 @@ Ioc_HotFix_Ioc(void)
 	hotfix_ioc_functional();
 
 	skip_code(0x800001e4, 0x8000021a, "EEPROM CHECKSUM");
-	skip_code(0x800003a4, 0x80000546, "512k RAM Test");
+	skip_code(0x800003a4, 0x800004f8, "512k RAM Test (dword based)");
+	skip_code(0x800004f8, 0x80000546, "512k RAM Test (byte steering)");
 	skip_code(0x80000ba2, 0x80000bf2, "PIT  (=> DUART)");
 	skip_code(0x80000c1a, 0x80000d20, "Modem DUART channel");
 	skip_code(0x80000d4e, 0x80000dd6, "Diagnostic DUART channel");
