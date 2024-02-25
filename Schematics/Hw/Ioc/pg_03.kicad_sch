@@ -690,9 +690,11 @@
     (uuid ef6645b7-74d1-4c7d-a357-61165b297709)
   )
 
+  (no_connect (at 353.06 66.04) (uuid 0081e2d3-26ff-4a12-a031-4f7412c2fdf6))
   (no_connect (at 312.42 76.2) (uuid 273b9ea7-9b16-400f-85b7-259af26bf257))
   (no_connect (at 353.06 60.96) (uuid 313d0d2b-18ad-4051-9aa2-d2ad513ef57f))
   (no_connect (at 215.9 83.82) (uuid 9fd80618-7188-4f32-9428-c89ce5f51dd0))
+  (no_connect (at 368.3 66.04) (uuid a6b1a99e-757d-4214-aba6-29be9140af84))
   (no_connect (at 312.42 66.04) (uuid afea798a-40ea-4622-a830-ff4cd93acb20))
   (no_connect (at 312.42 81.28) (uuid bcab649a-0375-48af-b6a2-34f8a9e57157))
   (no_connect (at 353.06 81.28) (uuid d058820a-15ae-4dc3-a532-57f815b8877f))
@@ -1478,6 +1480,11 @@
     (stroke (width 0) (type default))
     (uuid 007a4b2d-dc8d-459b-af21-fcc62424850d)
   )
+  (polyline (pts (xy 353.06 66.04) (xy 368.3 66.04))
+    (stroke (width 0) (type dot))
+    (uuid 01266fbe-9e8c-43f9-aef8-9cedd48898ec)
+  )
+
   (wire (pts (xy 45.72 182.88) (xy 81.28 182.88))
     (stroke (width 0) (type default))
     (uuid 01fd7baa-ad4f-449d-8871-c10a26735aab)
@@ -2403,10 +2410,6 @@
   (wire (pts (xy 71.12 134.62) (xy 71.12 208.28))
     (stroke (width 0) (type default))
     (uuid 831931e1-5c0a-4478-b15e-594f306b38c9)
-  )
-  (wire (pts (xy 353.06 66.04) (xy 368.3 66.04))
-    (stroke (width 0) (type default))
-    (uuid 84dc361f-48a6-47bf-a463-542fdd3b4557)
   )
   (wire (pts (xy 40.64 48.26) (xy 71.12 48.26))
     (stroke (width 0) (type default))
@@ -3375,6 +3378,12 @@
   (bus (pts (xy 43.18 165.1) (xy 43.18 170.18))
     (stroke (width 0) (type default))
     (uuid ffeb81a4-d975-4d6e-9c28-4347dfa9b8e6)
+  )
+
+  (text "Disable the BOOTTIME logic,\nwe handle this is software"
+    (at 365.76 53.34 0)
+    (effects (font (size 2.54 2.54)) (justify left bottom))
+    (uuid abca7f9c-e984-44f6-b1d6-ff1376854ed2)
   )
 
   (label "IOP.A2" (at 314.96 127 0) (fields_autoplaced)
