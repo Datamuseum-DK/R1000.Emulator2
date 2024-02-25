@@ -45,7 +45,6 @@ class MC68020(PartFactory):
         yield "PIN_CLK.pos()"
 
     def extra(self, file):
-        super().extra(file)
         # The meat of the doit() function lives in a separate file so
         # that fidling with it does not require a rerun of the python code.
         self.scm.sf_cc.include("Iop/iop_sc_68k20.hh")
@@ -58,8 +57,6 @@ class MC68020(PartFactory):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         # The meat of the doit() function lives in a separate file so
         # that fidling with it does not require a rerun of the python code.
