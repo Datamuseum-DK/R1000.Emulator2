@@ -376,7 +376,7 @@ cli_scsi_disk_mount(struct cli *cli)
 	vbe16enc(sd->sense_3 + 0x0c, 0x8316);
 	vbe16enc(sd->sense_4 + 0x0c, 0x8412);
 
-	if (sd->map_size == 1143936000UL) {
+	if (sd->map_size == 1143936000UL || sd->map_size == 1146009600UL) {
 		// FUJITSU M2266
 		vbe16enc(sd->sense_3 + 0x0e, 15);	// tracks/zone
 		vbe16enc(sd->sense_3 + 0x14, 45);	// alt sec/lu
