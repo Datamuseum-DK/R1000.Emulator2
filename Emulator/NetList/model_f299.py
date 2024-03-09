@@ -35,7 +35,6 @@
    Ref: Fairchild DS009515 April 1988 Revised September 2000
 '''
 
-
 from part import PartModel, PartFactory
 from node import Node
 from pin import Pin
@@ -48,6 +47,18 @@ class F299(PartFactory):
 
     autopin = True
 
+    def private(self):
+        if "CLR" in self.comp:
+            a = ["PIN_CLR"]
+        else:
+            a = []
+        yield from self.event_or(
+            "idle_event",
+            "BUS_S",
+            "PIN_OE",
+            *a,
+        )
+
     def state(self, file):
         file.fmt('''
 		|	unsigned reg;
@@ -56,13 +67,10 @@ class F299(PartFactory):
     def sensitive(self):
         yield "PIN_CLK.pos()"
         yield "PIN_OE"
-        if not self.comp.nodes["CLR"].net.is_pu():
+        if "CLR" in self.comp:
             yield "PIN_CLR"
 
     def doit(self, file):
-        ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|	const char *what = NULL;
@@ -71,14 +79,13 @@ class F299(PartFactory):
 		|	BUS_S_READ(mode);
 		|
 		|	if (mode == 0) {
-		|		next_trigger(
-		|		    BUS_S_EVENTS() |
-		|		    PIN_OE.default_event()
-		|		);
+		|		idle_next = &idle_event;
 		|	}
 		|
 		|''')
-        if "CLR" in self.comp and not self.comp["CLR"].net.is_const():
+
+        if "CLR" in self.comp:
+
             file.fmt('''
 		|	if (!PIN_CLR=>) {
 		|		state->reg = 0;
@@ -120,12 +127,7 @@ class F299(PartFactory):
 		|		output.y = state->reg;
 		|	}
 		|	output.q0 = ((state->reg & (1 << (BUS_Y_WIDTH-1))) != 0);
-		|#if BUS_Y_WIDTH == 8
 		|	output.q7 = ((state->reg & 0x01) != 0);
-		|#else
-		|	output.q15 = ((state->reg & 0x01) != 0);
-		|#endif
-		|
 		|	if (what != NULL) {
 		|		TRACE(
 		|		    << what
@@ -155,6 +157,18 @@ class F299X8(PartFactory):
 
     autopin = True
 
+    def private(self):
+        if "CLR" in self.comp:
+            a = ["PIN_CLR"]
+        else:
+            a = []
+        yield from self.event_or(
+            "idle_event",
+            "BUS_S",
+            "PIN_OE",
+            *a,
+        )
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t reg;
@@ -163,13 +177,10 @@ class F299X8(PartFactory):
     def sensitive(self):
         yield "PIN_CLK.pos()"
         yield "PIN_OE"
-        if not self.comp.nodes["CLR"].net.is_pu():
+        if "CLR" in self.comp:
             yield "PIN_CLR"
 
     def doit(self, file):
-        ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|	const char *what = NULL;
@@ -178,14 +189,13 @@ class F299X8(PartFactory):
 		|	BUS_S_READ(mode);
 		|
 		|	if (mode == 0) {
-		|		next_trigger(
-		|		    BUS_S_EVENTS() |
-		|		    PIN_OE.default_event()
-		|		);
+		|		idle_next = &idle_event;
 		|	}
 		|
 		|''')
-        if "CLR" in self.comp and not self.comp["CLR"].net.is_const():
+
+        if "CLR" in self.comp:
+
             file.fmt('''
 		|	if (!PIN_CLR=>) {
 		|		state->reg = 0;
@@ -263,6 +273,7 @@ class F299X8(PartFactory):
 		|''')
 
         if "CLR" in self.comp:
+
             file.fmt('''
 		|		    << " mr " << PIN_CLR?
 		|''')
@@ -281,6 +292,10 @@ class ModelF299(PartModel):
     ''' F299 registers '''
 
     def assign(self, comp, part_lib):
+
+        clr_node = comp["CLR"]
+        if clr_node.net.is_pu():
+            clr_node.remove()
 
         for node in comp:
             if node.pin.name[:2] == 'DQ':
@@ -317,12 +332,9 @@ class ModelF299(PartModel):
             Node(g2_node.net, or_comp, Pin("D1", "D1", "input"))
 
         new_pin = Pin("OE", "OE", "input")
-        new_node = Node(oe_net, comp, new_pin)
+        Node(oe_net, comp, new_pin)
         g1_node.remove()
         g2_node.remove()
-
-        super().assign(comp, part_lib)
-
 
 def register(part_lib):
     ''' Register component model '''
