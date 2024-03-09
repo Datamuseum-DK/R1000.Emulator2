@@ -44,6 +44,13 @@ class XEQ(PartFactory):
 
     autopin = True
 
+    def private(self):
+        if "E" in self.comp:
+            yield from self.event_or(
+                "idle_event",
+                "PIN_E.negedge_event()",
+            )
+
     def state(self, file):
         if "CONST" in self.name:
             file.write("\tuint64_t const_b;\n")
@@ -54,49 +61,37 @@ class XEQ(PartFactory):
 
     def sensitive(self):
         if "X521" in self.name:
-           yield "PIN_C.pos()"
+            yield "PIN_C.pos()"
         else:
-           yield from super().sensitive()
+            yield from super().sensitive()
 
     def doit(self, file):
-        ''' The meat of the doit() function '''
-
-        super().doit(file)
-
-        if "E" in self.comp.nodes:
-            file.fmt('''
-		|	if (PIN_E=>) {
-		|		output.aeqb = true;
-		|		TRACE ( << " e " << PIN_E?);
-		|		next_trigger(PIN_E.negedge_event());
-		|		return;
-		|	}
-		|
+        file.fmt('''
+		|	uint64_t a, b;
+		|	BUS_A_READ(a);
 		|''')
 
         if "CONST" in self.name:
             file.fmt('''
-		|	uint64_t a;
-		|	BUS_A_READ(a);
-		|	output.aeqb = (a != state->const_b);
-		|
-		|	TRACE (
-		|	    << "a " << BUS_A_TRACE()
-		|	    << " b " << std::hex << state->const_b
-		|	);
+		|	b = state->const_b;
 		|''')
         else:
             file.fmt('''
-		|	uint64_t a, b;
-		|	BUS_A_READ(a);
 		|	BUS_B_READ(b);
-		|	output.aeqb = (a != b);
-		|
-		|	TRACE (
-		|	    << "a " << BUS_A_TRACE()
-		|	    << " b " << BUS_B_TRACE()
-		|	);
 		|''')
+
+        file.fmt('''
+		|	output.aeqb = (a != b);
+		|''')
+
+        if "E" in self.comp:
+            file.fmt('''
+		|	if (PIN_E=>) {
+		|		output.aeqb = true;
+		|		idle_next = &idle_event;
+		|	}
+		|''')
+
 
 class ModelXeq(PartModel):
     ''' comparator '''
