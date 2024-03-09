@@ -35,7 +35,6 @@
    Ref: Fairchild DS009504 April 1988 Revised September 2000
 '''
 
-
 from part import PartModel, PartFactory
 
 class F251(PartFactory):
@@ -44,15 +43,13 @@ class F251(PartFactory):
     autopin = True
 
     def private(self):
-        ''' private variables '''
-        if self.comp["Y"].pin.type.hiz:
+        if "OE" in self.comp:
             yield from self.event_or(
                 "idle_event",
                 "PIN_OE.negedge_event()",
             )
 
     def doit(self, file):
-        ''' The meat of the doit() function '''
 
         file.fmt('''
 		|	unsigned adr = 0;
@@ -71,25 +68,50 @@ class F251(PartFactory):
 		|	}
 		|''')
 
-        if self.comp["Y"].pin.type.hiz:
+        if "OE" in self.comp:
             file.fmt('''
-		|	output.z_y = PIN_OE=>;
-		|	output.z_ynot = PIN_OE=>;
-		|	if (output.z_y) {
+		|	bool oe = PIN_OE=>;
+		|	if (oe) {
 		|		idle_next = &idle_event;
-		|	} else {
-		|		output.y = s;
-		|		output.ynot = !s;
 		|	}
 		|''')
-        else:
+
+        if "Y" in self.comp and "OE" in self.comp:
+            file.fmt('''
+		|	output.z_y = oe;
+		|''')
+        if "Y" in self.comp:
             file.fmt('''
 		|	output.y = s;
+		|''')
+
+        if "Ynot" in self.comp and "OE" in self.comp:
+            file.fmt('''
+		|	output.z_ynot = oe;
+		|''')
+        if "Ynot" in self.comp:
+            file.fmt('''
 		|	output.ynot = !s;
 		|''')
 
+class ModelF251(PartModel):
+    ''' Delete unused pins '''
+
+    def assign(self, comp, _part_lib):
+
+        oe_node = comp["OE"]
+        if oe_node.net.is_pd():
+            oe_node.remove()
+
+        y_node = comp["Y"]
+        if len(y_node.net) == 1:
+            y_node.remove()
+
+        ynot_node = comp["Ynot"]
+        if len(ynot_node.net) == 1:
+            ynot_node.remove()
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("F251", PartModel("F251", F251))
+    part_lib.add_part("F251", ModelF251("F251", F251))
