@@ -16,6 +16,7 @@ events dictate it, we will make ``releaseN`` branches and list them here:
 | Release  | Slowdown | Time to Idle | Comment |
 | -------- | -------- | -------------| ---------------------------------------------- |
 | release1 |     420x |         137h | First working version of the emulator          |
+| release2 |      N/A |          N/A | HW-true schematics booted to login             |
 
 As time permits, we will continue to work on this emulation, hoping
 to make it at least as fast as the hardware, but for now the only
