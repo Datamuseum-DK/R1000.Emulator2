@@ -16,11 +16,22 @@ events dictate it, we will make ``releaseN`` branches and list them here:
 | Release  | Slowdown | Time to Idle | Comment |
 | -------- | -------- | -------------| ---------------------------------------------- |
 | release1 |     420x |         137h | First working version of the emulator          |
+| release2 |      N/A |          N/A | HW-true schematics booted to login             |
 
 As time permits, we will continue to work on this emulation, hoping
 to make it at least as fast as the hardware, but for now the only
 realistic way to experience the R1000 is to visit our museum in
 Copenhagen and see the real thing.
+
+# Release2
+
+If you are reading this, you are on the Release2 branch.
+
+Release2 marks that we have successfully booted the HW-true schematics all the way to login.
+
+This was done at 34411d522eec8f7535f90e05488ae9460f49ed12, took 59 days and 19 hours
+on a MacBook M2, and is generally not recommended, but if anybody wants to start experimenting
+with a FPGA version of the R1000, this is where you should start.
 
 # Getting Started
 
