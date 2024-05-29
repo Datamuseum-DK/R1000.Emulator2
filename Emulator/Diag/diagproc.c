@@ -547,5 +547,6 @@ DiagProcCreate(const char *name, const char *arg, uint32_t *do_trace)
 	else if (strstr(dp->name, "val"))
 		dp->turbo = diagproc_turbo_val;
 	dp->ram = dp->mcs51->iram;
+	dp->ip = &dp->mcs51->sfr[SFR_IP];
 	return (dp);
 }

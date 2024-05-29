@@ -60,6 +60,7 @@ struct diagproc {
 
 	diagprocturbo_t *turbo;
 	uint8_t *ram;
+	uint8_t *ip;
 };
 
 struct diagproc *DiagProcCreate(const char *name, const char *arg,
