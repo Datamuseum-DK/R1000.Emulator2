@@ -59,7 +59,7 @@ class XCOND(PartFactory):
                    "PIN_Q4.default_event()",
                    "BUS_ICOND",
                 )
-            else:
+            elif i not in (5, 6, 7):
                 yield from self.event_or(
                    "event_%x" % i,
                    "PIN_CX%X.default_event()" % i,
@@ -67,13 +67,20 @@ class XCOND(PartFactory):
                    "BUS_ICOND",
                 )
 
+        for i in range(0x5 << 3, 0x8 << 3):
+            yield from self.event_or(
+               "event_%02x" % i,
+               "PIN_SC%d.default_event()" % (i - (0x5 << 3)),
+               "PIN_Q4.default_event()",
+               "BUS_ICOND",
+            )
+
     def init(self, file):
         file.fmt('''
 		|	load_programmable(this->name(),
 		|	    state->elprom, sizeof state->elprom,
 		|	    "PA042-02");
 		|''')
-        super().init(file)
 
     def sensitive(self):
         yield "BUS_ICOND_SENSITIVE()"
@@ -81,8 +88,6 @@ class XCOND(PartFactory):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|
@@ -93,19 +98,37 @@ class XCOND(PartFactory):
 		|	bool is_e_ml = (pa042 >> 7) & 1;
 		|
 		|	bool cond;
-		|	sc_core::sc_event_or_list *next = NULL;
-		|	switch(condsel >> 3) {
+		|	switch(condsel) {
 		|''')
 
         for pin in range(16):
+            if pin not in (5, 6, 7):
+                for i in range(8):
+                    file.write('\tcase 0x%x:\n' % ((pin << 3) | i))
             if pin == 4:
                 file.fmt('''
-		|	case 0x%x: cond = !(PIN_CXC=> && PIN_CXF=>); next = &event_%x; break;
-		|''' % (pin, pin))
+		|		cond = !(PIN_CXC=> && PIN_CXF=>);
+		|		idle_next = &event_%x;
+		|		break;
+		|''' % pin)
+            elif pin in (5,):
+                for i in range(8):
+                    j = (pin << 3) | i
+                    file.fmt('''
+		|	case 0x%x: cond = !PIN_SC%d=>; idle_next = &event_%02x; break;
+		|''' % (j, j - (5<<3), j))
+            elif pin in (6, 7):
+                for i in range(8):
+                    j = (pin << 3) | i
+                    file.fmt('''
+		|	case 0x%x: cond = PIN_SC%d=>; idle_next = &event_%02x; break;
+		|''' % (j, j - (5<<3), j))
             else:
                 file.fmt('''
-		|	case 0x%x: cond = PIN_CX%X=>; next = &event_%x; break;
-		|''' % (pin, pin, pin))
+		|		cond = PIN_CX%X=>;
+		|		idle_next = &event_%x;
+		|		break;
+		|''' % (pin, pin))
 
         file.fmt('''
 		|	}
@@ -125,9 +148,6 @@ class XCOND(PartFactory):
 		|	output.cq3n = !state->q3cond;
 		|	output.cllp = state->llcond;
 		|	output.clln = !state->llcond;
-		|	if (!memcmp(&output, &state->output, sizeof output)) {
-		|		next_trigger(*next);
-		|	}
 		|''')
 
 def register(part_lib):

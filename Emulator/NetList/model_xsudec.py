@@ -174,6 +174,7 @@ class XSUDEC(PartFactory):
 		|	}
 		|	output.dtime = !(!bad_hint && (state->bhreg & 0x10));
 		|	output.dbhint = !(!bad_hint || (state->bhreg & 0x08));
+		|	output.bhint = (!bad_hint || (state->bhreg & 0x08));
 		|	output.dmdisp = !(!bad_hint || (state->bhreg & 0x04));
 		|	if (!bad_hint) {
 		|		output.mpcmb = PIN_MPRND=>;

@@ -29,41 +29,69 @@
 # SUCH DAMAGE.
 
 '''
-   SEQ 52 CSA
-   ==========
+   SEQ Macro Event resolver
+   ========================
 
 '''
 
 from part import PartModel, PartFactory
 
-class XSEQ52CSA(PartFactory):
-    ''' SEQ 52 CSA '''
+class XSMEV(PartFactory):
+    ''' SEQ Macro Event resolver '''
 
     autopin = True
 
-    def sensitive(self):
-        yield "PIN_CLK.pos()"
-        yield "BUS_NVE"
-        yield "BUS_DEC"
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+            "idle_event",
+            "PIN_WDISP",
+            "PIN_MDISP",
+        )
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|		
-		|	unsigned csa_nve, csa_dec;
+		|	bool wanna_dispatch = PIN_WDISP=>;
+		|	bool maybe_dispatch = PIN_MDISP=>;
+		|	bool e_macro_pend = PIN_EMP=>;
+		|	unsigned lmp;
+		|	BUS_LMP_READ(lmp);
+		|	bool l_macro_pend = lmp != BUS_LMP_MASK;
 		|
-		|	BUS_NVE_READ(csa_nve);
-		|	BUS_DEC_READ(csa_dec);
-		|	if (PIN_CLK.posedge()) {
-		|		output.csa = csa_nve;
+		|	output.disp = wanna_dispatch || e_macro_pend || l_macro_pend;
+		|	output.mevh = (!wanna_dispatch) && (e_macro_pend || l_macro_pend);
+		|	output.mevl = !output.mevh;
+		|	output.lmac = output.mevh && !e_macro_pend;
+		|
+		|	if (maybe_dispatch)
+		|		output.lmu = 7;
+		|	else if (!(lmp & 0x80))
+		|		output.lmu = 0;
+		|	else if (!(lmp & 0x40))
+		|		output.lmu = 1;
+		|	else if (!(lmp & 0x20))
+		|		output.lmu = 2;
+		|	else if (!(lmp & 0x10))
+		|		output.lmu = 3;
+		|	else if (!(lmp & 0x08))
+		|		output.lmu = 4;
+		|	else if (!(lmp & 0x04))
+		|		output.lmu = 5;
+		|	else if (!(lmp & 0x02))
+		|		output.lmu = 6;
+		|	else
+		|		output.lmu = 7;
+		|
+		|	output.mibf = !(output.lmac && output.lmu == 7);
+		|
+		|	if (wanna_dispatch && maybe_dispatch) {
+		|		idle_next = &idle_event;
 		|	}
-		|	output.ufl = csa_nve >= (csa_dec & 7);
-		|	output.ofl = csa_nve <= ((csa_dec >> 3) | 12);
-		|		
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XSEQ52CSA", PartModel("XSEQ52CSA", XSEQ52CSA))
+    part_lib.add_part("XSMEV", PartModel("XSMEV", XSMEV))

@@ -9277,7 +9277,7 @@
   (symbol (lib_id "r1000:F00") (at 78.74 548.64 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 6b02d514-e7ff-4277-a0b2-e3811b9ebea1)
-    (property "Reference" "U7903" (at 93.98 548.64 0)
+    (property "Reference" "U507" (at 93.98 548.64 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "F00" (at 80.645 553.72 0)
@@ -9923,7 +9923,7 @@
   (symbol (lib_id "r1000:F02") (at 111.76 546.1 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid e6dd06eb-c9d2-49da-9da4-3f3a3d99262b)
-    (property "Reference" "U2801" (at 123.92 545.465 0)
+    (property "Reference" "U509" (at 123.92 545.465 0)
       (effects (font (size 1.27 1.27)))
     )
     (property "Value" "F02" (at 110.49 550.545 0)
@@ -9946,9 +9946,6 @@
     (pin "3" (uuid 8c595355-21af-4537-b17b-ed6da1b83c5a))
     (instances
       (project "SEQ"
-        (path "/20011966-1ffc-24d7-1b4b-436a182362c4/20011966-6892-3d9d-7ae5-0d63dc2dba2e"
-          (reference "U2801") (unit 1)
-        )
         (path "/20011966-1ffc-24d7-1b4b-436a182362c4/20011966-6c08-6710-1426-205b3184364d"
           (reference "U509") (unit 1)
         )

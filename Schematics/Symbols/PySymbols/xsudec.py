@@ -45,6 +45,7 @@ class XSUDEC(FChip):
         self.sig_right(ChipSig("+-->", "MPCMB"))
         self.sig_right(ChipSig("+-->", "LHINT"))
         self.sig_right(ChipSig("+-->", "LHINTT"))
+        self.sig_right(ChipSig("+-->", "BHINT"))
 
         self.finish()
 
