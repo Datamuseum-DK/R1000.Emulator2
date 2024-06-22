@@ -32,8 +32,15 @@
    TYP/VAL ALU
    ===========
 
-'''
+   The 74181 consists of four segments:
 
+   1.  Calculate a function of two S-bits, A & B which we call C
+   2.  Calculate a function of the two other S-bits, A & B which we call D
+   3.  Carry-look-ahead-circuit which generates CO
+   4.  Add C & D to Y but if M is high, supress the carry in the addition (=XOR)
+
+   NB: The R1000 schematics mirrors the bit-order of the S bus
+'''
 
 from part import PartModel, PartFactory
 
@@ -42,85 +49,73 @@ class XALU(PartFactory):
 
     autopin = True
 
-    def extra(self, file):
-        file.include("Components/tables.h")
-        super().extra(file)
-
     def sensitive(self):
-        if 'CLK' in self.comp:
-            yield "PIN_CLK.pos()"
-            yield "PIN_CI"
-        else:
-            yield from super().sensitive()
+        yield "PIN_CLK.pos()"
+        yield "PIN_CI"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	unsigned idx, a, b, s, tour, ci, y = 0, eq = 1, eqb, ebus = 0;
+		|	unsigned a, b, s, ci;
 		|
+		|	bool mag = PIN_MAG=>;
+		|	bool m = PIN_M=>;
 		|	ci = PIN_CI=>;
 		|	BUS_A_READ(a);
 		|	BUS_B_READ(b);
 		|	BUS_S_READ(s);
 		|
-		|	if (BUS_A_WIDTH == 32)
-		|		s ^= BUS_S_MASK;
+		|	s ^= BUS_S_MASK;
 		|
-		|	for (tour = 0; tour < BUS_A_WIDTH; tour += 4) {
-		|		if (!(tour & 4))
-		|			eqb = 1;
-		|		idx = 0;
-		|		if (ci) idx |= 1 << 13;
-		|		if (PIN_M=>) idx |= 1 << 12;
-		|		idx |= 0xf00 & ((a >> tour) << 8);
-		|		idx |= 0x0f0 & ((b >> tour) << 4);
-		|		idx |= s;
-		|		unsigned val = lut181[idx];
-		|		y |= ((val >> 4) & 0xf) << tour;
-		|		if (!(val & 0x08)) {
-		|			eq = 0;
-		|			eqb = 0;
-		|		}
-		|		ci = (val & 0x02);
-		|		if (tour & 4)
-		|			ebus |= eqb << ((tour-4) >> 3);
-		|''')
-        if 'MAG' in self.comp:
-            file.fmt('''
-		|		if (tour == 4 && !PIN_MAG=>) {
-		|			y ^= 0x80;
-		|			if (a & 0x80)
-		|				ci = 0x0;
-		|			else
-		|				ci = 0x2;
-		|		}
-		|''')
-        file.fmt('''
+		|	uint64_t c;
+		|	switch(s & 0x3) {
+		|	case 0x0: c = a; break;
+		|	case 0x1: c = a | b; break;
+		|	case 0x2: c = a | (b^BUS_Y_MASK); break;
+		|	case 0x3: c = BUS_Y_MASK; break;
+		|	}
+		|	c ^= BUS_Y_MASK;
+		|
+		|	uint64_t d;
+		|	switch(s & 0xc) {
+		|	case 0x0: d = 0; break;
+		|	case 0x4: d = a & (b^BUS_Y_MASK); break;
+		|	case 0x8: d = a & b; break;
+		|	case 0xc: d = a; break;
+		|	}
+		|	d ^= BUS_Y_MASK;
+		|
+		|	uint64_t y;
+		|	if (!mag) {
+		|		// TYP board INC/DEC128
+		|		y = (c & 0xff) + (d & 0xff) + ci;
+		|		y &= 0xff;
+		|		y ^= 0x80;
+		|		if (a & 0x80)
+		|			ci = 0;
+		|		else
+		|			ci = 0x100;
+		|		y += (c & (~0xff)) + (d & (~0xff)) + ci;
+		|	} else {
+		|		y = c + d + ci;
 		|	}
 		|
-		|	TRACE(
-		|	    << " s " << BUS_S_TRACE()
-		|	    << " m " << PIN_M?
-		|	    << " ci " << PIN_CI?
-		|	    << " a " << BUS_A_TRACE() << " " << std::hex << a
-		|	    << " b " << BUS_B_TRACE() << " " << std::hex << b
-		|	    << " = " << eq
-		|	    << " co " << ci
-		|	    << " y " << std::hex << y
-		|	);
-		|	//PIN_AeqB<=(eq);
-		|	output.aeqb = eq;
-		|	//PIN_CO<=(ci);
-		|	output.co = ci;
-		|	//BUS_Y_WRITE(y);
-		|	output.y = y;
-		|#ifdef BUS_EQ_MASK
-		|	output.eq = ebus;
-		|	//BUS_EQ_WRITE(ebus);
-		|#endif
+		|	output.co = (y >> BUS_Y_WIDTH) & 1;
+		|
+		|	if (m) {
+		|		y = c ^ d;
+		|		if (!mag)
+		|			y ^= 0x80;
+		|	}
+		|
+		|	output.eq = 0;
+		|	if (!(y & 0xff)) output.eq |= 1;
+		|	if (!(y & 0xff00)) output.eq |= 2;
+		|	if (!(y & 0xff0000)) output.eq |= 4;
+		|	if (!(y & 0xff000000)) output.eq |= 8;
+		|
+		|	output.y = y ^= BUS_Y_MASK;
 		|''')
 
 def register(part_lib):
