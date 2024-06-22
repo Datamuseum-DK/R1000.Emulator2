@@ -147,9 +147,7 @@ single() {
 
 
 	if [ "x$1" == "x" ] ; then
-		EXP=TEST_WCS_ADDRESS
-	else
-		EXP=$1
+		set TEST_WCS_ADDRESS
 	fi
 
 	cli 'sc trace DI*PROC 0x14'
@@ -157,11 +155,13 @@ single() {
 	cli 'sc quota add 60'
 	cli 'sc quota exit'
 
-	cli "dfs read ${EXP}.${single_suff} ${R1K_PFX}.exp"
-
-	cli "diproc experiment ${single_brd} ${R1K_PFX}.exp"
-	cli "diproc wait ${single_brd}"
-	cli "diproc status ${single_brd}"
+        for EXP in $*
+	do
+		cli "dfs read ${EXP}.${single_suff} ${R1K_PFX}.exp"
+		cli "diproc experiment ${single_brd} ${R1K_PFX}.exp"
+		cli "diproc wait ${single_brd}"
+		cli "diproc status ${single_brd}"
+	done
 
 	run
 }
