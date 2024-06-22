@@ -47,18 +47,16 @@ class XFHRAM(PartFactory):
 		|	uint8_t ramlo[1<<10];
 		|''')
 
-    def xxsensitive(self):
-        yield "PIN_FIU_CLK.pos()"
-        yield "PIN_LOCAL_CLK.pos()"
-        yield "PIN_Q1not.pos()"
-        yield "PIN_DV_U"
-        yield "PIN_BAD_HINT"
-        yield "PIN_U_PEND"
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+            "idle_event",
+            "PIN_WE",
+            "PIN_OE",
+        )
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|	unsigned q = 0, ahi=0, alo=0, spc, nam, off;
@@ -66,9 +64,9 @@ class XFHRAM(PartFactory):
 		|	BUS_NAM_READ(nam);
 		|	BUS_OFF_READ(off);
 		|
-		|#define BITSPC(n) ((spc >> (2 - n)) & 1)
-		|#define BITNAM(n) ((nam >> (31 - n)) & 1)
-		|#define BITOFF(n) ((off >> (24 - n)) & 1)
+		|#define BITSPC(n) ((spc >> BUS_SPC_LSB(n)) & 1)
+		|#define BITNAM(n) ((nam >> BUS_NAM_LSB(n)) & 1)
+		|#define BITOFF(n) ((off >> BUS_OFF_LSB(n)) & 1)
 		|
 		|	ahi |= BITNAM(14) << 9;
 		|	ahi |= BITNAM(15) << 8;
@@ -111,20 +109,8 @@ class XFHRAM(PartFactory):
 		|	q |= state->ramlo[alo] << 2;
 		|	q ^= 0xff << 2;
 		|	output.q = q;
-		|
-		|	TRACE(
-		|	    << " big " << PIN_BIG?
-		|	    << " cs " << PIN_CS?
-		|	    << " we^ " << PIN_WE.posedge()
-		|	    << " oe " << PIN_OE?
-		|	    << " d " << BUS_D_TRACE()
-		|	    << " s " << BUS_SPC_TRACE()
-		|	    << " o " << BUS_OFF_TRACE()
-		|	    << " n " << BUS_NAM_TRACE()
-		|	    << " q " << std::hex << q
-		|	    << " ahi " << ahi
-		|	    << " alo " << alo
-		|	);
+		|	if (PIN_OE=>)
+		|		idle_next = &idle_event;
 		|''')
 
 def register(part_lib):

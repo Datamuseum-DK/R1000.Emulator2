@@ -44,8 +44,6 @@ class XFAINC(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|	unsigned mar_offset;
 		|	BUS_MARO_READ(mar_offset);
@@ -60,6 +58,9 @@ class XFAINC(PartFactory):
 		|		inco += 1;
 		|	inco |= mar_offset & 0x20;
 		|	output.inco = inco;
+		|	output.incp = odd_parity(inco);
+		|	if (PIN_DPAR=>)
+		|		output.incp ^= 1;
 		|
 		|	output.pxnx = (
 		|		(page_xing && sel_pg_xing && sel_incyc_px) ||

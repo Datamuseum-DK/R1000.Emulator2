@@ -34,15 +34,17 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XFAPAR(PartFactory):
     ''' FIU A-bus parity '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	bool moe;
-		|	unsigned po;
+		|	unsigned qp;
 		|	bool ckopar;
 		|	bool offserr;
 		|''')
@@ -54,19 +56,7 @@ class XFAPAR(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		PIN_MOE<=state->moe;
-		|		if (state->moe) {
-		|			BUS_PO_Z();
-		|		} else {
-		|			BUS_PO_WRITE(state->po);
-		|		}
-		|		return;
-		|	}
 		|
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
@@ -85,45 +75,43 @@ class XFAPAR(PartFactory):
 		|		BUS_B_READ(b);
 		|		if (space_pev)
 		|			b |= 0x100;
-		|		BUS_PI_READ(pi);
+		|		BUS_DP_READ(pi);
 		|	}
 		|
 		|	if (q2pos) {
+		|		unsigned ctp;
+		|		BUS_CTP_READ(ctp);
+		|		bool terr = PIN_CKCTP=> && (ctp & 0xf6) != (pi & 0xf6);
 		|		bool tmp = (b & 1) != (pi & 1);
 		|		state->offserr = tmp && state->ckopar;
 		|		pi >>= 1;
 		|		b >>= 1;
 		|		bool ck_adrpar = PIN_CKP=>;
 		|		bool perr = (pi != b) && ck_adrpar;
-		|		//PIN_AERR<=(!perr);
-		|		//PIN_OERR<=(!state->offserr);
 		|		bool aerr = !(
 		|		    perr ||
 		|		    state->offserr ||
-		|		    !PIN_TERR=>
+		|		    terr
 		|		);
-		|		PIN_AERR<=(aerr);
+		|		output.aerr = aerr;
 		|	}
 		|	if (q4pos) {
 		|		state->ckopar = PIN_CKPN=>;
 		|
-		|		state->po = b;
-		|		state->po &= 0x1fd;
-		|		if (PIN_IO2=>)
-		|			state->po |= 2;
-		|		state->moe = PIN_FAE=>;
-		|		if (!state->moe) {
-		|			state->ctx.job = 1;
-		|			next_trigger(5, sc_core::SC_NS);
+		|		output.moe = PIN_FAE=>;
+		|		output.z_qp = output.moe;
+		|		if (!output.z_qp) {
+		|			output.qp = b & ~2;
+		|			if (PIN_IO2=>)
+		|				output.qp |= 2;
 		|		}
 		|	} else if (PIN_Q4.negedge() && !state->moe) {
-		|		state->moe = true;
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
+		|		output.moe = true;
+		|		output.z_qp = output.moe;
 		|	}
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XFAPAR", PartModel("XFAPAR", XFAPAR))
+    part_lib.add_part("XFAPAR", PartModelDQ("XFAPAR", XFAPAR))

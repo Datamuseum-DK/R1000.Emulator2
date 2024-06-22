@@ -34,7 +34,7 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XSCAV(PartFactory):
     ''' SEQ Scavenger '''
@@ -50,7 +50,7 @@ class XSCAV(PartFactory):
     def sensitive(self):
         yield "PIN_Q4.pos()"
         yield "PIN_WE.pos()"
-        yield "PIN_VIQOE"
+        yield "PIN_QVIOE"
         yield "BUS_A_SENSITIVE()"
         yield "BUS_MSP_SENSITIVE()"
 
@@ -64,7 +64,7 @@ class XSCAV(PartFactory):
 		|
 		|	BUS_A_READ(a);
 		|	if (PIN_WE.posedge()) {
-		|		BUS_VID_READ(d);
+		|		BUS_DVI_READ(d);
 		|		state->ram[a] = d;
 		|	}
 		|	d = state->ram[a];
@@ -79,12 +79,12 @@ class XSCAV(PartFactory):
 		|	d >>= 1;
 		|	d |= 0x80;
 		|	output.sd = !((d >> (7-msp)) & 1);
-		|	output.z_viq = PIN_VIQOE=>;
-		|	if (!output.z_viq)
-		|		output.viq = state->screg;
+		|	output.z_qvi = PIN_QVIOE=>;
+		|	if (!output.z_qvi)
+		|		output.qvi = state->screg;
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XSCAV", PartModel("XSCAV", XSCAV))
+    part_lib.add_part("XSCAV", PartModelDQ("XSCAV", XSCAV))

@@ -17,7 +17,6 @@ class XFHRAM(FChip):
         self.sig_left(ChipSig("-->+", "OFF", 0, 24))
         self.sig_left(ChipSig("-->+", "NAM", 0, 31))
         self.sig_right(ChipSig("+<--", "BIG"))
-        self.sig_right(ChipSig("+<--", "CS"))
         self.sig_right(ChipSig("+<--", "WE"))
         self.sig_right(ChipSig("+<--", "OE"))
         self.sig_right(ChipSig("+<--", "D", 0, 23))

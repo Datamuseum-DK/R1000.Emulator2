@@ -19,11 +19,13 @@ class XFAINC(FChip):
         self.sig_left(ChipSig("-->+", "INMAR"))
         self.sig_left(ChipSig("-->+", "PGMOD"))
         self.sig_left(ChipSig("-->+", "MARO", 0, 24))
+        self.sig_left(ChipSig("-->+", "DPAR"))
 
         self.sig_right(ChipSig("+-->", "INCO", 0, 5))
         self.sig_right(ChipSig("+-->", "PXNX"))
         self.sig_right(ChipSig("+-->", "NTOP"))
         self.sig_right(ChipSig("+-->", "WEZ"))
+        self.sig_right(ChipSig("+-->", "INCP"))
 
         self.finish()
 

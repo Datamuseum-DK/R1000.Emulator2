@@ -34,7 +34,7 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 from pin import Pin
 from node import Node
 
@@ -45,27 +45,99 @@ class XFMAR(PartFactory):
 
     def state(self, file):
         file.fmt('''
+		|	uint8_t hramhi[1<<10];
+		|	uint8_t hramlo[1<<10];
 		|	uint32_t srn, sro, par, ctopn, ctopo;
+		|	unsigned nve, pdreg;
+		|	unsigned moff;
+		|	bool pdt;
 		|''')
 
     def sensitive(self):
         yield "PIN_CLK2X.pos()"
         yield "BUS_OREG"
-        yield "BUS_INC"
-        yield "PIN_VIOE"
-        yield "PIN_YDIAGOE"
-        yield "PIN_YSPCOE"
-        yield "PIN_YADROE"
+        yield "PIN_QVIOE"
+        yield "PIN_QDIAGOE"
+        yield "PIN_QSPCOE"
+        yield "PIN_QADROE"
         yield "PIN_DGPAR"
         yield "PIN_COCLK.pos()"
         yield "BUS_CSA"
+        yield "PIN_HWE.pos()"
+        yield "PIN_INMAR"
+        yield "PIN_PXING"
+        yield "PIN_SELPG"
+        yield "PIN_SELIN"
+        yield "PIN_Q4.pos()"
+        yield "PIN_NMAT"
+        yield "PIN_OCLK.pos()"
+        yield "PIN_SCLK.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
+        if True:
+            file.fmt('''
+		|{
+		|	unsigned a, b, dif;
+		|	bool co, name_match, in_range;
+		|
+		|	if (PIN_SCLK.posedge()) {
+		|		// CSAFFB
+		|		state->pdt = !PIN_PRED=>;
+		|
+		|		// NVEMUX + CSAREG
+		|		if (PIN_DSEL=>) {
+		|			BUS_CNV_READ(state->nve);
+		|		} else if (PIN_DNVE=>) {
+		|			state->nve = 0xf;
+		|		} else {
+		|			state->nve = 0;
+		|		}
+		|	}
+		|
+		|	a = state->ctopo & 0xfffff;
+		|	b = state->moff & 0xfffff;
+		|
+		|	if (PIN_OCLK.posedge()) {
+		|		state->pdreg = a;
+		|	}
+		|
+		|	if (state->pdt) {
+		|		co = a <= state->pdreg;
+		|		dif = ~0xfffff + state->pdreg - a;
+		|	} else {
+		|		co = b <= a;
+		|		dif = ~0xfffff + a - b;
+		|	}
+		|	dif &= 0xfffff;
+		|
+		|	name_match = PIN_NMAT=>;
+		|
+		|	// CNAN0B, CINV0B, CSCPR0
+		|	in_range = (!state->pdt && name_match) || (dif & 0xffff0);
+		|	output.inrg = in_range;
+		|
+		|	output.hofs = 0xf + state->nve - (dif & 0xf);
+		|
+		|	output.chit = !(
+		|		co &&
+		|		!(
+		|			in_range ||
+		|			((dif & 0xf) >= state->nve)
+		|		)
+		|	);
+		|
+		|	if (PIN_Q4.posedge()) {
+		|		output.oor = !(co || name_match);
+		|	}
+		|}
+		|''')
+
         file.fmt('''
 		|	uint64_t adr;
 		|	BUS_DADR_READ(adr);
+		|
 		|
 		|	if (PIN_CLK2X.posedge()) {
 		|		unsigned mode;
@@ -105,8 +177,13 @@ class XFMAR(PartFactory):
 		|			state->sro |= ((diag >> 1) & 0x1) << 0x0f;
 		|			state->sro |= ((diag >> 0) & 0x1) << 0x07;
 		|		}
-		|		output.madr = state->sro;
-		|		output.madr |= (uint64_t)state->srn << 32;
+		|		output.mspc = (state->sro >> 4) & BUS_MSPC_MASK;
+		|		state->moff = (state->sro >> 7) & 0xffffff;
+		|		output.mnam = (state->srn >> 23) & BUS_MNAM_MASK;
+		|
+		|		output.wez = (state->moff & 0x3f) == 0;
+		|		output.ntop = !	((state->moff & 0x3f) > 0x30);
+		|
 		|		state->par = odd_parity64(state->srn) << 4;
 		|		state->par |= offset_parity(state->sro) ^ 0xf;
 		|		output.nmatch =
@@ -114,16 +191,48 @@ class XFMAR(PartFactory):
 		|		    ((state->sro & 0xf8000070 ) != 0x10);
 		|	}
 		|
+		|	unsigned mar_offset = state->moff;
+		|	bool inc_mar = PIN_INMAR=>;
+		|	bool page_xing = PIN_PXING=>;
+		|	bool sel_pg_xing = PIN_SELPG=>;
+		|	bool sel_incyc_px = PIN_SELIN=>;
+		|
+		|	unsigned marbot = mar_offset & 0x1f;
+		|	unsigned inco = marbot;
+		|	if (inc_mar && inco != 0x1f)
+		|		inco += 1;
+		|	inco |= mar_offset & 0x20;
+		|	// output.inco = inco;
+		|	output.incp = odd_parity(inco);
+		|	if (PIN_DPAR=>)
+		|		output.incp ^= 1;
+		|
+		|	unsigned oreg;
+		|	BUS_OREG_READ(oreg);
+		|
+		|	output.z_qadr = PIN_QADROE=>;
+		|	if (!output.z_qadr) {
+		|		output.qadr = (uint64_t)state->srn << 32;
+		|		output.qadr |= state->sro & 0xfffff000;
+		|		//unsigned inc;
+		|		//BUS_INC_READ(inc);
+		|		output.qadr |= (inco & 0x1f) << 7;
+		|		output.qadr |= oreg;
+		|	}
+		|
+		|	output.pxnx = (
+		|		(page_xing && sel_pg_xing && sel_incyc_px) ||
+		|		(!page_xing && sel_pg_xing && sel_incyc_px && inc_mar && marbot == 0x1f)
+		|	);
+		|
 		|	if (PIN_CTCLK.posedge()) {
 		|		state->ctopn = adr >> 32;
-		|		output.ctpar = odd_parity64(state->ctopn) << 4;
+		|		output.ctpar &= 0x0f;
+		|		output.ctpar |= odd_parity64(state->ctopn) << 4;
 		|		output.nmatch =
 		|		    (state->ctopn != state->srn) ||
 		|		    ((state->sro & 0xf8000070 ) != 0x10);
 		|	}
-		|
-		|	unsigned oreg;
-		|	BUS_OREG_READ(oreg);
 		|
 		|	state->par &= 0xfe;
 		|	state->par |= (odd_parity(oreg) ^ 0xff) & 0x1;
@@ -133,40 +242,30 @@ class XFMAR(PartFactory):
 		|	else
 		|		output.par = state->par;
 		|
-		|	output.z_ydiag = PIN_YDIAGOE=>;
-		|	if (!output.z_ydiag) {
-		|		output.ydiag = 0;
-		|		output.ydiag |= ((state->srn >> 24) & 1) << 7;
-		|		output.ydiag |= ((state->srn >> 16) & 1) << 6;
-		|		output.ydiag |= ((state->srn >>  8) & 1) << 5;
-		|		output.ydiag |= ((state->srn >>  0) & 1) << 4;
-		|		output.ydiag |= ((state->sro >> 24) & 1) << 3;
-		|		output.ydiag |= ((state->sro >> 16) & 1) << 2;
-		|		output.ydiag |= ((state->sro >>  8) & 1) << 1;
-		|		output.ydiag |= ((state->sro >>  4) & 1) << 0;
+		|	output.z_qdiag = PIN_QDIAGOE=>;
+		|	if (!output.z_qdiag) {
+		|		output.qdiag = 0;
+		|		output.qdiag |= ((state->srn >> 24) & 1) << 7;
+		|		output.qdiag |= ((state->srn >> 16) & 1) << 6;
+		|		output.qdiag |= ((state->srn >>  8) & 1) << 5;
+		|		output.qdiag |= ((state->srn >>  0) & 1) << 4;
+		|		output.qdiag |= ((state->sro >> 24) & 1) << 3;
+		|		output.qdiag |= ((state->sro >> 16) & 1) << 2;
+		|		output.qdiag |= ((state->sro >>  8) & 1) << 1;
+		|		output.qdiag |= ((state->sro >>  4) & 1) << 0;
 		|	}
 		|
-		|	output.z_vi = PIN_VIOE=>;
-		|	if (!output.z_vi) {
-		|		output.vi = (uint64_t)state->srn << 32;
-		|		output.vi |= state->sro & 0xffffff80;
-		|		output.vi |= oreg;
-		|		output.vi ^= BUS_VI_MASK;
+		|	output.z_qvi = PIN_QVIOE=>;
+		|	if (!output.z_qvi) {
+		|		output.qvi = (uint64_t)state->srn << 32;
+		|		output.qvi |= state->sro & 0xffffff80;
+		|		output.qvi |= oreg;
+		|		output.qvi ^= BUS_QVI_MASK;
 		|	}
 		|
-		|	output.z_yspc = PIN_YSPCOE=>;
-		|	if (!output.z_yspc) {
-		|		output.yspc = (state->sro >> 4) & 7;
-		|	}
-		|
-		|	output.z_yadr = PIN_YADROE=>;
-		|	if (!output.z_yadr) {
-		|		output.yadr = (uint64_t)state->srn << 32;
-		|		output.yadr |= state->sro & 0xfffff000;
-		|		unsigned inc;
-		|		BUS_INC_READ(inc);
-		|		output.yadr |= (inc & 0x1f) << 7;
-		|		output.yadr |= oreg;
+		|	output.z_qspc = PIN_QSPCOE=>;
+		|	if (!output.z_qspc) {
+		|		output.qspc = (state->sro >> 4) & 7;
 		|	}
 		|
 		|	unsigned csa;
@@ -184,27 +283,68 @@ class XFMAR(PartFactory):
 		|			state->ctopo += 0xfffff;
 		|		}
 		|		state->ctopo &= 0xfffff;
-		|		output.cto = state->ctopo;
+		|
+		|		output.ctpar &= 0xf0;
+		|		output.ctpar |= offset_parity(state->ctopo << 7) ^ 0xf;
 		|	}
+		|
+		|	// HASH RAM
+		|	unsigned q = 0, ahi=0, alo=0, spc, nam, off;
+		|	spc = output.mspc;
+		|	nam = state->srn;
+		|	off = state->moff;
+		|
+		|#define BITSPC(n) ((spc >> (2 - n)) & 1)
+		|#define BITNAM(n) ((nam >> (31 - n)) & 1)
+		|#define BITOFF(n) ((off >> (24 - n)) & 1)
+		|
+		|	ahi |= BITNAM(14) << 9;
+		|	ahi |= BITNAM(15) << 8;
+		|	ahi |= BITNAM(16) << 7;
+		|	ahi |= BITNAM(17) << 6;
+		|	ahi |= BITOFF( 9) << 5;
+		|	ahi |= BITOFF(10) << 4;
+		|	ahi |= BITOFF(11) << 3;
+		|	ahi |= BITOFF( 7) << 2;
+		|	ahi |= BITOFF(17) << 1;
+		|	ahi |= BITOFF(18) << 0;
+		|
+		|	alo |= BITNAM(18) << 9;
+		|	alo |= BITNAM(19) << 8;
+		|	alo |= BITNAM(20) << 7;
+		|	alo |= BITNAM(21) << 6;
+		|	alo |= BITOFF(10) << 5;
+		|	alo |= BITOFF(11) << 4;
+		|	alo |= BITOFF(12) << 3;
+		|	alo |= BITOFF(13) << 2;
+		|	alo |= BITOFF(14) << 1;
+		|	alo |= BITOFF(15) << 0;
+		|
+		|	if (PIN_HWE.posedge()) {
+		|		uint64_t data;
+		|		BUS_DVI_READ(data);
+		|		data >>= 32;
+		|
+		|		state->hramhi[ahi] = (data >> 14) & 0xf;
+		|		state->hramlo[alo] = (data >> 10) & 0xf;
+		|		
+		|	}
+		|
+		|	if (!PIN_BIG=>) {
+		|		q |= (BITSPC(1) ^ BITNAM(12) ^ BITOFF(17)) << (11- 0);
+		|	}
+		|	q |= (BITOFF(8) ^ BITNAM(13)) << (11- 1);
+		|	q |= (BITSPC(0) ^ BITOFF(18)) << (11-10);
+		|	q |= (BITSPC(2) ^ BITOFF(16)) << (11-11);
+		|	q |= state->hramhi[ahi] << 6;
+		|	q |= state->hramlo[alo] << 2;
+		|	q ^= 0xff << 2;
+		|	output.line = q;
 		|''')
 
-class ModelXFMAR(PartModel):
-    ''' FIU MAR &co '''
 
-    def assign(self, comp, part_lib):
-
-        for node in comp:
-            if node.pin.name[:1] == 'B':
-                pn = node.pin.name[1:]
-                new_pin = Pin("D" + pn, "D" + pn, "input")
-                Node(node.net, comp, new_pin)
-                new_pin = Pin("Y" + pn, "Y" + pn, "tri_state")
-                Node(node.net, comp, new_pin)
-                node.remove()
-
-        super().assign(comp, part_lib)
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XFMAR", ModelXFMAR("XFMAR", XFMAR))
+    part_lib.add_part("XFMAR", PartModelDQ("XFMAR", XFMAR))

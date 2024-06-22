@@ -13,7 +13,6 @@ class XFAPAR(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "PI", 0, 8))
         self.sig_left(ChipSig("-->+", "B", 0, 7))
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
@@ -22,12 +21,14 @@ class XFAPAR(FChip):
         self.sig_left(ChipSig("-->+", "IO2"))
         self.sig_left(ChipSig("-->+", "MSP", 0, 2))
         self.sig_left(ChipSig("-->+", "CKPN"))
-        self.sig_left(ChipSig("-->+", "TERR"))
+
+        self.sig_left(ChipSig("-->+", "CKCTP"))
+        self.sig_left(ChipSig("-->+", "CTP", 0, 7))
 
         self.sig_right(ChipSig("+-->", "AERR"))
-        self.sig_right(ChipSig("+===", "PO", 0, 8))
+        self.sig_right(ChipSig("+===", "DQP", 0, 8))
         self.sig_right(ChipSig("+-->", "MOE"))
-        self.sig_right(ChipSig("+<--", "OE"))
+        self.sig_right(ChipSig("+<--", "QPOE"))
 
         self.finish()
 
