@@ -109,6 +109,16 @@ fill_memory_m32(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_mem32(const struct diagproc *dp)
 {
+	if (dp->dl_hash == READ_NOVRAM_DATA_M32_HASH) {
+		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.M32");
+		*dp->ip = 0x3;
+		return(diag_load_novram(dp, "R1000_MEM0_NOVRAM", 0, 0x19, 12));
+	}
+	if (dp->dl_hash == READ_NOVRAM_INFO_M32_HASH) {
+		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.M32");
+		*dp->ip = 0x3;
+		return(diag_load_novram(dp, "R1000_MEM0_NOVRAM", 0, 0x1f, 21));
+	}
 	if (dp->dl_hash == CLEAR_TAGSTORE_M32_HASH)
 		return (clear_tagstore_m32(dp));
 	if (dp->dl_hash == FILL_MEMORY_M32_HASH)

@@ -74,6 +74,8 @@ diagprocturbo_t diagproc_turbo_seq;
 diagprocturbo_t diagproc_turbo_typ;
 diagprocturbo_t diagproc_turbo_val;
 
+int diag_load_novram(const struct diagproc *dp, const char *novram_name, unsigned src, unsigned dst, unsigned len);
+
 #ifdef __cplusplus
 }
 #endif

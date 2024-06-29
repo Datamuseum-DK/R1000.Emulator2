@@ -162,6 +162,17 @@ load_control_store_200_seq(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_seq(const struct diagproc *dp)
 {
+	if (dp->dl_hash == READ_NOVRAM_DATA_SEQ_HASH) {
+		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.SEQ");
+		*dp->ip = 0x3;
+		return(diag_load_novram(dp, "R1000_SEQ_NOVRAM", 1, 0x1a, 8));
+	}
+	if (dp->dl_hash == READ_NOVRAM_INFO_SEQ_HASH) {
+		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.SEQ");
+		*dp->ip = 0x3;
+		return(diag_load_novram(dp, "R1000_SEQ_NOVRAM", 0, 0x20, 21));
+	}
+
 	if (dp->dl_hash == LOAD_DISPATCH_RAMS_200_SEQ_HASH ||
 	    dp->dl_hash == 0x00001081) {
 		return (load_dispatch_rams_200_seq(dp));

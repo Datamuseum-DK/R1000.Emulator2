@@ -340,10 +340,19 @@ load_control_store_200_val(const struct diagproc *dp)
 #endif
 }
 
-
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_typ(const struct diagproc *dp)
 {
+	if (dp->dl_hash == READ_NOVRAM_DATA_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.TYP");
+		*dp->ip = 0x3;
+		return(diag_load_novram(dp, "R1000_TYP_NOVRAM", 1, 0x19, 7));
+	}
+	if (dp->dl_hash == READ_NOVRAM_INFO_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.TYP");
+		*dp->ip = 0x3;
+		return(diag_load_novram(dp, "R1000_TYP_NOVRAM", 0, 0x20, 21));
+	}
 	if (dp->dl_hash == PREP_LOAD_REGISTER_FILE_TYP_HASH) {
 		typ_ptr = 0;
 		return (0);
@@ -365,6 +374,16 @@ diagproc_turbo_typ(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_val(const struct diagproc *dp)
 {
+	if (dp->dl_hash == READ_NOVRAM_DATA_VAL_HASH) {
+		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.VAL");
+		*dp->ip = 0x3;
+		return(diag_load_novram(dp, "R1000_VAL_NOVRAM", 1, 0x19, 7));
+	}
+	if (dp->dl_hash == READ_NOVRAM_INFO_VAL_HASH) {
+		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.VAL");
+		*dp->ip = 0x3;
+		return(diag_load_novram(dp, "R1000_VAL_NOVRAM", 0, 0x20, 21));
+	}
 	if (dp->dl_hash == PREP_LOAD_REGISTER_FILE_VAL_HASH) {
 		val_ptr = 0;
 		return (0);

@@ -93,9 +93,110 @@ load_control_store_200_fiu(const struct diagproc *dp)
 #endif
 }
 
+static int
+load_hram_0_32(const struct diagproc *dp)
+{
+#if !defined(HAS_Z024)
+	(void)dp;
+	return (0);
+#else
+	struct ctx *ctx;
+	uint8_t *ptr;
+	unsigned n;
+	uint8_t b0;
+	uint8_t b1;
+	uint8_t b2;
+	uint8_t b3;
+	uint8_t b4;
+	uint8_t b5;
+	uint8_t b6;
+	uint8_t b7;
+
+	ctx = CTX_Find(COMP_Z024);
+	AN(ctx);
+	ptr = (uint8_t *)(void*)(ctx + 1);
+	for (n = 0; n < 1024; n++) {
+		b0 = (n >> 9) & 1;
+		b1 = (n >> 8) & 1;
+		b2 = (n >> 7) & 1;
+		b3 = (n >> 6) & 1;
+		b4 = (n >> 5) & 1;
+		b5 = (n >> 4) & 1;
+		b6 = (n >> 3) & 1;
+		b7 = (n >> 2) & 1;
+		ptr[n] = 0x0f;
+		ptr[n] ^= (b0^b4) << 3;
+		ptr[n] ^= (b1^b5) << 2;
+		ptr[n] ^= (b2^b7) << 1;
+		ptr[n] ^= (b3^b6) << 0;
+	}
+	sc_tracef(dp->name, "Turbo LOAD_HRAM_32_0._FIU");
+	return ((int)DIPROC_RESPONSE_DONE);
+#endif
+}
+
+static int
+load_hram_1(const struct diagproc *dp)
+{
+#if !defined(HAS_Z024)
+	(void)dp;
+	return (0);
+#else
+	struct ctx *ctx;
+	uint8_t *ptr;
+	unsigned n;
+	uint8_t b0;
+	uint8_t b1;
+	uint8_t b2;
+	uint8_t b3;
+	uint8_t b6;
+	uint8_t b7;
+	uint8_t b8;
+	uint8_t b9;
+
+	ctx = CTX_Find(COMP_Z024);
+	AN(ctx);
+	ptr = (uint8_t *)(void*)(ctx + 1);
+	ptr += 1<<10;
+	for (n = 0; n < 1024; n++) {
+		b0 = (n >> 9) & 1;
+		b1 = (n >> 8) & 1;
+		b2 = (n >> 7) & 1;
+		b3 = (n >> 6) & 1;
+		b6 = (n >> 3) & 1;
+		b7 = (n >> 2) & 1;
+		b8 = (n >> 1) & 1;
+		b9 = (n >> 0) & 1;
+		ptr[n] = 0x0f;
+		ptr[n] ^= (b0 ^ b9) << 3;
+		ptr[n] ^= (b1 ^ b8) << 2;
+		ptr[n] ^= (b2 ^ b7) << 1;
+		ptr[n] ^= (b3 ^ b6) << 0;
+	}
+	sc_tracef(dp->name, "Turbo LOAD_HRAM_1._FIU");
+	return ((int)DIPROC_RESPONSE_DONE);
+#endif
+}
+
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_fiu(const struct diagproc *dp)
 {
+	if (dp->dl_hash == LOAD_HRAM_32_0_FIU_HASH) {
+		return(load_hram_0_32(dp));
+	}
+	if (dp->dl_hash == LOAD_HRAM_1_FIU_HASH) {
+		return(load_hram_1(dp));
+	}
+	if (dp->dl_hash == READ_NOVRAM_DATA_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.FIU");
+		*dp->ip = 0x3;
+		return(diag_load_novram(dp, "R1000_FIU_NOVRAM", 1, 0x22, 8));
+	}
+	if (dp->dl_hash == READ_NOVRAM_INFO_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.FIU");
+		*dp->ip = 0x3;
+		return(diag_load_novram(dp, "R1000_FIU_NOVRAM", 0, 0x27, 21));
+	}
 	if (dp->dl_hash == LOAD_COUNTER_FIU_HASH) {
 		fiu_ptr = 0x100;
 		return (0);
