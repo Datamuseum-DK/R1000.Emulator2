@@ -98,7 +98,6 @@ class XTVBSIDE(PartFactory):
 		|	output.b = b;
 		|	output.bb0 = b >> 63;
 		|	output.z_qx = PIN_QXOE=>;
-		|	output.par = odd_parity64(b) ^ BUS_PAR_MASK;
 		|	if (!output.z_qx) {
 		|		output.qx = b ^ BUS_QX_MASK;
 		|	}

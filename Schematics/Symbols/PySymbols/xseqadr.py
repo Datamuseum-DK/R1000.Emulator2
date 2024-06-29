@@ -46,7 +46,6 @@ class XSEQNAM(FChip):
         self.sig_right(ChipSig("+===", "QTYP", 0, 31))
 
         self.sig_left(ChipSig("-->+", "CODS", 0, 23))
-        self.sig_right(ChipSig("+-->", "PAR", 0, 3))
         self.finish()
 
 def register():

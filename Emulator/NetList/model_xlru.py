@@ -48,20 +48,15 @@ class XLRU(PartFactory):
 		|	bool qsoil;
 		|	bool dsoil;
 		|	bool qmod;
-		|	bool qlpar;
-		|	bool dlpar;
-		|	bool dpar6;
 		|	unsigned qlru;
 		|	unsigned dlru;
 		|	bool dhit;
 		|	bool hhit;
-		|	bool qpar;
 		|	bool oeq;
 		|	bool oeh;
 		|	bool modd;
 		|	bool modm;
 		|	unsigned lrua, lrub;
-		|	bool para, parb;
 		|''')
 
     def sensitive(self):
@@ -93,21 +88,6 @@ class XLRU(PartFactory):
 		|			if (state->lrub > 0)
 		|				state->lrub -= 1;
 		|			state->lrub ^= 0xf;
-		|			state->para = !state->dpar6;
-		|			switch(state->dlru) {
-		|			case 0x2:
-		|			case 0x6:
-		|			case 0x8:
-		|			case 0xa:
-		|			case 0xe:
-		|				// par(n) == par(n-1)
-		|				state->parb = !state->dpar6;
-		|				break;
-		|			default:
-		|				// par(n) != par(n-1)
-		|				state->parb = state->dpar6;
-		|				break;
-		|			}
 		|		} else {
 		|			bool mrif = PIN_MRIF=>;
 		|			if (mrif) {
@@ -117,8 +97,6 @@ class XLRU(PartFactory):
 		|				state->lrua = 0x8;
 		|				state->lrub = 0x8;
 		|			}
-		|			state->para = state->dsoil ^ state->dlpar ^ state->dpar6 ^ mrif;
-		|			state->parb = state->para;
 		|		}
 		|
 		|		if (!late) {
@@ -137,8 +115,6 @@ class XLRU(PartFactory):
 		|		// LRUREG
 		|		state->dhit = hit;
 		|		state->dsoil = state->qsoil;
-		|		state->dlpar = state->qlpar;
-		|		state->dpar6 = state->qpar;
 		|		state->dlru = state->qlru;
 		|	}
 		|
@@ -146,7 +122,6 @@ class XLRU(PartFactory):
 		|
 		|		unsigned tag, cmd;
 		|		BUS_TAG_READ(tag);
-		|		state->qpar = PIN_PAR=>;
 		|		state->qmod = (tag >> 6) & 0x1;
 		|		state->qlru = (tag >> 2) & 0xf;
 		|
@@ -210,8 +185,6 @@ class XLRU(PartFactory):
 		|
 		|		state->qsoil = ((!state->qmod) && (!p_mcyc1) && cmd == 0xd);
 		|
-		|		state->qlpar = odd_parity(state->qlru);
-		|
 		|		output.logq = state->qlog;
 		|	}
 		|
@@ -249,10 +222,8 @@ class XLRU(PartFactory):
 		|	BUS_LRI_READ(lri);
 		|	if (state->lrua < lri) {
 		|		wrd |= state->lrub << 1;
-		|		wrd |= state->parb;
 		|	} else {
 		|		wrd |= state->lrua << 1;
-		|		wrd |= state->para;
 		|	}
 		|	wrd ^= 0xff;
 		|	output.wrd = wrd;

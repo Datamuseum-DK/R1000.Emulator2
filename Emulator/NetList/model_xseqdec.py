@@ -107,7 +107,7 @@ class XSEQDEC(PartFactory):
 		|#define TO_REG(srn, srb, regb, name) \\
 		|	state->reg |= ((state->sr[srn] >> (7 - srb)) & 1) << (31 - regb);
 		|
-		|	unsigned disp, dcnt, diag, tdec, par, mode, tmp, emac, icc;
+		|	unsigned disp, dcnt, diag, tdec, mode, emac, icc;
 		|
 		|	BUS_DISP_READ(disp);
 		|	BUS_DCNT_READ(dcnt);
@@ -183,7 +183,6 @@ class XSEQDEC(PartFactory):
 		|	a ^= 0xffff;
 		|
 		|	bool banksel = (state->sr[2] >> 7) & 1;
-		|	output.bsel = banksel;
 		|
 		|	bool top = !banksel || (disp >> 10) != 0x3f;
 		|
@@ -233,19 +232,9 @@ class XSEQDEC(PartFactory):
 		|		write_ccl = true;
 		|	}
 		|
-		|	tmp = tdec >> 8;	// CUR_CLASS[0..3] not included in parity
-		|	par = (tmp ^ (tmp >> 16)) & 0xffff;
-		|	par = (par ^ (par >> 8)) & 0xff;
-		|	par = (par ^ (par >> 4)) & 0xf;
-		|	par = (par ^ (par >> 2)) & 0x3;
-		|	par = (par ^ (par >> 1)) & 0x1;
-		|	par ^= 1;
-		|
 		|	bool dec_cs = PIN_DGCS=>;
 		|
 		|	bool enuadr = !(e_macro_pend || !dec_cs);
-		|
-		|	output.dper = !(enuadr && par);
 		|
 		|	if (!PIN_WE=> && dec_cs && enuadr) {
 		|		TRACE(<< " W " << std::hex << a << " " << state->reg);

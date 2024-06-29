@@ -42,7 +42,6 @@ class XM30(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	bool awe, nameq, row_adr_oe, col_adr_oe, ras, cas_a, cas_b;
-		|	bool vpdr;
 		|	bool vbdr;
 		|	bool vadr;
 		|	bool trdr;
@@ -65,7 +64,6 @@ class XM30(PartFactory):
 		|		PIN_TRCE<=(state->trdr);
 		|		PIN_VACE<=(state->vadr);
 		|		PIN_VBCE<=(state->vbdr);
-		|		PIN_VPCE<=(state->vpdr);
 		|		if (state->ctx.job & 2)
 		|			next_trigger(30, sc_core::SC_NS);
 		|		return;
@@ -143,12 +141,6 @@ class XM30(PartFactory):
 		|		        (cmd == 0x6 && !h1  && (!mcyc2_next) && (!set_b)) ||
 		|		        (cmd == 0x5 && !h1 )
 		|		    );
-		|		bool vpdr =
-		|		    !(
-		|		        (cmd == 0x6 && !h1  && (!mcyc2_next)) ||
-		|		        (cmd == 0x5 && !h1 )
-		|		    );
-		|
 		|		if (
 		|		    awe != state->awe ||
 		|		    nameq != state->nameq ||
@@ -156,8 +148,7 @@ class XM30(PartFactory):
 		|		    col_adr_oe != state->col_adr_oe ||
 		|		    trdr != state->trdr ||
 		|		    vadr != state->vadr ||
-		|		    vbdr != state->vbdr ||
-		|		    vpdr != state->vpdr
+		|		    vbdr != state->vbdr
 		|		) {
 		|			state->ctx.job |= 1;
 		|			state->awe = awe;
@@ -167,7 +158,6 @@ class XM30(PartFactory):
 		|			state->trdr = trdr;
 		|			state->vadr = vadr;
 		|			state->vbdr = vbdr;
-		|			state->vpdr = vpdr;
 		|		}
 		|		if (state->ctx.job & 1)
 		|			next_trigger(5, sc_core::SC_NS);

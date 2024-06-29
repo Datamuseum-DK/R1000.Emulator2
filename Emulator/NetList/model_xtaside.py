@@ -84,21 +84,17 @@ class XTASIDE(PartFactory):
 		|	BUS_UA_READ(uir_a);
 		|	if ((uir_a & 0x3c) != 0x28 || !PIN_AODIAG) {
 		|		a = state->alat;
-		|		output.aout = 0;
 		|		is_lat = true;
 		|	} else if (uir_a == 0x28) {
 		|		BUS_LOOP_READ(loop);
 		|		a = BUS_A_MASK;
 		|		a ^= BUS_LOOP_MASK;
 		|		a |= loop;
-		|		output.aout = 1;
 		|	} else {
 		|		a = BUS_A_MASK;
-		|		output.aout = 1;
 		|	}
 		|	output.a = a;
 		|	output.ab0 = a >> 63;
-		|	output.ap = odd_parity64(output.a) ^ 0xff;
 		|''')
 
     def doit_idle(self, file):

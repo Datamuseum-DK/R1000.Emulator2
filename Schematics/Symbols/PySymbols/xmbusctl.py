@@ -28,7 +28,6 @@ class XMBUSCTL(FChip):
         self.sig_right(ChipSig("+-->", "VALAOE"))
         self.sig_right(ChipSig("+-->", "TYPBOE"))
         self.sig_right(ChipSig("+-->", "VALBOE"))
-        self.sig_right(ChipSig("+-->", "VALPOE"))
         self.sig_right(ChipSig("+-->", "EXTHIT"))
 
         self.finish()

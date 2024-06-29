@@ -59,7 +59,6 @@ class XTVADR(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	bool poe;
-		|	uint8_t par;
 		|''')
 
     def doit(self, file):
@@ -74,9 +73,6 @@ class XTVADR(PartFactory):
 		|	if (q4pos) {
 		|		state->poe = output.adre;
 		|	}
-		|	output.pare = !(PIN_Q4=> && !state->poe);
-		|	output.z_par = output.pare;
-		|
 		|	unsigned spc;
 		|	BUS_SPC_READ(spc);
 		|
@@ -87,22 +83,8 @@ class XTVADR(PartFactory):
 		|		alu |=0xf8000000ULL;
 		|	}
 		|
-		|	if (q4pos) {
-		|		state->par = odd_parity64(alu) & 0xf8;
-		|
-		|		if (__builtin_parity(alu & 0x00ffe000ULL))
-		|			state->par |= 0x04;
-		|		if (__builtin_parity(alu & 0x00001f80ULL))
-		|			state->par |= 0x02;
-		|		if (__builtin_parity(alu & 0x0000007fULL))
-		|			state->par |= 0x01;
-		|	}
-		|
 		|	if (!output.z_adr)
 		|		output.adr = alu ^ BUS_ALU_MASK;
-		|
-		|	if (!output.z_par)
-		|		output.par = state->par;
 		|
 		|	if (output.z_adr && state->poe) {
 		|		next_trigger(idle_event);

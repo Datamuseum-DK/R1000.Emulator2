@@ -126,27 +126,14 @@ class XFIUWCS(PartFactory):
 		|		PERMUTE(SR2WCS); \\
 		|	} while (0)
 		|
-		|	unsigned uad;
+		|	unsigned addr;
 		|	if (PIN_DUAS=>) {
-		|		BUS_UAC_READ(uad);
+		|		BUS_UAC_READ(addr);
 		|	} else {
-		|		BUS_UAD_READ(uad);
+		|		BUS_UAD_READ(addr);
 		|	}
 		|
-		|	unsigned addr = uad & 0x3fff;
-		|
-		|	unsigned pa = uad & 0x40ff;
-		|	pa = (pa ^ (pa >> 8)) & 0xff;
-		|	pa = (pa ^ (pa >> 4)) & 0x0f;
-		|	pa = (pa ^ (pa >> 2)) & 0x03;
-		|	pa = (pa ^ (pa >> 1)) & 0x01;
-		|	unsigned pb = uad & 0xbf00;
-		|	pb = (pb ^ (pb >> 8)) & 0xff;
-		|	pb = (pb ^ (pb >> 4)) & 0x0f;
-		|	pb = (pb ^ (pb >> 2)) & 0x03;
-		|	pb = (pb ^ (pb >> 1)) & 0x01;
-		|
-		|	output.aper = !pa && !pb;
+		|	addr &= BUS_UAD_MASK;
 		|
 		|	if (PIN_CLK.posedge() && !PIN_CKEN=> && !PIN_SFST=>) {
 		|		if (PIN_MODE=>) {
@@ -186,8 +173,6 @@ class XFIUWCS(PartFactory):
 		|		output.rsrc = (state->wcs >> 9) & 1;
 		|		output.lsrc = (state->wcs >> 1) & 1;
 		|		output.ofsrc = (state->wcs >> 0) & 1;
-		|
-		|		output.uper = odd_parity(odd_parity64(state->wcs & 0x7f7fffff7f03));
 		|
 		|	}
 		|	output.z_dgo = PIN_SUIR=>;

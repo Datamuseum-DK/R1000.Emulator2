@@ -23,7 +23,6 @@ class XM31(FChip):
         self.sig_left(ChipSig("-->+", "TRACE", 0, 7))
         self.sig_left(ChipSig("-->+", "BDISYN"))
         self.sig_left(ChipSig("-->+", "BDIFRZ"))
-        self.sig_left(ChipSig("-->+", "PERR"))
         self.sig_left(ChipSig("-->+", "DLWDR"))
         self.sig_left(ChipSig("-->+", "DENLW"))
 
@@ -32,7 +31,6 @@ class XM31(FChip):
         self.sig_right(ChipSig("o-->", "CSTOP"))
         self.sig_right(ChipSig("o-->", "DSYNC"))
         self.sig_right(ChipSig("o-->", "DFRZE"))
-        self.sig_right(ChipSig("o-->", "PARER"))
 
         self.finish()
 

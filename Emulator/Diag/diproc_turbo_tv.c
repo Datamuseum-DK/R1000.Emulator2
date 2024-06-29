@@ -15,11 +15,13 @@
 
 #if defined(HAS_Z016) && defined(HAS_Z017)
 static uint64_t *typ_aram, *typ_bram;
+#endif
+#if defined(HAS_Z019)
 static uint8_t *typ_rfpar;
 #endif
 static unsigned typ_ptr;
 
-#if (defined(HAS_Z013) && defined(HAS_Z014) && defined(HAS_Z018)) || \
+#if (defined(HAS_Z013) && defined(HAS_Z014)) || \
 	(defined(HAS_Z016) && defined(HAS_Z017))
 static uint64_t
 get_wdr(const struct diagproc *dp, uint8_t offset)
@@ -55,7 +57,6 @@ load_register_file_typ(const struct diagproc *dp)
 #else
 	struct ctx *ctx;
 	uint64_t wdr;
-	uint8_t par;
 	int i;
 
 	if (typ_aram == NULL) {
@@ -68,11 +69,13 @@ load_register_file_typ(const struct diagproc *dp)
 		AN(ctx);
 		typ_bram = (uint64_t *)(void*)(ctx + 1);
 	}
+#if defined(HAS_Z019)
 	if (typ_rfpar == NULL) {
 		ctx = CTX_Find(COMP_Z019);
 		AN(ctx);
 		typ_rfpar = (uint8_t *)(void*)(ctx + 1);
 	}
+#endif
 
 	for (i = 0; i < 16; i++, typ_ptr++) {
 		wdr = get_wdr(dp, 0x18 + i * 12);
@@ -82,6 +85,8 @@ load_register_file_typ(const struct diagproc *dp)
 		wdr = wdr ^ ((wdr >> 4) & 0x0f0f0f0f0f0f0f0fULL);
 		wdr = wdr ^ ((wdr >> 2) & 0x0303030303030303ULL);
 		wdr = wdr ^ ((wdr >> 1) & 0x0101010101010101ULL);
+#if defined(HAS_Z019)
+		uint8_t par;
 		par = 0;
 		if (wdr & (1ULL<<56)) par |= 0x80;
 		if (wdr & (1ULL<<48)) par |= 0x40;
@@ -94,6 +99,7 @@ load_register_file_typ(const struct diagproc *dp)
 		par ^= 0xff;
 		typ_rfpar[typ_ptr] = par;
 		typ_rfpar[typ_ptr + 1024] = par;
+#endif
 	}
 
 	sc_tracef(dp->name, "Turbo LOAD_REGISTER_FILE_200.TYP");
@@ -101,8 +107,10 @@ load_register_file_typ(const struct diagproc *dp)
 #endif
 }
 
-#if defined(HAS_Z013) && defined(HAS_Z014) && defined(HAS_Z018)
+#if defined(HAS_Z013) && defined(HAS_Z014)
 static uint64_t *val_aram, *val_bram;
+#endif
+#if defined(HAS_Z018)
 static uint8_t *val_rfpar;
 #endif
 
@@ -111,13 +119,12 @@ static unsigned val_ptr;
 static int
 load_register_file_val(const struct diagproc *dp)
 {
-#if !defined(HAS_Z013) || !defined(HAS_Z014) || !defined(HAS_Z018)
+#if !defined(HAS_Z013) || !defined(HAS_Z014)
 	(void)dp;
 	return (0);
 #else
 	struct ctx *ctx;
 	uint64_t wdr;
-	uint8_t par;
 	int i;
 
 	if (val_aram == NULL) {
@@ -130,11 +137,13 @@ load_register_file_val(const struct diagproc *dp)
 		AN(ctx);
 		val_bram = (uint64_t *)(void*)(ctx + 1);
 	}
+#if defined(COMP_Z018)
 	if (val_rfpar == NULL) {
 		ctx = CTX_Find(COMP_Z018);
 		AN(ctx);
 		val_rfpar = (uint8_t *)(void*)(ctx + 1);
 	}
+#endif
 
 	for (i = 0; i < 16; i++, val_ptr++) {
 		wdr = get_wdr(dp, 0x18 + i * 12);
@@ -144,6 +153,8 @@ load_register_file_val(const struct diagproc *dp)
 		wdr = wdr ^ ((wdr >> 4) & 0x0f0f0f0f0f0f0f0fULL);
 		wdr = wdr ^ ((wdr >> 2) & 0x0303030303030303ULL);
 		wdr = wdr ^ ((wdr >> 1) & 0x0101010101010101ULL);
+#if defined(COMP_Z018)
+		uint8_t par;
 		par = 0;
 		if (wdr & (1ULL<<56)) par |= 0x80;
 		if (wdr & (1ULL<<48)) par |= 0x40;
@@ -156,6 +167,7 @@ load_register_file_val(const struct diagproc *dp)
 		par ^= 0xff;
 		val_rfpar[val_ptr] = par;
 		val_rfpar[val_ptr + 1024] = par;
+#endif
 	}
 
 	sc_tracef(dp->name, "Turbo LOAD_REGISTER_FILE_200.VAL");

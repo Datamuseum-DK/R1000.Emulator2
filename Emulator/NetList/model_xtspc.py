@@ -64,7 +64,6 @@ class XTSPC(PartFactory):
     def state(self, file):
         file.fmt('''
 		|       bool poe;
-		|       uint8_t par;
 		|''')
 
     def doit(self, file):
@@ -84,10 +83,8 @@ class XTSPC(PartFactory):
 		|	if (pos) {
 		|		state->poe = output.aspe;
 		|	}
-		|	output.pare = !(PIN_CLK=> && !state->poe);
-		|	output.z_par = output.pare;
 		|
-		|	if (pos || !output.z_asp || !output.z_par) {
+		|	if (pos || !output.z_asp) {
 		|		unsigned marctl;
 		|		BUS_MARCTL_READ(marctl);
 		|		bool force_sp_h1 = PIN_FSP=>;
@@ -100,9 +97,6 @@ class XTSPC(PartFactory):
 		|			unsigned b;
 		|			BUS_B_READ(b);
 		|			output.asp = b ^ 0x7;
-		|		}
-		|		if (pos) {
-		|			output.par = !odd_parity(output.asp);
 		|		}
 		|	}
 		|	if (output.z_asp && state->poe) {

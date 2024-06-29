@@ -53,7 +53,6 @@ class XUSTK(PartFactory):
         yield "PIN_Q4.pos()"
         yield "PIN_QFOE"
         yield "PIN_QVOE"
-        yield "PIN_QPOE"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -127,8 +126,6 @@ class XUSTK(PartFactory):
 		|			state->topu = state->ram[state->adr];
 		|		}
 		|		output.topu = state->topu ^ 0xffff;
-		|		uint8_t par = odd_parity64(output.topu);
-		|		output.qp = par;
 		|	}
 		|	if (PIN_Q2.posedge()) {
 		|		state->ram[(state->adr + 1) & 0xf] = state->topu;
@@ -149,14 +146,9 @@ class XUSTK(PartFactory):
 		|	if (PIN_LCLK.posedge()) {
 		|		uint64_t fiu;
 		|		BUS_DF_READ(fiu);
-		|		uint8_t parc, pari;
-		|		BUS_DP_READ(pari);
-		|		parc = odd_parity64(fiu);
-		|		output.perr = parc != pari;
 		|	}
 		|
 		|	output.z_qf = PIN_QFOE=>;
-		|	output.z_qp = PIN_QPOE=>;
 		|	if (!output.z_qf) {
 		|		output.qf = output.topu;
 		|		output.qf ^= 0xffff;

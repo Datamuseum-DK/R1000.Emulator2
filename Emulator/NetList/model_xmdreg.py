@@ -110,7 +110,7 @@ class XMDREG(PartFactory):
 		|			state->chk1 = chk & 0x1f;
 		|			if (chk & 0x100)	state->chk0 |= 0xf0;
 		|			if (chk & 0x100)	state->chk1 |= 0xe0;
-		|			BUS_DP_READ(state->par);
+		|			state->par = 0xff;
 		|			break;
 		|		default:
 		|			break;
@@ -131,10 +131,6 @@ class XMDREG(PartFactory):
 		|		output.qc = (state->chk0 & 0xf) << 5;
 		|		output.qc |= state->chk1 & 0x1f;
 		|	}
-		|
-		|	output.z_qp = PIN_QPOE=>;
-		|	if (!output.z_qp)
-		|		output.qp = state->par;
 		|
 		|	output.z_qdg = PIN_QDGOE=>;
 		|	if (!output.z_qdg) {

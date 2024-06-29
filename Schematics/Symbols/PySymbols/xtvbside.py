@@ -27,7 +27,6 @@ class XTVBSIDE(FChip):
         self.sig_right(ChipSig("+<--", "A", 0, 9))
         self.sig_right(ChipSig("+<--", "QXOE"))
         self.sig_right(ChipSig("+-->", "BB0"))
-        self.sig_right(ChipSig("+-->", "PAR", 0, 7))
 
         self.finish()
 

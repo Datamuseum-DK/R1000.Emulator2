@@ -28,12 +28,10 @@ class XFMAR(FChip):
         self.sig_left(ChipSig("-->+", "CTCLK"))
         self.sig_left(ChipSig("-->+", "CSA", 0, 2))
         self.sig_left(ChipSig("-->+", "COCLK"))
-        self.sig_left(ChipSig("<--+", "CTPAR", 0, 7))
 
         self.sig_right(ChipSig("+<--", "QVIOE"))
         self.sig_right(ChipSig("+===", "DQVI", 0, 63))
 
-        self.sig_right(ChipSig("+-->", "PAR", 0, 7))
         self.sig_right(ChipSig("+-->", "MNAM", 0, 8))
         self.sig_right(ChipSig("+-->", "MSPC", 0, 2))
         self.sig_right(ChipSig("+-->", "NMATCH"))
@@ -52,7 +50,6 @@ class XFMAR(FChip):
         self.sig_right(ChipSig("+-->", "LINE", 0, 11))
         self.sig_right(ChipSig("+-->", "WEZ"))
         self.sig_right(ChipSig("+-->", "NTOP"))
-        self.sig_right(ChipSig("+-->", "INCP"))
         self.sig_right(ChipSig("+-->", "PXNX"))
 
         self.sig_left(ChipSig("-->+", "PRED"))

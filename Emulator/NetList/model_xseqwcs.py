@@ -109,7 +109,6 @@ class XSEQWCS(PartFactory):
 		|#define WCS2SR(wcsbit, srnam, srbit) srnam |= ((state->wcs >> (41 - wcsbit)) & 1) << (7 - srbit);
 		|#define SR2WCS(wcsbit, srnam, srbit) state->wcs |= ((srnam >> (7 - srbit)) & 1) << (41 - wcsbit);
 		|	unsigned um, din, tmp, ua;
-		|	uint64_t par;
 		|
 		|	if (!PIN_CLR=>) {
 		|		state->srd2 = 0;
@@ -182,14 +181,6 @@ class XSEQWCS(PartFactory):
 		|			break;
 		|		}
 		|		output.uir = state->wcs;
-		|		par = (state->wcs ^ (state->wcs >> 32)) & 0xffffffff;
-		|		par = (par ^ (par >> 16)) & 0xffff;
-		|		par = (par ^ (par >> 8)) & 0xff;
-		|		par = (par ^ (par >> 4)) & 0xf;
-		|		par = (par ^ (par >> 2)) & 0x3;
-		|		par = (par ^ (par >> 1)) & 0x1;
-		|		par ^= PIN_PTST=>;
-		|		output.perr = par;
 		|		output.halt = (state->srd6 >> 5) & 1;
 		|		output.llm = (state->srd6 >> 4) & 1;
 		|		output.llmi = !output.llm;

@@ -132,7 +132,6 @@ class XTCMUX(PartFactory):
 		| 	} else {
 		|		output.c = c;
 		|	}
-		|	output.p = odd_parity64(output.c) ^ 0xff;
 		|''')
 
 def register(part_lib):

@@ -47,7 +47,6 @@ class XM31(PartFactory):
 		|	bool tlwdr;
 		|	bool diag_sync;
 		|	bool diag_freeze;
-		|	bool parity_error;
 		|''')
 
     def sensitive(self):
@@ -72,10 +71,8 @@ class XM31(PartFactory):
 		|		state->tlwdr = (cmdreg & 2) == 0;
 		|		bool diag_sync = !PIN_BDISYN=>;
 		|		bool diag_freeze = !PIN_BDIFRZ=>;
-		|		bool parity_error = !PIN_PERR=>;
 		|		output.dsync = diag_sync;
 		|		output.dfrze = diag_freeze;
-		|		output.parer = parity_error;
 		|		output.cstop = !(diag_sync || diag_freeze);
 		|	}
 		|

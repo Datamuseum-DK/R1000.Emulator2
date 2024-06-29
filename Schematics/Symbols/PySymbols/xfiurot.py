@@ -55,8 +55,6 @@ class XFIUROV(FChip):
         self.sig_right(ChipSig("+<--", "QFIOE"))
 
         self.sig_right(ChipSig("+<--", "PDIAG"))
-        self.sig_right(ChipSig("+<--", "FIPOE"))
-        self.sig_right(ChipSig("+===", "FIP", 0, 7))
 
         self.finish()
 

@@ -54,7 +54,7 @@ class XCACHE(PartFactory):
 		|	uint8_t par[1<<BUS_A_WIDTH];
 		|	bool utrace_set;
 		|	enum microtrace utrace;
-		|	unsigned ae, al, be, bl, sr, la, lb;
+		|	unsigned sr;
 		|	bool nme;
 		|	bool ome;
 		|	bool nml;
@@ -68,8 +68,6 @@ class XCACHE(PartFactory):
         yield "PIN_LWE.pos()"
         yield "BUS_A"
         yield "PIN_CLK"
-        yield "PIN_OEE"
-        yield "PIN_OEL"
         yield "PIN_EQ"
 
     def doit(self, file):
@@ -96,7 +94,6 @@ class XCACHE(PartFactory):
 		|		adr |= 1;
 		|
 		|	data = state->ram[adr];
-		|	output.qt = data >> 6;
 		|
 		|	uint8_t pdata;
 		|	if (PIN_EVEN=>) {
@@ -113,24 +110,14 @@ class XCACHE(PartFactory):
 		|		output.qv |= (pdata & 0xfe) << 7;	// VAL49-55
 		|	}
 		|
-		|	output.z_qp = output.droe;
-		|	if (!output.z_qp) {
-		|		output.qp = state->par[adr] & 0xfd;	// P0-5,7
-		|		output.qp |= (pdata & 1) << 1;		// P6
-		|	}
-		|
 		|	bool pos = PIN_CLK.posedge();
 		|	bool neg = PIN_CLK.negedge();
-		|	uint64_t tag = data, bpar = 0;
 		|
-		|	bool oee = PIN_OEE=>;
-		|	bool oel = PIN_OEL=>;
-		|	unsigned tspr;
-		|	BUS_TSPR_READ(tspr);
+		|	unsigned tspr = 0;
 		|	if (pos && tspr) {
 		|		if (tspr == 3) {
-		|			state->sr = state->la << 8;
-		|			state->sr |= state->lb;
+		|			state->sr = 0;
+		|			state->sr |= 0;
 		|		} else if (tspr == 2) {
 		|			state->sr >>= 1;
 		|			state->sr |= PIN_DIAG=> << 15;
@@ -138,44 +125,7 @@ class XCACHE(PartFactory):
 		|			state->sr <<= 1;
 		|			state->sr &= 0xf7f7;
 		|		}
-		|		output.tspo = state->sr & 1;
 		|	}
-		|
-		|	if (pos || neg) {
-		|		bpar = odd_parity64(tag);
-		|	}
-		|	if (pos) {
-		|		bool ts6l = odd_parity(state->rame[adr | 1] & 0xfe);
-		|		ts6l ^= ((tag >> 15) & 1);
-		|		state->al = bpar & 0xfd;
-		|		state->al |= ts6l << 1;
-		|		state->bl = state->par[adr] & 0xfd;
-		|		state->bl |= (state->rame[adr | 1] & 0x1) << 1;
-		|	}
-		|	if (neg) {
-		|		bool ts6e = odd_parity(state->rame[adr & ~1] & 0xfe);
-		|		ts6e ^= ((tag >> 15) & 1);
-		|		state->ae = bpar & 0xfd;
-		|		state->ae |= ts6e << 1;
-		|		state->be = state->par[adr] & 0xfd;
-		|		state->be |= (state->rame[adr & ~1] & 0x1) << 1;
-		|	}
-		|
-		|
-		|	if (!oee) {
-		|		state->la = state->ae;
-		|		state->lb = state->be;
-		|	} else if (!oel) {
-		|		state->la = state->al;
-		|		state->lb = state->bl;
-		|	} else if (!PIN_TSMO=> && tspr != 3) {
-		|		state->la = (state->sr >> 8) & 0xff;
-		|		state->lb = (state->sr >> 0) & 0xff;
-		|	} else {
-		|		state->la = 0xff;
-		|		state->lb = 0xff;
-		|	}
-		|	output.perr = state->la != state->lb;
 		|
 		|	uint64_t ta, ts, nm, pg, sp;
 		|	bool name, offset;
@@ -210,8 +160,7 @@ class XCACHE(PartFactory):
 		|
 		|	uint64_t vd;
 		|	BUS_DV_READ(vd);
-		|	uint8_t pd;
-		|	BUS_DP_READ(pd);
+		|	uint8_t pd = 0xff;
 		|
 		|	if (!PIN_OE=> && PIN_WE.posedge()) {
 		|		state->ram[adr] = vd & ~(0xfeULL << 7);	// VAL bits
@@ -250,8 +199,12 @@ class XCACHE(PartFactory):
 		|		}
 		|		state->rame[adr | 1] = data;
 		|	}
-		|	output.cre = state->rame[adr & ~1];
-		|	output.crl = state->rame[adr | 1];
+		|	output.cre = state->rame[adr & ~1] << 1;
+		|	output.crl = state->rame[adr | 1] << 1;
+		|	output.cre &= ~3;
+		|	output.crl &= ~3;
+		|	output.cre |= (data >> 6) & 3;
+		|	output.crl |= (data >> 6) & 3;
 		|
 		|	if (pos)
 		|		state->k12 = PIN_K12=>;

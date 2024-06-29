@@ -101,14 +101,6 @@ class XMBUSCTL(PartFactory):
 		|		)
 		|	);
 		|
-		|	output.valpoe = !(
-		|		buzz_off &&
-		|		!(
-		|			ext_hit ||
-		|			(ahit && bhit && high_board) ||
-		|			(d_drvmem && b_vdrv && d_drvtag)
-		|		)
-		|	);
 		|''')
 
 def register(part_lib):

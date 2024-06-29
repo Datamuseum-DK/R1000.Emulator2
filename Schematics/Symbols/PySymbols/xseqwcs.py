@@ -28,7 +28,6 @@ class XSEQWCS(FChip):
         self.sig_left(ChipSig("-->+", "LMAC"))
 
         self.sig_right(ChipSig("+-->", "UIR", 0, 41))
-        self.sig_right(ChipSig("+-->", "PERR"))
         self.sig_right(ChipSig("+===", "DOUT", 0, 7))
         self.sig_right(ChipSig("+-->", "HALT"))
         self.sig_right(ChipSig("+-->", "LLM"))

@@ -66,7 +66,6 @@ class XNXTUADR(PartFactory):
 		|	unsigned data = 0, sel;
 		|	bool macro_hic = true;
 		|	bool u_event = true;
-		|	unsigned p0 = 0, p1 = 0;
 		|
 		|	if (PIN_FIU_CLK.posedge()) {
 		|		BUS_FIU_READ(state->fiu);
@@ -162,20 +161,6 @@ class XNXTUADR(PartFactory):
 		|		microtrace(utrc, sizeof utrc);
 		|
 		|		output.nu = data;
-		|		p0 = (data >> 8) & 0x3f;
-		|		p0 = (p0 ^ (p0 >> 4)) & 0xf;
-		|		p0 = (p0 ^ (p0 >> 2)) & 0x3;
-		|		p0 = (p0 ^ (p0 >> 1)) & 0x1;
-		|		p1 = data & 0xff;
-		|		p1 = (p1 ^ (p1 >> 4)) & 0xf;
-		|		p1 = (p1 ^ (p1 >> 2)) & 0x3;
-		|		p1 = (p1 ^ (p1 >> 1)) & 0x1;
-		|		if (PIN_DPAR) {
-		|			p0 ^= 1;
-		|			p1 ^= 1;
-		|		}
-		|		output.nu_p0 = p0;
-		|		output.nu_p1 = p1;
 		|	}
 		|
 		|	output.macro_hic = macro_hic;

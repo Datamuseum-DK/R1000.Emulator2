@@ -26,11 +26,6 @@ class XTVADR(FChip):
         self.sig_right(ChipSig("+-->", "ADRE"))
         self.sig_right(ChipSig("+<--", "ADROE"))
 
-        self.sig_right(ChipSig("+-->", "PARE"))
-        self.sig_right(ChipSig("+<--", "PAROE"))
-
-        self.sig_right(ChipSig("+===", "PAR", 0, 7))
-
         self.finish()
 
 def register():

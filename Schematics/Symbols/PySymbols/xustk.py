@@ -27,8 +27,6 @@ class XUSTK(FChip):
 
         self.sig_left(ChipSig("-->+", "QVOE"))
         self.sig_left(ChipSig("===+", "QV", 0, 15))
-        self.sig_left(ChipSig("-->+", "QPOE"))
-        self.sig_left(ChipSig("===+", "DQP", 0, 7))
         self.sig_left(ChipSig("-->+", "LCLK"))
         self.sig_left(ChipSig("<--+", "PERR"))
 

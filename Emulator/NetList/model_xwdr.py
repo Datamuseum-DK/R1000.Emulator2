@@ -68,8 +68,7 @@ class XWDR(PartFactory):
 		|		if (s0 && s1) {
 		|			BUS_DB_READ(state->data);
 		|			state->data = ~state->data;
-		|			BUS_DP_READ(tmp);
-		|			tmp = ~tmp;
+		|			tmp = 0x00;
 		|			// .P2 and .P6 are swapped and patching DIPROC's table
 		|			// is not enough
 		|			state->parity = tmp & 0xdd;
@@ -126,10 +125,6 @@ class XWDR(PartFactory):
 		|		}
 		|		output.qb = state->data;
 		|		// .P2 and .P6 are swapped and patching DIPROC's tbl is not enough. 
-		|		tmp = state->parity & 0xdd;
-		|		tmp |= (state->parity & 0x02) << 4;
-		|		tmp |= (state->parity & 0x20) >> 4;
-		|		output.qp = tmp;
 		|	}
 		|	if (!PIN_SCANWDR=>) {
 		|		diag = 0x03;

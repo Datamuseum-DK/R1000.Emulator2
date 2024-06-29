@@ -81,10 +81,6 @@ class XECC(PartFactory):
 		|		cbi = 0;
 		|	}
 		|
-		|	output.pt = odd_parity64(typ) ^ 0xff;
-		|
-		|	output.pv = odd_parity64(val) ^ 0xff;
-		|
 		|''')
 
         for tmask, vmask, invert in self.getmasks():

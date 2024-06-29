@@ -41,7 +41,6 @@ class XNXTUADR(FChip):
         self.sig_right(ChipSig("+<--", "TOP", 0, 13))
 
         self.sig_right(ChipSig("o<--", "Q1~"))
-        self.sig_right(ChipSig("+-->", "NU_P", 0, 1))
         self.sig_right(ChipSig("+-->", "NU", 0, 13))
 
         self.sig_right(ChipSig("+<--", "UEV", 0, 3))

@@ -98,9 +98,6 @@ class XSEQNAM(PartFactory):
 		|		adr_name = name_bus;
 		|	}
 		|
-		|	output.par = odd_parity64(adr_name);
-		|	output.par ^= 0xf;
-		|
 		|	output.z_adrn = output.nspoe;
 		|	if (!output.z_adrn)
 		|		output.adrn = adr_name;

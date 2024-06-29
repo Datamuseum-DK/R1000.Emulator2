@@ -29,7 +29,6 @@ class XTCMUX(FChip):
         self.sig_right(ChipSig("+<--", "WDR", 0, 63))
         self.sig_right(ChipSig("+<--", "OE"))
         self.sig_right(ChipSig("+<--", "WE"))
-        self.sig_right(ChipSig("+-->", "P", 0, 7))
         self.sig_right(ChipSig("+<--", "CLK"))
 
         self.finish()

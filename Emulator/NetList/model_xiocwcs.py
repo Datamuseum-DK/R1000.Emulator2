@@ -52,7 +52,6 @@ class XIOCWCS(PartFactory):
 		|	unsigned ctr;
 		|	unsigned uir;
 		|	unsigned sr0, sr1;
-		|	unsigned uadr;
 		|	unsigned tracnt;
 		|	bool csa_hit;
 		|	bool dummy_en;
@@ -76,7 +75,7 @@ class XIOCWCS(PartFactory):
 		|	if (PIN_DGADR=>) {
 		|		BUS_UADR_READ(uadr);
 		|	} else {
-		|		uadr = state->ctr;
+		|		uadr = state->ctr & BUS_UADR_MASK;
 		|	}
 		|
 		|	bool uir_clk = false;
@@ -92,7 +91,7 @@ class XIOCWCS(PartFactory):
 		|				tmp |= 0x8000;
 		|			if (state->csa_hit)
 		|				tmp |= 0x4000;
-		|			tmp |= (uadr & 0x3fff);
+		|			tmp |= uadr & 0x3fff;
 		|			state->tram[state->tracnt] = tmp;
 		|		}
 		|		if (!PIN_TRALD=>) {
@@ -121,21 +120,6 @@ class XIOCWCS(PartFactory):
 		|
 		|	}
 		|
-		|	uint32_t par_a, par_b;
-		|
-		|	par_a = uadr & 0xbf00;
-		|	par_a = (par_a ^ (par_a >> 8)) & 0xff;
-		|	par_a = (par_a ^ (par_a >> 4)) & 0x0f;
-		|	par_a = (par_a ^ (par_a >> 2)) & 0x03;
-		|	par_a = (par_a ^ (par_a >> 1)) & 0x01;
-		|	par_b = uadr & 0x40ff;
-		|	par_b = (par_b ^ (par_b >> 8)) & 0xff;
-		|	par_b = (par_b ^ (par_b >> 4)) & 0x0f;
-		|	par_b = (par_b ^ (par_b >> 2)) & 0x03;
-		|	par_b = (par_b ^ (par_b >> 1)) & 0x01;
-		|
-		|	output.uaperr = (!par_a && !par_b);
-		|
 		|	if (uir_clk) {
 		|		unsigned uirs, diag;
 		|		BUS_UIRS_READ(uirs);
@@ -155,7 +139,7 @@ class XIOCWCS(PartFactory):
 		|				state->sr0 &= 0x7f;
 		|			break;
 		|		case 0xc:
-		|			state->sr0 = state->ram[uadr & 0x3fff] >> 8;
+		|			state->sr0 = state->ram[uadr] >> 8;
 		|			break;
 		|		}
 		|		state->sr0 &= 0xff;
@@ -175,7 +159,7 @@ class XIOCWCS(PartFactory):
 		|				state->sr1 &= 0x7f;
 		|			break;
 		|		case 0x3:
-		|			state->sr1 = state->ram[uadr & 0x3fff] & 0xff;
+		|			state->sr1 = state->ram[uadr] & 0xff;
 		|			break;
 		|		}
 		|		state->sr1 &= 0xff;
@@ -185,10 +169,6 @@ class XIOCWCS(PartFactory):
 		|
 		|		state->uir = uir;
 		|		output.uir = state->uir;
-		|		state->uadr = uadr;
-		|		uint8_t par_w =
-		|		    odd_parity(state->uir >> 8) ^ odd_parity(state->uir & 0xff);
-		|		output.udperr = par_w == 0;
 		|		output.odg = state->uir & 0x0001;
 		|		output.odg |= (state->uir >>7) & 0x0002;
 		|
@@ -200,7 +180,7 @@ class XIOCWCS(PartFactory):
 		|	}
 		|
 		|	if (PIN_WE.posedge()) {
-		|		state->ram[uadr & 0x3fff] = state->uir;
+		|		state->ram[uadr] = state->uir;
 		|	}
 		|	if (!PIN_TRRDD=>) {
 		|		output.z_dgo = false;

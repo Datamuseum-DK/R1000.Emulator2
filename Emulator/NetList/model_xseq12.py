@@ -267,7 +267,6 @@ class XSEQ12(PartFactory):
 		|	output.z_nam = PIN_NAMOE=>;
 		|	if (!output.z_nam) {
 		|		output.nam = nam;
-		|		output.par = offset_parity(nam);
 		|	}
 		|
 		|''')

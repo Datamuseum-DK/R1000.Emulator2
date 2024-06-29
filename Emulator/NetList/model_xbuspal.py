@@ -123,7 +123,6 @@ class XBUSPAL(PartFactory):
 		|		output.intbs = !output.intbs;
 		|		output.extsl = !output.extsl;
 		|		output.intan = !output.intan;
-		|		output.intb = output.intbn;
 		|		output.intbn = !output.intbn;
 		|	}
 		|

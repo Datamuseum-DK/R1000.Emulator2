@@ -35,7 +35,6 @@ class XM30(FChip):
         self.sig_right(ChipSig("+-->", "TRCE"))
         self.sig_right(ChipSig("+-->", "VACE"))
         self.sig_right(ChipSig("+-->", "VBCE"))
-        self.sig_right(ChipSig("+-->", "VPCE"))
 
         self.finish()
 

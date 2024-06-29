@@ -18,7 +18,7 @@ class XFIUWCS(FChip):
         self.sig_left(ChipSig("-->+", "SFST"))
         self.sig_left(ChipSig("-->+", "WE"))
         self.sig_left(ChipSig("-->+", "UAC", 0, 15))
-        self.sig_left(ChipSig("-->+", "UAD", 0, 15))
+        self.sig_left(ChipSig("-->+", "UAD", 0, 13))
         self.sig_left(ChipSig("-->+", "DUAS"))
         self.sig_left(ChipSig("-->+", "MODE"))
         self.sig_left(ChipSig("-->+", "SUIR"))
@@ -26,8 +26,6 @@ class XFIUWCS(FChip):
         self.sig_left(ChipSig("-->+", "DTVE"))
 
         self.sig_right(ChipSig("+===", "DGO", 0, 7))
-        self.sig_right(ChipSig("+-->", "UPER"))
-        self.sig_right(ChipSig("+-->", "APER"))
         self.sig_right(ChipSig("+-->", "OFSL", 0, 6))
         self.sig_right(ChipSig("+-->", "LFL", 0, 6))
         self.sig_right(ChipSig("+-->", "LFCN", 0, 1))

@@ -202,10 +202,6 @@ class XFMAR(PartFactory):
 		|	if (inc_mar && inco != 0x1f)
 		|		inco += 1;
 		|	inco |= mar_offset & 0x20;
-		|	// output.inco = inco;
-		|	output.incp = odd_parity(inco);
-		|	if (PIN_DPAR=>)
-		|		output.incp ^= 1;
 		|
 		|	unsigned oreg;
 		|	BUS_OREG_READ(oreg);
@@ -227,20 +223,10 @@ class XFMAR(PartFactory):
 		|
 		|	if (PIN_CTCLK.posedge()) {
 		|		state->ctopn = adr >> 32;
-		|		output.ctpar &= 0x0f;
-		|		output.ctpar |= odd_parity64(state->ctopn) << 4;
 		|		output.nmatch =
 		|		    (state->ctopn != state->srn) ||
 		|		    ((state->sro & 0xf8000070 ) != 0x10);
 		|	}
-		|
-		|	state->par &= 0xfe;
-		|	state->par |= (odd_parity(oreg) ^ 0xff) & 0x1;
-		|
-		|	if (PIN_DGPAR=>)
-		|		output.par = state->par ^ 0xff;
-		|	else
-		|		output.par = state->par;
 		|
 		|	output.z_qdiag = PIN_QDIAGOE=>;
 		|	if (!output.z_qdiag) {
@@ -284,8 +270,6 @@ class XFMAR(PartFactory):
 		|		}
 		|		state->ctopo &= 0xfffff;
 		|
-		|		output.ctpar &= 0xf0;
-		|		output.ctpar |= offset_parity(state->ctopo << 7) ^ 0xf;
 		|	}
 		|
 		|	// HASH RAM

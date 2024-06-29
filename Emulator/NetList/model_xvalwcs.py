@@ -138,21 +138,8 @@ class XVALWCS(PartFactory):
 		|	} else {
 		|		uad = BUS_UAD_MASK;
 		|	}
-		|	state->addr = (uad & cnt) & BUS_UAC_MASK;
+		|	state->addr = (uad & cnt);
 		|	state->addr ^= BUS_UAC_MASK;
-		|	unsigned upar0 = uad & 0x40ff;
-		|	upar0 = ((upar0 >> 8) | upar0) & 0xff;
-		|	upar0 = ((upar0 >> 4) | upar0) & 0xf;
-		|	upar0 = ((upar0 >> 2) | upar0) & 0x3;
-		|	upar0 = ((upar0 >> 1) | upar0) & 0x1;
-		|	unsigned upar1 = uad & 0xbf00;
-		|	upar1 = ((upar1 >> 8) | upar1) & 0xff;
-		|	upar1 = ((upar1 >> 4) | upar1) & 0xf;
-		|	upar1 = ((upar1 >> 2) | upar1) & 0x3;
-		|	upar1 = ((upar1 >> 1) | upar1) & 0x1;
-		|	upar0 ^= 1;
-		|	upar1 ^= 1;
-		|	output.uper = !(upar0 | upar1);
 		|
 		|	if (PIN_UCLK.posedge()) {
 		|		if (PIN_USEL=>) {
@@ -216,7 +203,6 @@ class XVALWCS(PartFactory):
 		|	}
 		|
 		|	output.uir = state->wcs;
-		|	output.perr = __builtin_parityll(output.uir & BUS_UIR_MASK);
 		|
 		|	uint64_t tmp = state->ram[state->addr];
 		|

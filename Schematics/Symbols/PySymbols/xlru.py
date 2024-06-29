@@ -20,7 +20,6 @@ class XLRU(FChip):
         self.sig_left(ChipSig("-->+", "PHIT"))
         self.sig_left(ChipSig("-->+", "FHIT"))
         self.sig_left(ChipSig("-->+", "TAG", 0, 6))
-        self.sig_left(ChipSig("-->+", "PAR"))
         self.sig_left(ChipSig("-->+", "NMAT"))
         self.sig_left(ChipSig("-->+", "H1"))
         self.sig_left(ChipSig("-->+", "LRUP"))

@@ -50,7 +50,6 @@ class XSEQ12(FChip):
 
         self.sig_right(ChipSig("+<--", "NAMOE"))
         self.sig_right(ChipSig("+===", "NAM", 0, 31))
-        self.sig_right(ChipSig("+-->", "PAR", 0, 3))
 
         self.finish()
 
