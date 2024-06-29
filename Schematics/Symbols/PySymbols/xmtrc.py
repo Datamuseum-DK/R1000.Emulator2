@@ -42,7 +42,6 @@ class XMTRC(FChip):
 
         self.sig_right(ChipSig("+-->", "Q", 0, 7))
         self.sig_right(ChipSig("+===", "QDIAG", 0, 7))
-        self.sig_right(ChipSig("+-->", "QTA", 4, 11))
         self.sig_right(ChipSig("+-->", "TQB", 0, 7))
         self.sig_right(ChipSig("+-->", "DR", 3, 10))
         self.sig_right(ChipSig("+-->", "TSTR", 0, 15))

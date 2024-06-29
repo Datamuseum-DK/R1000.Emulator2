@@ -135,7 +135,6 @@ class XMTRC(PartFactory):
 		|			state->cnt8 += 1;
 		|		}
 		|		state->cnt8 &= 0xff;
-		|		output.qta = state->cnt8;
 		|
 		|		if (!refresh) {
 		|			if (cnt2 & 1) {

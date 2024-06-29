@@ -1116,6 +1116,7 @@
 
   (no_connect (at 149.86 147.32) (uuid 0b183505-43fb-41ef-94bf-72fec3756641))
   (no_connect (at 149.86 25.4) (uuid 75130d60-ea7a-4862-ae2d-1144a656bcac))
+  (no_connect (at 149.86 35.56) (uuid 96f22462-405f-43e7-98bc-2e0787d600a8))
   (no_connect (at 436.88 43.18) (uuid e48dc202-9dfe-497a-9867-907ea341d2f8))
   (no_connect (at 416.56 109.22) (uuid f9f3a007-96ce-4212-8591-b11e8a04a870))
 
@@ -1996,10 +1997,6 @@
     (uuid 4748b6e6-16d6-4a6a-ab8f-3dd4906bb3b3)
   )
 
-  (wire (pts (xy 149.86 35.56) (xy 154.94 35.56))
-    (stroke (width 0) (type default))
-    (uuid 474d1d73-aa2a-4acd-a00f-4839df12f4f3)
-  )
   (wire (pts (xy 294.64 335.28) (xy 325.12 335.28))
     (stroke (width 0) (type default))
     (uuid 486cc2f6-fb71-49b7-a5c2-494840dc4a64)
@@ -4008,13 +4005,6 @@
     (uuid 7dc39bd7-0c38-4bea-8089-9de01c9d8d7e)
     (property "Intersheetrefs" "${INTERSHEET_REFS}" (at 357.3054 86.2013 0)
       (effects (font (size 1.905 1.905)) (justify right))
-    )
-  )
-  (global_label "DECODER.PERR~" (shape output) (at 154.94 35.56 0) (fields_autoplaced)
-    (effects (font (size 2.54 2.54)) (justify left))
-    (uuid 8315f29a-6321-4cc5-a04f-2d8fafb65081)
-    (property "Intersheetrefs" "${INTERSHEET_REFS}" (at 190.125 35.4013 0)
-      (effects (font (size 1.905 1.905)) (justify left))
     )
   )
   (global_label "IBUFF_FILL~.DEC" (shape output) (at 154.94 142.24 0) (fields_autoplaced)

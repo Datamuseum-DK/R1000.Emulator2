@@ -68,8 +68,6 @@ class XM28(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|
 		|	bool clk2x_neg = PIN_CLK.negedge();

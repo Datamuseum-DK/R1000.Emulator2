@@ -43,10 +43,7 @@ class XCMDPAL(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		unsigned cmd;
-		int p_mcyc2;
-		int p_mcyc1;
-		int p_mcyc2_next;
+		|	int p_mcyc2_next;
 		|''')
 
     def sensitive(self):
@@ -57,51 +54,39 @@ class XCMDPAL(PartFactory):
 
         file.fmt('''
 		|
-		|if (PIN_H2.negedge()) {
-		|	bool p_h2 = PIN_H2=>;
-		|	unsigned mcmd;
-		|	BUS_MCMD_READ(mcmd);
-		|	bool p_cmdcont = PIN_CCNT=>;
-		|	bool p_early_abort = PIN_ABRT=>;
-		|	bool p_mcyc1_hd = state->p_mcyc1;
-		|	bool p_mcyc2_next_hd = state->p_mcyc2_next;
-		|	bool p_mcyc2_hd = state->p_mcyc2;
-		|	int out_mcyc2_next;
-		|	int out_mcyc1;
-		|	int out_mcyc2;
-		|	unsigned cmd = 0;
-		|	if (p_early_abort && p_h2 && p_mcyc2_hd) {
-		|		cmd = 0;
-		|	} else if (p_early_abort && !p_h2 && p_mcyc2_next_hd) {
-		|		cmd = 0;
-		|	} else {
-		|		cmd = mcmd ^ 0xf;
-		|	}
-		|	out_mcyc2_next =
-		|	    !(
-		|	        ((!p_h2) && (mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
-		|	        ((!p_cmdcont) && (!p_early_abort) && (!p_mcyc2_next_hd)) ||
-		|	        (  p_h2  && (!p_mcyc2_next_hd))
-		|	    );
-		|	out_mcyc1 =
-		|	    !(
-		|	        ((!p_h2) && (mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
-		|	        (  p_h2  && (!p_mcyc1_hd))
-		|	    );
-		|	out_mcyc2 =
-		|	    !(
-		|	        ((!p_h2) && (!p_mcyc2_next_hd)) ||
-		|	        (  p_h2  && (!p_mcyc2_hd))
-		|	    );
+		|	if (PIN_H2.negedge()) {
+		|		assert(!PIN_H2=>);
+		|		unsigned mcmd;
+		|		BUS_MCMD_READ(mcmd);
+		|		bool p_cmdcont = PIN_CCNT=>;
+		|		bool p_early_abort = PIN_ABRT=>;
+		|		bool p_mcyc2_next_hd = state->p_mcyc2_next;
+		|		int out_mcyc2_next;
+		|		int out_mcyc1;
+		|		int out_mcyc2;
+		|		unsigned cmd = 0;
+		|		if (p_early_abort && p_mcyc2_next_hd) {
+		|			cmd = 0;
+		|		} else {
+		|			cmd = mcmd ^ 0xf;
+		|		}
+		|		out_mcyc2_next =
+		|		    !(
+		|		        ((mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
+		|		        ((!p_cmdcont) && (!p_early_abort) && (!p_mcyc2_next_hd))
+		|		    );
+		|		out_mcyc1 =
+		|		    !(
+		|		        ((mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd)
+		|		    );
+		|		out_mcyc2 = p_mcyc2_next_hd;
 		|
-		|	state->cmd = output.cmd = cmd;
-		|	state->p_mcyc2_next = output.mc2n = out_mcyc2_next;
-		|	state->p_mcyc1 = out_mcyc1;
-		|	state->p_mcyc2 = out_mcyc2;
-		|	output.mc = 0;
-		|	if (out_mcyc1) output.mc |= 2;
-		|	if (out_mcyc2) output.mc |= 1;
-		|}
+		|		output.cmd = cmd;
+		|		state->p_mcyc2_next = output.mc2n = out_mcyc2_next;
+		|		output.mc = 0;
+		|		if (out_mcyc1) output.mc |= 2;
+		|		if (out_mcyc2) output.mc |= 1;
+		|	}
 		|''')
 
 def register(part_lib):
