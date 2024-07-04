@@ -14,11 +14,10 @@ class XLRU(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "LATE"))
+        self.sig_left(ChipSig("-->+", "AB"))
         self.sig_left(ChipSig("-->+", "CLK"))
         self.sig_left(ChipSig("-->+", "CYC1"))
         self.sig_left(ChipSig("-->+", "CMD", 0, 3))
-        self.sig_left(ChipSig("-->+", "PHIT"))
-        self.sig_left(ChipSig("-->+", "FHIT"))
         self.sig_left(ChipSig("-->+", "TAG", 0, 6))
         self.sig_left(ChipSig("-->+", "NMAT"))
         self.sig_left(ChipSig("-->+", "H1"))
@@ -30,6 +29,8 @@ class XLRU(FChip):
         self.sig_right(ChipSig("+-->", "HIT"))
         self.sig_right(ChipSig("+===", "HLRU", 0, 3))
         self.sig_right(ChipSig("+-->", "WRD", 0, 5))
+        self.sig_right(ChipSig("+<--", "HIGH"))
+        self.sig_right(ChipSig("+<--", "PHYS", 0, 3))
 
         self.finish()
 

@@ -354,6 +354,8 @@ class GAL(PartFactory):
                 file.fmt('\t\t|\tbool %s;\n' % pin.var)
             elif self.comp.nodes[pin.name[4:]].net.is_pd():
                 file.fmt('\t\t|\tbool %s = false;\n' % pin.var)
+            elif self.comp.nodes[pin.name[4:]].net.is_pu():
+                file.fmt('\t\t|\tbool %s = true;\n' % pin.var)
             else:
                 file.fmt('\t\t|\tbool %s = %s=>;\n' % (pin.var, pin.name))
 
@@ -642,15 +644,6 @@ class PALModel(PartModel):
 
     def create(self, ident):
         return self.factory(ident, self.octets)
-
-    def assign(self, comp, part_lib):
-        #for node in comp:
-            #if node.pin.name == "OE":
-            #    print("PN", node)
-            # NB: For now make all outputs sc_logic
-            #if "output" in node.pin.role:
-            #    node.pin.role = "sc_out <sc_logic>"
-        super().assign(comp, part_lib)
 
 def iter_pals():
     ''' Read PAL bitstreams out of firmware.c "library" '''

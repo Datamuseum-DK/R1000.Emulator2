@@ -13,7 +13,7 @@ class XCMDPAL(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "H2"))
+        self.sig_left(ChipSig("-->+", "H1"))
         self.sig_left(ChipSig("-->+", "MCMD", 0, 3))
         self.sig_left(ChipSig("-->+", "CCNT"))
         self.sig_left(ChipSig("-->+", "ABRT"))

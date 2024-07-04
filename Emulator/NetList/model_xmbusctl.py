@@ -46,60 +46,19 @@ class XMBUSCTL(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|
-		|	bool buzz_off = !(PIN_DBUZZOF=>);
-		|
-		|	bool ext_hit = !(PIN_XHITA=> && PIN_XHITB=>);
+		|	output.exthit = !(PIN_XHITA=> && PIN_XHITB=>);
 		|	bool high_board = PIN_HIBOARD=>;
-		|	bool d_drvmem = PIN_DDRVMEM=>;
-		|	bool d_drvtag = PIN_DDRVTAG=>;
 		|	bool b_tvdrv = PIN_TVDRV=>;
 		|	bool b_vdrv = PIN_VDRV=>;
 		|	bool ahit = PIN_AHIT=>;
 		|	bool bhit = PIN_BHIT=>;
 		|
-		|	output.exthit = ext_hit;
-		|
-		|	output.typaoe = !(
-		|		buzz_off &&
-		|		!(
-		|			ext_hit ||
-		|			!bhit ||
-		|			(ahit && high_board) ||
-		|			(b_tvdrv && d_drvmem)
-		|		)
-		|	);
-		|
-		|	output.valaoe = !(
-		|		buzz_off &&
-		|		!(
-		|			ext_hit ||
-		|			!bhit ||
-		|			(ahit && high_board) ||
-		|			(b_tvdrv && d_drvmem && b_vdrv && d_drvtag)
-		|		)
-		|	);
-		|
-		|	output.typboe = !(
-		|		buzz_off &&
-		|		!(
-		|			ext_hit ||
-		|			bhit ||
-		|			(b_tvdrv && d_drvmem)
-		|		)
-		|	);
-		|
-		|	output.valboe = !(
-		|		buzz_off &&
-		|		!(
-		|			ext_hit ||
-		|			bhit ||
-		|			(b_tvdrv && d_drvmem && b_vdrv && d_drvtag)
-		|		)
-		|	);
+		|	output.typaoe = output.exthit || !bhit || (ahit && high_board) ||  b_tvdrv;
+		|	output.valaoe = output.exthit || !bhit || (ahit && high_board) || (b_tvdrv && b_vdrv);
+		|	output.typboe = output.exthit ||  bhit ||                          b_tvdrv;
+		|	output.valboe = output.exthit ||  bhit ||                         (b_tvdrv && b_vdrv);
 		|
 		|''')
 

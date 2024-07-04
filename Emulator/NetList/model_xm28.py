@@ -63,7 +63,6 @@ class XM28(PartFactory):
         yield "PIN_H1"
         yield "PIN_DRH"
         yield "BUS_PSET_SENSITIVE()"
-        yield "BUS_DBM_SENSITIVE()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -133,40 +132,6 @@ class XM28(PartFactory):
 		|
 		|	unsigned pset;
 		|	BUS_PSET_READ(pset);
-		|	unsigned dbus_mode;
-		|	BUS_DBM_READ(dbus_mode);
-		|
-		|	output.phae = !(
-		|		(pset == 0x0 && (!high_board) &&  h1   && (!(dbus_mode & 4))) ||
-		|		(pset == 0x2 && (!high_board) && (!h1) && (!(dbus_mode & 4))) ||
-		|		(pset == 0x8 &&   high_board  &&   h1  && (!(dbus_mode & 4))) ||
-		|		(pset == 0xa &&   high_board  && (!h1) && (!(dbus_mode & 4))) ||
-		|		(dbus_mode == 0xd || dbus_mode == 0xf)  
-		|	);
-		|
-		|	output.phal = !(
-		|		(pset == 0x1 && (!high_board) &&  h1   && (!(dbus_mode & 4))) ||
-		|		(pset == 0x3 && (!high_board) && (!h1) && (!(dbus_mode & 4))) ||
-		|		(pset == 0x9 &&   high_board  &&   h1  && (!(dbus_mode & 4))) ||
-		|		(pset == 0xb &&   high_board  && (!h1) && (!(dbus_mode & 4))) ||
-		|		(dbus_mode == 0xd || dbus_mode == 0xf)  
-		|	);
-		|
-		|	output.phbe = !(
-		|		(pset == 0x4 && (!high_board) &&  h1   && (!(dbus_mode & 4))) ||
-		|		(pset == 0x6 && (!high_board) && (!h1) && (!(dbus_mode & 4))) ||
-		|		(pset == 0xc &&   high_board  &&   h1  && (!(dbus_mode & 4))) ||
-		|		(pset == 0xe &&   high_board  && (!h1) && (!(dbus_mode & 4))) ||
-		|		(dbus_mode == 0xe || dbus_mode == 0xf)  
-		|	);
-		|
-		|	output.phbl = !(
-		|		(pset == 0x5 && (!high_board) &&  h1   && (!(dbus_mode & 4))) ||
-		|		(pset == 0x7 && (!high_board) && (!h1) && (!(dbus_mode & 4))) ||
-		|		(pset == 0xd &&   high_board  &&   h1  && (!(dbus_mode & 4))) ||
-		|		(pset == 0xf &&   high_board  && (!h1) && (!(dbus_mode & 4))) ||
-		|		(dbus_mode == 0xe || dbus_mode == 0xf)  
-		|	);
 		|
 		|	output.setas = !(
 		|		((pset & 0xc) == 0x8 &&  high_board) ||
@@ -182,10 +147,9 @@ class XM28(PartFactory):
 		|		((pset & 0xb) == 0xa &&  high_board) ||
 		|		((pset & 0xb) == 0x2 && !high_board)
 		|	);
-		|	output.dfhit = !(dbus_mode >= 0xc);
 		|
-		|	bool eabort_y = !(PIN_DEABT=> && PIN_EABT=> && PIN_ELABT=>);
-		|	bool labort_y = !(PIN_DLABT=> && PIN_LABT=> && PIN_ELABT=> && !h1);
+		|	bool eabort_y = !(PIN_EABT=> && PIN_ELABT=>);
+		|	bool labort_y = !(PIN_LABT=> && PIN_ELABT=> && !h1);
 		|
 		|	if (clk2x_pos) {
 		|		bool late_abort = state->labort;
@@ -227,16 +191,15 @@ class XM28(PartFactory):
 		|		state->eabort = eabort_y;
 		|		output.eabrt = state->eabort;
 		|		output.labrt = state->labort;
-		|		output.abort = !(state->labort || output.eabrt);
 		|	}
 		|	if (clk2x_pos) {
 		|		output.tsc14 = !h1 && !mcyc2_next && output.labrt;
 		|	}
 		|
 		|	if (clk2x_neg) {
-		|		bool d_dis_adr = PIN_DDISA=>;
-		|		bool trace_dra1 = PIN_TRDR1=>;
-		|		bool trace_dra2 = PIN_TRDR2=>;
+		|		const bool d_dis_adr = false;
+		|		const bool trace_dra1 = true;
+		|		const bool trace_dra2 = true;
 		|		bool lar_2 = PIN_LAR2=>;
 		|		bool lar_3 = PIN_LAR3=>;
 		|

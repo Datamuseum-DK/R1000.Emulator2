@@ -13,9 +13,6 @@ class XMBUSCTL(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "DBUZZOF"))
-        self.sig_left(ChipSig("-->+", "DDRVMEM"))
-        self.sig_left(ChipSig("-->+", "DDRVTAG"))
         self.sig_left(ChipSig("-->+", "HIBOARD"))
         self.sig_left(ChipSig("-->+", "TVDRV"))
         self.sig_left(ChipSig("-->+", "VDRV"))

@@ -16,7 +16,6 @@ class XBUSPAL(FChip):
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "CMD", 0, 3))
         self.sig_left(ChipSig("-->+", "MC2N"))
-        self.sig_left(ChipSig("-->+", "DBMD", 0, 3))
         self.sig_left(ChipSig("-->+", "SETA"))
         self.sig_left(ChipSig("-->+", "SETB"))
 
@@ -25,16 +24,10 @@ class XBUSPAL(FChip):
 
         self.sig_right(ChipSig("+-->", "TADIN"))
         self.sig_right(ChipSig("+-->", "TBDIN"))
-        self.sig_right(ChipSig("+-->", "INTAS"))
-        self.sig_right(ChipSig("+-->", "INTBS"))
         self.sig_right(ChipSig("+-->", "INTAN"))
         self.sig_right(ChipSig("+-->", "INTBN"))
-        self.sig_right(ChipSig("+-->", "DROEN"))
-        self.sig_right(ChipSig("+-->", "EXTSL"))
 
         self.finish()
 
 def register():
     yield XBUSPAL()
-
-

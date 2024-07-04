@@ -15,16 +15,17 @@ class XHASH(FChip):
 
         self.sig_left(ChipSig("-->+", "S", 0, 2))
         self.sig_left(ChipSig("-->+", "A", 0, 56))
-        self.sig_left(ChipSig("-->+", "T", 0, 3))
-        self.sig_left(ChipSig("-->+", "TE"))
+        self.sig_left(ChipSig("-->+", "LDMAR"))
+        self.sig_left(ChipSig("-->+", "STPCK"))
+        self.sig_left(ChipSig("-->+", "Q4"))
 
-        self.sig_right(ChipSig("+<--", "Q4"))
-        self.sig_right(ChipSig("+<--", "R"))
-        self.sig_right(ChipSig("+<--", "M", 0, 1))
-        self.sig_right(ChipSig("+<--", "TRC", 0, 11))
         self.sig_right(ChipSig("+-->", "P", 0, 3))
         self.sig_right(ChipSig("+-->", "L", 0, 11))
         self.sig_right(ChipSig("+-->", "TAG", 0, 13))
+        self.sig_right(ChipSig("+-->", "MS", 0, 2))
+        self.sig_right(ChipSig("+-->", "MN", 0, 31))
+        self.sig_right(ChipSig("+-->", "MP", 0, 12))
+        self.sig_right(ChipSig("+-->", "MW", 0, 5))
 
         self.finish()
 

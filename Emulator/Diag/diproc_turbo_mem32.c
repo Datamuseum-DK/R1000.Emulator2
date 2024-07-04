@@ -109,6 +109,21 @@ fill_memory_m32(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_mem32(const struct diagproc *dp)
 {
+	if (1 && dp->dl_hash == SET_HIT_M32_HASH) {
+		sc_tracef(dp->name, "Turbo SET_HIT.M32");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	
+	if (1 && dp->dl_hash == CLEAR_HITS_M32_HASH) {
+		sc_tracef(dp->name, "Turbo CLEAR_HITS.M32");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	
+	if (dp->dl_hash == CLEAR_PARITY_ERRORS_M32_HASH) {
+		sc_tracef(dp->name, "Turbo CLEAR_PARITY_ERRORS.M32");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	
 	if (dp->dl_hash == READ_NOVRAM_DATA_M32_HASH) {
 		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.M32");
 		*dp->ip = 0x3;

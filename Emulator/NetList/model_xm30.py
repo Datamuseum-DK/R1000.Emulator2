@@ -41,7 +41,7 @@ class XM30(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	bool awe, nameq, row_adr_oe, col_adr_oe, ras, cas_a, cas_b;
+		|	bool awe, row_adr_oe, col_adr_oe, ras, cas_a, cas_b;
 		|	bool vbdr;
 		|	bool vadr;
 		|	bool trdr;
@@ -58,7 +58,6 @@ class XM30(PartFactory):
 		|	if (state->ctx.job & 1) {
 		|		state->ctx.job &= ~1;
 		|		PIN_AWE<=(state->awe);
-		|		PIN_NMEQ<=(state->nameq);
 		|		PIN_RAOE<=(state->row_adr_oe);
 		|		PIN_CAOE<=(state->col_adr_oe);
 		|		PIN_TRCE<=(state->trdr);
@@ -85,7 +84,6 @@ class XM30(PartFactory):
 		|		bool ahit = PIN_AHIT=>;
 		|		bool bhit = PIN_BHIT=>;
 		|		bool late_abort = PIN_LAB=>;
-		|		bool d_dis_adr = PIN_DDA=>;
 		|		bool set_b = PIN_SETB=>;
 		|
 		|		bool ras = !(
@@ -102,12 +100,11 @@ class XM30(PartFactory):
 		|		    ((cmd == 0xc || cmd == 0xe) && !h1 && !mcyc2_next) ||
 		|		    ((cmd == 0xd || cmd == 0xf) && h1 && !mcyc2 && !bhit && !late_abort)
 		|		);
-		|		bool awe = !(((cmd & 0xd) == 0xd) && h1 && !mcyc2);
-		|		bool nameq = !(cmd == 0x3);
-		|		bool row_adr_oe = !(!h1 && mcyc2_next && !d_dis_adr);
+		|		bool awe = (((cmd & 0xd) == 0xd) && h1 && !mcyc2);
+		|		bool row_adr_oe = !(!h1 && mcyc2_next);
 		|		bool col_adr_oe = !(
-		|		    (h1 && !d_dis_adr) ||
-		|		    (!mcyc2_next && !d_dis_adr)
+		|		    (h1) ||
+		|		    (!mcyc2_next)
 		|		);
 		|
 		|		if (
@@ -143,7 +140,6 @@ class XM30(PartFactory):
 		|		    );
 		|		if (
 		|		    awe != state->awe ||
-		|		    nameq != state->nameq ||
 		|		    row_adr_oe != state->row_adr_oe ||
 		|		    col_adr_oe != state->col_adr_oe ||
 		|		    trdr != state->trdr ||
@@ -152,7 +148,6 @@ class XM30(PartFactory):
 		|		) {
 		|			state->ctx.job |= 1;
 		|			state->awe = awe;
-		|			state->nameq = nameq;
 		|			state->row_adr_oe = row_adr_oe;
 		|			state->col_adr_oe = col_adr_oe;
 		|			state->trdr = trdr;

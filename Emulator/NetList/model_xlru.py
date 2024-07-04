@@ -72,7 +72,27 @@ class XLRU(PartFactory):
 		|	bool late = PIN_LATE=>;
 		|	bool neg = PIN_CLK.negedge();
 		|	bool pos = PIN_CLK.posedge();
+		|	bool h1 = PIN_H1=>;
 		|	bool nxthhit = false;
+		|
+		|	if (state->ctx.activations == 1000) {
+		|		// Crude, but gets the job done
+		|		state->qhit = 1;
+		|		state->qlog = 0;
+		|		state->qsoil = 0;
+		|		state->dsoil = 0;
+		|		state->qmod = 0;
+		|		state->qlru = 0;
+		|		state->dlru = 0;
+		|		state->dhit = 0;
+		|		state->hhit = 0;
+		|		state->oeq = 1;
+		|		state->oeh = 1;
+		|		state->modd = 1;
+		|		state->modm = 0;
+		|		state->lrua = 8;
+		|		state->lrub = 8;
+		|	}
 		|
 		|	bool hit = true;
 		|	if (state->qhit)
@@ -102,12 +122,12 @@ class XLRU(PartFactory):
 		|		if (!late) {
 		|			state->modd = !(state->modm || (state->dsoil && !state->dhit));
 		|			state->modm = state->qmod;
-		|			state->oeq = !(PIN_LRUP=> && (!PIN_H1=>) && (!hit));
+		|			state->oeq = !(PIN_LRUP=> && (!h1) && (!hit));
 		|		} else {
 		|			state->modd = !((state->qmod) || (state->dsoil && !state->dhit));
 		|			state->oeq = !(PIN_LRUP=> && !hit);
 		|		}
-		|		state->oeh = !(PIN_LRUP=> && (!PIN_H1=>) && (!state->dhit));
+		|		state->oeh = !(PIN_LRUP=> && (!h1) && (!state->dhit));
 		|		nxthhit = state->dhit;
 		|	}
 		|
@@ -131,16 +151,24 @@ class XLRU(PartFactory):
 		|
 		|		BUS_CMD_READ(cmd);
 		|
-		|		bool p_phit = PIN_PHIT=>;
 		|		bool p_mcyc1 = PIN_CYC1=>;
 		|
-		|		if (!PIN_FHIT=>) {
-		|			state->qhit = !p_phit;
-		|			state->qlog = false;
-		|		} else if (p_mcyc1) {
+		|
+		|		if (p_mcyc1) {
 		|			state->qhit = !state->hhit;
 		|			state->qlog = false;
 		|		} else {
+		|			unsigned phys;
+		|			BUS_PHYS_READ(phys);
+		|			unsigned set = late;
+		|			if (!h1)
+		|				set |= 2;
+		|			if (PIN_AB=>)
+		|				set |= 4;
+		|			if (PIN_HIGH=>)
+		|				set |= 8;
+		|			bool p_phit = set != phys;
+		|
 		|			state->qhit = false;
 		|			state->qlog = false;
 		|
@@ -159,24 +187,20 @@ class XLRU(PartFactory):
 		|			case 0x6:	// PHYSICAL TAG READ
 		|			case 0x7:	// PHYSICAL TAG WRITE
 		|			case 0x8:	// SET HIT FLIP FLOPS
+		|			case 0xa:	// MEMORY_TO_TAGSTORE
+		|			case 0xb:	// COPY 0 TO 1
+		|			case 0xe:	// PHYSICAL_MEM_READ
+		|			case 0xf:	// PHYSICAL_MEM_WRITE
 		|				state->qhit = !p_phit;
 		|				break;
 		|			case 0x9:	// COPY 1 to 0
 		|				state->qhit = !state->hhit;
-		|				break;
-		|			case 0xa:	// MEMORY_TO_TAGSTORE
-		|			case 0xb:	// COPY 0 TO 1
-		|				state->qhit = !p_phit;
 		|				break;
 		|			case 0xc:	// LOGICAL_MEM_READ
 		|				state->qlog = (page_state == 1 || page_state == 2);
 		|				break;
 		|			case 0xd:	// LOGICAL_MEM_WRITE
 		|				state->qlog = (page_state == 1);
-		|				break;
-		|			case 0xe:	// PHYSICAL_MEM_READ
-		|			case 0xf:	// PHYSICAL_MEM_WRITE
-		|				state->qhit = !p_phit;
 		|				break;
 		|			default:
 		|				break;
@@ -198,7 +222,7 @@ class XLRU(PartFactory):
 		|	if (late) {
 		|		state->oeq = !(PIN_LRUP=> && !hit); 
 		|	} else {
-		|		state->oeq = !(PIN_LRUP=> && (!PIN_H1=>) && (!hit));
+		|		state->oeq = !(PIN_LRUP=> && (!h1) && (!hit));
 		|	}
 		|
 		|	if (!state->oeq) {

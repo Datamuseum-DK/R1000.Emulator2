@@ -162,6 +162,9 @@ load_control_store_200_seq(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_seq(const struct diagproc *dp)
 {
+	if (dp->dl_hash == CLEAR_PARITY_SEQ_HASH) {
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 	if (dp->dl_hash == READ_NOVRAM_DATA_SEQ_HASH) {
 		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.SEQ");
 		*dp->ip = 0x3;

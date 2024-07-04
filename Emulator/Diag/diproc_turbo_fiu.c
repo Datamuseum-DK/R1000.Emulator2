@@ -181,6 +181,9 @@ load_hram_1(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_fiu(const struct diagproc *dp)
 {
+	if (dp->dl_hash == CLEAR_PARITY_FIU_HASH) {
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 	if (dp->dl_hash == LOAD_HRAM_32_0_FIU_HASH) {
 		return(load_hram_0_32(dp));
 	}

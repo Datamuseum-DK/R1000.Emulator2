@@ -47,15 +47,14 @@ class XCMDPAL(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_H2.neg()"
+        yield "PIN_H1.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         file.fmt('''
 		|
-		|	if (PIN_H2.negedge()) {
-		|		assert(!PIN_H2=>);
+		|	if (PIN_H1.posedge()) {
 		|		unsigned mcmd;
 		|		BUS_MCMD_READ(mcmd);
 		|		bool p_cmdcont = PIN_CCNT=>;

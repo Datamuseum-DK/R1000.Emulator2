@@ -52,8 +52,6 @@ class XM31(PartFactory):
     def sensitive(self):
         yield "PIN_Q2.pos()"
         yield "PIN_Q4"
-        yield "PIN_DLWDR"
-        yield "PIN_DENLW"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -62,42 +60,29 @@ class XM31(PartFactory):
 		|	unsigned cmdreg = 0;
 		|
 		|	if (PIN_Q2.posedge()) {
-		|		if (PIN_SEL=>) {
-		|			BUS_TRACE_READ(cmdreg);
-		|		} else {
-		|			if (PIN_LDWDR=>)
-		|				cmdreg |= 2;
-		|		}
+		|		if (PIN_LDWDR=>)
+		|			cmdreg |= 2;
 		|		state->tlwdr = (cmdreg & 2) == 0;
 		|		bool diag_sync = !PIN_BDISYN=>;
 		|		bool diag_freeze = !PIN_BDIFRZ=>;
-		|		output.dsync = diag_sync;
-		|		output.dfrze = diag_freeze;
 		|		output.cstop = !(diag_sync || diag_freeze);
 		|	}
 		|
 		|	if (PIN_Q4.posedge()) {
 		|		output.tlwdr = false;
-		|		if (PIN_CMDE=>) {
-		|			if (PIN_SEL=>) {
-		|				BUS_TRACE_READ(cmdreg);
-		|			} else {
-		|				unsigned tmp;
-		|				BUS_MCMD_READ(tmp);
-		|				cmdreg |= tmp << 4;
-		|				if (PIN_CONT=>)
-		|					cmdreg |= 8;
-		|				cmdreg |= 5;
-		|			}
-		|			output.tmp = cmdreg >> 2;
-		|		}
+		|		unsigned tmp;
+		|		BUS_MCMD_READ(tmp);
+		|		cmdreg |= tmp << 4;
+		|		if (PIN_CONT=>)
+		|			cmdreg |= 8;
+		|		cmdreg |= 5;
+		|		output.tmp = cmdreg >> 2;
 		|	} else if (!PIN_Q4=>) {
-		|		if (PIN_DLWDR=> || (
+		|		if (
 		|		    state->tlwdr &&
 		|		    !state->diag_sync &&
-		|		    !state->diag_freeze &&
-		|		    PIN_DENLW=>
-		|		)) {
+		|		    !state->diag_freeze
+		|		) {
 		|			output.tlwdr = true;
 		|		}
 		|	}

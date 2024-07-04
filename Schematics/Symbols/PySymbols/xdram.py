@@ -14,7 +14,7 @@ class XDRAM(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "A", 0, 9))
-        self.sig_left(ChipSig("-->+", "WE"))
+        self.sig_left(ChipSig("-->+", "OE"))
         self.sig_left(ChipSig("-->+", "CAS"))
         self.sig_left(ChipSig("-->+", "RAS"))
 

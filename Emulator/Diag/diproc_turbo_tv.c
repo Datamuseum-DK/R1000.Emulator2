@@ -355,6 +355,9 @@ load_control_store_200_val(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_typ(const struct diagproc *dp)
 {
+	if (dp->dl_hash == CLEAR_PARITY_TYP_HASH) {
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 	if (dp->dl_hash == READ_NOVRAM_DATA_TYP_HASH) {
 		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.TYP");
 		*dp->ip = 0x3;
@@ -386,6 +389,9 @@ diagproc_turbo_typ(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_val(const struct diagproc *dp)
 {
+	if (dp->dl_hash == CLEAR_PARITY_VAL_HASH) {
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 	if (dp->dl_hash == READ_NOVRAM_DATA_VAL_HASH) {
 		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.VAL");
 		*dp->ip = 0x3;

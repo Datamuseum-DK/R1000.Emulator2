@@ -524,8 +524,10 @@ class PartFactory(Part):
             file.write('\t\ttrcs << " ' + pnam.lower() + ' " << PIN_' + pnam + ';\n')
 
         file.fmt('''
-		|		if (state->ctx.job) {
-		|			trcs << std::hex;
+		|		if (!state->ctx.job) {
+		|			trcs << " ::";
+		|		} else {
+		|			trcs << std::hex << " @@ ";
 		|''')
   
         for node in self.comp:

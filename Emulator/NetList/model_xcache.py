@@ -63,12 +63,8 @@ class XCACHE(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_WE.pos()"
-        yield "PIN_EWE.pos()"
-        yield "PIN_LWE.pos()"
         yield "BUS_A"
         yield "PIN_CLK"
-        yield "PIN_EQ"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -113,20 +109,6 @@ class XCACHE(PartFactory):
 		|	bool pos = PIN_CLK.posedge();
 		|	bool neg = PIN_CLK.negedge();
 		|
-		|	unsigned tspr = 0;
-		|	if (pos && tspr) {
-		|		if (tspr == 3) {
-		|			state->sr = 0;
-		|			state->sr |= 0;
-		|		} else if (tspr == 2) {
-		|			state->sr >>= 1;
-		|			state->sr |= PIN_DIAG=> << 15;
-		|		} else if (tspr == 1) {
-		|			state->sr <<= 1;
-		|			state->sr &= 0xf7f7;
-		|		}
-		|	}
-		|
 		|	uint64_t ta, ts, nm, pg, sp;
 		|	bool name, offset;
 		|
@@ -136,17 +118,14 @@ class XCACHE(PartFactory):
 		|	BUS_NM_READ(nm);
 		|	BUS_PG_READ(pg);
 		|	BUS_SP_READ(sp);
+		|	unsigned cmd;
+		|	BUS_CMD_READ(cmd);
 		|
-		|	if (PIN_E) {
-		|		name = true;
-		|		offset = true;
-		|	} else {
-		|		name = (nm != (ta >> BUS_PG_WIDTH));
-		|		offset = (pg != (ta & BUS_PG_MASK)) || (sp != ts);
-		|	}
+		|	name = (nm != (ta >> BUS_PG_WIDTH));
+		|	offset = (pg != (ta & BUS_PG_MASK)) || (sp != ts);
 		|	
-		|	output.nme = !state->nme && !(PIN_EQ=> && state->ome);
-		|	output.nml = !state->nml && !(PIN_EQ=> && state->oml);
+		|	output.nme = !state->nme && !((cmd != 3) && state->ome);
+		|	output.nml = !state->nml && !((cmd != 3) && state->oml);
 		|
 		|	if (neg) {
 		|		state->nme = name;
@@ -162,7 +141,7 @@ class XCACHE(PartFactory):
 		|	BUS_DV_READ(vd);
 		|	uint8_t pd = 0xff;
 		|
-		|	if (!PIN_OE=> && PIN_WE.posedge()) {
+		|	if (pos && !PIN_OE=> && PIN_WE) {
 		|		state->ram[adr] = vd & ~(0xfeULL << 7);	// VAL bits
 		|		state->par[adr] = pd;
 		|
@@ -176,7 +155,7 @@ class XCACHE(PartFactory):
 		|		microtrace(utrc, sizeof utrc);
 		|	}
 		|
-		|	if (!PIN_OE=> && PIN_EWE.posedge()) {
+		|	if (pos && !PIN_OE=> && PIN_EWE) {
 		|		if (!PIN_DIR=> && PIN_EVEN=> && PIN_TGOE=>) {
 		|			data = (pd & 0x02) >> 1;	// P6
 		|			data |= (vd >> 7) & 0xfe;	// VAL49-55
@@ -188,7 +167,7 @@ class XCACHE(PartFactory):
 		|		state->rame[adr & ~1] = data;
 		|	}
 		|
-		|	if (!PIN_OE=> && PIN_LWE.posedge()) {
+		|	if (pos && !PIN_OE=> && PIN_LWE) {
 		|		if (!PIN_DIR=> && PIN_LVEN=> && PIN_TGOE=>) {
 		|			data = (pd & 0x02) >> 1;	// P6
 		|			data |= (vd >> 7) & 0xfe;	// VAL49-55

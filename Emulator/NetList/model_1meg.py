@@ -34,7 +34,7 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModel, PartModelDQ, PartFactory
 from pin import Pin
 from net import Net
 from node import Node
@@ -65,8 +65,6 @@ class DRAM1MEGWIDE(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|	uint32_t adr = 0;
 		|
@@ -77,7 +75,7 @@ class DRAM1MEGWIDE(PartFactory):
 		|	if (PIN_CAS.negedge()) {
 		|		state->cas = adr;
 		|		adr = (state->cas << 10) | state->ras;
-		|		if (!PIN_WE=>) {
+		|		if (PIN_OE=>) {
 		|			output.z_q = true;
 		|			BUS_D_READ(state->bits[adr]);
 		|		} else {
@@ -92,7 +90,7 @@ class DRAM1MEGWIDE(PartFactory):
 		|		TRACE(
 		|		    << " ras " << PIN_RAS.negedge()
 		|		    << " cas " << PIN_CAS.negedge()
-		|		    << " we " << PIN_WE?
+		|		    << " oe " << PIN_OE?
 		|		    << " a " << BUS_A_TRACE()
 		|		    << " ra " << std::hex << state->ras
 		|		    << " ca " << std::hex << state->cas
@@ -119,8 +117,6 @@ class DRAM1MEG(PartFactory):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|	uint32_t adr = 0, data = 0, mask = 0;
@@ -152,7 +148,7 @@ class DRAM1MEG(PartFactory):
 		|		TRACE(
 		|		    << " ras " << PIN_RAS?
 		|		    << " cas " << PIN_CAS?
-		|		    << " we " << PIN_WE?
+		|		    << " we " << PIN_OE?
 		|		    << " a " << BUS_A_TRACE()
 		|		    << " dq " << PIN_DQ?
 		|		    << " ras " << std::hex << state->ras
@@ -179,39 +175,9 @@ class Model1Meg(PartModel):
 
         super().assign(comp, part_lib)
 
-class ModelWide(PartModel):
-    ''' 1MEGxN DRAM '''
-
-    def assign(self, comp, part_lib):
-
-        for node in comp.iter_nodes():
-            if node.pin.name[:2] != "DQ":
-                continue
-            Node(node.net, comp, Pin("d", "D" + node.pin.name[2:], "input"))
-            Node(node.net, comp, Pin("q", "Q" + node.pin.name[2:], "tri_state"))
-            node.remove()
-        inv_comp = Component(
-            compref = comp.ref + "_INV",
-            compvalue = comp.value,
-            comppart = "F00",
-        )
-        comp.scm.add_component(inv_comp)
-        inv_comp.name = comp.name + "_INV"
-        inv_comp.part = part_lib[inv_comp.partname]
-
-        Node(comp["WE"].net, inv_comp, Pin("D0", "D0", "input"))
-        Node(comp["WE"].net, inv_comp, Pin("D1", "D1", "input"))
-
-        inv_net = Net(comp.name + "_OE")
-        comp.scm.add_net(inv_net)
-        Node(inv_net, inv_comp, Pin("Q", "Q", "output"))
-        Node(inv_net, comp, Pin("OE", "OE", "input"))
-
-        super().assign(comp, part_lib)
-
 def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("1MEG", Model1Meg("1MEG", DRAM1MEG))
-    part_lib.add_part("XDRAM", ModelWide("XDRAM", DRAM1MEGWIDE))
-    part_lib.add_part("XERAM", ModelWide("XERAM", DRAM1MEGWIDE))
+    part_lib.add_part("XDRAM", PartModelDQ("XDRAM", DRAM1MEGWIDE))
+    part_lib.add_part("XERAM", PartModelDQ("XERAM", DRAM1MEGWIDE))

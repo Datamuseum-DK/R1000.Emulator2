@@ -45,20 +45,6 @@ from net import Net
 class F652H(PartFactory):
     ''' Half Part'''
 
-    def private(self):
-        ''' private variables '''
-        yield from self.event_or(
-            "z_event",
-            "PIN_CLK.posedge_event()",
-            "PIN_OE",
-        )
-        yield from self.event_or(
-            "s_event",
-            "PIN_CLK.posedge_event()",
-            "PIN_OE",
-            "PIN_S",
-        )
-
     def state(self, file):
         file.fmt('''
 		|	uint64_t reg;
@@ -67,8 +53,6 @@ class F652H(PartFactory):
     def sensitive(self):
         yield "PIN_CLK.pos()"
         yield "PIN_OE"
-        yield "PIN_S"
-        yield "BUS_I_SENSITIVE()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -80,7 +64,6 @@ class F652H(PartFactory):
 		|	TRACE(
 		|	    << " j " << state->ctx.job
 		|	    << " c " << PIN_CLK
-		|	    << " s " << PIN_S
 		|	    << " o " << PIN_OE
 		|	    << " i " << BUS_I_TRACE()
 		|	    << " y " << BUS_Y_TRACE()
@@ -95,16 +78,9 @@ class F652H(PartFactory):
 		|	if (PIN_OE=>) {
 		|		TRACE(" Z");
 		|		BUS_Y_Z();
-		|		next_trigger(z_event);
-		|	} else if (PIN_S=>) {
+		|	} else {
 		|		BUS_Y_WRITE(state->reg);
 		|		TRACE(" o " << std::hex << state->reg);
-		|		next_trigger(s_event);
-		|	} else {
-		|		if (!read)
-		|			BUS_I_READ(tmp);
-		|		BUS_Y_WRITE(tmp);
-		|		TRACE(" i " << BUS_I_TRACE() << " " << std::hex << tmp);
 		|	}
 		|''')
 
@@ -112,32 +88,6 @@ class ModelF652(PartModel):
     ''' F652 Transceivers/Registers '''
 
     def assign(self, comp, part_lib):
-        ''' Split into four separate components '''
-
-        inv = Component(
-            compref = comp.ref + "_I",
-            compvalue = comp.value,
-            comppart = "F00",
-        )
-        comp.scm.add_component(inv)
-        inv.name = comp.name + "_I"
-        inv.part = part_lib[inv.partname]
-
-        node = comp["OEB"]
-        new_pin = Pin("d", "D", "input")
-        Node(node.net, inv, new_pin)
-
-        new_pin = Pin("q", "Q", "output")
-        new_net = Net(self.name + "_" + comp.name + "_I")
-        comp.scm.add_net(new_net)
-        Node(new_net, inv, new_pin)
-
-        pin = node.pin
-        node.remove()
-        new_node = Node(new_net, comp, pin)
-
-        inv.part.assign(inv, part_lib)
-
         for suff in ("_AB", "_BA",):
             new_comp = Component(
                 compref = comp.ref + suff,
@@ -182,8 +132,6 @@ class F652(PartFactory):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|	uint64_t a = 0;

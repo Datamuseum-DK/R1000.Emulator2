@@ -50,80 +50,35 @@ class XBUSPAL(PartFactory):
         file.fmt('''
 		|	unsigned cmd;
 		|	BUS_CMD_READ(cmd);
+		|	switch(cmd) {
+		|	case 0x0:	// 0xf IDLE
+		|	case 0x1:	// 0xe AVAILABLE QUERY
+		|	case 0x2:	// 0xd LRU QUERY
+		|	case 0x3:	// 0xc NAME QUERY
+		|	case 0x4:	// 0xb LOGICAL TAG READ
+		|	case 0x6:	// 0x9 PHYSICAL TAG READ
+		|	case 0x7:	// 0x8 PHYSICAL TAG WRITE
+		|	case 0xc:	// 0x3 LOGICAL MEM READ
+		|	case 0xd:	// 0x2 LOGICAL MEM WRITE
+		|	case 0xe:	// 0x1 PHYSICAL MEM READ
+		|	case 0xf:	// 0x0 PHYSICAL MEM WRITE
+		|		break;
+		|	default:
+		|		std::cerr << std::hex << "CMD " << cmd << "\\n";
+		|		assert(cmd == 0x10);
+		|		break;
+		|	}
 		|	bool p_mcyc2_nxt = PIN_MC2N;
-		|	unsigned dbusmode;
-		|	BUS_DBMD_READ(dbusmode);
-		|	bool p_seta_sel = PIN_SETA;
+		|
+		|	// bool p_seta_sel = PIN_SETA;
 		|	bool p_setb_sel = PIN_SETB;
 		|	if (PIN_Q4.posedge()) {
-		|		output.tadin =
-		|		    (  cmd == 0xa && (!p_mcyc2_nxt) && dbusmode == 1 && (!p_seta_sel)) ||
-		|		    (  cmd == 0x7 && (!p_mcyc2_nxt) && dbusmode == 1 ) ||
-		|		    (  dbusmode == 0 || dbusmode == 2 ) || 
-		|		    (  4 <= dbusmode && dbusmode <= 7 );
-		|		output.tbdin =
-		|		    (  cmd == 0xa && dbusmode == 0xa && (!p_setb_sel)) ||
-		|		    (  cmd == 0x7 && (!p_mcyc2_nxt) && dbusmode == 1 ) ||
-		|		    (  dbusmode == 8 ) || 
-		|		    (  4 <= dbusmode && dbusmode <= 7 ) ||
-		|		    (  dbusmode == 2 );
-		|		output.intas =
-		|		    !(
-		|		        (dbusmode == 1 || dbusmode == 3) ||
-		|		        (dbusmode == 4)
-		|		    );
-		|		output.extsl =
-		|		    !(
-		|		        (dbusmode == 1) || 
-		|		        (dbusmode == 6 || dbusmode == 7)
-		|		    );
-		|		output.intan =
-		|		    !(
-		|		        (  (cmd == 0xa || cmd == 0xb) && (!p_mcyc2_nxt) && dbusmode == 1 && (!p_seta_sel)) ||
-		|		        (  (cmd == 0xd || cmd == 0xf) && (!p_mcyc2_nxt) && dbusmode == 1 ) ||
-		|		        (  cmd == 0x7 && (!p_mcyc2_nxt) && dbusmode == 1 ) ||
-		|		        (  dbusmode == 0 ) || 
-		|			(  4 <= dbusmode && dbusmode <= 7 ) ||
-		|		        (  dbusmode == 2 || dbusmode == 3 )
-		|		    );
-		|		output.intbn =
-		|		    !(
-		|		        (  cmd == 0xa && (!p_mcyc2_nxt) && dbusmode == 0xa && (!p_setb_sel)) ||
-		|		        (  cmd == 0xb && (!p_mcyc2_nxt) && dbusmode == 1   && (!p_setb_sel)) ||
-		|		        (  (cmd == 0xd || cmd == 0xf) && (!p_mcyc2_nxt) && dbusmode == 1 ) ||
-		|		        (  cmd == 0x7 && (!p_mcyc2_nxt) && dbusmode == 1 ) ||
-		|		        (  dbusmode == 8 ) ||
-		|		        (  4 <= dbusmode && dbusmode <= 7) || 
-		|		        (  dbusmode == 3 )
-		|		    );
-		|		output.taoe =
-		|		    (  cmd == 0xa && (!p_mcyc2_nxt) && dbusmode == 1 &&   p_setb_sel ) ||
-		|		    (  cmd == 0xa && (!p_mcyc2_nxt) && dbusmode == 0xa &&   p_setb_sel ) ||
-		|		    (  (cmd == 0x6 || cmd == 0x7)   && (!p_mcyc2_nxt) && dbusmode == 1 &&   p_setb_sel ) ||
-		|		    (  dbusmode == 8 ) || 
-		|		    (  4 <= dbusmode && dbusmode <= 7) ||
-		|		    (  dbusmode == 2 );
-		|		output.tboe =
-		|		    (  cmd == 0xa && (!p_mcyc2_nxt) && dbusmode == 1 && (!p_setb_sel)) ||
-		|		    (  cmd == 0xa && (!p_mcyc2_nxt) && dbusmode == 0xa && (!p_setb_sel)) ||
-		|		    (  (cmd == 0x6 || cmd == 0x7) && (!p_mcyc2_nxt) && dbusmode == 1 && (!p_setb_sel)) ||
-		|		    (  dbusmode == 0 || dbusmode == 2 ) || 
-		|		    (  4 <= dbusmode && dbusmode <= 7);
-		|		output.droen =
-		|		    (dbusmode == 2);
-		|		output.intbs =
-		|		    !(
-		|		        (dbusmode == 1 || dbusmode == 3) || 
-		|		        (dbusmode == 5)
-		|		    );
-		|		output.tadin = !output.tadin;
-		|		output.tbdin = !output.tbdin;
-		|		output.droen = !output.droen;
-		|		output.intas = !output.intas;
-		|		output.intbs = !output.intbs;
-		|		output.extsl = !output.extsl;
-		|		output.intan = !output.intan;
-		|		output.intbn = !output.intbn;
+		|		output.taoe =  (cmd == 0x6 || cmd == 0x7) && (!p_mcyc2_nxt)  &&   p_setb_sel;
+		|		output.tboe =  (cmd == 0x6 || cmd == 0x7) && (!p_mcyc2_nxt)  && (!p_setb_sel);
+		|		output.tadin = !(cmd == 0x7 && (!p_mcyc2_nxt));
+		|		output.tbdin = !(cmd == 0x7 && (!p_mcyc2_nxt));
+		|		output.intan = !((cmd == 0x7 || cmd == 0xd || cmd == 0xf) && (!p_mcyc2_nxt));
+		|		output.intbn = !((cmd == 0x7 || cmd == 0xd || cmd == 0xf) && (!p_mcyc2_nxt));
 		|	}
 		|
 		|''')
