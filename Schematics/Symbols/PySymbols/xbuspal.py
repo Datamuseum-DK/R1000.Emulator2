@@ -24,8 +24,6 @@ class XBUSPAL(FChip):
 
         self.sig_right(ChipSig("+-->", "TADIN"))
         self.sig_right(ChipSig("+-->", "TBDIN"))
-        self.sig_right(ChipSig("+-->", "INTAN"))
-        self.sig_right(ChipSig("+-->", "INTBN"))
 
         self.finish()
 

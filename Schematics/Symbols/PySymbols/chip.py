@@ -586,8 +586,8 @@ class FChip(Chip):
         if width == 0:
             #print(self.symbol_name, "W", width, "MW", minwidth)
             width = minwidth
-        else:
-            #print(self.symbol_name, "W", width, "MW", minwidth)
+        elif width < minwidth:
+            print(self.symbol_name, "W", width, "MW", minwidth)
             assert width >= minwidth
 
         top_bot = '   +' + '-' * (width - 8) + '+\n'

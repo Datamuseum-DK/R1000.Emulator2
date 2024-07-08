@@ -13,7 +13,6 @@ class XM31(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "MCMD", 0, 3))
         self.sig_left(ChipSig("-->+", "CONT"))
@@ -21,7 +20,8 @@ class XM31(FChip):
         self.sig_left(ChipSig("-->+", "BDISYN"))
         self.sig_left(ChipSig("-->+", "BDIFRZ"))
 
-        self.sig_right(ChipSig("+-->", "TMP", 0, 5))
+        self.sig_right(ChipSig("+-->", "RCMD", 0, 3))
+        self.sig_right(ChipSig("+-->", "RCONT"))
         self.sig_right(ChipSig("+-->", "TLWDR"))
         self.sig_right(ChipSig("o-->", "CSTOP"))
 

@@ -14,7 +14,7 @@ class XCACHE(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "A", 0, 13))
-        self.sig_left(ChipSig("<->+", "DQV", 0, 63))
+        self.sig_left(ChipSig("-->+", "DQV", 0, 63))
         self.sig_left(ChipSig("-->+", "CWE", 0, 5))
         self.sig_left(ChipSig("-->+", "CWL", 0, 5))
         self.sig_left(ChipSig("-->+", "DIR"))
@@ -40,13 +40,14 @@ class XCACHE(FChip):
 
         #self.sig_right(ChipSig("+-->", "PQ", 0, 7))
 
-        self.sig_right(ChipSig("+-->", "DROE"))
         self.sig_right(ChipSig("+<--", "QVOE"))
         self.sig_right(ChipSig("+<--", "K12"))
         self.sig_right(ChipSig("+<--", "K13"))
         self.sig_right(ChipSig("+<--", "CMD", 0, 3))
+        self.sig_right(ChipSig("+<--", "WCK"))
+        self.sig_right(ChipSig("+<--", "QCK"))
 
-        self.finish()
+        self.finish(19)
 
 def register():
     yield XCACHE()

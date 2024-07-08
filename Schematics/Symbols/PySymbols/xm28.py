@@ -18,7 +18,6 @@ class XM28(FChip):
         self.sig_left(ChipSig("-->+", "H1"))
         self.sig_left(ChipSig("-->+", "MC2"))
         self.sig_left(ChipSig("-->+", "MC2N"))
-        self.sig_left(ChipSig("-->+", "DRH"))
         self.sig_left(ChipSig("-->+", "HIGH"))
         self.sig_left(ChipSig("-->+", "PSET", 0, 3))
         self.sig_left(ChipSig("-->+", "CMD", 0, 3))
@@ -48,17 +47,18 @@ class XM28(FChip):
         self.sig_right(ChipSig("+-->", "TSC14"))
         self.sig_right(ChipSig("+-->", "SETAS"))
         self.sig_right(ChipSig("+-->", "SETBS"))
-        self.sig_right(ChipSig("+-->", "PHT26"))
         self.sig_right(ChipSig("+-->", "RCLKE"))
         self.sig_right(ChipSig("+-->", "EABRT"))
         self.sig_right(ChipSig("+-->", "LABRT"))
 
         self.sig_right(ChipSig("+-->", "DAA1D"))
-        self.sig_right(ChipSig("+-->", "DBA1D"))
         self.sig_right(ChipSig("+-->", "DAA2D"))
-        self.sig_right(ChipSig("+-->", "DBA2D"))
         self.sig_right(ChipSig("+-->", "DA2SL"))
         self.sig_right(ChipSig("+-->", "TAGW"))
+
+        self.sig_right(ChipSig("+-->", "T12Y"))
+        self.sig_right(ChipSig("+-->", "T13Y"))
+        self.sig_right(ChipSig("+-->", "LRUP"))
 
         self.finish()
 
