@@ -39,52 +39,26 @@ from part import PartModel, PartFactory
 class XM31(PartFactory):
     ''' MEM32 pg 31 '''
 
-    autopin = ("TMP", "DSYNC", "DFRZE", "PARER", "CSTOP", "TLWDR",)
-
-    def state(self, file):
-        file.fmt('''
-		|	unsigned cmdreg;
-		|	bool tlwdr;
-		|	bool diag_sync;
-		|	bool diag_freeze;
-		|''')
+    autopin = True
 
     def sensitive(self):
-        yield "PIN_Q2.pos()"
         yield "PIN_Q4"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	unsigned cmdreg = 0;
-		|
-		|	if (PIN_Q2.posedge()) {
-		|		if (PIN_LDWDR=>)
-		|			cmdreg |= 2;
-		|		state->tlwdr = (cmdreg & 2) == 0;
+		|	if (PIN_Q4.negedge()) {
 		|		bool diag_sync = !PIN_BDISYN=>;
 		|		bool diag_freeze = !PIN_BDIFRZ=>;
 		|		output.cstop = !(diag_sync || diag_freeze);
+		|		output.tlwdr = !PIN_LDWDR=>;
 		|	}
 		|
 		|	if (PIN_Q4.posedge()) {
 		|		output.tlwdr = false;
-		|		unsigned tmp;
-		|		BUS_MCMD_READ(tmp);
-		|		cmdreg |= tmp << 4;
-		|		if (PIN_CONT=>)
-		|			cmdreg |= 8;
-		|		cmdreg |= 5;
-		|		output.tmp = cmdreg >> 2;
-		|	} else if (!PIN_Q4=>) {
-		|		if (
-		|		    state->tlwdr &&
-		|		    !state->diag_sync &&
-		|		    !state->diag_freeze
-		|		) {
-		|			output.tlwdr = true;
-		|		}
+		|		BUS_MCMD_READ(output.rcmd);
+		|		output.rcont = PIN_CONT=>;
 		|	}
 		|''')
 

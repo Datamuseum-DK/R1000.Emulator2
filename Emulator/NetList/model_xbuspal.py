@@ -77,8 +77,6 @@ class XBUSPAL(PartFactory):
 		|		output.tboe =  (cmd == 0x6 || cmd == 0x7) && (!p_mcyc2_nxt)  && (!p_setb_sel);
 		|		output.tadin = !(cmd == 0x7 && (!p_mcyc2_nxt));
 		|		output.tbdin = !(cmd == 0x7 && (!p_mcyc2_nxt));
-		|		output.intan = !((cmd == 0x7 || cmd == 0xd || cmd == 0xf) && (!p_mcyc2_nxt));
-		|		output.intbn = !((cmd == 0x7 || cmd == 0xd || cmd == 0xf) && (!p_mcyc2_nxt));
 		|	}
 		|
 		|''')

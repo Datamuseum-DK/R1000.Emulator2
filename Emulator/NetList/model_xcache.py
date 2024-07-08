@@ -60,11 +60,14 @@ class XCACHE(PartFactory):
 		|	bool nml;
 		|	bool oml;
 		|	bool k12, k13;
+		|	uint64_t breg, qreg;
 		|''')
 
     def sensitive(self):
         yield "BUS_A"
         yield "PIN_CLK"
+        yield "PIN_WCK.pos()"
+        yield "PIN_QCK.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -82,6 +85,10 @@ class XCACHE(PartFactory):
 		|	unsigned adr = 0;
 		|	uint64_t data = 0;
 		|
+		|	if (PIN_WCK.posedge()) {
+		|		BUS_DV_READ(state->breg);
+		|	}
+		|
 		|	BUS_A_READ(adr);
 		|	adr &= ~3;
 		|	if (state->k12)
@@ -98,12 +105,13 @@ class XCACHE(PartFactory):
 		|		pdata = state->rame[adr | 1];
 		|	}
 		|
-		|	output.droe = !(PIN_DIR=> && PIN_TGOE=> && (PIN_EVEN=> || PIN_LVEN=>));
-		|
-		|	output.z_qv = output.droe;
+		|	if (PIN_QCK.posedge()) {
+		|		state->qreg = data & 0xffffffffffff80ff;	// VAL bits
+		|		state->qreg |= (pdata & 0xfe) << 7;	// VAL49-55
+		|	}
+		|	output.z_qv = PIN_QVOE=>;
 		|	if (!output.z_qv) {
-		|		output.qv = data & 0xffffffffffff80ff;	// VAL bits
-		|		output.qv |= (pdata & 0xfe) << 7;	// VAL49-55
+		|		output.qv = state->qreg;
 		|	}
 		|
 		|	bool pos = PIN_CLK.posedge();
@@ -137,8 +145,7 @@ class XCACHE(PartFactory):
 		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|
-		|	uint64_t vd;
-		|	BUS_DV_READ(vd);
+		|	uint64_t vd = state->breg;
 		|	uint8_t pd = 0xff;
 		|
 		|	if (pos && !PIN_OE=> && PIN_WE) {

@@ -323,27 +323,30 @@ class NetBus():
         file.write(" \t" + str(self.cname) + " " + str(self.ctype) + "\n")
         file.write(pfx + "   [" + self.sig + "]\n")
 
+        def row(x):
+            file.write(pfx + " ".join(j.ljust(12) for j in x) + "\n")
+
         i = [""]
         for component, _pinbus in self.components:
             i.append(component.scm.scm_lname)
-        file.write(pfx + "\t".join(i) + "\n")
+        row(i)
 
         i = [""]
         for component, _pinbus in self.components:
             i.append(component.name)
-        file.write(pfx + "\t".join(i) + "\n")
+        row(i)
 
         i = [""]
         for node in self.nets[0].nnodes:
             i.append(node.pin.type.name)
-        file.write(pfx + "\t".join(i) + "\n")
+        row(i)
 
         for net in sorted(self.nets):
             i = [""]
             for node in net.nnodes:
                 i.append(node.pin.name)
             i.append(net.name)
-            file.write(pfx + "\t".join(i) + "\n")
+            row(i)
 
     def decide_cname(self):
         ''' Find name '''

@@ -56,9 +56,9 @@ class XMBUSCTL(PartFactory):
 		|	bool bhit = PIN_BHIT=>;
 		|
 		|	output.typaoe = output.exthit || !bhit || (ahit && high_board) ||  b_tvdrv;
-		|	output.valaoe = output.exthit || !bhit || (ahit && high_board) || (b_tvdrv && b_vdrv);
+		|	output.valaoe = output.exthit || !bhit || (ahit && high_board) ||  b_vdrv;
 		|	output.typboe = output.exthit ||  bhit ||                          b_tvdrv;
-		|	output.valboe = output.exthit ||  bhit ||                         (b_tvdrv && b_vdrv);
+		|	output.valboe = output.exthit ||  bhit ||                          b_vdrv;
 		|
 		|''')
 

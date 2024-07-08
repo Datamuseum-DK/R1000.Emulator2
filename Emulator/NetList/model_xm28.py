@@ -46,10 +46,9 @@ class XM28(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	bool ahit0145, bhit0246;
-		|	bool ah012, bh456;
 		|	bool bhit, ahit;
 		|	bool ahit0, ahit1, bhit4, bhit5;
-		|	bool labort, eabort;
+		|	bool labort;
 		|	bool dradpal_p22;
 		|''')
 
@@ -59,10 +58,6 @@ class XM28(PartFactory):
         yield "PIN_ALH"
         yield "PIN_BEH"
         yield "PIN_BLH"
-        yield "PIN_Q1"
-        yield "PIN_H1"
-        yield "PIN_DRH"
-        yield "BUS_PSET_SENSITIVE()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -73,12 +68,15 @@ class XM28(PartFactory):
 		|	bool clk2x_pos = PIN_CLK.posedge();
 		|	bool h1 = PIN_H1=>;
 		|	bool q1 = PIN_Q1=>;
-		|	bool q4pos = PIN_Q1.negedge();
+		|	bool q1pos = clk2x_neg && h1;
+		|	bool q2pos = clk2x_pos && h1;
+		|	bool q3pos = clk2x_neg && !h1;
+		|	bool q4pos = clk2x_pos && !h1;
 		|	bool aehit = PIN_AEH=>;
 		|	bool alhit = PIN_ALH=>;
 		|	bool behit = PIN_BEH=>;
 		|	bool blhit = PIN_BLH=>;
-		|	bool drvhit = PIN_DRH=>;
+		|	bool miss = aehit && alhit && behit && blhit;
 		|	bool exthit = PIN_EHIT=>;
 		|	bool high_board = PIN_HIGH=>;
 		|	unsigned cmd;
@@ -86,49 +84,42 @@ class XM28(PartFactory):
 		|	bool mcyc2 = PIN_MC2=>;
 		|	bool mcyc2_next = PIN_MC2N=>;
 		|
-		|	if (clk2x_neg && !h1) {
+		|	if (q3pos) {
 		|		state->ahit0 = !aehit           &&  behit &&  blhit;
 		|		state->ahit1 =  aehit && !alhit &&  behit &&  blhit;
 		|		state->bhit4 =                     !behit;
 		|		state->bhit5 =                      behit && !blhit;
 		|	}
-		|	if (clk2x_neg && h1) {
-		|		state->ahit0145 =
-		|		    (drvhit && state->bhit5) ||
-		|		    (drvhit && state->bhit4) ||
-		|		    (drvhit && behit && blhit && state->ahit0) ||
-		|		    (drvhit && behit && blhit && state->ahit1)
-		|		;
-		|		state->bhit0246 =
-		|		    (drvhit && state->bhit4) ||
-		|		    (drvhit && !behit &&                           !state->bhit5) ||
-		|		    (drvhit &&  behit && blhit &&  state->ahit0) ||
-		|		    (drvhit && !aehit && blhit && !state->ahit1 && !state->bhit5)
-		|		;
-		|	}
-		|	if (clk2x_neg && !h1) {
-		|		output.tagw = (
-		|		    (cmd == 0xc && !mcyc2_next && mcyc2) ||
-		|		    (cmd == 0xd && !mcyc2_next && mcyc2) ||
-		|		    (cmd == 0x7 && !mcyc2_next && mcyc2) ||
-		|		    (cmd == 0x2 && !mcyc2_next && mcyc2)
+		|	if (q1pos) {
+		|		state->ahit0145 = (
+		|		    (state->bhit5) ||
+		|		    (state->bhit4) ||
+		|		    (behit && blhit && state->ahit0) ||
+		|		    (behit && blhit && state->ahit1)
+		|		);
+		|		state->bhit0246 = (
+		|		    (state->bhit4) ||
+		|		    (!behit &&                           !state->bhit5) ||
+		|		    ( behit && blhit &&  state->ahit0) ||
+		|		    (!aehit && blhit && !state->ahit1 && !state->bhit5)
 		|		);
 		|	}
-		|	state->ah012 = !(state->ahit0 || state->ahit1 || !aehit);
-		|	state->bh456 = !(state->bhit4 || state->bhit5 || !behit);
+		|	if (q3pos) {
+		|		output.tagw = mcyc2 && !mcyc2_next && (
+		|		    cmd == 0xc || cmd == 0xd || cmd == 0x7 || cmd == 0x2
+		|		);
+		|	}
 		|	output.z_seta = !(state->ahit0145 && !exthit);
 		|	output.z_setb = !(state->bhit0246 && !exthit);
 		|	output.seta = output.z_seta;
 		|	output.setb = output.z_setb;
 		|
 		|	if (!q1) {
-		|		state->ahit = !(alhit && state->ah012);
-		|		state->bhit = !(blhit && state->bh456);
-		|		output.aht = !state->ahit;
-		|		output.bht = !state->bhit;
+		|		output.aht = alhit && !(state->ahit0 || state->ahit1 || !aehit);
+		|		output.bht = blhit && !(state->bhit4 || state->bhit5 || !behit);
+		|		output.baht = output.aht;
+		|		output.bbht = output.bht;
 		|	}
-		|	output.baht = !(drvhit && state->ahit);
-		|	output.bbht = !(drvhit && state->bhit);
 		|
 		|	unsigned pset;
 		|	BUS_PSET_READ(pset);
@@ -143,16 +134,10 @@ class XM28(PartFactory):
 		|		((pset & 0xc) == 0x4 && !high_board)
 		|	);
 		|
-		|	output.pht26 = !(
-		|		((pset & 0xb) == 0xa &&  high_board) ||
-		|		((pset & 0xb) == 0x2 && !high_board)
-		|	);
-		|
 		|	bool eabort_y = !(PIN_EABT=> && PIN_ELABT=>);
 		|	bool labort_y = !(PIN_LABT=> && PIN_ELABT=> && !h1);
 		|
 		|	if (clk2x_pos) {
-		|		bool late_abort = state->labort;
 		|
 		|		bool seta_sel = !(
 		|			((0x8 <= pset && pset <= 0xb) && high_board) ||
@@ -163,88 +148,88 @@ class XM28(PartFactory):
 		|			((0x4 <= pset && pset <= 0x7) && !high_board)
 		|		);
 		|
-		|
-		|		bool txoen = mcyc2 || !h1 || (cmd != 0x7);
+		|		bool txoen = mcyc2 || q4pos || (cmd != 0x7);
 		|		output.txeoe = !(pset & 1) && txoen;
 		|		output.txloe =  (pset & 1) && txoen;
 		|
-		|		output.txxwe = (cmd == 0x7 && !h1 && !mcyc2_next && mcyc2);
+		|		output.txxwe = (cmd == 0x7 && q4pos && !mcyc2_next && mcyc2);
 		|		bool cmd_2cd = (cmd == 0x2) || (cmd == 0xc) || (cmd == 0xd);
 		|		output.txewe = (
 		|			(output.txxwe && !(pset & 1)) ||
-		|			(cmd_2cd && !h1 &&  mcyc2 && !mcyc2_next) ||
-		|			(cmd_2cd &&  h1 && !mcyc2 && !late_abort && state->output.txewe)
+		|			(cmd_2cd && q4pos &&  mcyc2 && !mcyc2_next) ||
+		|			(cmd_2cd && q2pos && !mcyc2 && !state->labort && state->output.txewe)
 		|		);
 		|		output.txlwe = (
 		|			(output.txxwe && (pset & 1)) ||
-		|			(cmd_2cd && !h1 &&  mcyc2 && !mcyc2_next) ||
-		|			(cmd_2cd &&  h1 && !mcyc2 && !late_abort && state->output.txlwe)
+		|			(cmd_2cd && q4pos &&  mcyc2 && !mcyc2_next) ||
+		|			(cmd_2cd && q2pos && !mcyc2 && !state->labort && state->output.txlwe)
 		|		);
 		|		output.tgace = !(output.txxwe && seta_sel);
 		|		output.tgbce = !(output.txxwe && setb_sel);
 		|
 		|		output.rclke = labort_y;
-		|	}
 		|
-		|	if (q4pos) {
-		|		state->labort = labort_y;
-		|		state->eabort = eabort_y;
-		|		output.eabrt = state->eabort;
-		|		output.labrt = state->labort;
-		|	}
-		|	if (clk2x_pos) {
-		|		output.tsc14 = !h1 && !mcyc2_next && output.labrt;
+		|		if (q4pos) {
+		|			state->labort = labort_y;
+		|			output.eabrt = eabort_y;
+		|			output.labrt = state->labort;
+		|			output.tsc14 = !mcyc2_next && output.labrt;
+		|		}
 		|	}
 		|
 		|	if (clk2x_neg) {
-		|		const bool d_dis_adr = false;
-		|		const bool trace_dra1 = true;
-		|		const bool trace_dra2 = true;
-		|		bool lar_2 = PIN_LAR2=>;
-		|		bool lar_3 = PIN_LAR3=>;
+		|		if (!mcyc2) {
+		|			output.da2sl = false;
+		|			if (state->dradpal_p22 && state->output.da2sl) {
+		|				output.daa2d = behit && aehit;
+		|			}
+		|		} else if (q1pos) {
+		|			output.da2sl = false;
+		|			output.daa1d = PIN_LAR2=>;
+		|			output.daa2d = PIN_LAR3=>;
+		|		} else {	// q3pos
 		|
-		|		output.da2sl =
-		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mcyc2 && blhit && behit && alhit && aehit ) ||
-		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mcyc2 && blhit && behit && alhit && aehit );
+		|			bool pht26 = !(
+		|				((pset & 0xb) == 0xa &&  high_board) ||
+		|				((pset & 0xb) == 0x2 && !high_board)
+		|			);
 		|
-		|		output.daa1d =
-		|		    (  d_dis_adr  &&                    trace_dra1 ) ||
-		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa1d ) ||
-		|		    ((!d_dis_adr) &&   h1  &&   mcyc2  && lar_2 ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && blhit && behit && alhit && aehit );
+		|			output.da2sl = miss && (((cmd & 0x6) == 0x4) || ((cmd & 0xc) == 0x0));
 		|
-		|		output.dba1d =
-		|		    (  d_dis_adr  &&                    trace_dra1 ) ||
-		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa1d ) ||
-		|		    ((!d_dis_adr) &&   h1  &&   mcyc2  && lar_2 ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && blhit && behit && alhit && aehit );
+		|			output.daa1d = miss;
 		|
-		|		output.daa2d =
-		|		    (  d_dis_adr  &&                    trace_dra2 ) ||
-		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa2d  && (!state->output.da2sl)) ||
-		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa2d  && (!state->dradpal_p22)) ||
-		|		    ((!d_dis_adr) &&   h1  &&   mcyc2  && lar_3 ) ||
-		|		    ((!d_dis_adr) &&          (!mcyc2) && behit && aehit && state->dradpal_p22 && state->output.da2sl ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && (!alhit) && behit && aehit ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && (!blhit) && behit && aehit ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && state->output.pht26 && behit && aehit ) ||
-		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mcyc2 && behit && aehit ) ||
-		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mcyc2 && behit && aehit );
-		|
-		|		output.dba2d =
-		|		    (  d_dis_adr  &&   trace_dra2 ) ||
-		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa2d  && (!state->output.da2sl)) ||
-		|		    ((!d_dis_adr) &&          (!mcyc2) && state->output.daa2d  && (!state->dradpal_p22)) ||
-		|		    ((!d_dis_adr) &&   h1  &&   mcyc2  && lar_3 ) ||
-		|		    ((!d_dis_adr) &&          (!mcyc2) && behit && aehit && state->dradpal_p22 && state->output.da2sl ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && (!alhit) && behit && aehit ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && (!blhit) && behit && aehit ) ||
-		|		    ((!d_dis_adr) && (!h1) &&   mcyc2  && state->output.pht26 && behit && aehit ) ||
-		|		    ((cmd & 0x6) == 0x4 && (!d_dis_adr) && (!h1) && mcyc2 && behit && aehit ) ||
-		|		    ((cmd & 0xc) == 0x0 && (!d_dis_adr) && (!h1) && mcyc2 && behit && aehit );
+		|			output.daa2d = behit && aehit && (
+		|			    ( !alhit ) ||
+		|			    ( !blhit ) ||
+		|			    ( pht26 ) ||
+		|			    ( (cmd & 0x6) == 0x4 ) ||
+		|			    ( (cmd & 0xc) == 0x0 )
+		|			);
+		|		}
 		|
 		|		state->dradpal_p22 = mcyc2;
-		|
+		|	}
+		|	if (clk2x_neg) {
+		|		// TAGAPAL
+		|		bool p_lru_update = output.lrup;
+		|		output.lrup =
+		|		    ( q3pos && (!mcyc2_next) && mcyc2 && (cmd == 0xc || cmd == 0xd)) ||
+		|		    ( q3pos && (!mcyc2_next) && mcyc2 && (cmd == 0x2 || cmd == 0x3)) ||
+		|		    ( q1pos && (!state->labort) && p_lru_update );
+		|		output.t12y =
+		|		    ( q1pos && ((cmd & 0x6) == 0x4)) ||
+		|		    ( q1pos && ((cmd & 0xc) == 0x0)) || 
+		|		    ( q1pos && !mcyc2 ) ||
+		|		    ( mcyc2 && (pset & 3) > 1 && ((cmd & 0x6) == 0x6)) ||
+		|		    ( mcyc2 && (pset & 3) > 1 && ((cmd & 0xa) == 0xa)) ||
+		|		    ( mcyc2 && (pset & 3) > 1 && ((cmd & 0xc) == 0x8));
+		|		output.t13y =
+		|		    ( q3pos && ((cmd & 0x6) == 0x4)) ||
+		|		    ( q3pos && ((cmd & 0xc) == 0x0)) ||
+		|		    ( q3pos && !mcyc2 ) ||
+		|		    ( mcyc2 && ((pset & 3) == 1 || (pset & 3) == 2) && ((cmd & 0x6) == 0x6)) ||
+		|		    ( mcyc2 && ((pset & 3) == 1 || (pset & 3) == 2) && ((cmd & 0xa) == 0xa)) ||
+		|		    ( mcyc2 && ((pset & 3) == 1 || (pset & 3) == 2) && ((cmd & 0xc) == 0x8));
 		|	}
 		|
 		|''')

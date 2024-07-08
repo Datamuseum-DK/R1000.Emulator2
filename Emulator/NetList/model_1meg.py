@@ -40,6 +40,64 @@ from net import Net
 from node import Node
 from component import Component
 
+class DRAM1MEGCLK(PartFactory):
+    ''' 1MEGxN DRAM '''
+
+    autopin = True
+
+    def state(self, file):
+        if len(self.comp.nodes) - 13 <= 16:
+            file.fmt('''
+		|	uint16_t bits[1 << 20];
+		|	unsigned ras, cas;
+		|	uint16_t dreg, qreg;
+		|''')
+        else:
+            file.fmt('''
+		|	uint64_t bits[1 << 20];
+		|	unsigned ras, cas;
+		|	uint64_t dreg, qreg;
+		|''')
+
+    def sensitive(self):
+        yield "PIN_RAS"
+        yield "PIN_CAS"
+        yield "PIN_OE"
+        yield "PIN_DCK.pos()"
+        yield "PIN_ICK.pos()"
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
+
+        file.fmt('''
+		|	uint32_t adr = 0;
+		|
+		|	BUS_A_READ(adr);
+		|
+		|	if (PIN_DCK.posedge()) {
+		|		BUS_D_READ(state->dreg);
+		|	}
+		|	if (PIN_RAS.negedge())
+		|		state->ras = adr;
+		|	if (PIN_CAS.negedge()) {
+		|		state->cas = adr;
+		|		adr = (state->cas << 10) | state->ras;
+		|		if (PIN_WE=>) {
+		|			state->bits[adr] = state->dreg;
+		|		}
+		|	}
+		|	adr = (state->cas << 10) | state->ras;
+		|	if (PIN_ICK.posedge() && !PIN_CAS=>) {
+		|		state->qreg = state->bits[adr];
+		|	}
+		|	output.z_q = PIN_OE=>;
+		|	if (!output.z_q) {
+		|		output.z_q = false;
+		|		output.q = state->qreg;
+		|	}
+		|''')
+
+
 class DRAM1MEGWIDE(PartFactory):
     ''' 1MEGxN DRAM '''
 
@@ -180,4 +238,5 @@ def register(part_lib):
 
     part_lib.add_part("1MEG", Model1Meg("1MEG", DRAM1MEG))
     part_lib.add_part("XDRAM", PartModelDQ("XDRAM", DRAM1MEGWIDE))
-    part_lib.add_part("XERAM", PartModelDQ("XERAM", DRAM1MEGWIDE))
+    part_lib.add_part("XERAM", PartModelDQ("XERAM", DRAM1MEGCLK))
+    part_lib.add_part("XFRAM", PartModelDQ("XFRAM", DRAM1MEGCLK))
