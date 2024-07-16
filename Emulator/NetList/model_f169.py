@@ -46,7 +46,9 @@ class F169(PartFactory):
     def state(self, file):
         ''' Extra state variable '''
 
-        file.write("\tunsigned count;\n")
+        file.fmt('''
+		|	uint32_t count;
+		|''')
 
     def sensitive(self):
         yield "PIN_CLK.pos()"
@@ -61,8 +63,6 @@ class F169(PartFactory):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|

@@ -57,13 +57,10 @@ class XFMAR(PartFactory):
         yield "PIN_CLK2X.pos()"
         yield "BUS_OREG"
         yield "PIN_QVIOE"
-        yield "PIN_QDIAGOE"
         yield "PIN_QSPCOE"
         yield "PIN_QADROE"
-        yield "PIN_DGPAR"
         yield "PIN_COCLK.pos()"
         yield "BUS_CSA"
-        yield "PIN_HWE.pos()"
         yield "PIN_INMAR"
         yield "PIN_PXING"
         yield "PIN_SELPG"
@@ -87,13 +84,7 @@ class XFMAR(PartFactory):
 		|		state->pdt = !PIN_PRED=>;
 		|
 		|		// NVEMUX + CSAREG
-		|		if (PIN_DSEL=>) {
-		|			BUS_CNV_READ(state->nve);
-		|		} else if (PIN_DNVE=>) {
-		|			state->nve = 0xf;
-		|		} else {
-		|			state->nve = 0;
-		|		}
+		|		BUS_CNV_READ(state->nve);
 		|	}
 		|
 		|	a = state->ctopo & 0xfffff;
@@ -139,16 +130,12 @@ class XFMAR(PartFactory):
 		|	BUS_DADR_READ(adr);
 		|
 		|
-		|	if (PIN_CLK2X.posedge()) {
+		|	if (PIN_Q4.posedge()) {
 		|		unsigned mode;
-		|		unsigned msel;
-		|		BUS_MSEL_READ(msel);
 		|		bool load_mar = PIN_LMAR=>;
 		|		bool sclk_en = PIN_SCLKE=>;
 		|
-		|		if (msel == 2 || msel == 3) {
-		|			mode = msel;
-		|		} else if (load_mar && sclk_en && msel == 1) {
+		|		if (load_mar && sclk_en) {
 		|			mode = 3;
 		|		} else {
 		|			mode = 0;
@@ -164,8 +151,7 @@ class XFMAR(PartFactory):
 		|		} else if (mode == 2) {
 		|			state->srn >>= 1;
 		|			state->sro >>= 1;
-		|			uint8_t diag;
-		|			BUS_DDIAG_READ(diag);
+		|			uint8_t diag = 0xff;
 		|			state->srn &= 0x7f7f7f7f;
 		|			state->srn |= ((diag >> 7) & 0x1) << 0x1f;
 		|			state->srn |= ((diag >> 6) & 0x1) << 0x17;
@@ -226,19 +212,6 @@ class XFMAR(PartFactory):
 		|		output.nmatch =
 		|		    (state->ctopn != state->srn) ||
 		|		    ((state->sro & 0xf8000070 ) != 0x10);
-		|	}
-		|
-		|	output.z_qdiag = PIN_QDIAGOE=>;
-		|	if (!output.z_qdiag) {
-		|		output.qdiag = 0;
-		|		output.qdiag |= ((state->srn >> 24) & 1) << 7;
-		|		output.qdiag |= ((state->srn >> 16) & 1) << 6;
-		|		output.qdiag |= ((state->srn >>  8) & 1) << 5;
-		|		output.qdiag |= ((state->srn >>  0) & 1) << 4;
-		|		output.qdiag |= ((state->sro >> 24) & 1) << 3;
-		|		output.qdiag |= ((state->sro >> 16) & 1) << 2;
-		|		output.qdiag |= ((state->sro >>  8) & 1) << 1;
-		|		output.qdiag |= ((state->sro >>  4) & 1) << 0;
 		|	}
 		|
 		|	output.z_qvi = PIN_QVIOE=>;
@@ -303,16 +276,6 @@ class XFMAR(PartFactory):
 		|	alo |= BITOFF(13) << 2;
 		|	alo |= BITOFF(14) << 1;
 		|	alo |= BITOFF(15) << 0;
-		|
-		|	if (PIN_HWE.posedge()) {
-		|		uint64_t data;
-		|		BUS_DVI_READ(data);
-		|		data >>= 32;
-		|
-		|		state->hramhi[ahi] = (data >> 14) & 0xf;
-		|		state->hramlo[alo] = (data >> 10) & 0xf;
-		|		
-		|	}
 		|
 		|	if (!PIN_BIG=>) {
 		|		q |= (BITSPC(1) ^ BITNAM(12) ^ BITOFF(17)) << (11- 0);

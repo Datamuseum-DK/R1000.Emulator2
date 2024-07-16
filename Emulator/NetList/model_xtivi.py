@@ -47,26 +47,24 @@ class XTIVI(PartFactory):
         file.fmt('''
 		|	unsigned tvoe = 0xff;
 		|
-		|	if (!PIN_EN=>) {
-		|		unsigned tivi;
-		|		BUS_TIVI_READ(tivi);
+		|	unsigned tivi;
+		|	BUS_TIVI_READ(tivi);
 		|
-		|		switch(tivi & 3) {
-		|		case 0x0: tvoe &= 0xf7; break;
-		|		case 0x1: tvoe &= 0xfb; break;
-		|		case 0x2: tvoe &= 0xfd; break;
-		|		case 0x3: tvoe &= 0xfe; break;
-		|		}
+		|	switch(tivi & 3) {
+		|	case 0x0: tvoe &= 0xf7; break;
+		|	case 0x1: tvoe &= 0xfb; break;
+		|	case 0x2: tvoe &= 0xfd; break;
+		|	case 0x3: tvoe &= 0xfe; break;
+		|	}
 		|
-		|		switch(tivi & 0xc) {
-		|		case 0x0: tvoe &= 0x7f; break;
-		|		case 0x4: tvoe &= 0xbf; break;
-		|		case 0x8: tvoe &= 0xdf; break;
-		|		case 0xc:
-		|			tvoe &= 0xef;
-		|			tvoe |= 0x0f;
-		|			break;
-		|		}
+		|	switch(tivi & 0xc) {
+		|	case 0x0: tvoe &= 0x7f; break;
+		|	case 0x4: tvoe &= 0xbf; break;
+		|	case 0x8: tvoe &= 0xdf; break;
+		|	case 0xc:
+		|		tvoe &= 0xef;
+		|		tvoe |= 0x0f;
+		|		break;
 		|	}
 		|	if (!(tvoe & 0x40)) {
 		|		tvoe &= 0x7f;
@@ -75,13 +73,6 @@ class XTIVI(PartFactory):
 		|		tvoe &= 0xf7;
 		|	}
 		|	output.tvoe = tvoe;
-		|''')
-
-    def doit_idle(self, file):
-        file.fmt('''
-		|	if (PIN_EN=>) {
-		|		next_trigger(PIN_EN.negedge_event());
-		|	}
 		|''')
 
 def register(part_lib):

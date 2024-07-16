@@ -14,7 +14,6 @@ class XMEMMON(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "MSTRT", 0, 4))
-        self.sig_left(ChipSig("-->+", "DMHLD"))
         self.sig_left(ChipSig("-->+", "LABR"))
         self.sig_left(ChipSig("-->+", "LEABR"))
         self.sig_left(ChipSig("-->+", "EABR"))
@@ -27,7 +26,6 @@ class XMEMMON(FChip):
 
         self.sig_right(ChipSig("+-->", "PRMT", 0, 7))
 
-        self.sig_left(ChipSig("-->+", "DMCTL"))
         self.sig_left(ChipSig("-->+", "SCKE"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
@@ -35,7 +33,6 @@ class XMEMMON(FChip):
         self.sig_left(ChipSig("-->+", "CNDSL", 0, 6))
 
         self.sig_left(ChipSig("-->+", "BDHIT", 0, 3))
-        self.sig_left(ChipSig("-->+", "DGHWE"))
         self.sig_left(ChipSig("-->+", "PGMOD"))
 
 

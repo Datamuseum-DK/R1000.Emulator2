@@ -54,8 +54,6 @@ class XFIUROV(FChip):
 
         self.sig_right(ChipSig("+<--", "QFIOE"))
 
-        self.sig_right(ChipSig("+<--", "PDIAG"))
-
         self.finish()
 
 def register():

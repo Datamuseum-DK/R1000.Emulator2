@@ -173,7 +173,33 @@ load_hram_1(const struct diagproc *dp)
 		ptr[n] ^= (b2 ^ b7) << 1;
 		ptr[n] ^= (b3 ^ b6) << 0;
 	}
-	sc_tracef(dp->name, "Turbo LOAD_HRAM_1._FIU");
+	sc_tracef(dp->name, "Turbo LOAD_HRAM_1.FIU");
+	return ((int)DIPROC_RESPONSE_DONE);
+#endif
+}
+
+static int
+load_counter(const struct diagproc *dp)
+{
+	fiu_ptr = vbe16dec(dp->ram + 0x28);
+#if !defined(HAS_Z025) || !defined(HAS_Z026)
+	(void)dp;
+	return (0);
+#else
+	struct ctx *ctx;
+	uint32_t *ptr;
+
+	ctx = CTX_Find(COMP_Z025);
+	AN(ctx);
+	ptr = (unsigned *)(void*)(ctx + 1);
+	*ptr = vbe16dec(dp->ram + 0x26);
+
+	ctx = CTX_Find(COMP_Z026);
+	AN(ctx);
+	ptr = (unsigned *)(void*)(ctx + 1);
+	*ptr = vbe16dec(dp->ram + 0x28);
+
+	sc_tracef(dp->name, "Turbo LOAD_COUNTER.FIU");
 	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
@@ -181,7 +207,15 @@ load_hram_1(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_fiu(const struct diagproc *dp)
 {
+	if (dp->dl_hash == LOAD_COUNTER_FIU_HASH) {
+		return (load_counter(dp));
+	}
+	if (0 && dp->dl_hash == INIT_MRU_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo INIT_MRU.FIU");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 	if (dp->dl_hash == CLEAR_PARITY_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo CLEAR_PARITY.FIU");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_HRAM_32_0_FIU_HASH) {
@@ -199,10 +233,6 @@ diagproc_turbo_fiu(const struct diagproc *dp)
 		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.FIU");
 		*dp->ip = 0x3;
 		return(diag_load_novram(dp, "R1000_FIU_NOVRAM", 0, 0x27, 21));
-	}
-	if (dp->dl_hash == LOAD_COUNTER_FIU_HASH) {
-		fiu_ptr = 0x100;
-		return (0);
 	}
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_FIU_HASH ||
 	    dp->dl_hash == 0x00001045) {

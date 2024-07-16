@@ -43,7 +43,6 @@ class XMEMMON(PartFactory):
 
     def sensitive(self):
         yield "BUS_MSTRT_SENSITIVE()"
-        yield "PIN_DMHLD"
         yield "PIN_LABR"
         yield "PIN_LEABR"
         yield "PIN_EABR"
@@ -52,7 +51,6 @@ class XMEMMON(PartFactory):
         yield "PIN_H2.pos()"
         yield "BUS_CNDSL_SENSITIVE()"
         yield "BUS_BDHIT_SENSITIVE()"
-        yield "PIN_DGHWE"
         yield "PIN_PGMOD"
 
     def state(self, file):
@@ -112,14 +110,9 @@ class XMEMMON(PartFactory):
         super().doit(file)
 
         file.fmt('''
-		|	bool diag_mctl = PIN_DMCTL=>;
 		|	unsigned mstart;
 		|	BUS_MSTRT_READ(mstart);
-		|	if (PIN_DMHLD=>) {
-		|		state->qms = mstart ^ 0x1e;
-		|	} else {
-		|		state->qms = (mstart & 1) | 0x1e;
-		|	}
+		|	state->qms = mstart ^ 0x1e;
 		|
 		|	unsigned condsel;
 		|	BUS_CNDSL_READ(condsel);
@@ -160,7 +153,7 @@ class XMEMMON(PartFactory):
 		|	prmda |= board_hit << 5;
 		|	prmda |= state->init_mru_d << 4;
 		|	prmda |= (output.omq & 0xc);
-		|	prmda |= PIN_DGHWE=> << 1;
+		|	prmda |= 1 << 1;
 		|	prmda |= PIN_PGMOD=> << 0;
 		|	unsigned prmd = state->promd[prmda];
 		|
@@ -220,7 +213,7 @@ class XMEMMON(PartFactory):
 		|		csa_oor_next = PIN_CSAOOR=>;
 		|	}
 		|
-		|	if (pos && !PIN_SFSTP=> && PIN_DMHLD=>) {
+		|	if (pos && !PIN_SFSTP=>) {
 		|		state->scav_trap = scav_trap_next;
 		|		state->cache_miss = cache_miss_next;
 		|		state->csa_oor = csa_oor_next;
@@ -336,9 +329,7 @@ class XMEMMON(PartFactory):
 		|	output.logrw = state->logrw;
 		|	output.logrwn = !(output.logrw && memcyc1);
 		|
-		|	if (diag_mctl) {
-		|		output.memct = 0xf;
-		|	} else if (memcyc1) {
+		|	if (memcyc1) {
 		|		output.memct = state->lcntl;
 		|	} else {
 		|		output.memct = prmo & 0xf;
@@ -353,7 +344,7 @@ class XMEMMON(PartFactory):
 		|	prmz = state->promz[promza];
 		|	output.prmz = prmz;
 		|	bool contin = (prmz >> 5) & 1;
-		|	output.contin = !(!diag_mctl && contin);
+		|	output.contin = !(contin);
 		|	output.wrscav = (prmz >> 2) & 1;
 		|	output.sparer = !(state->log_query && state->sparerr);
 		|
@@ -388,7 +379,7 @@ class XMEMMON(PartFactory):
 		|	prmda |= board_hit << 5;
 		|	prmda |= state->init_mru_d << 4;
 		|	prmda |= (output.omq & 0xc);
-		|	prmda |= PIN_DGHWE=> << 1;
+		|	prmda |= 1 << 1;
 		|	prmda |= PIN_PGMOD=> << 0;
 		|	prmd = state->promd[prmda];
 		|	output.setq = (prmd >> 3) & 3;
@@ -398,9 +389,9 @@ class XMEMMON(PartFactory):
 		|		output.pgstq |= 1;
 		|	if (!state->drive_mru || !(prmd & 0x80))
 		|		output.pgstq |= 2;
-		|	output.rtvnxt = !(!diag_mctl && state->rtv_next);
-		|	output.memcnd = !(!diag_mctl && state->memcnd);
-		|	output.cndtru = !(!diag_mctl && state->cndtru);
+		|	output.rtvnxt = !(state->rtv_next);
+		|	output.memcnd = !(state->memcnd);
+		|	output.cndtru = !(state->cndtru);
 		|	output.nohit = board_hit != 0xf;
 		|
 		|	prmta = mar_cntl << 5;

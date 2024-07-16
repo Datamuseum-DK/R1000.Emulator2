@@ -168,15 +168,6 @@ class XFIUROTV(PartFactory):
 		|
 		|	output.qr = tvo;
 		|
-		|#ifdef BUS_QFIP_WRITE
-		|	output.z_fip = PIN_FIPOE=>;
-		|	if (!output.z_fip) {
-		|		output.fip = odd_parity64(out);
-		|		if (PIN_PDIAG=>)
-		|			output.fip ^= 0xff;
-		|	}
-		|#endif
-		|
 		|#ifdef BUS_QFI_WRITE
 		|	output.z_qfi = PIN_QFIOE=>;
 		|	if (!output.z_qfi) {
