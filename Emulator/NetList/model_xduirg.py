@@ -57,6 +57,8 @@ class XDUIRG(PartFactory):
 
         file.fmt('''
 		|	uint8_t prom[512];
+		|	uint8_t zeros;
+		|	uint8_t ones;
 		|''')
 
     def init(self, file):
@@ -64,6 +66,8 @@ class XDUIRG(PartFactory):
         file.fmt('''
 		|	load_programmable(this->name(),
 		|	    state->prom, sizeof state->prom, arg);
+		|	state->zeros = 0xff;
+		|	state->ones = 0x00;
 		|''')
 
     def doit(self, file):
@@ -76,6 +80,8 @@ class XDUIRG(PartFactory):
 		|	adr |= PIN_H1=>;
 		|	if (PIN_CLK.posedge()) {
 		|		output.d = state->prom[adr];
+		|		state->zeros &= output.d;
+		|		state->ones |= output.d;
 		|	}
 		|''')
 

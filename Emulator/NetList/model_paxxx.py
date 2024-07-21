@@ -48,6 +48,8 @@ class PAxxx(PartFactory):
 
         file.fmt('''
 		|	uint8_t prom[512];
+		|	uint8_t zeros;
+		|	uint8_t ones;
 		|	bool asap;
 		|''')
 
@@ -63,6 +65,8 @@ class PAxxx(PartFactory):
 		|	if (state->asap) {
 		|		std::cerr << "ASAP " << arg << " " << this->name() << "\\n";
 		|	}
+		|	state->zeros = 0xff;
+		|	state->ones = 0x00;
 		|''')
 
     def doit(self, file):
@@ -104,6 +108,8 @@ class XPAxxxL(PartFactory):
 
         file.fmt('''
 		|	uint8_t prom[512];
+		|	uint8_t zeros;
+		|	uint8_t ones;
 		|''')
 
     def sensitive(self):
@@ -115,6 +121,8 @@ class XPAxxxL(PartFactory):
         file.fmt('''
 		|	load_programmable(this->name(),
 		|	    state->prom, sizeof state->prom, arg);
+		|	state->zeros = 0xff;
+		|	state->ones = 0x00;
 		|''')
 
     def doit(self, file):
@@ -125,6 +133,8 @@ class XPAxxxL(PartFactory):
 		|
 		|	BUS_A_READ(adr);
 		|	output.y = state->prom[adr];
+		|	state->zeros &= output.y;
+		|	state->ones |= output.y;
 		|''')
 
 def register(part_lib):
