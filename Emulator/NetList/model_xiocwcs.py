@@ -60,7 +60,6 @@ class XIOCWCS(PartFactory):
     def sensitive(self):
         yield "PIN_Q4.pos()"
         yield "PIN_DGADR"
-        yield "PIN_WE.pos()"
         yield "BUS_UADR_SENSITIVE()"
         yield "PIN_TRRDD"
         yield "PIN_TRRDA"
@@ -109,9 +108,6 @@ class XIOCWCS(PartFactory):
 		|			state->ctr = 0;
 		|		} else if (PIN_CTRCNT=>) {
 		|			// Hold
-		|		} else if (PIN_CTRUP=>) {
-		|			// Count Up
-		|			state->ctr += 1;
 		|		} else {
 		|			// Count Down
 		|			state->ctr += 0xffff;
@@ -179,9 +175,6 @@ class XIOCWCS(PartFactory):
 		|		output.fen = (1 << fen) ^ 0xf;
 		|	}
 		|
-		|	if (PIN_WE.posedge()) {
-		|		state->ram[uadr] = state->uir;
-		|	}
 		|	if (!PIN_TRRDD=>) {
 		|		output.z_dgo = false;
 		|		output.dgo = state->tram[state->tracnt];

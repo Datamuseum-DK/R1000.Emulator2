@@ -50,3 +50,4 @@ def register():
     yield XREG(9)
     yield XREG(16)
     yield XREG(32)
+    yield XREG(64)

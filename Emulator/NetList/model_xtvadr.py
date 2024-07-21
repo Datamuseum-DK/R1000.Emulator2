@@ -44,7 +44,6 @@ class XTVADR(PartFactory):
     def sensitive(self):
         yield "PIN_Q4"
         yield "PIN_AEN"
-        yield "PIN_DON"
         yield "PIN_DOFF"
         yield "BUS_ALU"
 
@@ -52,7 +51,6 @@ class XTVADR(PartFactory):
         yield from self.event_or(
             "idle_event",
             "PIN_AEN",
-            "PIN_DON",
             "PIN_DOFF",
         )
 
@@ -67,7 +65,7 @@ class XTVADR(PartFactory):
         file.fmt('''
 		|	bool q4pos = PIN_Q4.posedge();
 		|
-		|	output.adre = !(!(PIN_AEN=> && PIN_DON=>) && PIN_DOFF=>);
+		|	output.adre = !(!(PIN_AEN=>) && PIN_DOFF=>);
 		|	output.z_adr = output.adre;
 		|
 		|	if (q4pos) {

@@ -60,7 +60,7 @@ class XS52MISC(PartFactory):
         file.fmt('''
 		|	if (!PIN_TCLR=>) {
 		|		state->treg = 0;
-		|		output.tq = state->treg;
+		|		output.fo7 = state->treg >> 3;
 		|	}
 		|
 		|	if (PIN_CLK.posedge()) {
@@ -115,9 +115,10 @@ class XS52MISC(PartFactory):
 		|			break;
 		|		case 3:
 		|			BUS_TIN_READ(state->treg);
+		|			state->treg ^= 0x4;
 		|			break;
 		|		}
-		|		output.tq = state->treg;
+		|		output.fo7 = state->treg >> 3;
 		|
 		|
 		|		unsigned lmode;
@@ -133,8 +134,7 @@ class XS52MISC(PartFactory):
 		|		case 2:
 		|			state->lreg >>= 1;
 		|			state->lreg &= 0x7;
-		|			if (PIN_LSIN=>)
-		|				state->lreg |= 0x8;
+		|			state->lreg |= 0x8;
 		|			break;
 		|		case 3:
 		|			BUS_LIN_READ(state->lreg);

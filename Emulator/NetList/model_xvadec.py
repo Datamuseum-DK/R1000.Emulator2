@@ -43,13 +43,11 @@ class XVADEC(PartFactory):
 
     def sensitive(self):
         yield "PIN_Q1"
-        yield "PIN_AODON"
 
     def private(self):
         ''' private variables '''
         yield from self.event_or(
             "idle_event",
-            "PIN_AODON",
             "PIN_Q1.posedge_event()",
         )
 
@@ -63,9 +61,7 @@ class XVADEC(PartFactory):
 		|	output.loop = true;
 		|	output.prod = true;
 		|	output.zero = true;
-		|	if (!PIN_AODON=>) {
-		|		output.a = false;
-		|	} else if (!PIN_Q1=>) {
+		|	if (!PIN_Q1=>) {
 		|		output.a = false;
 		|	} else if (a == 0x28) {
 		|		output.loop = false;

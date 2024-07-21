@@ -54,7 +54,6 @@ class XSEQWCS(PartFactory):
         yield "PIN_PDCK.pos()"
         yield "PIN_WE.pos()"
         yield "PIN_OE"
-        yield "PIN_CLR"
         yield "PIN_DSP0"
 
     def doit(self, file):
@@ -109,12 +108,6 @@ class XSEQWCS(PartFactory):
 		|#define WCS2SR(wcsbit, srnam, srbit) srnam |= ((state->wcs >> (41 - wcsbit)) & 1) << (7 - srbit);
 		|#define SR2WCS(wcsbit, srnam, srbit) state->wcs |= ((srnam >> (7 - srbit)) & 1) << (41 - wcsbit);
 		|	unsigned um, din, tmp, ua;
-		|
-		|	if (!PIN_CLR=>) {
-		|		state->srd2 = 0;
-		|		state->wcs = 0;
-		|		PERMUTE(SR2WCS)
-		|	}
 		|
 		|	if (PIN_CLK.posedge()) {
 		|		BUS_UM_READ(um);

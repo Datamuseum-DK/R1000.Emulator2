@@ -51,7 +51,6 @@ class XVALWCS(PartFactory):
     def sensitive(self):
         yield "BUS_DGI"
         yield "PIN_DUAS"
-        yield "PIN_FPA"
         yield "BUS_UAC"
         yield "BUS_UAD"
         yield "PIN_UCLK.pos()"

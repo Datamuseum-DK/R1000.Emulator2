@@ -45,10 +45,8 @@ class XTSPC(PartFactory):
         yield "PIN_CLK"
         yield "BUS_MARCTL"
         yield "BUS_B"
-        yield "PIN_FSP"
         yield "PIN_TAEN"
         yield "PIN_VAEN"
-        yield "PIN_DON"
         yield "PIN_DOFF"
 
     def private(self):
@@ -57,7 +55,6 @@ class XTSPC(PartFactory):
             "idle_event",
             "PIN_TAEN",
             "PIN_VAEN",
-            "PIN_DON",
             "PIN_DOFF",
         )
 
@@ -75,7 +72,7 @@ class XTSPC(PartFactory):
 		|	bool pos = PIN_CLK.posedge();
 		|
 		|	output.aspe = !(
-		|		!(PIN_TAEN=> && PIN_VAEN=> && PIN_DON=>) &&
+		|		!(PIN_TAEN=> && PIN_VAEN=>) &&
 		|		PIN_DOFF=>
 		|	);
 		|	output.z_asp = output.aspe;

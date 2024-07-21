@@ -45,13 +45,11 @@ class XTASIDE(PartFactory):
         ''' private variables '''
         yield from self.event_or(
             "nolat_event",
-            "PIN_AODIAG",
             "BUS_UA",
             "BUS_LOOP",
         )
         yield from self.event_or(
             "lat_event",
-            "PIN_AODIAG",
             "BUS_UA",
             #"BUS_C",
             "PIN_LE",
@@ -64,7 +62,6 @@ class XTASIDE(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_AODIAG"
         yield "BUS_UA"
         yield "BUS_LOOP"
 
@@ -82,7 +79,7 @@ class XTASIDE(PartFactory):
 		|		BUS_C_READ(state->alat);
 		|	}
 		|	BUS_UA_READ(uir_a);
-		|	if ((uir_a & 0x3c) != 0x28 || !PIN_AODIAG) {
+		|	if ((uir_a & 0x3c) != 0x28) {
 		|		a = state->alat;
 		|		is_lat = true;
 		|	} else if (uir_a == 0x28) {

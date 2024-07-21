@@ -152,3 +152,4 @@ def register(part_lib):
     part_lib.add_part("XREG9", ModelXreg("XREG9"))
     part_lib.add_part("XREG16", ModelXreg("XREG16"))
     part_lib.add_part("XREG32", ModelXreg("XREG32"))
+    part_lib.add_part("XREG64", ModelXreg("XREG64"))
