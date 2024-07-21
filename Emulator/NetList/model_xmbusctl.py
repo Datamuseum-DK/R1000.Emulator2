@@ -49,7 +49,7 @@ class XMBUSCTL(PartFactory):
         file.fmt('''
 		|
 		|	output.exthit = !(PIN_XHITA=> && PIN_XHITB=>);
-		|	bool high_board = PIN_HIBOARD=>;
+		|	bool high_board = !PIN_LOBOARD=>;
 		|	bool b_tvdrv = PIN_TVDRV=>;
 		|	bool b_vdrv = PIN_VDRV=>;
 		|	bool ahit = PIN_AHIT=>;

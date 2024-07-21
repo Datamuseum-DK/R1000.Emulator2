@@ -18,7 +18,7 @@ class XM28(FChip):
         self.sig_left(ChipSig("-->+", "H1"))
         self.sig_left(ChipSig("-->+", "MC2"))
         self.sig_left(ChipSig("-->+", "MC2N"))
-        self.sig_left(ChipSig("-->+", "HIGH"))
+        self.sig_left(ChipSig("-->+", "LOBRD"))
         self.sig_left(ChipSig("-->+", "PSET", 0, 3))
         self.sig_left(ChipSig("-->+", "CMD", 0, 3))
         self.sig_left(ChipSig("-->+", "AEH"))

@@ -22,14 +22,14 @@ class XLRU(FChip):
         self.sig_left(ChipSig("-->+", "NMAT"))
         self.sig_left(ChipSig("-->+", "H1"))
         self.sig_left(ChipSig("-->+", "LRUP"))
-        self.sig_left(ChipSig("-->+", "MRIF"))
+        self.sig_left(ChipSig("-->+", "MRI7"))
         self.sig_left(ChipSig("-->+", "LRI", 0, 3))
 
         self.sig_right(ChipSig("+-->", "LOGQ"))
         self.sig_right(ChipSig("+-->", "HIT"))
         self.sig_right(ChipSig("+===", "HLRU", 0, 3))
         self.sig_right(ChipSig("+-->", "WRD", 0, 5))
-        self.sig_right(ChipSig("+<--", "HIGH"))
+        self.sig_right(ChipSig("+<--", "LOWB"))
         self.sig_right(ChipSig("+<--", "PHYS", 0, 3))
 
         self.finish()

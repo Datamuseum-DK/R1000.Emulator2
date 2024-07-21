@@ -40,6 +40,71 @@ from net import Net
 from node import Node
 from component import Component
 
+class BRAM(PartFactory):
+    ''' 1MEGxN DRAM '''
+
+    autopin = True
+
+    def state(self, file):
+        file.fmt('''
+		|	uint16_t bitc[1 << 20];
+		|	uint64_t bitt[1 << 20];
+		|	uint64_t bitv[1 << 20];
+		|	unsigned ras, cas;
+		|	uint16_t cdreg, cqreg;
+		|	uint64_t tdreg, tqreg;
+		|	uint64_t vdreg, vqreg;
+		|''')
+
+    def sensitive(self):
+        yield "PIN_RAS"
+        yield "PIN_CAS"
+        yield "PIN_QCOE"
+        yield "PIN_DCK.pos()"
+        yield "PIN_ICK.pos()"
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
+
+        file.fmt('''
+		|	uint32_t adr = 0;
+		|
+		|	BUS_A_READ(adr);
+		|
+		|	if (PIN_DCK.posedge()) {
+		|		BUS_DC_READ(state->cdreg);
+		|		BUS_DT_READ(state->tdreg);
+		|		BUS_DV_READ(state->vdreg);
+		|	}
+		|	if (PIN_RAS.negedge())
+		|		state->ras = adr;
+		|	if (PIN_CAS.negedge()) {
+		|		state->cas = adr;
+		|		adr = (state->cas << 10) | state->ras;
+		|		if (PIN_WE=>) {
+		|			state->bitc[adr] = state->cdreg;
+		|			state->bitt[adr] = state->tdreg;
+		|			state->bitv[adr] = state->vdreg;
+		|		}
+		|	}
+		|	adr = (state->cas << 10) | state->ras;
+		|	if (PIN_ICK.posedge() && !PIN_CAS=>) {
+		|		state->cqreg = state->bitc[adr];
+		|		state->tqreg = state->bitt[adr];
+		|		state->vqreg = state->bitv[adr];
+		|	}
+		|	output.z_qc = PIN_QCOE=>;
+		|	output.z_qt = output.z_qc;
+		|	output.z_qv = output.z_qc;
+		|	if (!output.z_qc) {
+		|		output.qc = state->cqreg;
+		|		output.qt = state->tqreg;
+		|		output.qv = state->vqreg;
+		|	}
+		|''')
+
+
+
 class DRAM1MEGCLK(PartFactory):
     ''' 1MEGxN DRAM '''
 
@@ -240,3 +305,4 @@ def register(part_lib):
     part_lib.add_part("XDRAM", PartModelDQ("XDRAM", DRAM1MEGWIDE))
     part_lib.add_part("XERAM", PartModelDQ("XERAM", DRAM1MEGCLK))
     part_lib.add_part("XFRAM", PartModelDQ("XFRAM", DRAM1MEGCLK))
+    part_lib.add_part("XBRAM", PartModelDQ("XBRAM", BRAM))

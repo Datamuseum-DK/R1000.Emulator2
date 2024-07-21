@@ -44,13 +44,13 @@ clear_tagstore_m32(const struct diagproc *dp)
 static int
 fill_memory_m32(const struct diagproc *dp)
 {
-#if !defined(HAS_Z006) || !defined(HAS_Z007) || !defined(HAS_Z008) || \
-    !defined(HAS_Z009) || !defined(HAS_Z010) || !defined(HAS_Z011)
+#if !defined(HAS_Z027) || !defined(HAS_Z028)
 	(void)dp;
 	return (0);
 #else
 	struct ctx *ctx;
-	uint64_t *ptr, typ, val, cbit;
+	uint16_t *ptrc;
+	uint64_t typ, val, cbit, *ptrt, *ptrv;
 	int i;
 
 	typ = vbe64dec(dp->ram + 0x18);		// P18IS8 DATA.TYP
@@ -59,47 +59,29 @@ fill_memory_m32(const struct diagproc *dp)
 
 	// P28IS1 DATA.VPAR is loaded into DREGVP but not stored anywhere.
 
-	// RAMAT
-	ctx = CTX_Find(COMP_Z006);
+	// RAMA
+	ctx = CTX_Find(COMP_Z028);
 	AN(ctx);
-	ptr = (uint64_t *)(void*)(ctx + 1);
-	for (i = 0; i < 1<<20; i++)
-		ptr[i] = typ;
+	ptrc = (uint16_t *)(void*)(ctx + 1);
+	ptrt = (uint64_t *)(void*)(ptrc + (1<<20));
+	ptrv = (uint64_t *)(void*)(ptrt + (1<<20));
+	for (i = 0; i < 1<<20; i++) {
+		ptrc[i] = cbit;
+		ptrt[i] = typ;
+		ptrv[i] = val;
+	}
 
-	// RAMAV
-	ctx = CTX_Find(COMP_Z007);
+	// RAMB
+	ctx = CTX_Find(COMP_Z027);
 	AN(ctx);
-	ptr = (uint64_t *)(void*)(ctx + 1);
-	for (i = 0; i < 1<<20; i++)
-		ptr[i] = val;
-
-	// RAMAC
-	ctx = CTX_Find(COMP_Z008);
-	AN(ctx);
-	ptr = (uint64_t *)(void*)(ctx + 1);
-	for (i = 0; i < 1<<20; i++)
-		ptr[i] = cbit;
-
-	// RAMBT
-	ctx = CTX_Find(COMP_Z009);
-	AN(ctx);
-	ptr = (uint64_t *)(void*)(ctx + 1);
-	for (i = 0; i < 1<<20; i++)
-		ptr[i] = typ;
-
-	// RAMBV
-	ctx = CTX_Find(COMP_Z010);
-	AN(ctx);
-	ptr = (uint64_t *)(void*)(ctx + 1);
-	for (i = 0; i < 1<<20; i++)
-		ptr[i] = val;
-
-	// RAMBC
-	ctx = CTX_Find(COMP_Z011);
-	AN(ctx);
-	ptr = (uint64_t *)(void*)(ctx + 1);
-	for (i = 0; i < 1<<20; i++)
-		ptr[i] = cbit;
+	ptrc = (uint16_t *)(void*)(ctx + 1);
+	ptrt = (uint64_t *)(void*)(ptrc + (1<<20));
+	ptrv = (uint64_t *)(void*)(ptrt + (1<<20));
+	for (i = 0; i < 1<<20; i++) {
+		ptrc[i] = cbit;
+		ptrt[i] = typ;
+		ptrv[i] = val;
+	}
 
 	sc_tracef(dp->name, "Turbo FILL_MEMORY.M32");
 	return ((int)DIPROC_RESPONSE_DONE);

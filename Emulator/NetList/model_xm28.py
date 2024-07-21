@@ -78,7 +78,7 @@ class XM28(PartFactory):
 		|	bool blhit = PIN_BLH=>;
 		|	bool miss = aehit && alhit && behit && blhit;
 		|	bool exthit = PIN_EHIT=>;
-		|	bool high_board = PIN_HIGH=>;
+		|	bool high_board = !PIN_LOBRD=>;
 		|	unsigned cmd;
 		|	BUS_CMD_READ(cmd);
 		|	bool mcyc2 = PIN_MC2=>;
@@ -185,7 +185,7 @@ class XM28(PartFactory):
 		|			}
 		|		} else if (q1pos) {
 		|			output.da2sl = false;
-		|			output.daa1d = PIN_LAR2=>;
+		|			output.daa1d = !PIN_LAR2=>;
 		|			output.daa2d = PIN_LAR3=>;
 		|		} else {	// q3pos
 		|
@@ -196,7 +196,7 @@ class XM28(PartFactory):
 		|
 		|			output.da2sl = miss && (((cmd & 0x6) == 0x4) || ((cmd & 0xc) == 0x0));
 		|
-		|			output.daa1d = miss;
+		|			output.daa1d = !miss;
 		|
 		|			output.daa2d = behit && aehit && (
 		|			    ( !alhit ) ||

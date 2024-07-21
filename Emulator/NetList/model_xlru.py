@@ -109,13 +109,13 @@ class XLRU(PartFactory):
 		|				state->lrub -= 1;
 		|			state->lrub ^= 0xf;
 		|		} else {
-		|			bool mrif = PIN_MRIF=>;
-		|			if (mrif) {
-		|				state->lrua = 0x0;
-		|				state->lrub = 0x0;
-		|			} else {
+		|			bool mri7 = PIN_MRI7=>;
+		|			if (mri7) {
 		|				state->lrua = 0x8;
 		|				state->lrub = 0x8;
+		|			} else {
+		|				state->lrua = 0x0;
+		|				state->lrub = 0x0;
 		|			}
 		|		}
 		|
@@ -165,7 +165,7 @@ class XLRU(PartFactory):
 		|				set |= 2;
 		|			if (PIN_AB=>)
 		|				set |= 4;
-		|			if (PIN_HIGH=>)
+		|			if (!PIN_LOWB=>)
 		|				set |= 8;
 		|			bool p_phit = set != phys;
 		|

@@ -16,7 +16,6 @@ class XVALWCS(FChip):
         self.sig_left(ChipSig("-->+", "DGI", 0, 7))
         self.sig_left(ChipSig("-->+", "UCLK"))
         self.sig_left(ChipSig("-->+", "USEL"))
-        self.sig_left(ChipSig("-->+", "DGOOE"))
         self.sig_left(ChipSig("-->+", "FPA"))
         self.sig_left(ChipSig("-->+", "WE"))
         self.sig_left(ChipSig("-->+", "UAC", 0, 13))
@@ -24,7 +23,6 @@ class XVALWCS(FChip):
         self.sig_left(ChipSig("-->+", "DUAS"))
 
         self.sig_right(ChipSig("+-->", "UIR", 0, 39))
-        self.sig_right(ChipSig("+===", "DGO", 0, 7))
         self.sig_right(ChipSig("+-->", "ALD"))
         self.sig_right(ChipSig("+-->", "BLD"))
 

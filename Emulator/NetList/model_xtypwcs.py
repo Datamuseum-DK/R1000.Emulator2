@@ -56,7 +56,6 @@ class XTYPWCS(PartFactory):
         yield "BUS_UAD"
         yield "PIN_DUAS"
         yield "PIN_PDCY"
-        yield "PIN_SUIR"
         yield "PIN_USEL"
 
     def doit(self, file):
@@ -178,22 +177,7 @@ class XTYPWCS(PartFactory):
 		|		}
 		|		output.uir = state->wcs;
 		|	}
-		|	output.z_dgo = PIN_SUIR=>;
-		|	if (!PIN_SUIR=>) {
-		|		unsigned dout = 0;
-		|		TOSR();
-		|		dout |= (state->ff1 & 1) << 7;
-		|		dout |= (state->ff2 & 1) << 6;
-		|		dout |= (state->sr0 & 1) << 5;
-		|		dout |= (state->sr1 & 1) << 4;
-		|		dout |= (state->sr2 & 1) << 3;
-		|		dout |= (state->sr3 & 1) << 2;
-		|		dout |= PIN_PDCY=> << 1;
-		|		dout ^= 0x80;
-		|		dout ^= 0xff;
-		|		dout |= 0x01;
-		|		output.dgo = dout;
-		|	}
+		|
 		|	if (PIN_WE.posedge()) {
 		|		state->ram[state->addr] = state->wcs;
 		|	}

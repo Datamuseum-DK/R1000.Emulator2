@@ -50,7 +50,6 @@ class XVALWCS(PartFactory):
 
     def sensitive(self):
         yield "BUS_DGI"
-        yield "PIN_DGOOE"
         yield "PIN_DUAS"
         yield "PIN_FPA"
         yield "BUS_UAC"
@@ -182,20 +181,6 @@ class XVALWCS(PartFactory):
 		|		state->sr1 = 0;
 		|		state->sr4 = 0;
 		|		TOWCS();
-		|	}
-		|
-		|	output.z_dgo = PIN_DGOOE=>;
-		|	if (!output.z_dgo) {
-		|		TOSR();
-		|		output.dgo = 0;
-		|		output.dgo |= (state->ff1 & 1) << 7;
-		|		output.dgo |= (state->ff2 & 1) << 6;
-		|		output.dgo |= (state->sr1 & 1) << 5;
-		|		output.dgo |= (state->sr2 & 1) << 4;
-		|		output.dgo |= (state->sr4 & 1) << 3;
-		|		output.dgo ^= 0xc0;
-		|		output.dgo ^= 0xff;
-		|		output.dgo |= 0x07;
 		|	}
 		|
 		|	if (PIN_WE.posedge()) {

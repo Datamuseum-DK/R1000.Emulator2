@@ -49,7 +49,6 @@ class XWDR(PartFactory):
 
     def sensitive(self):
         yield "PIN_CLK.pos()"
-        yield "PIN_SCANWDR"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -75,7 +74,8 @@ class XWDR(PartFactory):
 		|			state->parity |= (tmp & 0x02) << 4;
 		|			state->parity |= (tmp & 0x20) >> 4;
 		|		} else if (s0) {
-		|			BUS_DIAG_READ(diag);
+		|			diag = 0xff;
+		|			// BUS_DIAG_READ(diag);
 		|			spill_d = (state->data >> 32) & 1;
 		|			state->data >>= 1;
 		|			spill_p = state->parity & 1;
@@ -125,19 +125,6 @@ class XWDR(PartFactory):
 		|		}
 		|		output.qb = state->data;
 		|		// .P2 and .P6 are swapped and patching DIPROC's tbl is not enough. 
-		|	}
-		|	if (!PIN_SCANWDR=>) {
-		|		diag = 0x03;
-		|		if (state->data & (1ULL<<52))	diag |= 0x80;
-		|		if (state->data & (1ULL<<40))	diag |= 0x40;
-		|		if (state->parity & (1<<4))	diag |= 0x20;
-		|		if (state->data & (1ULL<<24))	diag |= 0x10;
-		|		if (state->data & (1ULL<<12))	diag |= 0x08;
-		|		if (state->data & (1ULL<<0))	diag |= 0x04;
-		|		output.z_diag = false;
-		|		output.diag = ~diag;
-		|	} else {
-		|		output.z_diag = true;
 		|	}
 		|''')
 
