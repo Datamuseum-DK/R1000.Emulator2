@@ -50,8 +50,6 @@ class XTYPWCS(PartFactory):
 
     def sensitive(self):
         yield "PIN_UCLK.pos()"
-        yield "PIN_WE.pos()"
-        yield "BUS_DGI"
         yield "BUS_UAC"
         yield "BUS_UAD"
         yield "PIN_DUAS"
@@ -154,8 +152,7 @@ class XTYPWCS(PartFactory):
 		|			state->wcs |= (1ULL << 63);
 		|			PERMUTE(INVM);
 		|		} else {
-		|			unsigned diag;
-		|			BUS_DGI_READ(diag);
+		|			unsigned diag = 0xff;
 		|			TOSR();
 		|			state->ff1 >>= 1;
 		|			state->ff1 |= ((diag >> 7) & 1) << 7;
@@ -178,9 +175,6 @@ class XTYPWCS(PartFactory):
 		|		output.uir = state->wcs;
 		|	}
 		|
-		|	if (PIN_WE.posedge()) {
-		|		state->ram[state->addr] = state->wcs;
-		|	}
 		|	unsigned csacntl0 = (state->ram[state->addr] >> BUS_UIR_LSB(45)) & 7;
 		|	unsigned csacntl1 = (state->wcs >> BUS_UIR_LSB(45)) & 6;
 		|	output.fpdt = !(

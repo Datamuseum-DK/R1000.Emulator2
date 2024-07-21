@@ -18,7 +18,6 @@ class XCADR(FChip):
         self.sig_left(ChipSig("-->+", "H2"))
         self.sig_left(ChipSig("-->+", "DMODE"))
         self.sig_left(ChipSig("-->+", "DIAG", 0, 3))
-        self.sig_left(ChipSig("-->+", "CSDG", 0, 2))
         self.sig_left(ChipSig("-->+", "A", 0, 5))
         self.sig_left(ChipSig("-->+", "B", 0, 5))
         self.sig_left(ChipSig("-->+", "C", 0, 5))

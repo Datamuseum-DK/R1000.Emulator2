@@ -49,13 +49,11 @@ class XVALWCS(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "BUS_DGI"
         yield "PIN_DUAS"
         yield "BUS_UAC"
         yield "BUS_UAD"
         yield "PIN_UCLK.pos()"
         yield "PIN_USEL"
-        yield "PIN_WE.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -144,8 +142,7 @@ class XVALWCS(PartFactory):
 		|			state->wcs = state->ram[state->addr];
 		|			PERMUTE(INVM);
 		|		} else {
-		|			unsigned diag;
-		|			BUS_DGI_READ(diag);
+		|			unsigned diag = 0xff;
 		|			TOSR();
 		|			if (!PIN_FPA=>) {
 		|				state->sr1 = 0;
@@ -180,10 +177,6 @@ class XVALWCS(PartFactory):
 		|		state->sr1 = 0;
 		|		state->sr4 = 0;
 		|		TOWCS();
-		|	}
-		|
-		|	if (PIN_WE.posedge()) {
-		|		state->ram[state->addr] = state->wcs;
 		|	}
 		|
 		|	output.uir = state->wcs;

@@ -13,7 +13,6 @@ class XVALWCS(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "DGI", 0, 7))
         self.sig_left(ChipSig("-->+", "UCLK"))
         self.sig_left(ChipSig("-->+", "USEL"))
         self.sig_left(ChipSig("-->+", "FPA"))

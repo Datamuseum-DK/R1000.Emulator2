@@ -70,17 +70,9 @@ class XCADR(PartFactory):
 		|	BUS_C_READ(c);
 		|
 		|	bool bot_mux_sel, top_mux_sel, add_mux_sel;
-		|	unsigned csdg;
-		|	BUS_CSDG_READ(csdg);
-		|	if (diag_mode) {
-		|		bot_mux_sel = (csdg >> 2) & 1;
-		|		add_mux_sel = (csdg >> 1) & 1;
-		|		top_mux_sel = !(add_mux_sel && (csdg & 1));
-		|	} else {
-		|		bot_mux_sel = PIN_LBOT=>;
-		|		add_mux_sel = PIN_LTOP=>;
-		|		top_mux_sel = !(add_mux_sel && PIN_LPOP=>);
-		|	}
+		|	bot_mux_sel = PIN_LBOT=>;
+		|	add_mux_sel = PIN_LTOP=>;
+		|	top_mux_sel = !(add_mux_sel && PIN_LPOP=>);
 		|
 		|	unsigned csmux3;
 		|	if (diag_mode)
@@ -224,7 +216,6 @@ class XCADR(PartFactory):
 		|		<< " c " << std::hex << c
 		|		<< " dm " << diag_mode
 		|		<< " diag " << std::hex << diag
-		|		<< " csdg " << std::hex << csdg
 		|		<< " bot " << PIN_LBOT?
 		|		<< " top " << PIN_LTOP?
 		|		<< " pop " << PIN_LPOP?
