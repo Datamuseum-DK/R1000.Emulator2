@@ -14,11 +14,8 @@ class XSEQWCS(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "UA", 0, 13))
-        self.sig_left(ChipSig("-->+", "WE"))
-        self.sig_left(ChipSig("-->+", "DIN", 0, 7))
         self.sig_left(ChipSig("-->+", "UM", 0, 1))
         self.sig_left(ChipSig("-->+", "CLK"))
-        self.sig_left(ChipSig("-->+", "OE"))
         self.sig_left(ChipSig("-->+", "HLR"))
         self.sig_left(ChipSig("-->+", "SCE"))
         self.sig_left(ChipSig("-->+", "DSP0"))
@@ -26,7 +23,6 @@ class XSEQWCS(FChip):
         self.sig_left(ChipSig("-->+", "LMAC"))
 
         self.sig_right(ChipSig("+-->", "UIR", 0, 41))
-        self.sig_right(ChipSig("+===", "DOUT", 0, 7))
         self.sig_right(ChipSig("+-->", "HALT"))
         self.sig_right(ChipSig("+-->", "LLM"))
         self.sig_right(ChipSig("+-->", "LLMI"))

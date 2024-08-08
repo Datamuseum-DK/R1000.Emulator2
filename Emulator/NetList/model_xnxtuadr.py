@@ -43,6 +43,7 @@ class XNXTUADR(PartFactory):
 
     def state(self, file):
         file.fmt('''
+		|	unsigned nxtuadr;	// Z029
 		|	unsigned fiu;
 		|	unsigned other;
 		|	unsigned late_u;
@@ -51,7 +52,7 @@ class XNXTUADR(PartFactory):
 
     def sensitive(self):
         yield "PIN_FIU_CLK.pos()"
-        yield "PIN_LOCAL_CLK.pos()"
+        yield "PIN_LCLK.pos()"
         yield "PIN_Q1not.pos()"
         yield "PIN_DV_U"
         yield "PIN_BAD_HINT"
@@ -59,8 +60,6 @@ class XNXTUADR(PartFactory):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|	unsigned data = 0, sel;
@@ -72,7 +71,7 @@ class XNXTUADR(PartFactory):
 		|		state->fiu &= 0x3fff;
 		|	}	
 		|
-		|	if (PIN_LOCAL_CLK.posedge()) {
+		|	if (PIN_LCLK.posedge()) {
 		|		BUS_LATE_READ(state->late_u);
 		|		sel = 0;
 		|		if (!PIN_U_MUX_SEL) sel |= 4;
@@ -107,10 +106,10 @@ class XNXTUADR(PartFactory):
 		|	}
 		|
 		|	if (!PIN_DV_U) {
-		|		BUS_DIAG_READ(data);
-		|	} else if (PIN_BAD_HINT) {
+		|		data = state->nxtuadr;
+		|	} else if (PIN_BAD_HINT=>) {
 		|		data = state->other;
-		|	} else if (PIN_LATE_MACRO) {
+		|	} else if (PIN_LMAC=>) {
 		|		// Not tested by expmon_test_seq ?
 		|		data = state->late_u << 3;
 		|		data ^= (7 << 3);

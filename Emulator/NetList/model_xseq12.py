@@ -191,7 +191,7 @@ class XSEQ12(PartFactory):
 		|	output_rofs &= 0xfffff;
 		|
 		|	unsigned cnb;
-		|	if (PIN_CMR=>) {
+		|	if (!PIN_CMR=>) {
 		|		cnb = typ ^ BUS_TYP_MASK;
 		|	} else {
 		|		BUS_FIU_READ(cnb);

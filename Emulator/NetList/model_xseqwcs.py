@@ -52,8 +52,6 @@ class XSEQWCS(PartFactory):
     def sensitive(self):
         yield "PIN_CLK.pos()"
         yield "PIN_PDCK.pos()"
-        yield "PIN_WE.pos()"
-        yield "PIN_OE"
         yield "PIN_DSP0"
 
     def doit(self, file):
@@ -107,7 +105,7 @@ class XSEQWCS(PartFactory):
 		|
 		|#define WCS2SR(wcsbit, srnam, srbit) srnam |= ((state->wcs >> (41 - wcsbit)) & 1) << (7 - srbit);
 		|#define SR2WCS(wcsbit, srnam, srbit) state->wcs |= ((srnam >> (7 - srbit)) & 1) << (41 - wcsbit);
-		|	unsigned um, din, tmp, ua;
+		|	unsigned um, tmp, ua;
 		|
 		|	if (PIN_CLK.posedge()) {
 		|		BUS_UM_READ(um);
@@ -128,47 +126,6 @@ class XSEQWCS(PartFactory):
 		|			if (!(PIN_SCE=> || !PIN_LMAC=>))
 		|				state->srd6 |= 0x10;
 		|			// printf("Load [0x%04x] 0x%016jx %02jx\\n", ua, state->wcs, state->srd6);
-		|			break;
-		|		case 2: // >>
-		|			BUS_DIN_READ(din);
-		|			state->srd0 >>= 1;
-		|			state->srd1 >>= 1;
-		|			state->srd2 >>= 1;
-		|			state->srd3 >>= 1;
-		|			state->srd5 >>= 1;
-		|			state->srd6 >>= 1;
-		|			state->srd0 |= ((din >> 7) & 1) << 7;
-		|			state->srd1 |= ((din >> 6) & 1) << 7;
-		|			state->srd2 |= ((din >> 5) & 1) << 7;
-		|			state->srd3 |= ((din >> 4) & 1) << 7;
-		|			state->srd5 |= ((din >> 2) & 1) << 7;
-		|			state->srd6 |= ((din >> 1) & 1) << 7;
-		|			state->wcs = 0;
-		|			PERMUTE(SR2WCS)
-		|			// printf(">> 0x%016jx {%02jx %02jx %02jx %02jx %02jx %02jx} %02x\\n", state->wcs,
-		|			//     state->srd0, state->srd1, state->srd2, state->srd3, state->srd5, state->srd6, din);
-		|			break;
-		|		case 1: // <<
-		|			state->srd0 <<= 1;
-		|			state->srd1 <<= 1;
-		|			state->srd2 <<= 1;
-		|			state->srd3 <<= 1;
-		|			state->srd5 <<= 1;
-		|			state->srd6 <<= 1;
-		|			state->srd0 &= 0xfe;
-		|			state->srd1 &= 0xfe;
-		|			state->srd2 &= 0xfe;
-		|			state->srd3 &= 0xfe;
-		|			state->srd5 &= 0xfe;
-		|			state->srd6 &= 0xe0;
-		|			state->srd0 |= 1;
-		|			state->srd1 |= 1;
-		|			state->srd2 |= 1;
-		|			state->srd5 |= 1;
-		|			state->wcs = 0;
-		|			PERMUTE(SR2WCS)
-		|			// printf("<< 0x%016jx {%02jx %02jx %02jx %02jx %02jx %02jx}\\n", state->wcs,
-		|			//     state->srd0, state->srd1, state->srd2, state->srd3, state->srd5, state->srd6);
 		|			break;
 		|		case 0: // noop
 		|			break;
@@ -198,21 +155,6 @@ class XSEQWCS(PartFactory):
 		|		output.ras &= ~2;
 		|	else
 		|		output.ras |= 2;
-		|	if (PIN_WE.posedge()) {
-		|		BUS_UA_READ(ua);
-		|		state->ram[ua] = state->wcs;
-		|		// printf("Save [0x%04x] 0x%016jx\\n", ua, state->wcs);
-		|	}
-		|	output.z_dout = PIN_OE=>;
-		|	if (!output.z_dout) {
-		|		output.dout = 0;
-		|		output.dout |= (state->srd0 & 1) << 7;
-		|		output.dout |= (state->srd1 & 1) << 6;
-		|		output.dout |= (state->srd2 & 1) << 5;
-		|		output.dout |= (state->srd3 & 1) << 4;
-		|		output.dout |= (state->srd5 & 1) << 2;
-		|		output.dout |= ((state->srd6 & 0x10) != 0) << 1;
-		|	}
 		''')
 
 def register(part_lib):
