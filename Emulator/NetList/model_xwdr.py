@@ -53,16 +53,12 @@ class XWDR(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|	bool s0 = false, s1 = false, spill_d, spill_p;
 		|	uint16_t diag = 0, tmp;	
 		|
 		|	if (PIN_CLK.posedge()) {
-		|		s0 = s1 = PIN_SCLKEN=> && PIN_DIAGWDREN=> && !PIN_LOADWDR=>;
-		|		s0 |= !PIN_DIAGWDRS0=>;
-		|		s1 |= !PIN_DIAGWDRS1=>;
+		|		s0 = s1 = PIN_SCLKEN=> && true && !PIN_LOADWDR=>;
 		|
 		|		if (s0 && s1) {
 		|			BUS_DB_READ(state->data);

@@ -39,79 +39,39 @@ from part import PartModel, PartFactory
 class XTVSCLK(PartFactory):
     ''' TV state clock '''
 
+    autopin = True
+
     def sensitive(self):
-        yield "PIN_Q3.pos()"
-        yield "PIN_2XE.pos()"
+        yield "PIN_Q4E"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|
-		|	if (state->ctx.job == 1) {
-		|		state->ctx.job = 0;
-		|		PIN_UCLK<=(true);
-		|		PIN_CCLK<=(true);
-		|		PIN_ACLK<=(true);
-		|		PIN_ZCLK<=(true);
-		|		PIN_ARFWE<=(true);
-		|		PIN_BRFWE<=(true);
-		|		next_trigger(PIN_H2.negedge_event());
-		|	} else if (PIN_H2.negedge()) {
-		|		//bool ram_stop = PIN_RMS=>;
-		|		//PIN_ARFCS<=(!(PIN_ACOFF=> && ram_stop));
-		|		//PIN_BRFCS<=(!(PIN_BCOFF=> && ram_stop));
-		|		PIN_ARFCS<=(!PIN_ACOFF=>);
-		|		PIN_BRFCS<=(!PIN_BCOFF=>);
-		|		next_trigger(PIN_H2.posedge_event());
-		|	} else if (PIN_H2.posedge()) {
-		|		if (PIN_ALOFF=>)
-		|			PIN_ARFCS<=(true);
-		|		if (PIN_BLOFF=>)
-		|			PIN_BRFCS<=(true);
-		|		next_trigger(PIN_Q3.posedge_event());
-		|	} else if (PIN_Q3.posedge()) {
+		|	if (PIN_Q4E.negedge()) {
+		|		output.zclk = true;
+		|		output.cclk = true;
+		|		output.aclk = true;
+		|		output.uclk = true;
+		|		output.arfwe = true;
+		|		output.brfwe = true;
+		|	} else if (PIN_Q4E.posedge()) {
 		|		bool uon = PIN_UON=>;
 		|		bool ram_stop = PIN_RMS=>;
-		|
 		|		bool sce = !(PIN_STS=> && ram_stop && PIN_WEL=>);
 		|		bool uena = !(
 		|			(uon && PIN_UOF=>) ||
 		|			(uon && PIN_SFS=>)
 		|		);
-		|		PIN_UCLK<=(!uena);
+		|		output.uclk = !uena;
 		|
-		|		// bool sce = PIN_SCE=>;
-		|		bool zena = !(sce || PIN_ZCE=>);
-		|		PIN_ZCLK<=(!zena);
-		|		bool cena = !(sce || PIN_CCE=>);
-		|		PIN_CCLK<=(!cena);
-		|		bool aena = !(sce || PIN_ACE=>);
-		|		PIN_ACLK<=(!aena);
+		|		output.zclk = sce || PIN_ZCE=>;
+		|		output.cclk = sce || PIN_CCE=>;
+		|		output.aclk = sce || PIN_ACE=>;
 		|
-		|		bool ween = !PIN_H2=> || PIN_DSTOP=>;
-		|		bool arfwe = !(
-		|			PIN_ACOFF=> &&
-		|			!(ween || PIN_ARFWR=>) &&
-		|			ram_stop
-		|		);
-		|		PIN_ARFWE<=(arfwe);
-		|
-		|		bool brfwe = !(
-		|			PIN_BCOFF=> &&
-		|			!(ween || PIN_BRFWR=>) &&
-		|			ram_stop
-		|		);
-		|		PIN_BRFWE<=(brfwe);
-		|
-		|		next_trigger(PIN_2XE.posedge_event());
-		|	} else if (PIN_2XE.posedge()) {
-		|		PIN_ARFWE<=(true);
-		|		PIN_BRFWE<=(true);
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
+		|		bool ween = PIN_DSTOP=>;
+		|		output.arfwe = !(!(ween || PIN_ARFWR=>) && ram_stop);
+		|		output.brfwe = !(!(ween || PIN_BRFWR=>) && ram_stop);
 		|	}
 		|''')
 

@@ -26,7 +26,6 @@ class XTCSA(FChip):
         self.sig_right(ChipSig("+-->", "LDTOP"))
         self.sig_right(ChipSig("+-->", "LDBOT"))
         self.sig_right(ChipSig("+-->", "POPDN"))
-        self.sig_right(ChipSig("+-->", "PDCYC1"))
 
         self.finish()
 

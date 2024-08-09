@@ -17,9 +17,6 @@ class XWDR(FChip):
 
         self.sig_left(ChipSig("-->+", "LOADWDR"))
         self.sig_left(ChipSig("-->+", "SCLKEN"))
-        self.sig_left(ChipSig("-->+", "DIAGWDREN"))
-        self.sig_left(ChipSig("-->+", "DIAGWDRS0"))
-        self.sig_left(ChipSig("-->+", "DIAGWDRS1"))
         self.sig_left(ChipSig("-->+", "CLK"))
 
         self.finish()

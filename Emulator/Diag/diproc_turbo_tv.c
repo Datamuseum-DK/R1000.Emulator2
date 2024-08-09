@@ -379,7 +379,7 @@ diagproc_turbo_typ(const struct diagproc *dp)
 	}
 	if (dp->dl_hash == LOAD_DIAG_COUNTER_TYP_HASH) {
 		typ_ptr = 0x100;
-		return (0);
+		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_REGISTER_FILE_200_TYP_HASH ||
 	    dp->dl_hash == 0x000017c5)

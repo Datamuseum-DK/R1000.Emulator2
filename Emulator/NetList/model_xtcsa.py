@@ -111,7 +111,7 @@ class XTCSA(PartFactory):
 		|	}
 		|
 		|	if (PIN_CSACLK.posedge()) {
-		|		if (PIN_UIRSL0=>) {
+		|		if (!PIN_UIRSL0=>) {
 		|			state->sr = state->output.nve << 4;
 		|			if (load_ctl_top) state->sr |= 0x8;
 		|			if (load_top_bot) state->sr |= 0x4;
@@ -122,7 +122,6 @@ class XTCSA(PartFactory):
 		|			if (PIN_DIAG14=>)
 		|				state->sr |= 0x80;
 		|		}
-		|		output.pdcyc1 = state->sr & 0x01;
 		|	}
 		|
 		|''')

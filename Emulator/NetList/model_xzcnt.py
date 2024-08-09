@@ -53,8 +53,6 @@ class XZCNT(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|	uint64_t data = 0, probe = (1ULL<<63);
 		|

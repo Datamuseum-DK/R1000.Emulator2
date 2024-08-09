@@ -21,9 +21,8 @@ class XMULT(FChip):
         self.sig_right(ChipSig("+<--", "START"))
         self.sig_right(ChipSig("+<--", "SRC", 0, 3))
         self.sig_right(ChipSig("+<--", "Q2"))
-        self.sig_right(ChipSig("+<--", "Q3"))
+        self.sig_right(ChipSig("+<--", "Q4"))
         self.sig_right(ChipSig("+<--", "DST", 0, 1))
-        self.sig_right(ChipSig("+<--", "DGMD"))
 
         self.finish()
 

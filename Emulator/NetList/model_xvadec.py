@@ -57,24 +57,20 @@ class XVADEC(PartFactory):
         file.fmt('''
 		|	unsigned a;
 		|	BUS_A_READ(a);
-		|	output.a = true;
 		|	output.loop = true;
 		|	output.prod = true;
 		|	output.zero = true;
+		|	output.a = false;
 		|	if (!PIN_Q1=>) {
-		|		output.a = false;
 		|	} else if (a == 0x28) {
-		|		output.loop = false;
 		|	} else if (a == 0x29) {
 		|		output.prod = false;
+		|		output.a = true;
 		|	} else if (a == 0x2a) {
-		|		output.zero = false;
 		|	} else if (a == 0x2b) {
-		|	} else {
-		|		output.a = false;
 		|	}
 		|''')
-    def doit_idle(self, file):
+    def xdoit_idle(self, file):
 
         file.fmt('''
 		|	if (!output.a) {

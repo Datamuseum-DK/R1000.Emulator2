@@ -144,10 +144,6 @@ class XVALWCS(PartFactory):
 		|		} else {
 		|			unsigned diag = 0xff;
 		|			TOSR();
-		|			if (!PIN_FPA=>) {
-		|				state->sr1 = 0;
-		|				state->sr4 = 0;
-		|			}
 		|			state->ff1 >>= 1;
 		|			state->ff1 |= ((diag >> 7) & 1) << 7;
 		|			state->ff1 ^= 0x80;
@@ -164,20 +160,11 @@ class XVALWCS(PartFactory):
 		|			state->sr2 |= ((diag >> 4) & 1) << 7;
 		|			state->sr4 >>= 1;
 		|			state->sr4 |= ((diag >> 3) & 1) << 7;
-		|			if (!PIN_FPA=>) {
-		|				state->sr1 = 0;
-		|				state->sr4 = 0;
-		|			}
 		|			TOWCS();
 		|		}
 		|		state->ctx.job = 1;
 		|		next_trigger(5, sc_core::SC_NS);
-		|	} else if (!PIN_FPA=>) {
-		|		TOSR();
-		|		state->sr1 = 0;
-		|		state->sr4 = 0;
-		|		TOWCS();
-		|	}
+		|	} 
 		|
 		|	output.uir = state->wcs;
 		|

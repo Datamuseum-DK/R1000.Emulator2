@@ -39,6 +39,8 @@ from part import PartModel, PartFactory
 class XMULT(PartFactory):
     ''' TYP A-side mux+latch '''
 
+    autopin = True
+
     def state(self, file):
         file.fmt('''
 		|	uint64_t alat;
@@ -50,67 +52,39 @@ class XMULT(PartFactory):
 
     def sensitive(self):
         yield "PIN_OE"
-        # yield "BUS_DST_SENSITIVE()"
+        yield "BUS_DST"
         yield "PIN_Q2.pos()"
-        yield "PIN_Q3.pos()"
+        yield "PIN_Q4.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|#ifdef DO_DLY
-		|	if (state->ctx.job == 2) {
-		|		state->ctx.job = 0;
-		|		BUS_P_Z();
-		|	}
-		|	if (state->ctx.job == 1) {
-		|		state->ctx.job = 0;
-		|		BUS_P_WRITE(state->out);
-		|	}
-		|#endif
-		|	if (!PIN_OE=>) {
+		|	output.z_p = PIN_OE=>;
+		|	if (!output.z_p) {
 		|		unsigned dst;
 		|		uint64_t out; 
 		|		BUS_DST_READ(dst);
 		|		switch(dst) {
 		|		case 0: out = 0; break;
-		|		case 1: out = state->prod << 32; BUS_P_WRITE(out); break;
-		|		case 2: out = state->prod << 16; BUS_P_WRITE(out); break;
-		|		case 3: out = state->prod <<  0; BUS_P_WRITE(out); break;
+		|		case 1: out = state->prod << 32; break;
+		|		case 2: out = state->prod << 16; break;
+		|		case 3: out = state->prod <<  0; break;
 		|		}
 		|		out ^= BUS_P_MASK;
-		|#ifdef DO_DLY
-		|		if (state->out != out) {
-		|			state->ctx.job = 1;
-		|			state->out = out;
-		|			next_trigger(5, sc_core::SC_NS);
-		|		}
-		|#else
-		|		state->out = out;
-		|		BUS_P_WRITE(state->out);
-		|#endif
+		|		output.p = out;
 		|	} 
-		|	if (PIN_OE.posedge()) {
-		|#ifdef DO_DLY
-		|		state->ctx.job = 2;
-		|		next_trigger(5, sc_core::SC_NS);
-		|#else
-		|		BUS_P_Z();
-		|#endif
-		|	}
 		|	if (PIN_Q2.posedge()) {
 		|		BUS_SRC_READ(state->src);
-		|	}
-		|	if (PIN_Q3.posedge()) {
-		|		if (!PIN_START=> && !PIN_DGMD=>) {
+		|		if (!PIN_START=>) {
 		|			BUS_A_READ(state->alat);
 		|			state->alat ^= BUS_A_MASK;
 		|			BUS_B_READ(state->blat);
 		|			state->blat ^= BUS_B_MASK;
 		|		}
+		|	}
 		|
+		|	if (PIN_Q4.posedge()) {
 		|		uint32_t a;
 		|		switch (state->src >> 2) {
 		|		case 0: a = (state->alat >> 48) & 0xffff; break;
@@ -127,24 +101,6 @@ class XMULT(PartFactory):
 		|		}
 		|		state->prod = a * b;
 		|	}
-		|
-		|	TRACE(
-		|		<< " q2 " << PIN_Q2? << " q2^" << PIN_Q2.posedge()
-		|		<< " q3 " << PIN_Q3? << " q3^" << PIN_Q3.posedge()
-		|		<< " start " << PIN_START?
-		|		// << " a " << BUS_A_TRACE()
-		|		// << " b " << BUS_B_TRACE()
-		|		<< " src " << BUS_SRC_TRACE()
-		|		<< " oe " << PIN_OE?
-		|		<< " dst " << BUS_DST_TRACE()
-		|		<< " dgmd " << PIN_DGMD?
-		|		<< std::hex
-		|		<< " al " << state->alat
-		|		<< " bl " << state->blat
-		|		<< " ssrc " << state->src
-		|		<< " prod " << state->prod
-		|		<< " out " << state->out
-		|	);
 		|''')
 
 def register(part_lib):

@@ -43,18 +43,14 @@ class XTYPWCS(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t ram[1<<BUS_UAC_WIDTH];
+		|	uint64_t ram[1<<BUS_UAD_WIDTH];
 		|	unsigned addr;
-		|	uint64_t wcs, ff1, ff2, ff3, sr0, sr1, sr2, sr3;
+		|	uint64_t wcs;
 		|''')
 
     def sensitive(self):
         yield "PIN_UCLK.pos()"
-        yield "BUS_UAC"
         yield "BUS_UAD"
-        yield "PIN_DUAS"
-        yield "PIN_PDCY"
-        yield "PIN_USEL"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -109,69 +105,14 @@ class XTYPWCS(PartFactory):
 		|	MX(44, state->sr3, 5, 0) \\
 		|	MX(45, state->sr3, 6, 0) \\
 		|
-		|#define WCS2SR(wcsbit, srnam, srbit, inv) \\
-		|	srnam |= ((state->wcs >> BUS_UIR_LSB(wcsbit)) & 1) << (7 - srbit);
-		|#define SR2WCS(wcsbit, srnam, srbit, inv) \\
-		|	state->wcs |= ((srnam >> (7 - srbit)) & 1) << BUS_UIR_LSB(wcsbit);
 		|#define INVM(wcsbit, srnam, srbit, inv) state->wcs ^= (uint64_t)inv << BUS_UIR_LSB(wcsbit);
 		|
-		|#define TOSR() \\
-		|	do { \\
-		|		state->ff1 = 0; \\
-		|		state->ff2 = 0; \\
-		|		state->ff3 = 0; \\
-		|		state->sr0 = 0; \\
-		|		state->sr1 = 0; \\
-		|		state->sr2 = 0; \\
-		|		state->sr3 = 0; \\
-		|		PERMUTE(WCS2SR); \\
-		|		state->sr3 |= state->wcs >> 63; \\
-		|	} while (0)
-		|
-		|#define TOWCS() \\
-		|	do { \\
-		|		state->wcs = 0; \\
-		|		PERMUTE(SR2WCS); \\
-		|		state->wcs |= (state->sr3 & 1) << 63; \\
-		|	} while (0)
-		|
-		|	unsigned uad, cnt;
-		|	BUS_UAC_READ(cnt);
-		|	BUS_UAD_READ(uad);
-		|	if (PIN_DUAS=>) {
-		|		uad ^= BUS_UAD_MASK;
-		|	} else {
-		|		uad = BUS_UAD_MASK;
-		|	}
-		|	state->addr = (uad & cnt) & BUS_UAC_MASK;
-		|	state->addr ^= BUS_UAC_MASK;
+		|	BUS_UAD_READ(state->addr);
 		|
 		|	if (PIN_UCLK.posedge()) {
-		|		if (PIN_USEL=>) {
-		|			state->wcs = state->ram[state->addr];
-		|			state->wcs |= (1ULL << 63);
-		|			PERMUTE(INVM);
-		|		} else {
-		|			unsigned diag = 0xff;
-		|			TOSR();
-		|			state->ff1 >>= 1;
-		|			state->ff1 |= ((diag >> 7) & 1) << 7;
-		|			state->ff1 ^= 0x80;
-		|			state->ff2 >>= 1;
-		|			state->ff2 |= ((diag >> 6) & 1) << 7;
-		|			state->ff2 ^= 0x80;
-		|			state->sr0 >>= 1;
-		|			state->sr0 |= (state->ff3 & 1) << 6;
-		|			state->ff3 = ((diag >> 5) & 1);
-		|			state->ff3 ^= 1;
-		|			state->sr1 >>= 1;
-		|			state->sr1 |= ((diag >> 4) & 1) << 7;
-		|			state->sr2 >>= 1;
-		|			state->sr2 |= ((diag >> 3) & 1) << 7;
-		|			state->sr3 >>= 1;
-		|			state->sr3 |= ((diag >> 2) & 1) << 7;
-		|			TOWCS();
-		|		}
+		|		state->wcs = state->ram[state->addr];
+		|		state->wcs |= (1ULL << 63);
+		|		PERMUTE(INVM);
 		|		output.uir = state->wcs;
 		|	}
 		|

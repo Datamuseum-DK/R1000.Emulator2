@@ -14,12 +14,7 @@ class XTYPWCS(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "UCLK"))
-        self.sig_left(ChipSig("-->+", "USEL"))
-        self.sig_left(ChipSig("-->+", "PDCY"))
-        self.sig_left(ChipSig("-->+", "UAC", 0, 13))
         self.sig_left(ChipSig("-->+", "UAD", 0, 13))
-        self.sig_left(ChipSig("-->+", "DUAS"))
-        self.sig_left(ChipSig("-->+", "WE"))
 
         self.sig_right(ChipSig("+-->", "UIR", 0, 46))
         self.sig_right(ChipSig("+-->", "CLIT", 0, 6))
