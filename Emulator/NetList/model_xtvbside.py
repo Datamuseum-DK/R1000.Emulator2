@@ -36,6 +36,78 @@
 
 from part import PartModelDQ, PartFactory
 
+class XVBSIDE(PartFactory):
+    ''' VAL B-side of RF '''
+
+    autopin = True
+
+    def state(self, file):
+        file.fmt('''
+		|	uint64_t bram[1 << BUS_BADR_WIDTH];
+		|	uint64_t b;
+		|''')
+
+    def sensitive(self):
+        yield "BUS_DV"
+        yield "BUS_C"
+        yield "PIN_Q2.neg()"
+        yield "PIN_BWE.pos()"
+        yield "PIN_QVOE"
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
+
+        file.fmt('''
+		|	unsigned badr;
+		|	BUS_BADR_READ(badr);
+		|
+		|	if (PIN_BWE.posedge()) {
+		|		uint64_t tmp;
+		|		BUS_C_READ(tmp);
+		|		state->bram[badr] = tmp;
+		|	}
+		|
+		|	if (!PIN_H2=>) {
+		|		bool oe, oe7;
+		|
+		|		unsigned uirb;
+		|		BUS_UIRB_READ(uirb);
+		|		uirb ^= BUS_UIRB_MASK;
+		|		if (uirb != 0x16) {
+		|			oe = false;
+		|		} else if (!PIN_LHIT=> && !PIN_QVOE=>) { 
+		|			oe = false;
+		|		} else {
+		|			oe = true;
+		|		}
+		|
+		|		bool glit = PIN_GETL=>;
+		|		oe7 = oe || !glit;
+		|
+		|		uint64_t b = 0;
+		|		if (!oe) {
+		|			b |= state->bram[badr] & 0xffffffffffffff00ULL;
+		|		}
+		|		if (!oe7) {
+		|			b |= state->bram[badr] & 0xffULL;
+		|		}
+		|		if (oe || oe7) {
+		|			uint64_t bus;
+		|			BUS_DV_READ(bus);
+		|			bus ^= BUS_DV_MASK;
+		|			if (oe) {
+		|				b |= bus & 0xffffffffffffff00ULL;
+		|			}
+		|			if (oe7) {
+		|				b |= bus & 0xffULL;
+		|			}
+		|		}
+		|		output.b = b;
+		|		output.bmsb = b >> 63;
+		|	}
+		|''')
+
+
 class XTVBSIDE(PartFactory):
     ''' TYP/VAL B-side of RF '''
 
@@ -106,4 +178,5 @@ class XTVBSIDE(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
+    part_lib.add_part("XVBSIDE", PartModelDQ("XVBSIDE", XVBSIDE))
     part_lib.add_part("XTVBSIDE", PartModelDQ("XTVBSIDE", XTVBSIDE))

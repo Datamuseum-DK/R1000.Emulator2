@@ -57,65 +57,24 @@ class XALU(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	unsigned a, b, s, ci;
+		|	struct f181 f181;
 		|
-		|	bool mag = PIN_MAG=>;
-		|	bool m = PIN_M=>;
-		|	ci = PIN_CI=>;
-		|	BUS_A_READ(a);
-		|	BUS_B_READ(b);
-		|	BUS_S_READ(s);
+		|	BUS_A_READ(f181.a);
+		|	BUS_B_READ(f181.b);
+		|	BUS_S_READ(f181.ctl);
+		|	f181.ci = PIN_CI=>;
+		|	f181.ctl |= PIN_MAG=> << 5;
+		|	f181.ctl |= PIN_M=> << 4;
 		|
-		|	s ^= BUS_S_MASK;
-		|
-		|	uint64_t c;
-		|	switch(s & 0x3) {
-		|	case 0x0: c = a; break;
-		|	case 0x1: c = a | b; break;
-		|	case 0x2: c = a | (b^BUS_Y_MASK); break;
-		|	case 0x3: c = BUS_Y_MASK; break;
-		|	}
-		|	c ^= BUS_Y_MASK;
-		|
-		|	uint64_t d;
-		|	switch(s & 0xc) {
-		|	case 0x0: d = 0; break;
-		|	case 0x4: d = a & (b^BUS_Y_MASK); break;
-		|	case 0x8: d = a & b; break;
-		|	case 0xc: d = a; break;
-		|	}
-		|	d ^= BUS_Y_MASK;
-		|
-		|	uint64_t y;
-		|	if (!mag) {
-		|		// TYP board INC/DEC128
-		|		y = (c & 0xff) + (d & 0xff) + ci;
-		|		y &= 0xff;
-		|		y ^= 0x80;
-		|		if (a & 0x80)
-		|			ci = 0;
-		|		else
-		|			ci = 0x100;
-		|		y += (c & (~0xff)) + (d & (~0xff)) + ci;
-		|	} else {
-		|		y = c + d + ci;
-		|	}
-		|
-		|	output.co = (y >> BUS_Y_WIDTH) & 1;
-		|
-		|	if (m) {
-		|		y = c ^ d;
-		|		if (!mag)
-		|			y ^= 0x80;
-		|	}
-		|
+		|	f181_alu(&f181);
+		|	output.co = f181.co;
 		|	output.eq = 0;
-		|	if (!(y & 0xff)) output.eq |= 1;
-		|	if (!(y & 0xff00)) output.eq |= 2;
-		|	if (!(y & 0xff0000)) output.eq |= 4;
-		|	if (!(y & 0xff000000)) output.eq |= 8;
+		|	if (!(f181.o & 0xff)) output.eq |= 1;
+		|	if (!(f181.o & 0xff00)) output.eq |= 2;
+		|	if (!(f181.o & 0xff0000)) output.eq |= 4;
+		|	if (!(f181.o & 0xff000000)) output.eq |= 8;
 		|
-		|	output.y = y ^= BUS_Y_MASK;
+		|	output.y = f181.o ^= BUS_Y_MASK;
 		|''')
 
 def register(part_lib):

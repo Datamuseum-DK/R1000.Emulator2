@@ -28,6 +28,14 @@ uint8_t even_parity(uint8_t);
 uint8_t odd_parity64(uint64_t);
 uint8_t offset_parity(uint64_t);
 
+struct f181 {
+	uint32_t	a, b, o;
+	unsigned	ci, co;
+	unsigned	ctl;	// mag[1], m[1], s[4]
+};
+
+void f181_alu(struct f181 *);
+
 #ifdef __cplusplus
 }
 #endif
@@ -39,6 +47,15 @@ uint8_t offset_parity(uint64_t);
 #ifdef __cplusplus
 
 #include <sstream>
+
+#define ALWAYS_TRACE( ...) \
+	do { \
+		char buf[4096]; \
+		buf[0] = '\0'; \
+		std::stringstream ss(buf); \
+		ss << "" __VA_ARGS__ << (uint8_t)0; \
+		sysc_trace(this->name(), ss.str().c_str()); \
+	} while (0)
 
 #define TRACE( ...) \
 	do { \

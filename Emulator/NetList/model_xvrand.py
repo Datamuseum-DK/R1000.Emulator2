@@ -55,13 +55,8 @@ class XVRAND(PartFactory):
 		|	}
 		|	output.incl = rand != 0x1;
 		|	output.decl = rand != 0x2;
-		|	output.spltc = rand != 0x4;
 		|	output.cntz = rand != 0x5;
-		|	output.glit = rand != 0x6;
 		|	output.div = rand != 0xb;
-		|	output.stmul = rand != 0xc;
-		|	output.prl16 = rand != 0xd;
-		|	output.prl32 = rand != 0xe;
 		|	output.sneak = (rand != 0x3) && (rand != 0x6);
 		|''')
 

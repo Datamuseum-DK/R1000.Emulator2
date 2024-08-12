@@ -18,13 +18,8 @@ class XVRAND(FChip):
         self.sig_right(ChipSig("+-->", "ALU", 0, 2))
         self.sig_right(ChipSig("+-->", "INCL"))
         self.sig_right(ChipSig("+-->", "DECL"))
-        self.sig_right(ChipSig("+-->", "SPLTC"))
         self.sig_right(ChipSig("+-->", "CNTZ"))
-        self.sig_right(ChipSig("+-->", "GLIT"))
         self.sig_right(ChipSig("+-->", "DIV"))
-        self.sig_right(ChipSig("+-->", "STMUL"))
-        self.sig_right(ChipSig("+-->", "PRL16"))
-        self.sig_right(ChipSig("+-->", "PRL32"))
         self.sig_right(ChipSig("+-->", "SNEAK"))
 
         self.finish()

@@ -107,11 +107,11 @@ load_register_file_typ(const struct diagproc *dp)
 #endif
 }
 
-#if defined(HAS_Z013) && defined(HAS_Z014)
-static uint64_t *val_aram, *val_bram;
+#if defined(HAS_Z013)
+static uint64_t *val_aram;
 #endif
-#if defined(HAS_Z018)
-static uint8_t *val_rfpar;
+#if defined(HAS_Z014)
+static uint64_t *val_bram;
 #endif
 
 static unsigned val_ptr;
@@ -119,7 +119,7 @@ static unsigned val_ptr;
 static int
 load_register_file_val(const struct diagproc *dp)
 {
-#if !defined(HAS_Z013) || !defined(HAS_Z014)
+#if !defined(HAS_Z013)
 	(void)dp;
 	return (0);
 #else
@@ -132,41 +132,19 @@ load_register_file_val(const struct diagproc *dp)
 		AN(ctx);
 		val_aram = (uint64_t *)(void*)(ctx + 1);
 	}
+#if defined(HAS_Z014)
 	if (val_bram == NULL) {
 		ctx = CTX_Find(COMP_Z014);
 		AN(ctx);
 		val_bram = (uint64_t *)(void*)(ctx + 1);
-	}
-#if defined(COMP_Z018)
-	if (val_rfpar == NULL) {
-		ctx = CTX_Find(COMP_Z018);
-		AN(ctx);
-		val_rfpar = (uint8_t *)(void*)(ctx + 1);
 	}
 #endif
 
 	for (i = 0; i < 16; i++, val_ptr++) {
 		wdr = get_wdr(dp, 0x18 + i * 12);
 		val_aram[val_ptr] = wdr;
+#if defined(HAS_Z014)
 		val_bram[val_ptr] = wdr;
-
-		wdr = wdr ^ ((wdr >> 4) & 0x0f0f0f0f0f0f0f0fULL);
-		wdr = wdr ^ ((wdr >> 2) & 0x0303030303030303ULL);
-		wdr = wdr ^ ((wdr >> 1) & 0x0101010101010101ULL);
-#if defined(COMP_Z018)
-		uint8_t par;
-		par = 0;
-		if (wdr & (1ULL<<56)) par |= 0x80;
-		if (wdr & (1ULL<<48)) par |= 0x40;
-		if (wdr & (1ULL<<40)) par |= 0x20;
-		if (wdr & (1ULL<<32)) par |= 0x10;
-		if (wdr & (1ULL<<24)) par |= 0x08;
-		if (wdr & (1ULL<<16)) par |= 0x04;
-		if (wdr & (1ULL<< 8)) par |= 0x02;
-		if (wdr & (1ULL<< 0)) par |= 0x01;
-		par ^= 0xff;
-		val_rfpar[val_ptr] = par;
-		val_rfpar[val_ptr + 1024] = par;
 #endif
 	}
 

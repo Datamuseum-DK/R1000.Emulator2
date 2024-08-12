@@ -472,3 +472,76 @@ offset_parity(uint64_t inp)
 	par |= even_parity(odd_parity64(inp & 0xff000000)) & 8;
 	return (par);
 }
+
+/*
+struct f181 {
+	uint32_t	a, b, o;
+	unsigned	ci, co;
+	unsigned	ctl;	// mag[1], m[1], s[4]
+};
+*/
+
+/*
+ * The 74181 consists of four segments:
+ * 
+ * 1.  Calculate a function of two S-bits, A & B which we call C
+ * 2.  Calculate a function of the two other S-bits, A & B which we call D
+ * 3.  Carry-look-ahead-circuit which generates CO
+ * 4.  Add C & D to Y but if M is high, supress the carry in the addition (=XOR)
+ * 
+ * NB: The R1000 schematics mirrors the bit-order of the S bus
+ */
+
+void
+f181_alu(struct f181 *priv)
+{
+
+	assert(priv != NULL);
+	unsigned mag = (priv->ctl >> 5) & 1;
+	unsigned m = (priv->ctl >> 4) & 1;
+	unsigned s = (priv->ctl & 0xf) ^ 0xf;
+
+	uint64_t c;
+	switch (s & 0x3) {
+	case 0x0: c = priv->a; break;
+	case 0x1: c = priv->a | priv->b; break;
+	case 0x2: c = priv->a | (priv->b^0xffffffff); break;
+	case 0x3: c = 0xffffffff; break;
+	}
+	c ^= 0xffffffff;
+
+	uint64_t d;
+	switch(s & 0xc) {
+	case 0x0: d = 0; break;
+	case 0x4: d = priv->a & (priv->b^0xffffffff); break;
+	case 0x8: d = priv->a & priv->b; break;
+	case 0xc: d = priv->a; break;
+	}
+	d ^= 0xffffffff;
+
+	uint64_t y;
+	unsigned ci = priv->ci;
+	if (!mag) {
+		// TYP board INC/DEC128
+		y = (c & 0xff) + (d & 0xff) + ci;
+		y &= 0xff;
+		y ^= 0x80;
+		if (priv->a & 0x80)
+			ci = 0;
+		else
+			ci = 0x100;
+		y += (c & (~0xff)) + (d & (~0xff)) + ci;
+	} else {
+		y = c + d + ci;
+	}
+
+	priv->co = (y >> 32) & 1;
+
+	if (m) {
+		priv->o = c ^ d;
+		if (!mag)
+			priv->o ^= 0x80;
+	} else {
+		priv->o = y;
+	}
+}

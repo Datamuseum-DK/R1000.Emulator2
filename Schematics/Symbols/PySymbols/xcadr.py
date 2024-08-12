@@ -16,8 +16,6 @@ class XCADR(FChip):
         self.sig_left(ChipSig("-->+", "UCLK"))
         self.sig_left(ChipSig("-->+", "CCLK"))
         self.sig_left(ChipSig("-->+", "H2"))
-        self.sig_left(ChipSig("-->+", "DMODE"))
-        self.sig_left(ChipSig("-->+", "DIAG", 0, 3))
         self.sig_left(ChipSig("-->+", "A", 0, 5))
         self.sig_left(ChipSig("-->+", "B", 0, 5))
         self.sig_left(ChipSig("-->+", "C", 0, 5))
@@ -26,9 +24,9 @@ class XCADR(FChip):
         self.sig_left(ChipSig("-->+", "LTOP"))
         self.sig_left(ChipSig("-->+", "LPOP"))
         self.sig_left(ChipSig("-->+", "CSAO", 0, 3))
+        self.sig_left(ChipSig("-->+", "CSAH"))
+        self.sig_left(ChipSig("-->+", "CSAW"))
         self.sig_left(ChipSig("-->+", "LOOP", 0, 9))
-
-        self.sig_left(ChipSig("-->+", "CTL", 0, 5))
 
         self.sig_right(ChipSig("+-->", "AADR", 0, 9))
         self.sig_right(ChipSig("+-->", "BADR", 0, 9))
@@ -37,6 +35,9 @@ class XCADR(FChip):
 
         self.sig_right(ChipSig("+<--", "ALOOP"))
         self.sig_right(ChipSig("+<--", "BLOOP"))
+        self.sig_right(ChipSig("+-->", "CLH"))
+        self.sig_right(ChipSig("+-->", "CWE"))
+        self.sig_right(ChipSig("+-->", "WEN"))
 
 
         self.finish()

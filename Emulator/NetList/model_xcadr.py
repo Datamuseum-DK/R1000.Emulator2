@@ -46,6 +46,8 @@ class XCADR(PartFactory):
 		|	unsigned csa_offset;
 		|	unsigned topreg;
 		|	unsigned botreg;
+		|	bool csa_hit;
+		|	bool csa_write;
 		|''')
 
     def sensitive(self):
@@ -56,18 +58,13 @@ class XCADR(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
+		|	bool uirsclk = PIN_UCLK.posedge();
 		|
-		|	bool diag_mode = PIN_DMODE=>;
-		|	unsigned diag;
-		|	BUS_DIAG_READ(diag);
-		|
-		|	unsigned a, b, c;
-		|	BUS_A_READ(a);
-		|	BUS_B_READ(b);
-		|	BUS_C_READ(c);
+		|	unsigned uira, uirb, uirc;
+		|	BUS_A_READ(uira);
+		|	BUS_B_READ(uirb);
+		|	BUS_C_READ(uirc);
 		|
 		|	bool bot_mux_sel, top_mux_sel, add_mux_sel;
 		|	bot_mux_sel = PIN_LBOT=>;
@@ -75,10 +72,7 @@ class XCADR(PartFactory):
 		|	top_mux_sel = !(add_mux_sel && PIN_LPOP=>);
 		|
 		|	unsigned csmux3;
-		|	if (diag_mode)
-		|		csmux3 = diag & 0xf;
-		|	else
-		|		BUS_CSAO_READ(csmux3);
+		|	BUS_CSAO_READ(csmux3);
 		|	csmux3 ^= 0xf;
 		|
 		|	unsigned csmux0;
@@ -89,7 +83,7 @@ class XCADR(PartFactory):
 		|
 		|	unsigned csalu0 = csmux3 + csmux0 + 1;
 		|
-		|	if (PIN_UCLK.posedge()) {
+		|	if (uirsclk) {
 		|		state->csa_offset = csmux3;
 		|	}
 		|	if (PIN_CCLK.posedge()) {
@@ -99,136 +93,102 @@ class XCADR(PartFactory):
 		|			state->topreg = csalu0;
 		|	}
 		|
-		|	unsigned atos = (a & 0xf) + state->topreg + 1;
-		|	unsigned btos = (b & 0xf) + state->topreg + 1;
+		|	unsigned atos = (uira & 0xf) + state->topreg + 1;
+		|	unsigned btos = (uirb & 0xf) + state->topreg + 1;
 		|
-		|	unsigned csa = state->botreg + (b&1);
-		|	if (!(b & 2)) {
+		|	unsigned csa = state->botreg + (uirb&1);
+		|	if (!(uirb & 2)) {
 		|		csa += state->csa_offset;
 		|	}
 		|
-		|	unsigned ctl;
-		|	BUS_CTL_READ(ctl);
-		|
-		|	unsigned foo;
-		|	if (ctl & 4) {
-		|		foo = state->botreg;
-		|	} else {
-		|		foo = c & 0xf;
-		|	}
-		|
-		|	unsigned bar;
-		|	if (ctl & 8) {
-		|		bar = 0;
-		|	} else if (ctl & 4) {
-		|		bar = state->csa_offset;
-		|	} else {
-		|		bar = state->topreg;
-		|	}
-		|
-		|	unsigned sum;
-		|	if (ctl & 0x10) {
-		|		sum = foo + bar + 1;
-		|	} else if (ctl & 0x20) {
-		|		sum = foo | bar;
-		|	} else {
-		|		printf("XXX: CTL 0x%02x\\n", ctl);
-		|		sum = 5;
+		|	if (uirsclk) {
+		|		state->csa_hit = PIN_CSAH=>;
+		|		state->csa_write = PIN_CSAW=>;
+		|		output.clh = state->csa_hit;
+		|		output.cwe = !(state->csa_hit || state->csa_write);
 		|	}
 		|
 		|	unsigned cadr = 0, frm, loop;
 		|	BUS_FRM_READ(frm);
 		|	BUS_LOOP_READ(loop);
-		|	if (ctl & 2) {
-		|		cadr |= loop & 0xf;
-		|	} else {
+		|	if (uirc <= 0x1f) {
+		|		// FRAME:REG
+		|		cadr |= uirc & 0x1f;
+		|		cadr |= frm << 5;
+		|	} else if (uirc <= 0x27) {
+		|		// 0x20 = TOP-1
+		|		// …
+		|		// 0x27 = TOP-8
+		|		cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
+		|	} else if (uirc == 0x28) {
+		|		// 0x28 LOOP COUNTER (RF write disabled)
+		|	} else if (uirc == 0x29 && output.cwe) {
+		|		// 0x29 DEFAULT (RF write disabled)
+		|		unsigned sum = state->botreg + state->csa_offset + 1;
 		|		cadr |= sum & 0xf;
+		|	} else if (uirc == 0x29 && !output.cwe) {
+		|		// 0x29 DEFAULT (RF write disabled)
+		|		cadr |= uirc & 0x1f;
+		|		cadr |= frm << 5;
+		|	} else if (uirc <= 0x2b) {
+		|		// 0x2a BOT
+		|		// 0x2b BOT-1
+		|		cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|		cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|	} else if (uirc == 0x2c) {
+		|		// 0x28 = LOOP_REG
+		|		cadr = loop;
+		|	} else if (uirc == 0x2d) {
+		|		// 0x2d SPARE
+		|		assert (uirc != 0x2d);
+		|	} else if (uirc <= 0x2f) {
+		|		// 0x2e = TOP+1
+		|		// 0x2f = TOP
+		|		cadr = (state->topreg + (uirc & 0x1) + 0xf) & 0xf;
+		|	} else if (uirc <= 0x3f) {
+		|		// GP[0…F]
+		|		cadr |= 0x10 | (uirc & 0x0f);
+		|	} else {
+		|		assert(uirc <= 0x3f);
 		|	}
 		|
-		|	if (ctl & 1) {
-		|		// nothing
-		|	} else if (ctl & 2) {
-		|		cadr |= loop & 0x3c0;
-		|	} else {
-		|		cadr |= (frm & 0x1e) << 5;
-		|	}
-		|
-		|	if (ctl & 1) {
-		|		// nothing
-		|	} else if (ctl & 2) {
-		|		cadr |= loop & 0x20;
-		|	} else {
-		|		cadr |= (frm & 1) << 5;
-		|	}
-		|
-		|	if (ctl & 2) {
-		|		cadr |= loop & 0x10;
-		|	} else {
-		|		cadr |= c & 0x10;
-		|	}
+		|	output.wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
+		|	if (output.cwe && uirc != 0x28)
+		|		output.wen = !output.wen;
 		|
 		|	unsigned aadr = 0, badr = 0;
-		|	if (!PIN_H2=>) {
+		|	if (PIN_H2=>) {
+		|		aadr = cadr;
+		|		badr = cadr;
+		|	} else {
 		|		if (PIN_ALOOP=>) {
 		|			aadr = loop;
+		|		} else if (uira <= 0x1f) {
+		|			aadr = frm << 5;
+		|			aadr |= uira & 0x1f;
+		|		} else if (uira <= 0x2f) {
+		|			aadr |= atos & 0xf;
 		|		} else {
-		|			if (!(a & 0x20)) {
-		|				aadr = frm << 5;
-		|			}
-		|			aadr |= (a & 0x10);
-		|			if ((a & 0x30) != 0x20) {
-		|				aadr |= a & 0xf;
-		|			} else {
-		|				aadr |= atos & 0xf;
-		|			}
+		|			aadr |= uira & 0x1f;
 		|		}
 		|
 		|		if (PIN_BLOOP=>) {
 		|			badr = loop;
+		|		} else if (uirb <= 0x1f) {
+		|			badr = frm << 5;
+		|			badr |= uirb & 0x1f;
+		|		} else if (uirb <= 0x27) {
+		|			badr |= btos & 0xf;
+		|		} else if (uirb <= 0x2b) {
+		|			badr |= csa & 0xf;
+		|		} else if (uirb <= 0x2f) {
+		|			badr |= btos & 0xf;
 		|		} else {
-		|			if (!(b & 0x20)) {
-		|				badr = frm << 5;
-		|			}
-		|			badr |= (b & 0x10);
-		|			if ((b & 0x30) != 0x20) {
-		|				badr |= b & 0xf;
-		|			} else if ((b & 0x3c) == 0x28) {
-		|				badr |= csa & 0xf;
-		|			} else {
-		|				badr |= btos & 0xf;
-		|			}
+		|			badr |= uirb & 0x1f;
 		|		}
-		|	} else {
-		|		aadr = cadr;
-		|		badr = cadr;
 		|	}
 		|	output.aadr = aadr;
 		|	output.badr = badr;
-		|
-		|	TRACE(
-		|		<< " uclk^ " << PIN_UCLK.posedge()
-		|		<< " cclk^ " << PIN_CCLK.posedge()
-		|		<< " uclk " << PIN_UCLK?
-		|		<< " cclk " << PIN_CCLK?
-		|		<< " h2 " << PIN_H2?
-		|		<< " a " << std::hex << a
-		|		<< " b " << std::hex << b
-		|		<< " c " << std::hex << c
-		|		<< " dm " << diag_mode
-		|		<< " diag " << std::hex << diag
-		|		<< " bot " << PIN_LBOT?
-		|		<< " top " << PIN_LTOP?
-		|		<< " pop " << PIN_LPOP?
-		|		<< " csao " << BUS_CSAO_TRACE()
-		|		<< " ctl " << BUS_CTL_TRACE()
-		|		<< " frm " << BUS_FRM_TRACE()
-		|		<< " loop " << BUS_LOOP_TRACE()
-		|		<< " aloop " << PIN_ALOOP?
-		|		<< " bloop " << PIN_BLOOP?
-		|		<< " - aadr " << std::hex << aadr
-		|		<< " badr " << std::hex << badr
-		|		<< " cadr " << std::hex << cadr
-		|	);
 		|''')
 
 def register(part_lib):

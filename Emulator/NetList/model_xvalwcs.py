@@ -140,7 +140,7 @@ class XVALWCS(PartFactory):
 		|	if (PIN_UCLK.posedge()) {
 		|		if (PIN_USEL=>) {
 		|			state->wcs = state->ram[state->addr];
-		|			PERMUTE(INVM);
+		|			state->wcs ^= 0xffff800000;
 		|		} else {
 		|			unsigned diag = 0xff;
 		|			TOSR();
