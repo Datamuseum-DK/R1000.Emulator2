@@ -34,7 +34,7 @@ make -j 7 && make -j 7
 sc_boards ioc fiu mem0 seq typ val
 
 cli 'sc trace DI*PROC 0x14'
-cli sc trace IOC.ioc_02.IOP 1
+cli sc trace IOC.ioc_00.IOP 1
 
 # cli 'sc trace TYP.*DI*PROC 0x16'
 # cli 'sc trace MEM.*TAER13 0x1'

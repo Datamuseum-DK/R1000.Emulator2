@@ -28,11 +28,8 @@ class XFMAR(FChip):
         self.sig_right(ChipSig("+<--", "QVIOE"))
         self.sig_right(ChipSig("+===", "DQVI", 0, 63))
 
-        self.sig_right(ChipSig("+-->", "MNAM", 0, 8))
         self.sig_right(ChipSig("+-->", "MSPC", 0, 2))
         self.sig_right(ChipSig("+-->", "NMATCH"))
-        self.sig_right(ChipSig("+-->", "CLD"))
-        self.sig_right(ChipSig("+-->", "CCNT"))
         self.sig_right(ChipSig("+-->", "LCTP"))
 
         self.sig_left(ChipSig("-->+", "BIG"))

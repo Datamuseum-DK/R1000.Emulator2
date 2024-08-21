@@ -34,7 +34,7 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XROTF(PartFactory):
 
@@ -44,14 +44,15 @@ class XROTF(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|       unsigned lreg;
 		|       unsigned oreg;
+		|       uint64_t mdreg;
+		|	uint64_t treg;
+		|	uint64_t vreg;
+		|	uint64_t rdq;
 		|''')
 
-    def sensitive(self):
-        yield "PIN_LCLK.pos()"          # Q4
-        yield "PIN_OCLK.pos()"          # Q4
-        yield "PIN_OE"                  # ucode
+    def xsensitive(self):
+        yield "PIN_Q4.pos()"            # Q4
         yield "PIN_FSRC"                # ucode
         yield "PIN_LSRC"                # ucode
         yield "PIN_ORSR"                # ucode
@@ -60,117 +61,54 @@ class XROTF(PartFactory):
         yield "BUS_OP_SENSITIVE()"      # ucode
         yield "BUS_LFL_SENSITIVE()"     # ucode 
         yield "BUS_OL_SENSITIVE()"      # ucode
-        yield "PIN_OCE"
-        yield "BUS_TI_SENSITIVE()"
-        yield "BUS_VI_SENSITIVE()"
-
-    def private(self):
-        ''' private variables '''
-        yield from self.event_or(
-            "oe_event",
-            "PIN_LCLK.posedge_event()",
-            "PIN_OCLK.posedge_event()",
-            "PIN_OE.negedge_event()",
-            "PIN_FSRC",
-            "PIN_LSRC",
-            "PIN_ORSR",
-            "PIN_OSRC",
-            "BUS_LFRC",
-            "BUS_OP",
-            "BUS_LFL",
-            "BUS_OL",
-            "PIN_OCE",
-            #"PIN_TI",
-            #"PIN_VI",
-        )
+        yield "BUS_DT_SENSITIVE()"
+        yield "BUS_DV_SENSITIVE()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	uint64_t ti, vi, ft, tir, vir, m;
+		|	bool q4pos = PIN_Q4.posedge();
+		|	uint64_t ft, tir, vir, m;
 		|	unsigned msk, s, fs, u, sgn;
 		|	bool sgnbit;
-		|	unsigned op;
 		|
-		|	BUS_OP_READ(op);	// UCODE
-		|	BUS_TI_READ(ti);
-		|	BUS_VI_READ(vi);
-		|
-		|	unsigned lfrg = 0;
-		|	unsigned lfl;
-		|	BUS_LFL_READ(lfl);	// UCODE
-		|	if (PIN_LCLK.posedge()) {
-		|		unsigned lfrc;
-		|		BUS_LFRC_READ(lfrc);	// UCODE
-		|
-		|		if (lfrc & 1) {
-		|			lfrg = lfl;
-		|		} else {
-		|			if (lfrc & 2) {
-		|				lfrg = (ti >> 15) & 0x3f;
-		|				if ((ti >> (63-36)) & 1)
-		|					lfrg |= (1 << 6);
-		|			} else {
-		|				// LDALU
-		|				lfrg = (((vi >> 32) & 0x3f) + 1) & 0x3f;
-		|				if ((ti >> (63-36)) & 1)
-		|					lfrg |= (1 << 6);
-		|				else if (!((vi >> (63-25)) & 1))
-		|					lfrg |= (1 << 6);
-		|			}
-		|			lfrg = lfrg ^ 0x7f;
-		|		}
-		|
-		|		// LFNAN0
-		|		if (lfrg != 0x7f)
-		|			lfrg |= 1<<7;
-		|
-		|		output.lfrg = lfrg;
-		|		state->lreg = lfrg;
+		|	uint64_t ti, vi;
+		|	if (!PIN_FT=>) {
+		|		BUS_DF_READ(ti);
+		|		ti ^= BUS_DF_MASK;
+		|	} else {
+		|		BUS_DT_READ(ti);
+		|	}
+		|	if (!PIN_FV=>) {
+		|		BUS_DF_READ(vi);
+		|		vi ^= BUS_DF_MASK;
+		|	} else {
+		|		BUS_DV_READ(vi);
 		|	}
 		|
-		|	// LAOIA
+		|	unsigned lfl;
+		|	BUS_LFL_READ(lfl);	// UCODE
+		|
 		|	bool fill_mode = false;
 		|	if (PIN_FSRC=>) {	// UCODE
 		|		fill_mode = lfl >> 6;
 		|	} else {
-		|		fill_mode = (state->lreg >> 6) & 1;
+		|		fill_mode = (output.lfrg >> 6) & 1;
 		|	}
 		|
-		|	// LSMX
 		|	unsigned lenone;
-		|
 		|	if (PIN_LSRC=>) {	// UCODE
 		|		lenone = lfl & 0x3f;
 		|	} else {
-		|		lenone = state->lreg & 0x3f;
+		|		lenone = output.lfrg & 0x3f;
 		|	}
 		|
-		|	// ZLNAN
-		|	bool zlen = !(fill_mode & (lenone == 0x3f));
-		|	output.zl = zlen;
+		|	bool zero_length = !(fill_mode & (lenone == 0x3f));
 		|
-		|	// OFSMX
-		|	bool ckpn;
-		|	unsigned oregin;
 		|	unsigned off_lit;
 		|	BUS_OL_READ(off_lit);	// UCODE
-		|	if (PIN_ORSR=>) {	// UCODE
-		|		oregin = off_lit;
-		|		ckpn = false;
-		|	} else {
-		|		BUS_AO_READ(oregin);
-		|		ckpn = PIN_OCE=>;
-		|	}
-		|	output.ckpn = ckpn;
 		|
-		|	if (PIN_OCLK.posedge()) {	// Q4~^
-		|		state->oreg = oregin;
-		|		output.oreg = state->oreg;
-		|	}
 		|
 		|	// OSMX
 		|	unsigned offset;
@@ -182,37 +120,33 @@ class XROTF(PartFactory):
 		|
 		|	// XWALU
 		|	unsigned xword;
-		|	xword = state->oreg + (state->lreg & 0x3f) + (state->lreg & 0x80);
+		|	xword = state->oreg + (output.lfrg & 0x3f) + (output.lfrg & 0x80);
 		|	output.xwrd = xword > 255;
 		|
 		|	// SBTMX
-		|	unsigned sbit;
 		|
+		|	unsigned op, sbit, ebit;
+		|	BUS_OP_READ(op);	// UCODE
 		|	switch (op) {
 		|	case 0:
 		|		sbit = (lenone ^ 0x3f) | (1<<6);
+		|		ebit = 0x7f;
 		|		break;
 		|	case 1:
 		|		sbit = 0;
+		|		ebit = (lenone & 0x3f) + (offset & 0x7f);
 		|		break;
 		|	case 2:
 		|		sbit = offset;
+		|		ebit = 0x7f;
 		|		break;
 		|	case 3:
 		|		sbit = offset;
+		|		ebit = (lenone & 0x3f) + (offset & 0x7f);
 		|		break;
 		|	}
-		|	output.sbit = sbit;
-		|
-		|	unsigned ebit;
-		|	if (op & 1) {
-		|		ebit = (lenone & 0xf) + (offset & 0xf);
-		|		ebit += lenone & 0x30;
-		|		ebit += offset & 0x70;
-		|	} else {
-		|		ebit = 0x7f;
-		|	}
-		|	output.ebit = ebit;
+		|	sbit &= 0x7f;
+		|	ebit &= 0x7f;
 		|
 		|	if (op != 0) {
 		|		msk = 0x7fff;
@@ -285,44 +219,158 @@ class XROTF(PartFactory):
 		|
 		|		sgnbit = (ft >> (63 - sgn)) & 1;
 		|	}
-		|	output.sgnb = sgnbit;
 		|
-		|	output.z_q = PIN_OE=>;
-		|	if (!output.z_q) {
+		|	if (PIN_RDSRC=>) {
+		|		state->rdq = state->mdreg;
+		|	} else {
 		|		uint64_t yl = 0, yh = 0, q;
-		|
 		|		fs = s & ~3;
 		|		yl = ft >> fs;
 		|		yh = ft << (64 - fs);
 		|		q = yh | yl;
-		|		output.q = q;
+		|		state->rdq = q;
 		|	}
 		|
-		|	TRACE(
-		|	    << " oe " << PIN_OE?
-		|	    << " lclk^ " << PIN_LCLK.posedge()
-		|	    << " oclk^ " << PIN_OCLK.posedge()
-		|	    << " op " << BUS_OP_TRACE()
-		|	    << " ti " << BUS_TI_TRACE()
-		|	    << " vi " << BUS_VI_TRACE()
-		|	    << " lfl " << BUS_LFL_TRACE()
-		|	    << " lfrc " << BUS_LFRC_TRACE()
-		|	    << " ao " << BUS_AO_TRACE()
-		|	    << " ol " << BUS_OL_TRACE()
-		|	    << " lsrc " << PIN_LSRC?
-		|	    << " orsr " << PIN_ORSR?
-		|	    << " oce " << PIN_OCE?
-		|	    << " osrc " << PIN_OSRC?
-		|	    << " - ft " << std::hex << ft
-		|	    << " sgnbit " << sgnbit
-		|	    << " lfrg " << std::hex << lfrg
-		|	    << " sbit " << std::hex << sbit
-		|	    << " ebit " << std::hex << ebit
-		|	    << " zlen " << zlen
-		|	);
+		|	uint64_t vmsk = 0, tmsk = 0;
+		|	if (zero_length) {
+		|		if (ebit == sbit) {
+		|			if (ebit < 64) {
+		|				tmsk = 1ULL << (63 - ebit);
+		|				vmsk = 0;
+		|			} else {
+		|				tmsk = 0;
+		|				vmsk = 1ULL << (127 - ebit);
+		|			} 
+		|		} else {
+		|			uint64_t inv = 0;
+		|			unsigned sb = sbit, eb = ebit;
+		|			if (eb < sb) {
+		|				sb = ebit + 1;
+		|				eb = sbit - 1;
+		|				inv = ~(uint64_t)0;
+		|			}
+		|			if (sb < 64)
+		|				tmsk = (~(uint64_t)0) >> sb;
+		|			if (eb < 63)
+		|				tmsk ^= (~(uint64_t)0) >> (eb + 1);
+		|			if (eb > 63)
+		|				vmsk = (~(uint64_t)0) << (127 - eb);
+		|			if (sb > 64)
+		|				vmsk ^= (~(uint64_t)0) << (128 - sb);
+		|			tmsk ^= inv;
+		|			vmsk ^= inv;
+		|		}
+		|	}
+		|
+		|	unsigned sel;
+		|	BUS_SEL_READ(sel);
+		|
+		|	uint64_t tii = 0;
+		|	switch(sel) {
+		|	case 0:
+		|	case 1:
+		|		if (sgnbit)
+		|			tii = BUS_DV_MASK;
+		|		break;
+		|	case 2:
+		|		BUS_DV_READ(tii);
+		|		break;
+		|	case 3:
+		|		BUS_DF_READ(tii);
+		|		tii ^= BUS_DF_MASK;
+		|		break;
+		|	}
+		|
+		|	uint64_t vout = 0;
+		|	vout = (state->rdq & vmsk);
+		|	vout |= (tii & (vmsk ^ BUS_DV_MASK));
+		|
+		|	output.z_qt = PIN_QTOE=>;
+		|	if (!output.z_qt and !PIN_FT=>) {
+		|		BUS_DF_READ(output.qt);
+		|		output.qt ^= BUS_DF_MASK;
+		|	} else if (!output.z_qt) {
+		|		output.qt = state->treg;
+		|	}
+		|
+		|	output.z_qv = PIN_QVOE=>;
+		|	if (!output.z_qv && !PIN_FV=>) {
+		|		BUS_DF_READ(output.qv);
+		|		output.qv ^= BUS_DF_MASK;
+		|	} else if (!output.z_qv) {
+		|		output.qv = state->vreg;
+		|	}
+		|
+		|	output.z_qf = PIN_QFOE=>;
+		|	if (!output.z_qf) {
+		|		output.qf = vout ^ BUS_QF_MASK;
+		|	}
+		|
+		|	if (q4pos && PIN_LDMDR=> && PIN_SCLKE) {
+		|		uint64_t yl = 0, yh = 0, q;
+		|		fs = s & ~3;
+		|		yl = ft >> fs;
+		|		yh = ft << (64 - fs);
+		|		q = yh | yl;
+		|		state->mdreg = q;
+		|	}
+		|
+		|	if (PIN_TCLK.posedge()) {
+		|		uint64_t out = 0;
+		|		out = (state->rdq & tmsk);
+		|		out |= (ti & (tmsk ^ BUS_DT_MASK));
+		|		state->treg = out;
+		|	}
+		|
+		|	if (PIN_VCLK.posedge()) {
+		|		state->vreg = vout;
+		|	}
+		|
+		|	if (PIN_OCLK.posedge()) {	// Q4~^
+		|		if (PIN_ORSR=>) {	// UCODE
+		|			state->oreg = off_lit;
+		|		} else {
+		|			BUS_AO_READ(state->oreg);
+		|		}
+		|		output.oreg = state->oreg;
+		|	}
+		|
+		|	if (PIN_LCLK.posedge()) {
+		|		unsigned lfrc;
+		|		BUS_LFRC_READ(lfrc);	// UCODE
+		|
+		|		unsigned lfrg = 0;
+		|		switch(lfrc) {
+		|		case 0:
+		|			lfrg = (((vi >> BUS_DV_LSB(31)) & 0x3f) + 1) & 0x3f;
+		|			if ((ti >> BUS_DT_LSB(36)) & 1)
+		|				lfrg |= (1 << 6);
+		|			else if (!((vi >> BUS_DV_LSB(25)) & 1))
+		|				lfrg |= (1 << 6);
+		|			lfrg = lfrg ^ 0x7f;
+		|			break;
+		|		case 1:
+		|			lfrg = lfl;
+		|			break;
+		|		case 2:
+		|			lfrg = (ti >> BUS_DT_LSB(48)) & 0x3f;
+		|			if ((ti >> BUS_DT_LSB(36)) & 1)
+		|				lfrg |= (1 << 6);
+		|			lfrg = lfrg ^ 0x7f;
+		|			break;
+		|		case 3:	// No load
+		|			lfrg = output.lfrg;
+		|			break;
+		|		}
+		|
+		|		if (lfrg != 0x7f)
+		|			lfrg |= 1<<7;
+		|
+		|		output.lfrg = lfrg;
+		|	}
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XROTF", PartModel("XROTF", XROTF))
+    part_lib.add_part("XROTF", PartModelDQ("XROTF", XROTF))

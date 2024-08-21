@@ -13,32 +13,40 @@ class XROTF(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "TI", 0, 63))
-        self.sig_left(ChipSig("-->+", "VI", 0, 63))
+        self.sig_left(ChipSig("<->+", "DQT", 0, 63))
+        self.sig_left(ChipSig("-->+", "QTOE"))
 
-        self.sig_left(ChipSig("-->+", "AO", 0, 6))
-        self.sig_left(ChipSig("-->+", "OL", 0, 6))
-        self.sig_left(ChipSig("-->+", "LFL", 0, 6))
+        self.sig_left(ChipSig("<->+", "DQF", 0, 63))
+        self.sig_left(ChipSig("-->+", "QFOE"))
+
+        self.sig_right(ChipSig("+<->", "DQV", 0, 63))
+        self.sig_right(ChipSig("+<--", "QVOE"))
+
         self.sig_left(ChipSig("-->+", "OP", 0, 1))
+        self.sig_left(ChipSig("-->+", "TCLK"))
+        self.sig_left(ChipSig("-->+", "VCLK"))
+        self.sig_left(ChipSig("-->+", "FT"))
+        self.sig_left(ChipSig("-->+", "FV"))
+        self.sig_left(ChipSig("-->+", "SEL", 0, 1))
 
-        self.sig_right(ChipSig("+===", "Q", 0, 63))
-        self.sig_right(ChipSig("+<--", "OE"))
-        self.sig_right(ChipSig("+-->", "SGNB"))
+        self.sig_right(ChipSig("+<--", "RDSRC"))
         self.sig_right(ChipSig("+<--", "LFRC", 0, 1))
         self.sig_right(ChipSig("+<--", "LCLK"))
         self.sig_right(ChipSig("+-->", "LFRG", 0, 6))
         self.sig_right(ChipSig("+<--", "FSRC"))
         self.sig_right(ChipSig("+<--", "LSRC"))
-        self.sig_right(ChipSig("+-->", "ZL"))
-        self.sig_right(ChipSig("+<--", "OCE"))
         self.sig_right(ChipSig("+<--", "ORSR"))
-        self.sig_right(ChipSig("+-->", "CKPN"))
         self.sig_right(ChipSig("+<--", "OCLK"))
         self.sig_right(ChipSig("+-->", "OREG", 0, 6))
         self.sig_right(ChipSig("+<--", "OSRC"))
         self.sig_right(ChipSig("+-->", "XWRD"))
-        self.sig_right(ChipSig("+-->", "SBIT", 0, 6))
-        self.sig_right(ChipSig("+-->", "EBIT", 0, 6))
+
+        self.sig_right(ChipSig("+<--", "Q4"))
+        self.sig_right(ChipSig("+<--", "LDMDR"))
+        self.sig_right(ChipSig("+<--", "SCLKE"))
+        self.sig_right(ChipSig("+<--", "AO", 0, 6))
+        self.sig_right(ChipSig("+<--", "OL", 0, 6))
+        self.sig_right(ChipSig("+<--", "LFL", 0, 6))
 
         self.finish()
 

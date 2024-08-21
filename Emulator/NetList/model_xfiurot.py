@@ -36,45 +36,105 @@
 
 from part import PartModelDQ, PartFactory
 
-class XFIUROTV(PartFactory):
+class XFIUROT(PartFactory):
     ''' FIU Rotators '''
 
     autopin = True
 
-    def private(self):
-        ''' private variables '''
-        yield from self.event_or(
-           "fiu_event",
-           "PIN_RCLK.posedge_event()",
-           "PIN_QROE",
-           "PIN_TVF",
-           "BUS_DFI",
-        )
-
     def state(self, file):
         file.fmt('''
-		|	uint64_t reg;
-		|	uint64_t tvo;
+		|	uint64_t treg;
 		|''')
-
-    def sensitive(self):
-        if "FIUROT" in self.name:
-            yield "PIN_RCLK.pos()"
-            yield "PIN_QROE"
-            yield "PIN_TVF"
-        else:
-            yield from super().sensitive()
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        if "FIUROT" in self.name:
-             file.add_subst("«rot_typ»", "true")
-        else:
-             file.add_subst("«rot_typ»", "false")
+        file.fmt('''
+		|	bool tpos = PIN_TCLK.posedge();
+		|
+		|	uint64_t vmsk = 0, tmsk = 0;
+		|	if (PIN_ZLEN=>) {
+		|		unsigned sbit, ebit;
+		|		BUS_SBIT_READ(sbit);
+		|		BUS_EBIT_READ(ebit);
+		|
+		|		if (ebit == sbit) {
+		|			if (ebit < 64) {
+		|				tmsk = 1ULL << (63 - ebit);
+		|				vmsk = 0;
+		|			} else {
+		|				tmsk = 0;
+		|				vmsk = 1ULL << (127 - ebit);
+		|			} 
+		|		} else {
+		|			uint64_t inv = 0;
+		|			unsigned sb = sbit, eb = ebit;
+		|			if (eb < sb) {
+		|				sb = ebit + 1;
+		|				eb = sbit - 1;
+		|				inv = ~(uint64_t)0;
+		|			}
+		|			if (sb < 64)
+		|				tmsk = (~(uint64_t)0) >> sb;
+		|			if (eb < 63)
+		|				tmsk ^= (~(uint64_t)0) >> (eb + 1);
+		|			if (eb > 63)
+		|				vmsk = (~(uint64_t)0) << (127 - eb);
+		|			if (sb > 64)
+		|				vmsk ^= (~(uint64_t)0) << (128 - sb);
+		|			tmsk ^= inv;
+		|			vmsk ^= inv;
+		|		}
+		|	}
+		|
+		|	if (tpos) {
+		|		uint64_t tii = 0;
+		|		BUS_DT_READ(tii);
+		|
+		|		uint64_t rdata;
+		|		BUS_RD_READ(rdata);
+		|
+		|		uint64_t out = 0;
+		|		out = (rdata & tmsk);
+		|		out |= (tii & (tmsk ^ BUS_DT_MASK));
+		|		state->treg = out;
+		|	}
+		|
+		|	output.z_qt = PIN_QTOE=>;
+		|	bool ft = PIN_FT=>;
+		|
+		|	if (!output.z_qt && !ft) {
+		|		BUS_DF_READ(output.qt);
+		|		output.qt ^= BUS_DF_MASK;
+		|	} else if (!output.z_qt) {
+		|		output.qt = state->treg;
+		|	}
+		|	if (PIN_DBGI=>) {
+		|		output.dbg = 0xaaaaaaaaaaaaaaaaULL;
+		|	} else if (!ft) {
+		|		BUS_DF_READ(output.dbg);
+		|		output.dbg ^= BUS_DF_MASK;
+		|	} else {
+		|		output.dbg = state->treg;
+		|	}
+		|''')
+
+
+class XFIUROV(PartFactory):
+    ''' FIU Rotators '''
+
+    autopin = True
+
+    def state(self, file):
+        file.fmt('''
+		|	uint64_t vreg;
+		|''')
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	bool pos = PIN_RCLK.posedge();
+		|	bool vpos = PIN_VCLK.posedge();
 		|
 		|	uint64_t vmsk = 0, tmsk = 0;
 		|	if (PIN_ZLEN=>) {
@@ -112,9 +172,6 @@ class XFIUROTV(PartFactory):
 		|	}
 		|
 		|	uint64_t tii = 0;
-		|#ifndef BUS_SEL_READ
-		|	BUS_DR_READ(tii);
-		|#else
 		|	unsigned sel;
 		|	bool sign;
 		|
@@ -125,70 +182,46 @@ class XFIUROTV(PartFactory):
 		|	case 1:
 		|		sign = PIN_SIGN=>;
 		|		if (sign)
-		|			tii = BUS_DR_MASK;
+		|			tii = BUS_DV_MASK;
 		|		break;
 		|	case 2:
-		|		BUS_DR_READ(tii);
+		|		BUS_DV_READ(tii);
 		|		break;
 		|	case 3:
-		|		BUS_DFI_READ(tii);
-		|		tii ^= BUS_DFI_MASK;
+		|		BUS_DF_READ(tii);
+		|		tii ^= BUS_DF_MASK;
 		|		break;
 		|	}
-		|
-		|#endif
 		|
 		|	uint64_t rdata;
 		|	BUS_RD_READ(rdata);
 		|
 		|	uint64_t out = 0;
-		|	if («rot_typ») {
-		|		out = (rdata & tmsk);
-		|		out |= (tii & (tmsk ^ BUS_DR_MASK));
-		|	} else {
-		|		out = (rdata & vmsk);
-		|		out |= (tii & (vmsk ^ BUS_DR_MASK));
+		|	out = (rdata & vmsk);
+		|	out |= (tii & (vmsk ^ BUS_DV_MASK));
+		|
+		|	if (vpos) {
+		|		state->vreg = out;
 		|	}
 		|
-		|	uint64_t reg = state->reg;
-		|	if (pos) {
-		|		reg = out;
+		|	output.z_qv = PIN_QVOE=>;
+		|	bool fv = PIN_FV=>;
+		|
+		|	if (!output.z_qv and !fv) {
+		|		BUS_DF_READ(output.qv);
+		|		output.qv ^= BUS_DF_MASK;
+		|	} else if (!output.z_qv) {
+		|		output.qv = state->vreg;
 		|	}
 		|
-		|	output.z_qr = PIN_QROE=>;
-		|	bool tvf = PIN_TVF=>;
-		|
-		|	uint64_t tvo = state->tvo;
-		|	if (!output.z_qr and !tvf) {
-		|		BUS_DFI_READ(tvo);
-		|		tvo ^= BUS_DFI_MASK;
-		|	} else if (!output.z_qr) {
-		|		tvo = state->reg;
-		|	}
-		|
-		|	output.qr = tvo;
-		|
-		|#ifdef BUS_QFI_WRITE
-		|	output.z_qfi = PIN_QFIOE=>;
-		|	if (!output.z_qfi) {
-		|		output.qfi = out ^ BUS_QFI_MASK;
-		|	}
-		|
-		|#endif
-		|	if (
-		|	    reg != state->reg ||
-		|	    tvo != state->tvo
-		|	) {
-		|		state->reg = reg;
-		|		state->tvo = tvo;
-		|		next_trigger(5, sc_core::SC_NS);
-		|	} else if («rot_typ» && !PIN_TVF=>) {
-		|		idle_next = &fiu_event;
+		|	output.z_qf = PIN_QFOE=>;
+		|	if (!output.z_qf) {
+		|		output.qf = out ^ BUS_QF_MASK;
 		|	}
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XFIUROT", PartModelDQ("XFIUROT", XFIUROTV))
-    part_lib.add_part("XFIUROV", PartModelDQ("XFIUROV", XFIUROTV))
+    part_lib.add_part("XFIUROT", PartModelDQ("XFIUROT", XFIUROT))
+    part_lib.add_part("XFIUROV", PartModelDQ("XFIUROV", XFIUROV))

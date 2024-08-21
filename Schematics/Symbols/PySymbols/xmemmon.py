@@ -54,14 +54,12 @@ class XMEMMON(FChip):
         self.sig_left(ChipSig("-->+", "EVENT"))
         self.sig_left(ChipSig("-->+", "TI", 0, 31))
         self.sig_left(ChipSig("-->+", "SCADAT"))
-        self.sig_left(ChipSig("-->+", "SCAPEV"))
         self.sig_left(ChipSig("-->+", "FRDRDR"))
         self.sig_left(ChipSig("-->+", "FRDTYP"))
         self.sig_left(ChipSig("-->+", "UEVSTP"))
 
         self.sig_right(ChipSig("+-->", "MEMCT", 0, 3))
         self.sig_right(ChipSig("+-->", "MCNTL3"))
-        self.sig_right(ChipSig("+-->", "SPARER"))
         self.sig_right(ChipSig("+-->", "LOGRW"))
         self.sig_right(ChipSig("+-->", "LOGRWN"))
 

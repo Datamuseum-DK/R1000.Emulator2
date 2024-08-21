@@ -79,12 +79,10 @@ class XMEMMON(PartFactory):
 		|	bool write_last;
 		|	bool phys_ref;
 		|	bool phys_last;
-		|	bool sparerr;
 		|	bool log_query;
 		|	bool mctl_is_read;
 		|	bool logrw;
 		|	bool logrw_d;
-		|	bool scav_hit;
 		|	bool omf20;
 		|''')
 
@@ -107,12 +105,11 @@ class XMEMMON(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|	unsigned mstart;
 		|	BUS_MSTRT_READ(mstart);
 		|	state->qms = mstart ^ 0x1e;
+		|	output.ackrfs = state->qms == 0x6;
 		|
 		|	unsigned condsel;
 		|	BUS_CNDSL_READ(condsel);
@@ -157,13 +154,6 @@ class XMEMMON(PartFactory):
 		|	prmda |= PIN_PGMOD=> << 0;
 		|	unsigned prmd = state->promd[prmda];
 		|
-		|	unsigned prmta = (output.cond & 1) << 4;
-		|	prmta |= output.eabd << 3;
-		|	prmta |= output.st1 << 2;
-		|	prmta |= state->mctl_is_read << 1;
-		|	prmta |= (output.oqf >> 3) & 1;
-		|	// unsigned prmt = state->promt[prmta];
-		|
 		|	bool memcyc1 = (prmz >> 1) & 1;
 		|	bool memstart = (prmz >> 0) & 1;
 		|	bool start_if_incw = (prmo >> 5) & 1;
@@ -192,7 +182,7 @@ class XMEMMON(PartFactory):
 		|	} else if (output.rmarp) {
 		|		scav_trap_next = (ti >> (63 - 32)) & 1;
 		|	} else if (state->log_query) {
-		|		scav_trap_next = state->scav_hit;
+		|		scav_trap_next = false;
 		|	}
 		|
 		|	bool cache_miss_next = state->cache_miss;
@@ -245,9 +235,6 @@ class XMEMMON(PartFactory):
 		|
 		|		state->log_query = !(state->labort || output.logrwn);
 		|		
-		|		state->sparerr = PIN_SCAPEV=>;
-		|		state->scav_hit = PIN_SCADAT=>;
-		|
 		|		state->omf20 = (
 		|			memcyc1 &&
 		|			((output.prmt >> 3) & 1) &&
@@ -342,11 +329,10 @@ class XMEMMON(PartFactory):
 		|	promza |= state->labort << 6;
 		|	promza |= state->e_abort_dly << 5;
 		|	prmz = state->promz[promza];
-		|	output.prmz = prmz;
+		|	output.prmz = prmz & 0x2;
 		|	bool contin = (prmz >> 5) & 1;
 		|	output.contin = !(contin);
 		|	output.wrscav = (prmz >> 2) & 1;
-		|	output.sparer = !(state->log_query && state->sparerr);
 		|
 		|	promoa = 0;
 		|	promoa |= state->qms;
@@ -359,7 +345,7 @@ class XMEMMON(PartFactory):
 		|	if (state->rtv_next_d)
 		|		promoa |= 0x100;
 		|	prmo = state->promo[promoa];
-		|	output.ackrfs = (prmo >> 6) & 1;
+		|	//output.ackrfs = (prmo >> 6) & 1;
 		|	// INIT_MRU, ACK_REFRESH, START_IF_INCM, START_TAG_RD, PCNTL0-3
 		|
 		|	output.cond6a = condsel != 0x6a;
@@ -394,15 +380,17 @@ class XMEMMON(PartFactory):
 		|	output.cndtru = !(state->cndtru);
 		|	output.nohit = board_hit != 0xf;
 		|
-		|	prmta = mar_cntl << 5;
+		|	unsigned prmta = mar_cntl << 5;
 		|	prmta |= (output.cond & 1) << 4;
 		|	prmta |= output.eabd << 3;
 		|	prmta |= output.st1 << 2;
 		|	prmta |= state->mctl_is_read << 1;
 		|	prmta |= (output.oqf >> 3) & 1;
 		|	output.prmt = state->promt[prmta];
+		|	output.prmt ^= 0x02;
+		|	output.prmt &= 0x7b;
 		|
-		|	output.scvhit = state->scav_hit;
+		|	output.scvhit = false;
 		|	output.mcisrd = state->mctl_is_read;
 		|	output.logrwd = state->logrw_d;
 		|''')

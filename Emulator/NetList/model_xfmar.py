@@ -165,7 +165,6 @@ class XFMAR(PartFactory):
 		|		}
 		|		output.mspc = (state->sro >> 4) & BUS_MSPC_MASK;
 		|		state->moff = (state->sro >> 7) & 0xffffff;
-		|		output.mnam = (state->srn >> 23) & BUS_MNAM_MASK;
 		|
 		|		output.wez = (state->moff & 0x3f) == 0;
 		|		output.ntop = !	((state->moff & 0x3f) > 0x30);
@@ -229,14 +228,12 @@ class XFMAR(PartFactory):
 		|
 		|	unsigned csa;
 		|	BUS_CSA_READ(csa);
-		|	output.cld = csa > 1;
-		|	output.ccnt = csa & 1;
 		|	output.lctp = csa != 0;
 		|
 		|	if (PIN_COCLK.posedge()) {
-		|		if (!output.cld) {
+		|		if (csa <= 1) {
 		|			state->ctopo = adr >> 7;
-		|		} else if (!output.ccnt) {
+		|		} else if (!(csa & 1)) {
 		|			state->ctopo += 1;
 		|		} else {
 		|			state->ctopo += 0xfffff;

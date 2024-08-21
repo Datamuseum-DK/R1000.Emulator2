@@ -19,7 +19,6 @@ class XSCAV(FChip):
         self.sig_left(ChipSig("-->+", "A", 0, 9))
 
         self.sig_right(ChipSig("+-->", "SD"))
-        self.sig_right(ChipSig("+-->", "SP"))
         self.sig_right(ChipSig("+<--", "QVIOE"))
         self.sig_right(ChipSig("+<->", "DQVI", 0, 7))
 

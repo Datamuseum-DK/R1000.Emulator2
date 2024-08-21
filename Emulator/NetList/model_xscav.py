@@ -66,12 +66,13 @@ class XSCAV(PartFactory):
 		|	if (PIN_WE.posedge()) {
 		|		BUS_DVI_READ(d);
 		|		state->ram[a] = d;
+		|		TRACE(<< std::hex << "W " << a << " <- " << d);
 		|	}
 		|	d = state->ram[a];
-		|	output.sp = !(odd_parity(d) & 1);
 		|
 		|	if (PIN_Q4.posedge()) {
 		|		state->screg = d;
+		|		state->screg = 0xfe;
 		|	}
 		|
 		|	unsigned msp;
@@ -79,6 +80,7 @@ class XSCAV(PartFactory):
 		|	d >>= 1;
 		|	d |= 0x80;
 		|	output.sd = !((d >> (7-msp)) & 1);
+		|	output.sd = false;
 		|	output.z_qvi = PIN_QVIOE=>;
 		|	if (!output.z_qvi)
 		|		output.qvi = state->screg;

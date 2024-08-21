@@ -14,7 +14,6 @@ class XFIUWCS(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "CLK"))
-        self.sig_left(ChipSig("-->+", "CKEN"))
         self.sig_left(ChipSig("-->+", "SFST"))
         self.sig_left(ChipSig("-->+", "UAD", 0, 13))
 
@@ -25,7 +24,6 @@ class XFIUWCS(FChip):
         self.sig_right(ChipSig("+-->", "VMSL", 0, 1))
         self.sig_right(ChipSig("+-->", "FILL"))
         self.sig_right(ChipSig("+-->", "OSRC"))
-        self.sig_right(ChipSig("+-->", "TIVI", 0, 3))
         self.sig_right(ChipSig("+-->", "LDO"))
         self.sig_right(ChipSig("+-->", "LDV"))
         self.sig_right(ChipSig("+-->", "LDT"))
@@ -34,6 +32,7 @@ class XFIUWCS(FChip):
         self.sig_right(ChipSig("+-->", "RSRC"))
         self.sig_right(ChipSig("+-->", "LSRC"))
         self.sig_right(ChipSig("+-->", "OFSRC"))
+        self.sig_right(ChipSig("+-->", "TVOE", 0, 7))
 
         self.finish()
 
