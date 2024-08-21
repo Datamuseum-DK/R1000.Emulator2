@@ -143,7 +143,8 @@ class KiCadNetList():
         if len(j) == 1:
             return None
         assert j.pop(0) == ''
-        assert j[0][:5] == "Page "
+        if j[0][:5] != "Page ":
+            return self.board.scm_lname + "_00"
         return self.board.scm_lname + "_%02d" % int(j[0][5:], 10)
 
 class ComponentSexp(Component):
