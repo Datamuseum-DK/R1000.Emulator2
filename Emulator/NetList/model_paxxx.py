@@ -129,12 +129,14 @@ class XPAxxxL(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	unsigned adr = 0;
 		|
-		|	BUS_A_READ(adr);
-		|	output.y = state->prom[adr];
-		|	state->zeros &= output.y;
-		|	state->ones |= output.y;
+		|	if (PIN_CLK.posedge()) {
+		|		unsigned adr = 0;
+		|		BUS_A_READ(adr);
+		|		output.y = state->prom[adr];
+		|		state->zeros &= output.y;
+		|		state->ones |= output.y;
+		|	}
 		|''')
 
 def register(part_lib):
