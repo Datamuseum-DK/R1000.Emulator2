@@ -15,7 +15,6 @@ class XNXTUADR(FChip):
         self.sig_left(ChipSig("-->+", "DV_U"))
         self.sig_left(ChipSig("-->+", "BAD_HINT"))
         self.sig_left(ChipSig("-->+", "LMAC"))
-        self.sig_left(ChipSig("-->+", "U_PEND"))
         self.sig_left(ChipSig("-->+", "G_SEL", 0, 1))
         self.sig_left(ChipSig("-->+", "U_MUX_SEL"))
         self.sig_left(ChipSig("-->+", "LCLK"))
@@ -29,6 +28,9 @@ class XNXTUADR(FChip):
 
         self.sig_left(ChipSig("-->+", "LATE", 0, 2))
 
+        self.sig_left(ChipSig("-->+", "UEI", 0, 14))
+        self.sig_left(ChipSig("-->+", "ACLK"))
+
         self.sig_right(ChipSig("+<--", "FIU", 0, 15))
         self.sig_right(ChipSig("+<--", "FIU_CLK"))
 
@@ -39,7 +41,7 @@ class XNXTUADR(FChip):
         self.sig_right(ChipSig("o<--", "Q1~"))
         self.sig_right(ChipSig("+-->", "NU", 0, 13))
 
-        self.sig_right(ChipSig("+<--", "UEV", 0, 3))
+        self.sig_right(ChipSig("+-->", "UEVP"))
 
         self.finish()
 

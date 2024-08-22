@@ -48,15 +48,17 @@ class XNXTUADR(PartFactory):
 		|	unsigned other;
 		|	unsigned late_u;
 		|	unsigned prev;
+		|	unsigned uei;
+		|	unsigned uev;
 		|''')
 
     def sensitive(self):
         yield "PIN_FIU_CLK.pos()"
         yield "PIN_LCLK.pos()"
+        yield "PIN_ACLK.pos()"
         yield "PIN_Q1not.pos()"
         yield "PIN_DV_U"
         yield "PIN_BAD_HINT"
-        yield "PIN_U_PEND"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -115,8 +117,8 @@ class XNXTUADR(PartFactory):
 		|		data ^= (7 << 3);
 		|		data |= 0x0140;
 		|		macro_hic = false;
-		|	} else if (PIN_U_PEND) {
-		|		BUS_UEV_READ(data);
+		|	} else if (state->uei != 0) {
+		|		data = state->uev;
 		|		data <<= 3;
 		|		data |= 0x0180;
 		|		u_event = false;
@@ -166,6 +168,14 @@ class XNXTUADR(PartFactory):
 		|	output.u_event = !u_event;
 		|	output.u_eventnot = u_event;
 		|
+		|	if (PIN_ACLK.posedge()) {
+		|		BUS_UEI_READ(state->uei);
+		|		state->uei <<= 1;
+		|		state->uei |= 1;
+		|		state->uei ^= 0xffff;
+		|		state->uev = 16 - fls(state->uei);
+		|		output.uevp = state->uei == 0;
+		|	}
 		|''')
 
 def register(part_lib):

@@ -34,7 +34,7 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XSEQNAM(PartFactory):
     ''' SEQ Name generation '''
@@ -64,14 +64,14 @@ class XSEQNAM(PartFactory):
 		|	}
 		|
 		|	if (!PIN_TOSCLK=>) {
-		|		BUS_ITYP_READ(state->tost);
+		|		BUS_DT_READ(state->tost);
 		|		BUS_IVAL_READ(state->vost);
 		|	}
 		|
 		|	if (PIN_RAMWE.posedge()) {
 		|		unsigned radr;
 		|		BUS_RADR_READ(radr);
-		|		BUS_ITYP_READ(state->namram[radr]);
+		|		BUS_DT_READ(state->namram[radr]);
 		|	}
 		|
 		|	uint32_t name_bus;
@@ -86,9 +86,9 @@ class XSEQNAM(PartFactory):
 		|	} else {
 		|		name_bus = 0xffffffff;
 		|	}
-		|	output.z_qtyp = PIN_QTYPOE=>;
-		|	if (!output.z_qtyp) {
-		|		output.qtyp = name_bus ^ BUS_QTYP_MASK;
+		|	output.z_qt = PIN_QTOE=>;
+		|	if (!output.z_qt) {
+		|		output.qt = name_bus ^ BUS_QT_MASK;
 		|	}
 		|
 		|	unsigned adr_name;
@@ -108,4 +108,4 @@ class XSEQNAM(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XSEQNAM", PartModel("XSEQNAM", XSEQNAM))
+    part_lib.add_part("XSEQNAM", PartModelDQ("XSEQNAM", XSEQNAM))

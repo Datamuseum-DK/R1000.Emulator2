@@ -17,11 +17,12 @@ class XSEQDEC(FChip):
         self.sig_left(ChipSig("-->+", "CLK"))
         self.sig_left(ChipSig("-->+", "EMAC", 0, 6))
         self.sig_left(ChipSig("-->+", "IMX"))
-        self.sig_left(ChipSig("-->+", "VAL", 0, 15))
+        self.sig_left(ChipSig("<->+", "DQV", 0, 15))
         self.sig_left(ChipSig("-->+", "SCLKE"))
         self.sig_left(ChipSig("-->+", "ILDRN"))
         self.sig_left(ChipSig("-->+", "DISPA"))
         self.sig_left(ChipSig("-->+", "FLIP"))
+        self.sig_left(ChipSig("-->+", "QVOE"))
 
         self.sig_right(ChipSig("+-->", "UAD", 0, 15))
         self.sig_right(ChipSig("+-->", "DEC", 0, 7))

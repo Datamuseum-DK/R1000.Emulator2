@@ -34,7 +34,7 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XSEQDEC(PartFactory):
     ''' SEQ Decode Ram '''
@@ -54,6 +54,7 @@ class XSEQDEC(PartFactory):
     def sensitive(self):
         yield "PIN_CLK.pos()"
         yield "BUS_DISP"
+        yield "PIN_QVOE"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -115,7 +116,7 @@ class XSEQDEC(PartFactory):
 		|		dsp = disp;
 		|	} else {
 		|		unsigned val;
-		|		BUS_VAL_READ(val);
+		|		BUS_DV_READ(val);
 		|		dsp = val;
 		|	}
 		|	dsp ^= BUS_DSP_MASK;
@@ -156,9 +157,14 @@ class XSEQDEC(PartFactory):
 		|
 		|	output.ccl = (*ciptr >> 4) & 0xf;
 		|
+		|	output.z_qv = PIN_QVOE=>;
+		|	if (!output.z_qv) {
+		|		output.qv = output.dsp ^ BUS_QV_MASK;
+		|	}
+		|
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XSEQDEC", PartModel("XSEQDEC", XSEQDEC))
+    part_lib.add_part("XSEQDEC", PartModelDQ("XSEQDEC", XSEQDEC))

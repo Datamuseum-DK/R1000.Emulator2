@@ -40,10 +40,8 @@ class XSEQNAM(FChip):
         self.sig_left(ChipSig("-->+", "IVAL", 0, 31))
         self.sig_right(ChipSig("+===", "ADRN", 0, 31))
 
-        self.sig_right(ChipSig("+<--", "QTYPOE"))
-        self.sig_level()
-        self.sig_left(ChipSig("-->+", "ITYP", 0, 31))
-        self.sig_right(ChipSig("+===", "QTYP", 0, 31))
+        self.sig_right(ChipSig("+<--", "QTOE"))
+        self.sig_right(ChipSig("+===", "DQT", 0, 31))
 
         self.sig_left(ChipSig("-->+", "CODS", 0, 23))
         self.finish()
