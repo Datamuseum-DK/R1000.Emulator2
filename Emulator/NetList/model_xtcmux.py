@@ -45,11 +45,12 @@ class XTCMUX(PartFactory):
  
         file.fmt('''
 		|	uint64_t aram[1<<BUS_A_WIDTH];
-		|	uint64_t c;
+		|	uint64_t c, wdr;
 		|''')
 
     def sensitive(self):
         yield "PIN_CLK.neg()"
+        yield "PIN_Q4.pos()"
         yield "PIN_WE.pos()"
 
     def doit(self, file):
@@ -59,8 +60,8 @@ class XTCMUX(PartFactory):
 
         file.fmt('''
 		|	uint64_t c = 0;
-		|	uint64_t fiu = 0, alu = 0, wdr = 0;
-		|	bool fiu_valid = false, alu_valid = false, wdr_valid = false;
+		|	uint64_t fiu = 0, alu = 0;
+		|	bool fiu_valid = false, alu_valid = false;
 		|	bool fiu0, fiu1;
 		|	bool chi = false;
 		|	bool clo = false;
@@ -85,9 +86,7 @@ class XTCMUX(PartFactory):
 		|			chi = true;
 		|		} else {
 		|			if (sel) {
-		|				BUS_WDR_READ(wdr);
-		|				wdr_valid = true;
-		|				c |= wdr & 0xffffffff00000000ULL;
+		|				c |= state->wdr & 0xffffffff00000000ULL;
 		|			} else {
 		|				BUS_ALU_READ(alu);
 		|				alu_valid = true;
@@ -104,9 +103,7 @@ class XTCMUX(PartFactory):
 		|			clo = true;
 		|		} else {
 		|			if (sel) {
-		|				if (!wdr_valid)
-		|					BUS_WDR_READ(wdr);
-		|				c |= wdr & 0xffffffffULL;
+		|				c |= state->wdr & 0xffffffffULL;
 		|			} else {
 		|				if (!alu_valid)
 		|					BUS_ALU_READ(alu);
@@ -131,6 +128,10 @@ class XTCMUX(PartFactory):
 		|		output.c = state->aram[adr];
 		| 	} else {
 		|		output.c = c;
+		|	}
+		|	if (PIN_Q4.posedge() && PIN_SCLKE=> && !PIN_LDWDR=>) {
+		|		BUS_DTY_READ(state->wdr);
+		|		state->wdr ^= BUS_DTY_MASK;
 		|	}
 		|''')
 
