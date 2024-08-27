@@ -188,8 +188,11 @@ class Chip():
 
         self.lex_symbol()
         i = [x.name for x in self.pins]
-        if len(set(i)) != len(self.pins):
-            print("DUPLICATE PIN NAMES", self.symbol_name, list(sorted(i)))
+        seen = set()
+        for x in self.pins:
+            if x.name in seen:
+                print("DUPLICATE PIN NAMES", self.symbol_name, x.name)
+            seen.add(x.name)
 
     def __str__(self):
         return "<Chip " + self.symbol_name + ">"

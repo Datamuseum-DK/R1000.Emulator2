@@ -18,8 +18,6 @@ class XTSPC(FChip):
         self.sig_left(ChipSig("-->+", "B", 0, 2))
         self.sig_left(ChipSig("-->+", "TAEN"))
         self.sig_left(ChipSig("-->+", "VAEN"))
-        self.sig_left(ChipSig("-->+", "DON"))
-        self.sig_left(ChipSig("-->+", "DOFF"))
 
         self.sig_right(ChipSig("+-->", "PARE"))
         self.sig_right(ChipSig("+<--", "PAROE"))

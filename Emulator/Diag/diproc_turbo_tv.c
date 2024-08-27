@@ -13,16 +13,15 @@
 #include "Infra/context.h"
 #include "Infra/vend.h"
 
-#if defined(HAS_Z016) && defined(HAS_Z017)
-static uint64_t *typ_aram, *typ_bram;
+#if defined(HAS_Z016)
+static uint64_t *typ_aram;
 #endif
 #if defined(HAS_Z019)
 static uint8_t *typ_rfpar;
 #endif
 static unsigned typ_ptr;
 
-#if (defined(HAS_Z013) && defined(HAS_Z014)) || \
-	(defined(HAS_Z016) && defined(HAS_Z017))
+#if defined(HAS_Z013) || defined(HAS_Z016)
 static uint64_t
 get_wdr(const struct diagproc *dp, uint8_t offset)
 {
@@ -51,7 +50,7 @@ get_wdr(const struct diagproc *dp, uint8_t offset)
 static int
 load_register_file_typ(const struct diagproc *dp)
 {
-#if !defined(HAS_Z016) || !defined(HAS_Z017)
+#if !defined(HAS_Z016)
 	(void)dp;
 	return (0);
 #else
@@ -64,42 +63,11 @@ load_register_file_typ(const struct diagproc *dp)
 		AN(ctx);
 		typ_aram = (uint64_t *)(void*)(ctx + 1);
 	}
-	if (typ_bram == NULL) {
-		ctx = CTX_Find(COMP_Z017);
-		AN(ctx);
-		typ_bram = (uint64_t *)(void*)(ctx + 1);
-	}
-#if defined(HAS_Z019)
-	if (typ_rfpar == NULL) {
-		ctx = CTX_Find(COMP_Z019);
-		AN(ctx);
-		typ_rfpar = (uint8_t *)(void*)(ctx + 1);
-	}
-#endif
 
 	for (i = 0; i < 16; i++, typ_ptr++) {
 		wdr = get_wdr(dp, 0x18 + i * 12);
 		typ_aram[typ_ptr] = wdr;
-		typ_bram[typ_ptr] = wdr;
 
-		wdr = wdr ^ ((wdr >> 4) & 0x0f0f0f0f0f0f0f0fULL);
-		wdr = wdr ^ ((wdr >> 2) & 0x0303030303030303ULL);
-		wdr = wdr ^ ((wdr >> 1) & 0x0101010101010101ULL);
-#if defined(HAS_Z019)
-		uint8_t par;
-		par = 0;
-		if (wdr & (1ULL<<56)) par |= 0x80;
-		if (wdr & (1ULL<<48)) par |= 0x40;
-		if (wdr & (1ULL<<40)) par |= 0x20;
-		if (wdr & (1ULL<<32)) par |= 0x10;
-		if (wdr & (1ULL<<24)) par |= 0x08;
-		if (wdr & (1ULL<<16)) par |= 0x04;
-		if (wdr & (1ULL<< 8)) par |= 0x02;
-		if (wdr & (1ULL<< 0)) par |= 0x01;
-		par ^= 0xff;
-		typ_rfpar[typ_ptr] = par;
-		typ_rfpar[typ_ptr + 1024] = par;
-#endif
 	}
 
 	sc_tracef(dp->name, "Turbo LOAD_REGISTER_FILE_200.TYP");
