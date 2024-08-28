@@ -55,8 +55,6 @@ class XSEQIBUF(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|
 		|	if (PIN_ICLK.posedge()) {
@@ -105,7 +103,8 @@ class XSEQIBUF(PartFactory):
 		|		output.mps = state->mpc;
 		|	}
 		|
-		|	PIN_EMP<=(state->word != 0);
+		|	//PIN_EMP<=(state->word != 0);
+		|	output.emp = state->word != 0;
 		|
 		|	if (state->word == 7)
 		|		output.disp = state->typ >> 48;

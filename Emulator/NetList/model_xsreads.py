@@ -79,6 +79,8 @@ class XSREADS(PartFactory):
 		|	}
 		|	output.offoe = idx == 0;
 		|	output.cnmoe = (idx == 0 || idx == 5);
+		|	if (!output.cnmoe)
+		|		output.rnmoe = false;
 		|	
 		|''')
 

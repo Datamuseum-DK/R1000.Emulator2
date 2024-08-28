@@ -60,8 +60,6 @@ class XCODSEG(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|
 		|	if (PIN_RCLK.posedge()) {

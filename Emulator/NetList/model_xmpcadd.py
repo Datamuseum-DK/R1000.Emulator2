@@ -40,6 +40,7 @@ class XMPCADD(PartFactory):
     ''' SEQ Macro PC adder '''
 
     # XXX: autopin failed
+    autopin = True
 
     def state(self, file):
         file.fmt('''
@@ -51,7 +52,6 @@ class XMPCADD(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
         file.fmt('''
 		|	bool wdisp, mibmt, oper;
 		|	unsigned macro_pc_ofs;
@@ -95,7 +95,8 @@ class XMPCADD(PartFactory):
 		|		boff = b - a;
 		|	}
 		|	boff &= 0x7fff;
-		|	BUS_BOFF_WRITE(boff);
+		|	// BUS_BOFF_WRITE(boff);
+		|	output.boff = boff;
 		|	unsigned code_sel, coff;
 		|	BUS_COSEL_READ(code_sel);
 		|	switch (code_sel) {
@@ -120,7 +121,9 @@ class XMPCADD(PartFactory):
 		|		}
 		|		state->last = coff;
 		|	}
-		|	BUS_COFF_WRITE(coff);
+		|	output.coff = coff;
+		|	//BUS_COFF_WRITE(coff);
+		|#if 0
 		|	TRACE(
 		|	    << " wdisp " << PIN_WDISP
 		|	    << " mibmt " << PIN_MIBMT
@@ -131,6 +134,7 @@ class XMPCADD(PartFactory):
 		|	    << " a " << std::hex << a
 		|	    << " b " << std::hex << b
 		|	);
+		|#endif
 		''')
 
 

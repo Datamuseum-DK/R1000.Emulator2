@@ -35,15 +35,21 @@ class XSEQNAM(FChip):
         self.sig_left(ChipSig("-->+", "ISPC", 0, 2))
         self.sig_right(ChipSig("+===", "OSPC", 0, 2))
 
+        self.sig_level()
+        self.sig_left(ChipSig("-->+", "QVOE"))
         self.sig_right(ChipSig("+<--", "ADRNOE"))
         self.sig_level()
-        self.sig_left(ChipSig("-->+", "IVAL", 0, 31))
+        self.sig_left(ChipSig("<->+", "DQV", 0, 31))
         self.sig_right(ChipSig("+===", "ADRN", 0, 31))
 
         self.sig_right(ChipSig("+<--", "QTOE"))
         self.sig_right(ChipSig("+===", "DQT", 0, 31))
 
-        self.sig_left(ChipSig("-->+", "CODS", 0, 23))
+        self.sig_left(ChipSig("-->+", "MCLK"))
+        self.sig_left(ChipSig("-->+", "RCLK"))
+        self.sig_left(ChipSig("-->+", "CSEL"))
+        self.sig_left(ChipSig("-->+", "CNCK"))
+        self.sig_left(ChipSig("-->+", "CNOE"))
         self.finish()
 
 def register():

@@ -43,15 +43,13 @@ class XSEQNAM(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint32_t tost;
-		|	uint32_t vost;
+		|	uint32_t tost, vost, cur_name;
 		|	uint32_t namram[1<<BUS_RADR_WIDTH];
+		|	unsigned pcseg, retseg, last, cseg;
 		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|
@@ -65,7 +63,11 @@ class XSEQNAM(PartFactory):
 		|
 		|	if (!PIN_TOSCLK=>) {
 		|		BUS_DT_READ(state->tost);
-		|		BUS_IVAL_READ(state->vost);
+		|		BUS_DV_READ(state->vost);
+		|	}
+		|
+		|	if (PIN_CNCK.posedge()) {
+		|		BUS_DT_READ(state->cur_name);
 		|	}
 		|
 		|	if (PIN_RAMWE.posedge()) {
@@ -88,12 +90,31 @@ class XSEQNAM(PartFactory):
 		|	}
 		|	output.z_qt = PIN_QTOE=>;
 		|	if (!output.z_qt) {
-		|		output.qt = name_bus ^ BUS_QT_MASK;
+		|		if (PIN_CNOE=>)
+		|			output.qt = name_bus ^ BUS_QT_MASK;
+		|		else
+		|			output.qt = state->cur_name;
+		|	}
+		|
+		|	if (PIN_RCLK.posedge()) {
+		|		state->retseg = state->pcseg;
+		|	}
+		|	if (PIN_MCLK.posedge()) {
+		|		unsigned val;
+		|		BUS_DV_READ(val);
+		|		val ^= BUS_DV_MASK;
+		|		state->pcseg = val;
+		|		state->pcseg &= 0xffffff;
+		|	}
+		|	if (!PIN_CSEL) {
+		|		state->cseg = state->pcseg;
+		|	} else {
+		|		state->cseg = state->retseg;
 		|	}
 		|
 		|	unsigned adr_name;
 		|	if (PIN_ADRICD=>) {
-		|		BUS_CODS_READ(adr_name);
+		|		adr_name = state->cseg;
 		|	} else {
 		|		adr_name = name_bus;
 		|	}
@@ -102,8 +123,13 @@ class XSEQNAM(PartFactory):
 		|	if (!output.z_adrn)
 		|		output.adrn = adr_name;
 		|	
+		|	output.z_qv = PIN_QVOE=>;
+		|	if (!output.z_qv) {
+		|		output.qv = state->cseg ^ BUS_QV_MASK;
+		|	}
 		|
 		|''')
+
 
 def register(part_lib):
     ''' Register component model '''
