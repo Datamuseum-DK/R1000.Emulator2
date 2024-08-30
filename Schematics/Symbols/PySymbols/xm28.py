@@ -29,7 +29,6 @@ class XM28(FChip):
         self.sig_left(ChipSig("-->+", "EABT"))
         self.sig_left(ChipSig("-->+", "ELABT"))
         self.sig_left(ChipSig("-->+", "LABT"))
-        self.sig_left(ChipSig("-->+", "LAR", 2, 3))
 
         self.sig_right(ChipSig("+-->", "AHT"))
         self.sig_right(ChipSig("+-->", "BAHT"))
@@ -45,8 +44,6 @@ class XM28(FChip):
         self.sig_right(ChipSig("+-->", "TGACE"))
         self.sig_right(ChipSig("+-->", "TGBCE"))
         self.sig_right(ChipSig("+-->", "TSC14"))
-        self.sig_right(ChipSig("+-->", "SETAS"))
-        self.sig_right(ChipSig("+-->", "SETBS"))
         self.sig_right(ChipSig("+-->", "RCLKE"))
         self.sig_right(ChipSig("+-->", "EABRT"))
         self.sig_right(ChipSig("+-->", "LABRT"))

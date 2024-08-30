@@ -62,9 +62,6 @@ class XHASH(PartFactory):
 		|
 		|		BUS_S_READ(s);
 		|		BUS_A_READ(a);
-		|		output.ms = s;
-		|		output.mn = (a>>25) & BUS_MN_MASK;
-		|		output.mp = (a>>12) & BUS_MP_MASK;
 		|		output.p = (a>>BUS_A_LSB(27)) & 0xf;
 		|		output.mw = a & BUS_MW_MASK;
 		|#define GBIT(fld,bit,width) ((fld >> (width - (bit + 1))) & 1)
@@ -96,7 +93,7 @@ class XHASH(PartFactory):
 		|			hash |= 1<<0;
 		|
 		|		output.l = hash;
-		|		output.tag = hash << 2;
+		|		//output.tag = hash << 2;
 		|	}
 		|	if (PIN_LDMAR=>) {
 		|		idle_next = &ldmar_event;

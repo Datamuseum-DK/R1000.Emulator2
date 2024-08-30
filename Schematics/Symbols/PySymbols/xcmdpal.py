@@ -20,8 +20,8 @@ class XCMDPAL(FChip):
 
         self.sig_right(ChipSig("+-->", "CMD", 0, 3))
         self.sig_right(ChipSig("+-->", "MC2N"))
-        self.sig_right(ChipSig("+-->", "MC1"))
-        self.sig_right(ChipSig("+-->", "MC2"))
+        self.sig_right(ChipSig("+-->", "CYO"))
+        self.sig_right(ChipSig("+-->", "CYT"))
 
         self.finish()
 

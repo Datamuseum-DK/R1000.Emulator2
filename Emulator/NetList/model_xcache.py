@@ -49,9 +49,9 @@ class XCACHE(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t ram[1<<BUS_A_WIDTH];
-		|	uint8_t rame[1<<BUS_A_WIDTH];
-		|	uint8_t par[1<<BUS_A_WIDTH];
+		|	uint64_t ram[1<<14];	// Turbo
+		|	uint8_t rame[1<<14];	// Turbo
+		|	uint8_t par[1<<14];	// Turbo
 		|	bool utrace_set;
 		|	enum microtrace utrace;
 		|	unsigned sr;
@@ -61,13 +61,33 @@ class XCACHE(PartFactory):
 		|	bool oml;
 		|	bool k12, k13;
 		|	uint64_t breg, qreg;
+		|	unsigned hash;
+		|	uint64_t mar_space, mar_name, mar_page;
 		|''')
 
     def sensitive(self):
-        yield "BUS_A"
+        #yield "BUS_ADR"	Q4
         yield "PIN_CLK"
-        yield "PIN_WCK.pos()"
+        yield "BUS_CMD"
+        #yield "PIN_CSTP"	Q4
+        #yield "BUS_CWE"	CLK.pos()
+        #yield "BUS_CWL"	CLK.neg()
+        #yield "PIN_DIR"	CLK.pos()
+        #yield "BUS_DV"		WCK.pos()
+        #yield "PIN_EVEN"	CLK.pos
+        #yield "PIN_EWE"	CLK.pos
+        #yield "BUS_K"		CLK.pos(12)+neg(13)
+        #yield "PIN_LDMR"	Q4
+        #yield "PIN_LVEN"	CLK.pos
+        #yield "PIN_LWE"	CLK.pos
+        #yield "PIN_OE"		CLK.pos
+        #yield "PIN_Q4"		CLK
         yield "PIN_QCK.pos()"
+        yield "PIN_QVOE"
+        #yield "BUS_SPC"	Q4
+        #yield "PIN_TGOE"	CLK.pos
+        #yield "PIN_WCK"	CLK
+        #yield "PIN_WE"		CLK.pos
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -81,7 +101,6 @@ class XCACHE(PartFactory):
 		|		assert (state->utrace > 0);
 		|		state->utrace_set = true;
 		|	}
-		|
 		|	unsigned adr = 0;
 		|	uint64_t data = 0;
 		|
@@ -89,7 +108,7 @@ class XCACHE(PartFactory):
 		|		BUS_DV_READ(state->breg);
 		|	}
 		|
-		|	BUS_A_READ(adr);
+		|	adr = state->hash;
 		|	adr &= ~3;
 		|	if (state->k12)
 		|		adr |= 2;
@@ -117,21 +136,18 @@ class XCACHE(PartFactory):
 		|	bool pos = PIN_CLK.posedge();
 		|	bool neg = PIN_CLK.negedge();
 		|
-		|	uint64_t ta, ts, nm, pg, sp;
+		|	uint64_t ta, ts;
 		|	bool name, offset;
 		|
 		|	ta = data;
 		|	ts = ta & 0x7;
 		|	ta = ta >> 19;
-		|	BUS_NM_READ(nm);
-		|	BUS_PG_READ(pg);
-		|	BUS_SP_READ(sp);
 		|	unsigned cmd;
 		|	BUS_CMD_READ(cmd);
 		|
-		|	name = (nm != (ta >> BUS_PG_WIDTH));
-		|	offset = (pg != (ta & BUS_PG_MASK)) || (sp != ts);
-		|	
+		|	name = (state->mar_name != (ta >> 13));
+		|	offset = (state->mar_page != (ta & 0x1fff)) || (state->mar_space != ts);
+		|
 		|	output.nme = !state->nme && !((cmd != 3) && state->ome);
 		|	output.nml = !state->nml && !((cmd != 3) && state->oml);
 		|
@@ -139,7 +155,7 @@ class XCACHE(PartFactory):
 		|		state->nme = name;
 		|		state->ome = offset;
 		|		next_trigger(5, sc_core::SC_NS);
-		|	} else if (pos) {	 
+		|	} else if (pos) {
 		|		state->nml = name;
 		|		state->oml = offset;
 		|		next_trigger(5, sc_core::SC_NS);
@@ -196,6 +212,63 @@ class XCACHE(PartFactory):
 		|		state->k12 = PIN_K12=>;
 		|	if (neg)
 		|		state->k13 = PIN_K13=>;
+		|
+		|	if (PIN_Q4.posedge() && !PIN_LDMR=> && PIN_CSTP) {
+		|		uint64_t a;
+		|		uint32_t s;
+		|
+		|		BUS_SPC_READ(s);
+		|		BUS_ADR_READ(a);
+		|		state->mar_space = s;
+		|		state->mar_name = (a>>25) & 0xffffffffULL;
+		|		state->mar_page = (a>>12) & 0x1fff;
+		|		output.ps = (a>>BUS_ADR_LSB(27)) & 0xf;
+		|		bool high_board = !PIN_ISLOW=>;
+		|		if (PIN_ISA=>) {
+		|			output.myset = !(
+		|				((output.ps & 0xc) == 0x8 &&  high_board) ||
+		|				((output.ps & 0xc) == 0x0 && !high_board)
+		|			);
+		|		} else {
+		|			output.myset = !(
+		|				((output.ps & 0xc) == 0xc &&  high_board) ||
+		|				((output.ps & 0xc) == 0x4 && !high_board)
+		|			);
+		|		}
+		|
+		|		output.wd = a & BUS_WD_MASK;
+		|		state->hash = 0;
+		|#define GBIT(fld,bit,width) ((fld >> (width - (bit + 1))) & 1)
+		|		if (GBIT(s, 1, BUS_SPC_WIDTH) ^
+		|		    GBIT(a, 12, BUS_ADR_WIDTH) ^
+		|		    GBIT(a, 49, BUS_ADR_WIDTH))
+		|			state->hash |= 1<<13;
+		|		if (GBIT(a, 40, BUS_ADR_WIDTH) ^ GBIT(a, 13, BUS_ADR_WIDTH))
+		|			state->hash |= 1<<12;
+		|		if (GBIT(a, 41, BUS_ADR_WIDTH) ^ GBIT(a, 14, BUS_ADR_WIDTH))
+		|			state->hash |= 1<<11;
+		|		if (GBIT(a, 42, BUS_ADR_WIDTH) ^ GBIT(a, 15, BUS_ADR_WIDTH))
+		|			state->hash |= 1<<10;
+		|		if (GBIT(a, 39, BUS_ADR_WIDTH) ^ GBIT(a, 16, BUS_ADR_WIDTH))
+		|			state->hash |= 1<<9;
+		|		if (GBIT(a, 43, BUS_ADR_WIDTH) ^ GBIT(a, 17, BUS_ADR_WIDTH))
+		|			state->hash |= 1<<8;
+		|		if (GBIT(a, 47, BUS_ADR_WIDTH) ^ GBIT(a, 18, BUS_ADR_WIDTH))
+		|			state->hash |= 1<<7;
+		|		if (GBIT(a, 46, BUS_ADR_WIDTH) ^ GBIT(a, 19, BUS_ADR_WIDTH))
+		|			state->hash |= 1<<6;
+		|		if (GBIT(a, 45, BUS_ADR_WIDTH) ^ GBIT(a, 20, BUS_ADR_WIDTH))
+		|			state->hash |= 1<<5;
+		|		if (GBIT(a, 44, BUS_ADR_WIDTH) ^ GBIT(a, 21, BUS_ADR_WIDTH))
+		|			state->hash |= 1<<4;
+		|		if (GBIT(a, 50, BUS_ADR_WIDTH) ^ GBIT(s, 0, BUS_SPC_WIDTH))
+		|			state->hash |= 1<<3;
+		|		if (GBIT(a, 48, BUS_ADR_WIDTH) ^ GBIT(s, 2, BUS_SPC_WIDTH))
+		|			state->hash |= 1<<2;
+		|
+		|		output.cl = state->hash >> 2;
+		|	}
+		|
 		|''')
 
 def register(part_lib):

@@ -41,7 +41,7 @@ class XM30(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	bool awe, row_adr_oe, col_adr_oe, ras, cas_a, cas_b;
+		|	bool awe, cas_a, cas_b;
 		|	bool vbdr;
 		|	bool vadr;
 		|	bool trdr;
@@ -58,8 +58,6 @@ class XM30(PartFactory):
 		|	if (state->ctx.job & 1) {
 		|		state->ctx.job &= ~1;
 		|		PIN_AWE<=(state->awe);
-		|		PIN_RAOE<=(state->row_adr_oe);
-		|		PIN_CAOE<=(state->col_adr_oe);
 		|		PIN_TRCE<=(state->trdr);
 		|		PIN_VACE<=(state->vadr);
 		|		PIN_VBCE<=(state->vbdr);
@@ -69,7 +67,6 @@ class XM30(PartFactory):
 		|	}
 		|	if (state->ctx.job & 2) {
 		|		state->ctx.job &= ~2;
-		|		PIN_RAS<=(state->ras);
 		|		PIN_CASA<=(state->cas_a);
 		|		PIN_CASB<=(state->cas_b);
 		|		return;
@@ -86,12 +83,6 @@ class XM30(PartFactory):
 		|		bool late_abort = PIN_LAB=>;
 		|		bool set_b = PIN_SETB=>;
 		|
-		|		bool ras = !(
-		|		    ((cmd == 0x9 || cmd == 0xb) && !mcyc2_next) ||
-		|		    ((cmd == 0x9 || cmd == 0xb) && h1 && !mcyc2) ||
-		|		    (cmd >= 0xc && !mcyc2_next) ||
-		|		    (cmd >= 0xc && h1 && !mcyc2)
-		|		);
 		|		bool cas_a = !(
 		|		    ((cmd == 0xc || cmd == 0xe) && !h1 && !mcyc2_next) ||
 		|		    ((cmd == 0xd || cmd == 0xf) && h1 && !mcyc2 && !ahit && !late_abort)
@@ -101,19 +92,12 @@ class XM30(PartFactory):
 		|		    ((cmd == 0xd || cmd == 0xf) && h1 && !mcyc2 && !bhit && !late_abort)
 		|		);
 		|		bool awe = (((cmd & 0xd) == 0xd) && h1 && !mcyc2);
-		|		bool row_adr_oe = !(!h1 && mcyc2_next);
-		|		bool col_adr_oe = !(
-		|		    (h1) ||
-		|		    (!mcyc2_next)
-		|		);
 		|
 		|		if (
-		|		    ras != state->ras ||
 		|		    cas_a != state->cas_a ||
 		|		    cas_b != state->cas_b
 		|		) {
 		|			state->ctx.job |= 2;
-		|			state->ras = ras;
 		|			state->cas_a = cas_a;
 		|			state->cas_b = cas_b;
 		|		}
@@ -140,16 +124,12 @@ class XM30(PartFactory):
 		|		    );
 		|		if (
 		|		    awe != state->awe ||
-		|		    row_adr_oe != state->row_adr_oe ||
-		|		    col_adr_oe != state->col_adr_oe ||
 		|		    trdr != state->trdr ||
 		|		    vadr != state->vadr ||
 		|		    vbdr != state->vbdr
 		|		) {
 		|			state->ctx.job |= 1;
 		|			state->awe = awe;
-		|			state->row_adr_oe = row_adr_oe;
-		|			state->col_adr_oe = col_adr_oe;
 		|			state->trdr = trdr;
 		|			state->vadr = vadr;
 		|			state->vbdr = vbdr;

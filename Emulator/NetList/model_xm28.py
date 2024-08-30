@@ -124,16 +124,6 @@ class XM28(PartFactory):
 		|	unsigned pset;
 		|	BUS_PSET_READ(pset);
 		|
-		|	output.setas = !(
-		|		((pset & 0xc) == 0x8 &&  high_board) ||
-		|		((pset & 0xc) == 0x0 && !high_board)
-		|	);
-		|
-		|	output.setbs = !(
-		|		((pset & 0xc) == 0xc &&  high_board) ||
-		|		((pset & 0xc) == 0x4 && !high_board)
-		|	);
-		|
 		|	bool eabort_y = !(PIN_EABT=> && PIN_ELABT=>);
 		|	bool labort_y = !(PIN_LABT=> && PIN_ELABT=> && !h1);
 		|
@@ -185,8 +175,8 @@ class XM28(PartFactory):
 		|			}
 		|		} else if (q1pos) {
 		|			output.da2sl = false;
-		|			output.daa1d = !PIN_LAR2=>;
-		|			output.daa2d = PIN_LAR3=>;
+		|			output.daa1d = false;
+		|			output.daa2d = true;
 		|		} else {	// q3pos
 		|
 		|			bool pht26 = !(

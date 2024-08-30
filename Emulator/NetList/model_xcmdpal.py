@@ -61,8 +61,6 @@ class XCMDPAL(PartFactory):
 		|		bool p_early_abort = PIN_ABRT=>;
 		|		bool p_mcyc2_next_hd = state->p_mcyc2_next;
 		|		int out_mcyc2_next;
-		|		int out_mcyc1;
-		|		int out_mcyc2;
 		|		unsigned cmd = 0;
 		|		if (p_early_abort && p_mcyc2_next_hd) {
 		|			cmd = 0;
@@ -74,17 +72,14 @@ class XCMDPAL(PartFactory):
 		|		        ((mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
 		|		        ((!p_cmdcont) && (!p_early_abort) && (!p_mcyc2_next_hd))
 		|		    );
-		|		out_mcyc1 =
+		|		output.cyo =
 		|		    !(
 		|		        ((mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd)
 		|		    );
-		|		out_mcyc2 = p_mcyc2_next_hd;
+		|		output.cyt = p_mcyc2_next_hd;
 		|
 		|		output.cmd = cmd;
 		|		state->p_mcyc2_next = output.mc2n = out_mcyc2_next;
-		|		output.mc = 0;
-		|		if (out_mcyc1) output.mc |= 2;
-		|		if (out_mcyc2) output.mc |= 1;
 		|	}
 		|''')
 

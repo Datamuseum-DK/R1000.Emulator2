@@ -21,10 +21,6 @@ class XHASH(FChip):
 
         self.sig_right(ChipSig("+-->", "P", 0, 3))
         self.sig_right(ChipSig("+-->", "L", 0, 11))
-        self.sig_right(ChipSig("+-->", "TAG", 0, 13))
-        self.sig_right(ChipSig("+-->", "MS", 0, 2))
-        self.sig_right(ChipSig("+-->", "MN", 0, 31))
-        self.sig_right(ChipSig("+-->", "MP", 0, 12))
         self.sig_right(ChipSig("+-->", "MW", 0, 5))
 
         self.finish()

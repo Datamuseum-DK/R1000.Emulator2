@@ -38,14 +38,15 @@ class XBRAM(FChip):
         self.sig_left(ChipSig("-->+", "CAS"))
         self.sig_left(ChipSig("-->+", "RAS"))
         self.sig_left(ChipSig("-->+", "DCK"))
+        self.sig_left(ChipSig("-->+", "SET", 0, 1))
+        self.sig_left(ChipSig("-->+", "CL", 0, 11))
+        self.sig_left(ChipSig("-->+", "WD", 0, 5))
 
         self.sig_right(ChipSig("+<--", "ICK"))
         self.sig_right(ChipSig("+<--", "QCOE"))
         self.sig_right(ChipSig("+<--", "QTOE"))
         self.sig_right(ChipSig("+<--", "QVOE"))
 
-        self.sig_level()
-        self.sig_left(ChipSig("-->+", "A", 0, 9))
         self.sig_right(ChipSig("+<->", "DQC", 0, 8))
         self.sig_level()
         self.sig_left(ChipSig("<->+", "DQT", 0, 63))

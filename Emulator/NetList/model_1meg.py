@@ -48,9 +48,8 @@ class BRAM(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	uint16_t bitc[1 << 20];
-		|	uint64_t bitt[1 << 20];
-		|	uint64_t bitv[1 << 20];
-		|	unsigned ras, cas;
+		|	uint64_t bitt[1 << 21];
+		|	unsigned set, cl, wd;
 		|	uint16_t cdreg, cqreg;
 		|	uint64_t tdreg, tqreg;
 		|	uint64_t vdreg, vqreg;
@@ -67,31 +66,36 @@ class BRAM(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	uint32_t adr = 0;
-		|
-		|	BUS_A_READ(adr);
-		|
 		|	if (PIN_DCK.posedge()) {
 		|		BUS_DC_READ(state->cdreg);
 		|		BUS_DT_READ(state->tdreg);
 		|		BUS_DV_READ(state->vdreg);
 		|	}
-		|	if (PIN_RAS.negedge())
-		|		state->ras = adr;
+		|	if (PIN_RAS.posedge()) {
+		|		BUS_CL_READ(state->cl);
+		|		BUS_WD_READ(state->wd);
+		|	}
 		|	if (PIN_CAS.negedge()) {
-		|		state->cas = adr;
-		|		adr = (state->cas << 10) | state->ras;
+		|		BUS_SET_READ(state->set);
+		|	}
+		|
+		|	uint32_t adr =
+		|		(state->set << 18) |
+		|		(state->cl << 6) |
+		|		state->wd;
+		|
+		|	assert(adr < (1 << 20));
+		|	if (PIN_CAS.negedge()) {
 		|		if (PIN_WE=>) {
 		|			state->bitc[adr] = state->cdreg;
-		|			state->bitt[adr] = state->tdreg;
-		|			state->bitv[adr] = state->vdreg;
+		|			state->bitt[adr+adr] = state->tdreg;
+		|			state->bitt[adr+adr+1] = state->vdreg;
 		|		}
 		|	}
-		|	adr = (state->cas << 10) | state->ras;
 		|	if (PIN_ICK.posedge() && !PIN_CAS=>) {
 		|		state->cqreg = state->bitc[adr];
-		|		state->tqreg = state->bitt[adr];
-		|		state->vqreg = state->bitv[adr];
+		|		state->tqreg = state->bitt[adr+adr];
+		|		state->vqreg = state->bitt[adr+adr+1];
 		|	}
 		|	output.z_qc = PIN_QCOE=>;
 		|	output.z_qt = output.z_qc;

@@ -70,10 +70,10 @@ class XBUSPAL(PartFactory):
 		|	}
 		|	bool p_mcyc2_nxt = PIN_MC2N;
 		|
-		|	// bool p_seta_sel = PIN_SETA;
+		|	bool p_seta_sel = PIN_SETA;
 		|	bool p_setb_sel = PIN_SETB;
 		|	if (PIN_Q4.posedge()) {
-		|		output.taoe =  (cmd == 0x6 || cmd == 0x7) && (!p_mcyc2_nxt)  &&   p_setb_sel;
+		|		output.taoe =  (cmd == 0x6 || cmd == 0x7) && (!p_mcyc2_nxt)  && (!p_seta_sel);
 		|		output.tboe =  (cmd == 0x6 || cmd == 0x7) && (!p_mcyc2_nxt)  && (!p_setb_sel);
 		|		output.tadin = !(cmd == 0x7 && (!p_mcyc2_nxt));
 		|		output.tbdin = !(cmd == 0x7 && (!p_mcyc2_nxt));

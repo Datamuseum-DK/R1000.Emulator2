@@ -13,7 +13,6 @@ class XCACHE(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "A", 0, 13))
         self.sig_left(ChipSig("-->+", "DQV", 0, 63))
         self.sig_left(ChipSig("-->+", "CWE", 0, 5))
         self.sig_left(ChipSig("-->+", "CWL", 0, 5))
@@ -22,6 +21,8 @@ class XCACHE(FChip):
         self.sig_left(ChipSig("-->+", "LVEN"))
         self.sig_left(ChipSig("-->+", "EWE"))
         self.sig_left(ChipSig("-->+", "LWE"))
+        self.sig_left(ChipSig("-->+", "SPC", 0, 2))
+        self.sig_left(ChipSig("-->+", "ADR", 0, 56))
 
         self.sig_right(ChipSig("+<--", "WE"))
         self.sig_right(ChipSig("+<--", "OE"))
@@ -29,9 +30,6 @@ class XCACHE(FChip):
 
         self.sig_right(ChipSig("+<--", "CLK"))
 
-        self.sig_right(ChipSig("+<--", "NM", 0, 31))
-        self.sig_right(ChipSig("+<--", "PG", 0, 12))
-        self.sig_right(ChipSig("+<--", "SP", 0, 2))
         self.sig_right(ChipSig("+-->", "NME"))
         self.sig_right(ChipSig("+-->", "NML"))
 
@@ -46,8 +44,18 @@ class XCACHE(FChip):
         self.sig_right(ChipSig("+<--", "CMD", 0, 3))
         self.sig_right(ChipSig("+<--", "WCK"))
         self.sig_right(ChipSig("+<--", "QCK"))
+        self.sig_right(ChipSig("+<--", "Q4"))
+        self.sig_right(ChipSig("+<--", "LDMR"))
+        self.sig_right(ChipSig("+<--", "CSTP"))
+        self.sig_right(ChipSig("+-->", "PS", 0, 3))
+        self.sig_right(ChipSig("+-->", "CL", 0, 11))
+        self.sig_right(ChipSig("+-->", "WD", 0, 5))
 
-        self.finish(19)
+        self.sig_right(ChipSig("+<--", "ISLOW"))
+        self.sig_right(ChipSig("+<--", "ISA"))
+        self.sig_right(ChipSig("+-->", "MYSET"))
+
+        self.finish(21)
 
 def register():
     yield XCACHE()

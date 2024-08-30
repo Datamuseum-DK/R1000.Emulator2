@@ -50,7 +50,7 @@ fill_memory_m32(const struct diagproc *dp)
 #else
 	struct ctx *ctx;
 	uint16_t *ptrc;
-	uint64_t typ, val, cbit, *ptrt, *ptrv;
+	uint64_t typ, val, cbit, *ptrt;
 	int i;
 
 	typ = vbe64dec(dp->ram + 0x18);		// P18IS8 DATA.TYP
@@ -64,11 +64,10 @@ fill_memory_m32(const struct diagproc *dp)
 	AN(ctx);
 	ptrc = (uint16_t *)(void*)(ctx + 1);
 	ptrt = (uint64_t *)(void*)(ptrc + (1<<20));
-	ptrv = (uint64_t *)(void*)(ptrt + (1<<20));
 	for (i = 0; i < 1<<20; i++) {
 		ptrc[i] = cbit;
-		ptrt[i] = typ;
-		ptrv[i] = val;
+		ptrt[i+i] = typ;
+		ptrt[i+i+1] = val;
 	}
 
 	// RAMB
@@ -76,11 +75,10 @@ fill_memory_m32(const struct diagproc *dp)
 	AN(ctx);
 	ptrc = (uint16_t *)(void*)(ctx + 1);
 	ptrt = (uint64_t *)(void*)(ptrc + (1<<20));
-	ptrv = (uint64_t *)(void*)(ptrt + (1<<20));
 	for (i = 0; i < 1<<20; i++) {
 		ptrc[i] = cbit;
-		ptrt[i] = typ;
-		ptrv[i] = val;
+		ptrt[i+i] = typ;
+		ptrt[i+i+1] = val;
 	}
 
 	sc_tracef(dp->name, "Turbo FILL_MEMORY.M32");
