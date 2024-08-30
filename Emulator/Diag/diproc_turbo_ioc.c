@@ -50,11 +50,11 @@ diagproc_turbo_ioc(const struct diagproc *dp)
 	if (dp->dl_hash == PREP_RUN_IOC_HASH) {
 		sc_tracef(dp->name, "Turbo PREP_RUN.IOC");
 		return ((int)DIPROC_RESPONSE_DONE);
-		return (0);
 	}
 	if (dp->dl_hash == LOAD_WCS_ADDRESS_IOC_HASH) {
-		ioc_ptr = 0x100;
-		return (0);
+		sc_tracef(dp->name, "Turbo LOAD_WCS_ADDRESS.IOC");
+		ioc_ptr = vbe16dec(dp->ram + 0x2e);
+		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_IOC_HASH ||
 	    dp->dl_hash == 0x00000500) {

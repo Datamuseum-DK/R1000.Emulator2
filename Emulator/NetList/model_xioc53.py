@@ -112,10 +112,6 @@ class XIOC53(PartFactory):
 		|	default:
 		|		break;
 		|	}
-		|	if (PIN_DIAGON=>)
-		|		output.ioctv = false;
-		|	else if (PIN_DIAGOFF=>)
-		|		output.ioctv = true;
 		|	
 		|	unsigned rand;
 		|	BUS_RAND_READ(rand);
@@ -142,16 +138,14 @@ class XIOC53(PartFactory):
 		|	bool drive_other_cb = (output.r >> (27-10)) & 1;
 		|	output.ncben = !(uir_load_wdr && drive_other_cb && output.memtv);
 		|
-		|	output.ipard = output.memtv && output.ioctv;
-		|
 		|	bool norcv = !(PIN_DIAGDR=> || !rddum);
 		|
 		|	bool rcv_type = (output.r >> (27-20)) & 1;
-		|	output.typpc = !(ldrst && rcv_type && output.memtv);
-		|	output.valpc = !(ldrst && output.memtv);
+		|	bool typpc = !(ldrst && rcv_type && output.memtv);
+		|	bool valpc = !(ldrst && output.memtv);
 		|
-		|	output.trcv = !(output.typpc && norcv);
-		|	output.vrcv = !(output.valpc && norcv);
+		|	output.trcv = !(typpc && norcv);
+		|	output.vrcv = !(valpc && norcv);
 		|''')
 
 def register(part_lib):

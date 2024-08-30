@@ -98,8 +98,6 @@ class XCPURAM(PartFactory):
 		|			microtrace(utrc, sizeof utrc);
 		|		}
 		|		if (PIN_WR=>) {
-		|			// XXX: Missing check on DIAG.RAM_EN which is high only 15...115ns
-		|			//bool dgena = PIN_DGENA=>;
 		|			uint64_t typ;
 		|			BUS_ITYP_READ(typ);
 		|			uint32_t data = typ >> 32;

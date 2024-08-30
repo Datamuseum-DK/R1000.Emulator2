@@ -29,9 +29,7 @@ class XIOCWCS(FChip):
         self.sig_left(ChipSig("-->o", "TRRDD"))
         self.sig_left(ChipSig("-->o", "TRRDA"))
         self.sig_left(ChipSig("-->+", "CLKSTP"))
-        self.sig_left(ChipSig("-->+", "DGDUEN"))
         self.sig_left(ChipSig("-->+", "DUMNXT"))
-        self.sig_left(ChipSig("-->+", "DGCSAH"))
         self.sig_left(ChipSig("-->+", "ICSAH"))
 
         self.sig_right(ChipSig("+-->", "UIR", 0, 13))

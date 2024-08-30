@@ -52,7 +52,6 @@ class XDUMMY(PartFactory):
             "idle_event",
             "PIN_QTYPOE",
             "PIN_QVALOE",
-            "PIN_QDIAGOE",
             "PIN_LDDUM",
             "PIN_DGSEL",
         )
@@ -60,7 +59,6 @@ class XDUMMY(PartFactory):
     def sensitive(self):
         yield "PIN_QTYPOE"
         yield "PIN_QVALOE"
-        yield "PIN_QDIAGOE"
         yield "PIN_Q4.pos()"
 
     def doit(self, file):
@@ -71,55 +69,9 @@ class XDUMMY(PartFactory):
 		|		state->typ = -1;
 		|		state->val = -1;
 		|	}
-		|	if (PIN_Q4.posedge()) {
-		|		unsigned mode = 0;
-		|		if (!PIN_DGSEL=>) {
-		|			BUS_DGS_READ(mode);
-		|		} else if (PIN_LDDUM=>) {
-		|			mode = 3;
-		|		}
-		|		mode ^= 3;
-		|		unsigned inp;
-		|		switch (mode) {
-		|		case 0:
-		|			if (PIN_DGSEL=>)
-		|				idle_next = &idle_event;
-		|			break;
-		|		case 1:
-		|			state->typ >>= 1;
-		|			state->val >>= 1;
-		|			state->typ &= 0x7fff7fff7fff7fff;
-		|			state->val &= 0x7fff7fff7fff7fff;
-		|			BUS_DDIAG_READ(inp);
-		|			if (inp & 0x80) state->typ |= (1ULL << 63);
-		|			if (inp & 0x40) state->typ |= (1ULL << 47);
-		|			if (inp & 0x20) state->typ |= (1ULL << 31);
-		|			if (inp & 0x10) state->typ |= (1ULL << 15);
-		|			if (inp & 0x08) state->val |= (1ULL << 63);
-		|			if (inp & 0x04) state->val |= (1ULL << 47);
-		|			if (inp & 0x02) state->val |= (1ULL << 31);
-		|			if (inp & 0x01) state->val |= (1ULL << 15);
-		|			break;
-		|		case 2:
-		|			state->typ <<= 1;
-		|			state->val <<= 1;
-		|			state->typ &= 0xfffefffeffffffff;
-		|			state->typ |= 0x0100010001010101;
-		|			state->val |= 0x0101010101010101;
-		|			if (PIN_ITYP=>)
-		|			    state->typ |= (1ULL << 48);
-		|			if (PIN_IVAL=>)
-		|			    state->typ |= (1ULL << 32);
-		|			break;
-		|		case 3:
-		|			BUS_DTYP_READ(state->typ);
-		|			BUS_DVAL_READ(state->val);
-		|			break;
-		|		default:
-		|			break;
-		|		}
-		|		if (mode)
-		|			TRACE(" t " << std::hex << state->typ << " v " << state->val);
+		|	if (PIN_Q4.posedge() && !PIN_LDDUM=>) {
+		|		BUS_DTYP_READ(state->typ);
+		|		BUS_DVAL_READ(state->val);
 		|	}
 		|	output.z_qval = PIN_QVALOE=>;
 		|	if (!output.z_qval)
@@ -127,20 +79,6 @@ class XDUMMY(PartFactory):
 		|	output.z_qtyp = PIN_QTYPOE=>;
 		|	if (!output.z_qtyp)
 		|		output.qtyp = state->typ;
-		|	output.z_qdiag = PIN_QDIAGOE=>;
-		|	if (!output.z_qdiag) {
-		|		output.qdiag = 0;
-		|		if (state->typ & (1ULL<<48))	output.qdiag |= 0x80;
-		|		if (state->typ & (1ULL<<32))	output.qdiag |= 0x40;
-		|		if (state->typ & (1ULL<<16))	output.qdiag |= 0x20;
-		|		if (state->typ & (1ULL<< 0))	output.qdiag |= 0x10;
-		|		if (state->val & (1ULL<<48))	output.qdiag |= 0x08;
-		|		if (state->val & (1ULL<<32))	output.qdiag |= 0x04;
-		|		if (state->val & (1ULL<<16))	output.qdiag |= 0x02;
-		|		if (state->val & (1ULL<< 0))	output.qdiag |= 0x01;
-		|		output.qdiag ^= BUS_QDIAG_MASK;
-		|		TRACE(" dg " << std::hex << output.qdiag);
-		|	}
 		|''')
 
 def register(part_lib):

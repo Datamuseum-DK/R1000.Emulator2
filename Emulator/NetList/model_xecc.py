@@ -65,6 +65,21 @@ class XECC(PartFactory):
             vmask = int(j[2].replace("-", "0").replace("+", "1"), 2)
             yield tmask, vmask, invert.pop(0)
 
+    def state(self, file):
+        file.fmt('''
+		|	uint8_t elprom[512];
+		|	uint8_t eidrg;
+		|''')
+
+    def init(self, file):
+        file.fmt('''
+		|	load_programmable(this->name(),
+		|	    state->elprom, sizeof state->elprom,
+		|	    "PA115-01");
+		|''')
+        super().init(file)
+
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -93,9 +108,19 @@ class XECC(PartFactory):
                 file.fmt('\tcbo ^= 1;\n')
 
         file.fmt('''
-		|	output.cbo = cbo ^ cbi;
-		|	output.err = output.cbo != 0;
+		|	cbo ^= cbi;
+		|	output.z_co = PIN_COOE=>;
+		|	if (!output.z_co) {
+		|		output.co = cbo;
+		|	}
+		|	output.err = cbo != 0;
 		|
+		|	if (PIN_Q4.posedge() && !PIN_TVEN=>) {
+		|		state->eidrg = state->elprom[cbo];
+		|		output.id = state->eidrg >> 1;
+		|		output.cber = (state->eidrg & 0x81) != 0x81;
+		|		output.mber = state->eidrg & 1;
+		|	}
 		|''')
 
 def register(part_lib):

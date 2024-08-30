@@ -80,9 +80,9 @@ class XIOCWCS(PartFactory):
 		|	bool uir_clk = false;
 		|
 		|	if (PIN_Q4.posedge()) {
-		|		state->dummy_en = !(PIN_DGDUEN=> && PIN_DUMNXT=>);
+		|		state->dummy_en = !PIN_DUMNXT=>;
 		|		output.dumen = state->dummy_en;
-		|		state->csa_hit = !(PIN_DGCSAH=> && PIN_ICSAH=>);
+		|		state->csa_hit = !PIN_ICSAH=>;
 		|		output.csahit = state->csa_hit;
 		|		if (PIN_TRAWR=>) {
 		|			unsigned tmp = 0;

@@ -21,7 +21,6 @@ class XCPURAM(FChip):
         self.sig_right(ChipSig("+-->", "OFLO"))
         self.sig_right(ChipSig("+<--", "WR"))
         self.sig_right(ChipSig("+<--", "RD"))
-        self.sig_right(ChipSig("+<--", "DGENA"))
 
         self.finish()
 

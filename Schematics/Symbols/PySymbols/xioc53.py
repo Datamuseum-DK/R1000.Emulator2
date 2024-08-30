@@ -16,8 +16,6 @@ class XIOC53(FChip):
         self.sig_left(ChipSig("-->+", "TVBS", 0, 3))
         self.sig_left(ChipSig("-->+", "DUMEN"))
         self.sig_left(ChipSig("-->+", "CSAHIT"))
-        self.sig_left(ChipSig("-->+", "DIAGON"))
-        self.sig_left(ChipSig("-->+", "DIAGOFF"))
         self.sig_left(ChipSig("-->+", "RAND", 0, 5))
         self.sig_left(ChipSig("-->+", "DIAGLW"))
         self.sig_left(ChipSig("-->+", "SCLKST"))
@@ -37,9 +35,6 @@ class XIOC53(FChip):
         self.sig_right(ChipSig("+-->", "LDDUM"))
         self.sig_right(ChipSig("+-->", "DECC"))
         self.sig_right(ChipSig("+-->", "NCBEN"))
-        self.sig_right(ChipSig("+-->", "IPARD"))
-        self.sig_right(ChipSig("+-->", "TYPPC"))
-        self.sig_right(ChipSig("+-->", "VALPC"))
         self.sig_right(ChipSig("+-->", "TRCV"))
         self.sig_right(ChipSig("+-->", "VRCV"))
 

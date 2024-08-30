@@ -18,6 +18,9 @@ standard_patches() {
 	# Dont wiggle FIU::UIRCLK.EN~, we dont use it any more
 	cli firmware patch PA036-02 0x162 0xe1
 
+	# Dont wiggle IOC:DUIRG5:D0
+	cli firmware patch PA105-02 0x120 0x44
+
 	# Dont use "CR ESC [ 2 K" to hide experiment names
 	cli dfs patch FS_0.M200 0x8fb7 0x20
 	cli dfs patch FS_0.M200 0x8fbd 0x20
