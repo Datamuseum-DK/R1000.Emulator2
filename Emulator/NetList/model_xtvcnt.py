@@ -55,30 +55,22 @@ class XTVCNT(PartFactory):
         file.fmt('''
 		|
 		|	if (PIN_CLKQ4.posedge()) {
-		|		bool lnan1a = !(PIN_DCT=> && PIN_DEC=> && PIN_INC=> && PIN_DIV=>);
-		|		bool count_up = !(PIN_DCT=> && PIN_DEC=> && PIN_DIV=>);
-		|		bool count_en = !(lnan1a && PIN_SCLKEN=> && PIN_DEN=>);
-		|		unsigned uir;
-		|		BUS_UIR_READ(uir);
-		|		bool lcmp28 = uir != 0x28;
-		|		bool lnan3a = !(lcmp28 && PIN_DLD=>);
-		|		bool lnan3b = !(!PIN_SCLKEN=> && PIN_DLD=>);
-		|		bool lnan2c = !(lnan3a && lnan3b);
-		|		if (count_en) {
-		|			output.co = true;
-		|		} else if (count_up) {
-		|			output.co = state->count != BUS_D_MASK;
+		|		if (PIN_SCLKEN=>) {
+		|			unsigned uir;
+		|			BUS_UIR_READ(uir);
+		|			if (uir == 0x28) {
+		|				BUS_D_READ(state->count);
+		|			} else if (!PIN_DEC=>) {
+		|				state->count += 1;
+		|				state->count &= BUS_D_MASK;
+		|				output.co = state->count != BUS_D_MASK;
+		|			} else if (!PIN_INC=>) {
+		|				state->count += BUS_D_MASK;
+		|				state->count &= BUS_D_MASK;
+		|				output.co = state->count != 0;
+		|			}
 		|		} else {
-		|			output.co = state->count != 0;
-		|		}
-		|		if (!lnan2c) {
-		|			BUS_D_READ(state->count);
-		|		} else if (!count_en && count_up) {
-		|			state->count += 1;
-		|			state->count &= BUS_D_MASK;
-		|		} else if (!count_en) {
-		|			state->count += BUS_D_MASK;
-		|			state->count &= BUS_D_MASK;
+		|			output.co = true;
 		|		}
 		|		output.q = state->count;
 		|	}
