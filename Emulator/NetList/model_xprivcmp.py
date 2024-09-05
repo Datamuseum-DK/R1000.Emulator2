@@ -67,8 +67,6 @@ class XPRIVCMP(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|	uint64_t a, b;
 		|	bool tmp;
@@ -112,17 +110,6 @@ class XPRIVCMP(PartFactory):
 		|	output.aeql = (a & 0x7f) != l;
 		|	output.aeqb = (a & 0x7f) != (b & 0x7f);
 		|	output.beql = (b & 0x7f) != l;
-		|	output.able = !(output.aeql | output.aeqb);
-		|
-		|	unsigned mask_a = state->prom[l] >> 1;
-		|	unsigned okpat_a = state->prom[l + 256] >> 1;
-		|	bool oka = (0x7f ^ (mask_a & (b & 0x7f))) != okpat_a;
-		|
-		|	unsigned mask_b = state->prom[l + 128] >> 1;
-		|	unsigned okpat_b = state->prom[l + 384] >> 1;
-		|	bool okb = (0x7f ^ (mask_b & (b & 0x7f))) != okpat_b;
-		|
-		|	output.okm = !(oka & okb);
 		|
 		|	bool clce = (ucod >> 1) != 0xf;
 		|
@@ -139,20 +126,11 @@ class XPRIVCMP(PartFactory):
 		|	);
 		|	bool sysu = !(clsysb | !output.beql);
 		|
-		|	output.bbit = 0;
-		|	output.bbit |= ((b >> BUS_B_LSB(0)) & 1) << 6;
-		|	output.bbit |= ((b >> BUS_B_LSB(21)) & 1) << 5;
-		|	output.bbit |= ((b >> BUS_B_LSB(36)) & 0x1f) << 0;
-		|
-		|	output.bbuf = b & 7;
-		|
 		|	unsigned priv_chk;
 		|	BUS_UPVC_READ(priv_chk);
 		|
 		|	if (PIN_Q4.posedge()) {
-		|		if (PIN_DMODE=>) {
-		|			// nothing
-		|		} else if (!PIN_SCKEN=>) {
+		|		if (PIN_SCKEN=>) {
 		|			// nothing
 		|		} else if (priv_chk == 7) {
 		|			// nothing

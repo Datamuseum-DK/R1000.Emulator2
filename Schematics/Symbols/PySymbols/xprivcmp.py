@@ -38,8 +38,6 @@ class XPRIVCMP(FChip):
         self.sig_right(ChipSig("+-->", "BEQL"))
         self.sig_right(ChipSig("+-->", "ABLE"))
         self.sig_right(ChipSig("+-->", "PPRIV"))
-        self.sig_right(ChipSig("+-->", "BBIT", 0, 6))
-        self.sig_right(ChipSig("+-->", "BBUF", 0, 2))
         self.sig_right(ChipSig("+-->", "UE", 0, 5))
 
         self.sig_left(ChipSig("<--+", "T0STP"))

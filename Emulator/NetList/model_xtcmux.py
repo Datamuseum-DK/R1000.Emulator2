@@ -45,7 +45,7 @@ class XTCMUX(PartFactory):
  
         file.fmt('''
 		|	uint64_t rfram[1<<10];
-		|	uint8_t pa010[512], pa068[512];
+		|	uint8_t pa010[512], pa068[512], pa059[512];
 		|	uint64_t a, b, c, alu;
 		|	uint64_t wdr;
 		|	unsigned count;
@@ -57,6 +57,13 @@ class XTCMUX(PartFactory):
 		|	unsigned aadr;
 		|	unsigned badr;
 		|	unsigned cadr;
+		|	bool cond;
+		|	bool almsb;
+		|	bool coh;
+		|	bool com;
+		|	uint8_t zero;
+		|	uint32_t ofreg;
+		|	bool ppriv;
 		|''')
 
     def init(self, file):
@@ -67,23 +74,45 @@ class XTCMUX(PartFactory):
 		|	load_programmable(this->name(),
 		|	    state->pa068, sizeof state->pa068,
 		|	    "PA068");
+		|	load_programmable(this->name(),
+		|	    state->pa059, sizeof state->pa059,
+		|	    "PA059-01");
 		|''')
         super().init(file)
 
     def sensitive(self):
-            yield "PIN_CSRC"
-            yield "BUS_DT"
             yield "BUS_DF"
-            yield "PIN_LDWDR"
-            yield "PIN_Q2"
-            yield "PIN_Q4"
+            yield "BUS_DT"
             yield "PIN_QTOE"
-            yield "PIN_SEL"
             yield "BUS_UIRA"
             yield "BUS_UIRB"
-            yield "PIN_ADROE"
+            yield "BUS_FRM"
+            yield "BUS_RAND"
+            yield "BUS_UIRC"
+            yield "PIN_SEL"
+            yield "BUS_AFNC"
+            yield "PIN_CSRC"
+            yield "PIN_Q2"
+            yield "PIN_LBOT"
+            yield "PIN_LTOP"
+            yield "PIN_LPOP"
+            yield "BUS_CSAO"
+            yield "PIN_CSAH"
+            yield "PIN_CSAW"
+            yield "PIN_H2.pos()"
             yield "PIN_WE.pos()"
+            yield "PIN_LDWDR"
+            yield "PIN_Q4"
+            yield "PIN_ALOOP"
+            yield "PIN_BLOOP"
+            yield "PIN_ACOND"
+            yield "BUS_SPC"
+            yield "BUS_CSEL"
+            yield "BUS_CLIT"
+            yield "BUS_UPVC"
+            yield "PIN_UEN"
 
+            yield "PIN_ADROE"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -102,13 +131,47 @@ class XTCMUX(PartFactory):
 		|	bool q4pos = PIN_Q4.posedge();
 		|
 		|	bool uirsclk = PIN_UCLK.posedge();
-		|	bool sclke = PIN_SCLKE=>;
+		|	bool sclke = !PIN_SCLKE=>;
 		|
-		|	unsigned uira, uirb, uirc, rand;
+		|	unsigned uira, uirb, uirc, rand, condsel;
 		|	BUS_UIRA_READ(uira);
 		|	BUS_UIRB_READ(uirb);
 		|	BUS_UIRC_READ(uirc);
 		|	BUS_RAND_READ(rand);
+		|	BUS_CSEL_READ(condsel);
+		|
+		|	unsigned condmask = 0;
+		|
+		|#define COND(g, c) (((g) << 3)| (c))
+		|	// Early conditions
+		|	assert (state->count <= 0x3ff);
+		|	switch (condsel) {
+		|	case COND(0x3, 4): // E - TYPE_COUNTER_ZERO	 
+		|	case COND(0xb, 4): // E - TYPE_COUNTER_ZERO	 
+		|		condmask = 0x10;
+		|		state->cond = state->count != 0x3ff;
+		|		break;
+		|	case COND(0x4, 5): // E - TYP_FALSE
+		|		condmask = 0x08;
+		|		state->cond = true;
+		|		break;
+		|	case COND(0x4, 6): // E - TYP_TRUE
+		|		condmask = 0x08;
+		|		state->cond = false;
+		|		break;
+		|	case COND(0x4, 7): // E - TYP_PREVIOUS
+		|		condmask = 0x08;
+		|		state->cond = output.ltcn;
+		|		break;
+		|	case COND(0x6, 4): // E - PASS_PRIVACY_BIT
+		|		condmask = 0x02;
+		|		state->cond = state->ppriv;
+		|		break;
+		|	}
+		|
+		|	unsigned condgrp = condsel >> 3;
+		|	if (condgrp == 0xb)
+		|		condgrp = 0x3;
 		|
 		|	unsigned csmux3;
 		|	BUS_CSAO_READ(csmux3);
@@ -171,17 +234,15 @@ class XTCMUX(PartFactory):
 		|		if ((uira & 0x3c) != 0x28) {
 		|			state->a = state->rfram[state->aadr];
 		|		} else if (uira == 0x28) {
-		|			state->a = BUS_A_MASK;
+		|			state->a = BUS_QF_MASK;
 		|			state->a ^= 0x3ff;
 		|			state->a |= state->count;
 		|		} else {
-		|			state->a = BUS_A_MASK;
+		|			state->a = BUS_QF_MASK;
 		|		}
-		|		output.a = state->a;
 		|		if (!output.z_qf) {
-		|			output.qf = output.a ^ BUS_QF_MASK;
+		|			output.qf = state->a ^ BUS_QF_MASK;
 		|		}
-		|		output.amsb = output.a >> 63;
 		|	}
 		|
 		|	if (q3pos) {
@@ -235,7 +296,7 @@ class XTCMUX(PartFactory):
 		|		} else {
 		|			state->b = state->rfram[state->badr];
 		|		}
-		|		output.b = state->b;
+		|		output.b = state->b & 0x7;
 		|	}
 		|	if (q2pos) {
 		|		struct f181 f181l, f181h;
@@ -251,7 +312,10 @@ class XTCMUX(PartFactory):
 		|		idx |= alurand << 5;
 		|		idx |= alufunc;
 		|		
-		|		tmp = state->pa068[idx] >> 3;
+		|		tmp = state->pa068[idx];
+		|		bool is_binary = (tmp >> 1) & 1;
+		|		tmp >>= 3;
+		|
 		|		f181l.ctl = tmp >> 1;
 		|		f181l.ctl |= (tmp & 1) << 4;
 		|		f181l.ctl |= (rand != 0xf) << 5;
@@ -259,10 +323,14 @@ class XTCMUX(PartFactory):
 		|		f181l.a = state->a & 0xffffffff;
 		|		f181l.b = state->b & 0xffffffff;
 		|		f181_alu(&f181l);
-		|		output.com = f181l.co;
+		|		state->com = f181l.co;
 		|		state->alu = f181l.o;
 		|
-		|		tmp = state->pa010[idx] >> 3;
+		|		tmp = state->pa010[idx];
+		|		bool sub_else_add = (tmp >> 2) & 1;
+		|		bool ovr_en = (tmp >> 1) & 1;
+		|		tmp >>= 3;
+		|
 		|		f181h.ctl = tmp >> 1;
 		|		f181h.ctl |= (tmp & 1) << 4;
 		|		f181h.ctl |= 1 << 5;
@@ -270,19 +338,19 @@ class XTCMUX(PartFactory):
 		|		f181h.a = state->a >> 32;
 		|		f181h.b = state->b >> 32;
 		|		f181_alu(&f181h);
-		|		output.coh = f181h.co;
+		|		state->coh = f181h.co;
 		|		state->alu |= ((uint64_t)f181h.o) << 32;
-		|		output.zero = 0;
-		|		if (!(state->alu & (0xffULL) <<  0)) output.zero |= 0x01;
-		|		if (!(state->alu & (0xffULL) <<  8)) output.zero |= 0x02;
-		|		if (!(state->alu & (0xffULL) << 16)) output.zero |= 0x04;
-		|		if (!(state->alu & (0xffULL) << 24)) output.zero |= 0x08;
-		|		if (!(state->alu & (0xffULL) << 32)) output.zero |= 0x10;
-		|		if (!(state->alu & (0xffULL) << 40)) output.zero |= 0x20;
-		|		if (!(state->alu & (0xffULL) << 48)) output.zero |= 0x40;
-		|		if (!(state->alu & (0xffULL) << 56)) output.zero |= 0x80;
+		|		state->zero = 0;
+		|		if (!(state->alu & (0xffULL) <<  0)) state->zero |= 0x01;
+		|		if (!(state->alu & (0xffULL) <<  8)) state->zero |= 0x02;
+		|		if (!(state->alu & (0xffULL) << 16)) state->zero |= 0x04;
+		|		if (!(state->alu & (0xffULL) << 24)) state->zero |= 0x08;
+		|		if (!(state->alu & (0xffULL) << 32)) state->zero |= 0x10;
+		|		if (!(state->alu & (0xffULL) << 40)) state->zero |= 0x20;
+		|		if (!(state->alu & (0xffULL) << 48)) state->zero |= 0x40;
+		|		if (!(state->alu & (0xffULL) << 56)) state->zero |= 0x80;
 		|		state->alu = ~state->alu;
-		|		output.almsb = state->alu >> 63ULL;
+		|		state->almsb = state->alu >> 63ULL;
 		|
 		|		output.z_adr = PIN_ADROE=>;
 		|		if (!output.z_adr) {
@@ -295,6 +363,194 @@ class XTCMUX(PartFactory):
 		|			}
 		|
 		|			output.adr = alu ^ BUS_ADR_MASK;
+		|		}
+		|
+		|		bool asign = (state->a >> 63);
+		|		bool bsign = (state->b >> 63);
+		|		bool signseq = asign ^ bsign;
+		|		bool ovrsign = (!((signseq && is_binary) || (!is_binary && !asign)));
+		|		if (condgrp == 3) {
+		|			condmask = 0x10;
+		|			switch (condsel & 0x7) {
+		|			case 0:	// L - TYP_ALU_ZERO
+		|			case 6: // L - TYP_ALU_ZERO - COMBO with VAL_ALU_NONZERO
+		|				state->cond = state->zero != 0xff;
+		|				break;
+		|			case 1:	// L - TYP_ALU_NONZERO
+		|				state->cond = state->zero == 0xff;
+		|				break;
+		|			case 2:	// L - TYP_ALU_A_GT_OR_GE_B
+		|				state->cond = !(
+		|				    (signseq && asign) ||
+		|				    (state->coh && (ovrsign ^ sub_else_add))
+		|				);
+		|				break;
+		|			case 4: // E - TYP_LOOP_COUNTER_ZERO
+		|				state->cond = state->count != 0x3ff;
+		|				break;
+		|			case 7: // L - TYP_ALU_32_CO - ALU 32 BIT CARRY OUT
+		|				state->cond = state->com;
+		|				break;
+		|			default:
+		|				state->cond = true;
+		|				break;
+		|			}
+		|		}
+		|		if (condgrp == 4) {
+		|			condmask = 0x08;
+		|			switch (condsel & 0x7) {
+		|			case 0:	// L - TYP_ALU_CARRY
+		|				state->cond = !state->coh;
+		|				break;
+		|			case 1: // L - TYP_ALU_OVERFLOW
+		|				state->cond = ovr_en || (
+		|				    state->coh ^ state->almsb ^ sub_else_add ^ ovrsign
+		|				);
+		|				break;
+		|			case 2: // L - TYP_ALU_LT_ZERO
+		|				state->cond = state->almsb;
+		|				break;
+		|			case 3: // L - TYP_ALU_LE_ZERO
+		|				state->cond = !(state->almsb && (state->zero != 0xff));
+		|				break;
+		|			case 4: // ML - TYP_SIGN_BITS_EQUAL
+		|				state->cond = signseq;
+		|				break;
+		|			case 5: // E - TYP_FALSE
+		|				state->cond = true;
+		|				break;
+		|			case 6: // E - TYP_TRUE
+		|				state->cond = false;
+		|				break;
+		|			case 7:	// E - TYP_PREVIOUS
+		|				state->cond = output.ltcn;
+		|				break;
+		|			}
+		|		}
+		|	}
+		|
+		|	unsigned clit;
+		|	BUS_CLIT_READ(clit);
+		|
+		|	bool aeql = (state->a & 0x7f) != clit;
+		|	bool beql = (state->b & 0x7f) != clit;
+		|	bool aeqb = (state->a & 0x7f) != (state->b & 0x7f);
+		|	bool a34 = (state->a >> (63 - 34)) & 1;
+		|	bool a35 = (state->a >> (63 - 35)) & 1;
+		|	bool b34 = (state->b >> (63 - 34)) & 1;
+		|	bool b35 = (state->b >> (63 - 35)) & 1;
+		|	bool dp = !(a35 && b35);
+		|	bool aopm = (state->a >> 32) == state->ofreg;
+		|	bool bopm = (state->b >> 32) == state->ofreg;
+		|	bool abim = !(!aopm | dp);
+		|	bool bbim = !(!bopm | dp);
+		|	bool aop = !(a35 && (aopm || a34));
+		|	bool bop = !(b35 && (bopm || b34));
+		|
+		|	bool priv_names_eq = (state->a >> 32) == (state->b >> 32);
+		|
+		|	bool priv_path_eq = !(
+		|		priv_names_eq &&
+		|		(((state->a >> 7) & 0xfffff) == ((state->b >> 7) & 0xfffff))
+		|	);
+		|				
+		|	bool bin_op_pass = !(
+		|		(abim && bbim) ||
+		|		(bbim && a34) ||
+		|		(abim && b34) ||
+		|		(a34 && a35 && b34 && b35)
+		|	);
+		|
+		|	if (q2pos && (condgrp == 5 || condgrp == 6 || condgrp == 7)) {
+		|
+		|		if (condgrp == 5) {
+		|			condmask = 0x04;
+		|			switch (condsel & 0x7) {
+		|			case 0:	// ML - OF_KIND_MATCH
+		|				{
+		|				unsigned mask_a = state->pa059[clit] >> 1;
+		|				unsigned okpat_a = state->pa059[clit + 256] >> 1;
+		|				bool oka = (0x7f ^ (mask_a & (state->b & 0x7f))) != okpat_a; // XXX state->b ??
+		|
+		|				unsigned mask_b = state->pa059[clit + 128] >> 1;
+		|				unsigned okpat_b = state->pa059[clit + 384] >> 1;
+		|				bool okb = (0x7f ^ (mask_b & (state->b & 0x7f))) != okpat_b;
+		|
+		|				bool okm = !(oka & okb);
+		|				state->cond = okm;
+		|				}
+		|				break;
+		|			case 1:	// ML - CLASS_A_EQ_LIT
+		|				state->cond = (state->a & 0x7f) != clit;
+		|				break;
+		|			case 2:	// ML - CLASS_B_EQ_LIT
+		|				state->cond = (state->b & 0x7f) != clit;
+		|				break;
+		|			case 3:	// ML - CLASS_A_EQ_B
+		|				state->cond = (state->a & 0x7f) != (state->b & 0x7f);
+		|				break;
+		|			case 4:	// ML - CLASS_A_B_EQ_LIT
+		|				state->cond = !((state->a & 0x7f) != clit) || ((state->b & 0x7f) != clit);
+		|				break;
+		|			case 5:	// E - PRIVACY_A_OP_PASS
+		|				state->cond = !(a35 && (aopm || a34));
+		|				break;
+		|			case 6:	// ML - PRIVACY_B_OP_PASS
+		|				state->cond = !(b35 && (bopm || b34));
+		|				break;
+		|			case 7:	// ML - PRIVACY_BIN_EQ_PASS
+		|				state->cond = priv_path_eq && bin_op_pass;
+		|				break;
+		|			}
+		|		}
+		|		if (condgrp == 6) {
+		|			condmask = 0x02;
+		|			switch (condsel & 0x7) {
+		|			case 0:	// ML - PRIVACY_BIN_OP_PASS
+		|				state->cond = bin_op_pass;
+		|				break;
+		|			case 1:	// ML - PRIVACY_NAMES_EQ
+		|				state->cond = priv_names_eq;
+		|				break;
+		|			case 2:	// ML - PRIVACY_PATHS_EQ
+		|				state->cond = priv_path_eq;
+		|				break;
+		|			case 3:	// ML - PRIVACY_STRUCTURE
+		|				state->cond = !(bin_op_pass || priv_path_eq);
+		|				break;
+		|			case 4:	// E - PASS_PRIVACY_BIT
+		|				state->cond = state->ppriv;
+		|				break;
+		|			case 5:	// ML - B_BUS_BIT_32
+		|				state->cond = (state->b >> (63-32)) & 1;
+		|				break;
+		|			case 6:	// ML - B_BUS_BIT_33
+		|				state->cond = (state->b >> (63-33)) & 1;
+		|				break;
+		|			case 7:	// ML - B_BUS_BIT_34
+		|				state->cond = (state->b >> (63-34)) & 1;
+		|				break;
+		|			}
+		|		}
+		|		if (condgrp == 7) {
+		|			condmask = 0x01;
+		|			switch (condsel & 0x7) {
+		|			case 0:	// ML - B_BUS_BIT_35
+		|				state->cond = (state->b >> (63-35)) & 1;
+		|				break;
+		|			case 1:	// ML - B_BUS_BIT_36
+		|				state->cond = (state->b >> (63-36)) & 1;
+		|				break;
+		|			case 2:	// ML - B_BUS_BIT_33_34_OR_36
+		|				state->cond = ((state->b >> (63-36)) & 0xd) != 0xd;
+		|				break;
+		|			case 7:	// ML - B_BUS_BIT_21
+		|				state->cond = (state->b >> (63-21)) & 1;
+		|				break;
+		|			default:
+		|				state->cond = true;
+		|				break;
+		|			}
 		|		}
 		|	}
 		|
@@ -366,11 +622,10 @@ class XTCMUX(PartFactory):
 		|		} else {
 		|			output.lovf = true;
 		|		}
-		|		output.lo = state->count;
 		|	}
 		|
 		|	if (!output.z_qt) {
-		|		output.qt = output.b ^ BUS_QT_MASK;
+		|		output.qt = state->b ^ BUS_QT_MASK;
 		|	}
 		|
 		|	if (uirsclk) {
@@ -395,6 +650,98 @@ class XTCMUX(PartFactory):
 		|		if (top_mux_sel)
 		|			state->topreg = csalu0;
 		|	}
+		|	if (state->cond) {
+		|		output.tcnd &= ~condmask;
+		|	} else {
+		|		output.tcnd |= condmask;
+		|	}
+		|	output.tcnd &= BUS_TCND_MASK;
+		|	if (PIN_CNCLK.posedge()) {
+		|		output.ltcn = state->cond;
+		|	}
+		|	if (PIN_OFC.posedge()) {
+		|		state->ofreg = state->b >> 32;
+		|	}
+		|
+		|	unsigned priv_check;
+		|	BUS_UPVC_READ(priv_check);
+		|
+		|	if (q4pos && sclke && priv_check != 7) {
+		|		bool set_pass_priv = rand != 0xd;
+		|		state->ppriv = set_pass_priv;
+		|	}
+		|
+		|// if (1) {
+		|		bool micros_en = PIN_UEN=>;
+		|
+		|		unsigned selcond = 0xff;
+		|		if (state->ppriv && micros_en) {
+		|			selcond = 0x80 >> priv_check;
+		|			selcond ^= 0xff;
+		|		}
+		|#if 0
+		|if (micros_en && priv_check != 7)
+		|	ALWAYS_TRACE(<< std::hex << "SELCOND " << selcond << " PC " << priv_check << " PP " << state->ppriv << " RAND " << rand << " SCLKE " << sclke);
+		|#endif
+		|
+		|		bool ucatol = rand != 0x4;
+		|		bool ucbtol = rand != 0x5;
+		|		bool ucatob = rand != 0x6;
+		|		bool ucabl = rand != 0x7;
+		|		bool uclsysb = rand != 0xe;
+		|
+		|		bool clce = 0x3 < rand && rand < 0x8;
+		|
+		|		bool clev = !(
+		|			(!ucatol && !aeql) ||
+		|			(!ucatob && !aeqb) ||
+		|			(!ucbtol && !beql) ||
+		|			(!ucabl && !aeqb && !beql)
+		|		);
+		|
+		|		bool sysu = !(uclsysb || !beql);
+		|// }
+		|
+		|	if (q3pos) {
+		|		output.ue = BUS_UE_MASK;
+		|		if (micros_en && selcond == 0xbf && bin_op_pass)
+		|			output.ue &= ~0x20;	// T.BIN_OP.UE~
+		|
+		|		if (micros_en && selcond == 0x7f && priv_path_eq && bin_op_pass)
+		|			output.ue &= ~0x10;	// T.BIN_EQ.UE~
+		|
+		|		if (micros_en && clev && clce)
+		|			output.ue &= ~0x08;	// T.CLASS.UE~
+		|
+		|		if (micros_en && selcond == 0xef && aop)
+		|			output.ue &= ~0x04;	// T.TOS1_OP.UE~
+		|		if (micros_en && selcond == 0xfb && bop)
+		|			output.ue &= ~0x04;	// T.TOS1_OP.UE~
+		|
+		|		if (micros_en && selcond == 0xdf && aop)
+		|			output.ue &= ~0x02;	// T.TOS_OP.UE~
+		|		if (micros_en && selcond == 0xf7 && bop)
+		|			output.ue &= ~0x02;	// T.TOS_OP.UE~
+		|
+		|		if (micros_en && sysu)
+		|			output.ue &= ~0x01;	// T.CHK_SYS.UE~
+		|	}
+		|
+		|	output.t0stp = true;
+		|	if (micros_en && sysu)
+		|		output.t0stp = false;
+		|	if (micros_en && clce && clev)
+		|		output.t0stp = false;
+		|	if (micros_en && priv_path_eq && bin_op_pass && selcond == 0x7f)
+		|		output.t0stp = false;
+		|
+		|	output.t1stp = true;
+		|	if (selcond == 0xbf && bin_op_pass)
+		|		output.t1stp = false;
+		|	if ((selcond == 0xef || selcond == 0xdf) && aop)
+		|		output.t1stp = false;
+		|	if ((selcond == 0xf7 || selcond == 0xfb) && bop)
+		|		output.t1stp = false;
 		|''')
 
 def register(part_lib):

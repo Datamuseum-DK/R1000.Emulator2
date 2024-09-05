@@ -48,15 +48,6 @@ class XTRAND(PartFactory):
 		|	unsigned rand;
 		|	BUS_RAND_READ(rand);
 		|
-		|	if (rand < 8) {
-		|		output.alu = 7;
-		|	} else {
-		|		output.alu = 15 - rand;
-		|	}
-		|
-		|	output.incl = rand != 0x1;
-		|	output.decl = rand != 0x2;
-		|	output.spltc = rand != 0x3;
 		|	output.catol = rand != 0x4;
 		|	output.cbtol = rand != 0x5;
 		|	output.catob = rand != 0x6;
