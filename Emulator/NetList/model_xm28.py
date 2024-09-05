@@ -163,7 +163,7 @@ class XM28(PartFactory):
 		|			state->labort = labort_y;
 		|			output.eabrt = eabort_y;
 		|			output.labrt = state->labort;
-		|			output.tsc14 = !mcyc2_next && output.labrt;
+		|			output.tsc14 = !(!mcyc2_next && output.labrt);
 		|		}
 		|	}
 		|

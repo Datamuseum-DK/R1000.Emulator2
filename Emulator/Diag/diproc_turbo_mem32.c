@@ -28,13 +28,13 @@ clear_tagstore_m32(const struct diagproc *dp)
 	ctx = CTX_Find(COMP_Z000);
 	AN(ctx);
 	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr, 0x00, (1 << 17) + 2 * (1 << 14));
+	memset(ptr, 0x00, (1 << 17) + (1 << 14));
 
 	// TBR
 	ctx = CTX_Find(COMP_Z001);
 	AN(ctx);
 	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr, 0x00, (1 << 17) + 2 * (1 << 14));
+	memset(ptr, 0x00, (1 << 17) + (1 << 14));
 
 	sc_tracef(dp->name, "Turbo CLEAR_TAGSTORE.M32");
 	return ((int)DIPROC_RESPONSE_DONE);
@@ -44,7 +44,7 @@ clear_tagstore_m32(const struct diagproc *dp)
 static int
 fill_memory_m32(const struct diagproc *dp)
 {
-#if !defined(HAS_Z027) || !defined(HAS_Z028)
+#if !defined(HAS_Z000) || !defined(HAS_Z001)
 	(void)dp;
 	return (0);
 #else
@@ -60,9 +60,10 @@ fill_memory_m32(const struct diagproc *dp)
 	// P28IS1 DATA.VPAR is loaded into DREGVP but not stored anywhere.
 
 	// RAMA
-	ctx = CTX_Find(COMP_Z028);
+	ctx = CTX_Find(COMP_Z000);
 	AN(ctx);
-	ptrc = (uint16_t *)(void*)(ctx + 1);
+	uint8_t *ptr = (void*)(ctx + 1);
+	ptrc = (uint16_t *)(void*)(ptr + (9 << 14));
 	ptrt = (uint64_t *)(void*)(ptrc + (1<<20));
 	for (i = 0; i < 1<<20; i++) {
 		ptrc[i] = cbit;
@@ -71,9 +72,10 @@ fill_memory_m32(const struct diagproc *dp)
 	}
 
 	// RAMB
-	ctx = CTX_Find(COMP_Z027);
+	ctx = CTX_Find(COMP_Z001);
 	AN(ctx);
-	ptrc = (uint16_t *)(void*)(ctx + 1);
+	ptr = (void*)(ctx + 1);
+	ptrc = (uint16_t *)(void*)(ptr + (9 << 14));
 	ptrt = (uint64_t *)(void*)(ptrc + (1<<20));
 	for (i = 0; i < 1<<20; i++) {
 		ptrc[i] = cbit;

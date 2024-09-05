@@ -57,8 +57,12 @@ class XMBUSCTL(PartFactory):
 		|
 		|	output.typaoe = output.exthit || !bhit || (ahit && high_board) ||  b_tvdrv;
 		|	output.valaoe = output.exthit || !bhit || (ahit && high_board) ||  b_vdrv;
+		|	if (!output.typaoe)
+		|		output.valaoe = false;
 		|	output.typboe = output.exthit ||  bhit ||                          b_tvdrv;
 		|	output.valboe = output.exthit ||  bhit ||                          b_vdrv;
+		|	if (!output.typboe)
+		|		output.valboe = false;
 		|
 		|''')
 

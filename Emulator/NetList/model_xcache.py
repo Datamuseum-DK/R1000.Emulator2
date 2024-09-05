@@ -51,10 +51,17 @@ class XCACHE(PartFactory):
         file.fmt('''
 		|	uint64_t ram[1<<14];	// Turbo
 		|	uint8_t rame[1<<14];	// Turbo
-		|	uint8_t par[1<<14];	// Turbo
+		|
+		|	uint16_t bitc[1 << 20];	// Turbo
+		|	uint64_t bitt[1 << 21];	// Turbo
+		|	unsigned set, cl, wd;
+		|	uint16_t cdreg, cqreg;
+		|	uint64_t tdreg, tqreg;
+		|	uint64_t vdreg, vqreg;
+		|
 		|	bool utrace_set;
 		|	enum microtrace utrace;
-		|	unsigned sr;
+		|	unsigned sr, word;
 		|	bool nme;
 		|	bool ome;
 		|	bool nml;
@@ -63,6 +70,7 @@ class XCACHE(PartFactory):
 		|	uint64_t breg, qreg;
 		|	unsigned hash;
 		|	uint64_t mar_space, mar_name, mar_page;
+		|	bool txoe, txdin;
 		|''')
 
     def sensitive(self):
@@ -89,10 +97,17 @@ class XCACHE(PartFactory):
         #yield "PIN_WCK"	CLK
         #yield "PIN_WE"		CLK.pos
 
+        yield "PIN_CAS"
+        yield "PIN_QCOE"
+        yield "PIN_ICK.pos()"
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|	bool q4pos = PIN_Q4.posedge();
+		|	bool q2pos = PIN_Q2.posedge();
+		|
 		|	if (!state->utrace_set) {
 		|		if (strstr(this->name(), ".ACACHE") != NULL)
 		|			state->utrace = UT_ATAGMEM;
@@ -106,6 +121,9 @@ class XCACHE(PartFactory):
 		|
 		|	if (PIN_WCK.posedge()) {
 		|		BUS_DV_READ(state->breg);
+		|		BUS_DC_READ(state->cdreg);
+		|		BUS_DT_READ(state->tdreg);
+		|		BUS_DV_READ(state->vdreg);
 		|	}
 		|
 		|	adr = state->hash;
@@ -127,10 +145,6 @@ class XCACHE(PartFactory):
 		|	if (PIN_QCK.posedge()) {
 		|		state->qreg = data & 0xffffffffffff80ff;	// VAL bits
 		|		state->qreg |= (pdata & 0xfe) << 7;	// VAL49-55
-		|	}
-		|	output.z_qv = PIN_QVOE=>;
-		|	if (!output.z_qv) {
-		|		output.qv = state->qreg;
 		|	}
 		|
 		|	bool pos = PIN_CLK.posedge();
@@ -166,20 +180,12 @@ class XCACHE(PartFactory):
 		|
 		|	if (pos && !PIN_OE=> && PIN_WE) {
 		|		state->ram[adr] = vd & ~(0xfeULL << 7);	// VAL bits
-		|		state->par[adr] = pd;
-		|
-		|		assert(state->utrace > 0);
-		|		uint8_t utrc[18];
-		|		memset(utrc, 0, sizeof utrc);
-		|		utrc[0] = state->utrace;
-		|		utrc[1] = state->par[adr];
-		|		vbe32enc(utrc + 2, adr);
-		|		vbe64enc(utrc + 6, state->ram[adr]);
-		|		microtrace(utrc, sizeof utrc);
 		|	}
 		|
+		|	bool tgoe = state->txoe;
+		|	bool dir = state->txdin;
 		|	if (pos && !PIN_OE=> && PIN_EWE) {
-		|		if (!PIN_DIR=> && PIN_EVEN=> && PIN_TGOE=>) {
+		|		if (!dir && PIN_EVEN=> && tgoe) {
 		|			data = (pd & 0x02) >> 1;	// P6
 		|			data |= (vd >> 7) & 0xfe;	// VAL49-55
 		|		} else {
@@ -191,7 +197,7 @@ class XCACHE(PartFactory):
 		|	}
 		|
 		|	if (pos && !PIN_OE=> && PIN_LWE) {
-		|		if (!PIN_DIR=> && PIN_LVEN=> && PIN_TGOE=>) {
+		|		if (!dir && PIN_LVEN=> && tgoe) {
 		|			data = (pd & 0x02) >> 1;	// P6
 		|			data |= (vd >> 7) & 0xfe;	// VAL49-55
 		|		} else {
@@ -213,7 +219,13 @@ class XCACHE(PartFactory):
 		|	if (neg)
 		|		state->k13 = PIN_K13=>;
 		|
-		|	if (PIN_Q4.posedge() && !PIN_LDMR=> && PIN_CSTP) {
+		|	if (q4pos) {
+		|		bool mcyc2_next = PIN_MC2N=>;
+		|		state->txoe = (cmd == 0x6 || cmd == 0x7) && (!mcyc2_next) && (!output.myset);
+		|		state->txdin = !(cmd == 0x7 && (!mcyc2_next));
+		|	}
+		|
+		|	if (q4pos && !PIN_LDMR=> && PIN_CSTP) {
 		|		uint64_t a;
 		|		uint32_t s;
 		|
@@ -236,7 +248,7 @@ class XCACHE(PartFactory):
 		|			);
 		|		}
 		|
-		|		output.wd = a & BUS_WD_MASK;
+		|		state->word = a & 0x3f;
 		|		state->hash = 0;
 		|#define GBIT(fld,bit,width) ((fld >> (width - (bit + 1))) & 1)
 		|		if (GBIT(s, 1, BUS_SPC_WIDTH) ^
@@ -266,7 +278,44 @@ class XCACHE(PartFactory):
 		|		if (GBIT(a, 48, BUS_ADR_WIDTH) ^ GBIT(s, 2, BUS_SPC_WIDTH))
 		|			state->hash |= 1<<2;
 		|
-		|		output.cl = state->hash >> 2;
+		|	}
+		|
+		|	if (PIN_CAS.negedge()) {
+		|		BUS_SET_READ(state->set);
+		|	}
+		|	if (q2pos) {
+		|		state->cl = state->hash >> 2;
+		|		state->wd = state->word;
+		|	}
+		|
+		|	uint32_t radr =
+		|		(state->set << 18) |
+		|		(state->cl << 6) |
+		|		state->wd;
+		|
+		|	assert(radr < (1 << 20));
+		|	if (PIN_CAS.negedge()) {
+		|		if (PIN_RWE=>) {
+		|			state->bitc[radr] = state->cdreg;
+		|			state->bitt[radr+radr] = state->tdreg;
+		|			state->bitt[radr+radr+1] = state->vdreg;
+		|		}
+		|	}
+		|	if (PIN_ICK.posedge() && !PIN_CAS=>) {
+		|		state->cqreg = state->bitc[radr];
+		|		state->tqreg = state->bitt[radr+radr];
+		|		state->vqreg = state->bitt[radr+radr+1];
+		|	}
+		|	output.z_qc = PIN_QCOE=>;
+		|	output.z_qt = output.z_qc;
+		|	output.z_qv = PIN_QVOE=>;
+		|	if (!output.z_qv && output.z_qt) {
+		|		output.qv = state->qreg;
+		|	}
+		|	if (!output.z_qc) {
+		|		output.qc = state->cqreg;
+		|		output.qt = state->tqreg;
+		|		output.qv = state->vqreg;
 		|	}
 		|
 		|''')
