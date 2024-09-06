@@ -96,32 +96,6 @@ DiagBus_Explain_Cmd(struct vsb *vsb, const uint8_t serbuf[2])
 	}
 }
 
-#if 0
-
-static void
-diagbus_tx(const struct diproc *dp, struct cli *cli)
-{
-	unsigned nonet;
-	unsigned sum = 0;
-
-	while (cli->ac > 1) {
-		cli->ac--;
-		cli->av++;
-		if (!strcmp(cli->av[0], "{")) {
-			sum = 0;
-		} else if (!strcmp(cli->av[0], "}")) {
-			DiagBus_Send(dp, sum & 0xff);
-		} else {
-			nonet = strtoul(cli->av[0], NULL, 0);
-			sum += nonet;
-			assert(nonet < 0x200);
-			DiagBus_Send(dp, nonet);
-		}
-	}
-}
-
-#endif
-
 static void
 cli_diproc_wait(struct cli *cli)
 {
@@ -182,6 +156,12 @@ cli_diproc_wait(struct cli *cli)
 	if (want_state != state)
 		Cli_Printf(cli, "State is 0x%02x\n", state);
 	return;
+}
+
+uint64_t
+diagbus_out_count(void)
+{
+	return (diag_elastic->count_out);
 }
 
 void v_matchproto_(cli_func_f)

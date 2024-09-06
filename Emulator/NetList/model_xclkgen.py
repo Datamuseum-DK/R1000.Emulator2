@@ -38,11 +38,16 @@ from part import PartModel, PartFactory
 
 class XClkGen(PartFactory):
 
-    ''' Null component model '''
+    def extra(self, file):
+        super().extra(file)
+        self.scm.sf_cc.include("Diag/diagproc.h")
 
     def state(self, file):
-        file.write("\tunsigned pit;\n")
-        file.write("\tunsigned when;\n")
+        file.fmt('''
+		|	unsigned pit;
+		|	unsigned when;
+		|	uint64_t diag_out;
+		|''')
 
     def sensitive(self):
         for a in range(0):
@@ -50,8 +55,6 @@ class XClkGen(PartFactory):
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|	unsigned now;
@@ -86,6 +89,10 @@ class XClkGen(PartFactory):
 		|	case 50:
 		|		PIN_BP_2X<=(0); PIN_BP_2Xnot<=(1);
 		|		state->when = 55;
+		|		if (diagbus_out_count() > state->diag_out) {
+		|			PIN_CLK_DIS<=(1);
+		|			state->diag_out += 2;
+		|		}
 		|		break;
 		|	case 55:
 		|		PIN_2XE<=(0); PIN_2XEnot<=(1);
@@ -119,6 +126,7 @@ class XClkGen(PartFactory):
 		|	case 150:
 		|		PIN_BP_2X<=(0); PIN_BP_2Xnot<=(1);
 		|		state->when = 155;
+		|		PIN_CLK_DIS<=(0);
 		|		break;
 		|	case 155:
 		|		PIN_2XE<=(0); PIN_2XEnot<=(1);

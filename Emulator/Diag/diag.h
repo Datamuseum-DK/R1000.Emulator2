@@ -87,4 +87,7 @@ int diagproc_exp_download(struct diagproc_exp_priv *, uint8_t length, uint8_t *r
 
 void DiagBus_Explain_Cmd(struct vsb *vsb, const uint8_t serbuf[2]);
 
+uint64_t diagbus_out_count(void);
+
+
 #endif /* DIAG_DIAG_H */

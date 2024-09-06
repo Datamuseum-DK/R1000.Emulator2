@@ -376,7 +376,7 @@ diagproc_istep(struct diagproc *dp, struct diagproc_context *dctx)
 	return (opc);
 }
 
-void
+int
 DiagProcStep(struct diagproc *dp, struct diagproc_context *dctx)
 {
 	uint16_t retval;
@@ -388,21 +388,21 @@ DiagProcStep(struct diagproc *dp, struct diagproc_context *dctx)
 	if (dp->pin9_reset) {
 		// Trace(trace_diagbus, "%s RST", dp->name);
 		MCS51_Reset(dp->mcs51);
-		return;
+		return (0);
 	}
 
 	MCS51_TimerTick(dp->mcs51);
 
 	if (dp->longwait > 0) {
 		dp->longwait--;
-		return;
+		return (0);
 	}
 
 	do {
 		assert(dp->mcs51->pc < 0x2000);
 		flags = dp->flags[dp->mcs51->pc];
 		if ((dp->p3val & 0x08) && (flags & FLAG_WAIT_DFSM))
-			return;
+			return (0);
 		assert(pthread_mutex_lock(&dp->mtx) == 0);
 		retval = diagproc_istep(dp, dctx);
 		dctx->profile[retval]++;
@@ -417,6 +417,7 @@ DiagProcStep(struct diagproc *dp, struct diagproc_context *dctx)
 		if (0 < i && i < 16)
 			diprocs[i].status = dp->mcs51->iram[4];
 	} while(!(flags & (FLAG_IDLE | FLAG_RX_SPIN)) && !dp->did_io);
+	return (flags & FLAG_IDLE);
 }
 
 static void

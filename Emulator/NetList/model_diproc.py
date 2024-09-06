@@ -48,6 +48,13 @@ class DIPROC(PartFactory):
         super().extra(file)
         self.scm.sf_cc.include("Diag/diagproc.h")
 
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+            "idle_event",
+            "PIN_DBUS.posedge_event()",
+        )
+
     def state(self, file):
         ''' Extra state variable '''
 
@@ -56,6 +63,7 @@ class DIPROC(PartFactory):
 		|	struct scm_8051_state *state;
 		|	struct diagproc *diagproc;
 		|	unsigned cycle;
+		|	unsigned isidle;
 		|''')
 
     def init(self, file):
@@ -199,7 +207,15 @@ class DIPROC(PartFactory):
 		|			PORT3(READPORT, 0);
 		|			// TRACE(<< "Need P3 " << std::hex << state->diagproc->p3val);
 		|		}
-		|		DiagProcStep(state->diagproc, &state->dctx);
+		|		if (DiagProcStep(state->diagproc, &state->dctx)) {
+		|			if (++state->isidle > 1000) {
+		|				ALWAYS_TRACE(<< "idle");
+		|				next_trigger(idle_event);
+		|				state->isidle = 0;
+		|			}
+		|		} else {
+		|			state->isidle = 0;
+		|		}
 		|		if (state->diagproc->p1mask) {
 		|			TRACE(
 		|			    << "Set P1 "

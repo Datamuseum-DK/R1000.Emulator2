@@ -67,6 +67,8 @@ struct elastic {
 	struct elastic_match		*em;
 	struct elastic_fd		*out;
 	cli_func_f			*break_function;
+	uint64_t			count_in;
+	uint64_t			count_out;
 };
 
 struct elastic *elastic_new(int mode, const char *name);

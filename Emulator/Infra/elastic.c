@@ -176,6 +176,7 @@ elastic_inject(struct elastic *ep, const void *ptr, ssize_t len)
 	cp->len = len;
 	AZ(pthread_mutex_lock(&ep->mtx));
 	VTAILQ_INSERT_TAIL(&ep->chunks_in, cp, next);
+	ep->count_in += len;
 	AZ(pthread_cond_signal(&ep->cond_in));
 	AZ(pthread_mutex_unlock(&ep->mtx));
 }
@@ -216,6 +217,7 @@ elastic_put(struct elastic *ep, const void *ptr, ssize_t len)
 	if (len == 0)
 		return;
 	AZ(pthread_mutex_lock(&ep->mtx));
+	ep->count_out += len;
 	if (VTAILQ_EMPTY(&ep->subscribers)) {
 		cp = mk_chunk(ptr, len);
 		VTAILQ_INSERT_TAIL(&ep->chunks_out, cp, next);
