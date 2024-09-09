@@ -80,6 +80,7 @@ class XDUIRG(PartFactory):
 		|	adr |= PIN_H1=>;
 		|	if (PIN_CLK.posedge()) {
 		|		output.d = state->prom[adr];
+		|		TRACE(<< std::hex << " ADR " << adr << " D " << output.d);
 		|		state->zeros &= output.d;
 		|		state->ones |= output.d;
 		|	}

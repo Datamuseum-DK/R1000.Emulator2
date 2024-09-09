@@ -64,6 +64,7 @@ class XTCMUX(PartFactory):
 		|	uint8_t zero;
 		|	uint32_t ofreg;
 		|	bool ppriv;
+		|	bool last_cond;
 		|''')
 
     def init(self, file):
@@ -105,7 +106,6 @@ class XTCMUX(PartFactory):
             yield "PIN_Q4"
             yield "PIN_ALOOP"
             yield "PIN_BLOOP"
-            yield "PIN_ACOND"
             yield "BUS_SPC"
             yield "BUS_CSEL"
             yield "BUS_CLIT"
@@ -161,7 +161,7 @@ class XTCMUX(PartFactory):
 		|		break;
 		|	case COND(0x4, 7): // E - TYP_PREVIOUS
 		|		condmask = 0x08;
-		|		state->cond = output.ltcn;
+		|		state->cond = state->last_cond;
 		|		break;
 		|	case COND(0x6, 4): // E - PASS_PRIVACY_BIT
 		|		condmask = 0x02;
@@ -299,6 +299,14 @@ class XTCMUX(PartFactory):
 		|		output.b = state->b & 0x7;
 		|	}
 		|	if (q2pos) {
+		|		output.ocken = rand != 0xc;
+		|
+		|		bool divide = rand != 0xb;
+		|		bool acond = true;
+		|		if (divide && state->last_cond)
+		|			acond = false;
+		|		if (!divide && PIN_TQBIT=>)
+		|			acond = false;
 		|		struct f181 f181l, f181h;
 		|		unsigned tmp, idx, alurand, alufunc;
 		|		BUS_AFNC_READ(alufunc);
@@ -308,7 +316,7 @@ class XTCMUX(PartFactory):
 		|		} else {
 		|			alurand = 15 - rand;
 		|		}
-		|		idx = PIN_ACOND=> << 8;
+		|		idx = acond << 8;
 		|		idx |= alurand << 5;
 		|		idx |= alufunc;
 		|		
@@ -423,7 +431,7 @@ class XTCMUX(PartFactory):
 		|				state->cond = false;
 		|				break;
 		|			case 7:	// E - TYP_PREVIOUS
-		|				state->cond = output.ltcn;
+		|				state->cond = state->last_cond;
 		|				break;
 		|			}
 		|		}
@@ -657,7 +665,7 @@ class XTCMUX(PartFactory):
 		|	}
 		|	output.tcnd &= BUS_TCND_MASK;
 		|	if (PIN_CNCLK.posedge()) {
-		|		output.ltcn = state->cond;
+		|		state->last_cond = state->cond;
 		|	}
 		|	if (PIN_OFC.posedge()) {
 		|		state->ofreg = state->b >> 32;

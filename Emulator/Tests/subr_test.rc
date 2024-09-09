@@ -21,6 +21,9 @@ standard_patches() {
 	# Dont wiggle IOC:DUIRG5:D0
 	cli firmware patch PA105-02 0x120 0x44
 
+	# Dont wiggle TYP:DUIRG3:D1 (UIR.DIAG_OFF)
+	cli firmware patch PA016-02 0x082 0x31
+
 	# Dont use "CR ESC [ 2 K" to hide experiment names
 	cli dfs patch FS_0.M200 0x8fb7 0x20
 	cli dfs patch FS_0.M200 0x8fbd 0x20

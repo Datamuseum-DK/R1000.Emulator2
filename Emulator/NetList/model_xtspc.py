@@ -56,15 +56,8 @@ class XTSPC(PartFactory):
             "PIN_VAEN",
         )
 
-    def state(self, file):
-        file.fmt('''
-		|       bool poe;
-		|''')
-
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|	bool pos = PIN_CLK.posedge();
@@ -72,18 +65,11 @@ class XTSPC(PartFactory):
 		|	output.aspe = PIN_TAEN=> && PIN_VAEN=>;
 		|	output.z_asp = output.aspe;
 		|
-		|	if (pos) {
-		|		state->poe = output.aspe;
-		|	}
-		|
 		|	if (pos || !output.z_asp) {
 		|		unsigned marctl;
 		|		BUS_MARCTL_READ(marctl);
-		|		bool force_sp_h1 = PIN_FSP=>;
 		|
-		|		if (!force_sp_h1) {
-		|			output.asp = 0x7;
-		|		} else if (marctl & 0x8) {
+		|		if (marctl & 0x8) {
 		|			output.asp = (marctl & 0x7) ^ 0x7;
 		|		} else {
 		|			unsigned b;
@@ -91,8 +77,8 @@ class XTSPC(PartFactory):
 		|			output.asp = b ^ 0x7;
 		|		}
 		|	}
-		|	if (output.z_asp && state->poe) {
-		|		next_trigger(idle_event);
+		|	if (output.z_asp) {
+		|		idle_next = &idle_event;
 		|	}
 		|''')
 
