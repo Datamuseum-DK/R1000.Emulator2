@@ -42,8 +42,6 @@ class XM30(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	bool awe, cas_a, cas_b;
-		|	bool vbdr;
-		|	bool vadr;
 		|	bool trdr;
 		|''')
 
@@ -54,13 +52,27 @@ class XM30(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|#define CMD_PMW	(1<<0xf)	// PHYSICAL_MEM_WRITE
+		|#define CMD_PMR	(1<<0xe)	// PHYSICAL_MEM_READ
+		|#define CMD_LMW	(1<<0xd)	// LOGICAL_MEM_WRITE
+		|#define CMD_LMR	(1<<0xc)	// LOGICAL_MEM_READ
+		|#define CMD_C01	(1<<0xb)	// COPY 0 TO 1
+		|#define CMD_MTT	(1<<0xa)	// MEMORY_TO_TAGSTORE
+		|#define CMD_C10	(1<<0x9)	// COPY 1 TO 0
+		|#define CMD_SFF	(1<<0x8)	// SET HIT FLIP FLOPS
+		|#define CMD_PTW	(1<<0x7)	// PHYSICAL TAG WRITE
+		|#define CMD_PTR	(1<<0x6)	// PHYSICAL TAG READ
+		|#define CMD_INI	(1<<0x5)	// INITIALIZE MRU
+		|#define CMD_LTR	(1<<0x4)	// LOGICAL TAG READ
+		|#define CMD_NMQ	(1<<0x3)	// NAME QUERY
+		|#define CMD_LRQ	(1<<0x2)	// LRU QUERY
+		|#define CMD_AVQ	(1<<0x1)	// AVAILABLE QUERY
+		|#define CMD_IDL	(1<<0x0)	// IDLE
 		|
 		|	if (state->ctx.job & 1) {
 		|		state->ctx.job &= ~1;
 		|		PIN_AWE<=(state->awe);
 		|		PIN_TRCE<=(state->trdr);
-		|		PIN_VACE<=(state->vadr);
-		|		PIN_VBCE<=(state->vbdr);
 		|		if (state->ctx.job & 2)
 		|			next_trigger(30, sc_core::SC_NS);
 		|		return;
@@ -75,23 +87,25 @@ class XM30(PartFactory):
 		|	if (PIN_CLK.posedge()) {
 		|		unsigned cmd;
 		|		BUS_CMD_READ(cmd);
+		|	unsigned bcmd = 1 << cmd;
+		|#define CMDS(x) ((bcmd & (x)) != 0)
+		|
 		|		bool h1 = PIN_H1=>;
 		|		bool mcyc2 = PIN_MC=>;
 		|		bool mcyc2_next = PIN_MCN=>;
 		|		bool ahit = PIN_AHIT=>;
 		|		bool bhit = PIN_BHIT=>;
 		|		bool late_abort = PIN_LAB=>;
-		|		bool set_b = PIN_SETB=>;
 		|
 		|		bool cas_a = !(
-		|		    ((cmd == 0xc || cmd == 0xe) && !h1 && !mcyc2_next) ||
-		|		    ((cmd == 0xd || cmd == 0xf) && h1 && !mcyc2 && !ahit && !late_abort)
+		|		    (CMDS(CMD_LMR|CMD_PMR) && !h1 && !mcyc2_next) ||
+		|		    (CMDS(CMD_LMW|CMD_PMW) && h1 && !mcyc2 && !ahit && !late_abort)
 		|		);
 		|		bool cas_b = !(
-		|		    ((cmd == 0xc || cmd == 0xe) && !h1 && !mcyc2_next) ||
-		|		    ((cmd == 0xd || cmd == 0xf) && h1 && !mcyc2 && !bhit && !late_abort)
+		|		    (CMDS(CMD_LMR|CMD_PMR) && !h1 && !mcyc2_next) ||
+		|		    (CMDS(CMD_LMW|CMD_PMW) && h1 && !mcyc2 && !bhit && !late_abort)
 		|		);
-		|		bool awe = (((cmd & 0xd) == 0xd) && h1 && !mcyc2);
+		|		bool awe = (CMDS(CMD_LMW|CMD_PMW) && h1 && !mcyc2);
 		|
 		|		if (
 		|		    cas_a != state->cas_a ||
@@ -104,35 +118,16 @@ class XM30(PartFactory):
 		|
 		|		bool trdr =
 		|		    !(
-		|		        (cmd == 0xc && !h1  && (!mcyc2_next)) ||
-		|		        (cmd == 0xe && !h1  && (!mcyc2_next)) ||
-		|		        (cmd == 0x5 && !h1 )
-		|		    );
-		|		bool vadr =
-		|		    !(
-		|		        (cmd == 0xc && !h1  && (!mcyc2_next)) ||
-		|		        (cmd == 0xe && !h1  && (!mcyc2_next)) ||
-		|		        (cmd == 0x6 && !h1  && (!mcyc2_next) &&   set_b ) ||
-		|		        (cmd == 0x5 && !h1 )
-		|		    );
-		|		bool vbdr =
-		|		    !(
-		|		        (cmd == 0xc && !h1  && (!mcyc2_next)) ||
-		|		        (cmd == 0xe && !h1  && (!mcyc2_next)) ||
-		|		        (cmd == 0x6 && !h1  && (!mcyc2_next) && (!set_b)) ||
-		|		        (cmd == 0x5 && !h1 )
+		|		        (CMDS(CMD_LMR|CMD_PMR) && !h1  && (!mcyc2_next)) ||
+		|		        (CMDS(CMD_INI) && !h1 )
 		|		    );
 		|		if (
 		|		    awe != state->awe ||
-		|		    trdr != state->trdr ||
-		|		    vadr != state->vadr ||
-		|		    vbdr != state->vbdr
+		|		    trdr != state->trdr
 		|		) {
 		|			state->ctx.job |= 1;
 		|			state->awe = awe;
 		|			state->trdr = trdr;
-		|			state->vadr = vadr;
-		|			state->vbdr = vbdr;
 		|		}
 		|		if (state->ctx.job & 1)
 		|			next_trigger(5, sc_core::SC_NS);

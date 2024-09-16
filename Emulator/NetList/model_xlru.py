@@ -235,22 +235,24 @@ class XLRU(PartFactory):
 		|		output.z_hlru = true;
 		|	}
 		|
-		|	unsigned wrd = BUS_WRD_MASK + 1;
 		|	if (pos) {
 		|		state->hhit = nxthhit;
 		|	}
 		|
+		|#if 0
+		|	unsigned wrd = BUS_WRD_MASK + 1;
 		|	wrd = 0;
-		|	wrd |= state->modd << 5;
+		|	wrd |= state->modd << 4;
 		|	unsigned lri;
 		|	BUS_LRI_READ(lri);
 		|	if (state->lrua < lri) {
-		|		wrd |= state->lrub << 1;
+		|		wrd |= state->lrub;
 		|	} else {
-		|		wrd |= state->lrua << 1;
+		|		wrd |= state->lrua;
 		|	}
-		|	wrd ^= 0xff;
+		|	wrd ^= BUS_WRD_MASK;
 		|	output.wrd = wrd;
+		|#endif
 		|''')
 
 def register(part_lib):

@@ -52,11 +52,9 @@ class XM31(PartFactory):
 		|		bool diag_sync = !PIN_BDISYN=>;
 		|		bool diag_freeze = !PIN_BDIFRZ=>;
 		|		output.cstop = !(diag_sync || diag_freeze);
-		|		output.tlwdr = !PIN_LDWDR=>;
 		|	}
 		|
 		|	if (PIN_Q4.posedge()) {
-		|		output.tlwdr = false;
 		|		BUS_MCMD_READ(output.rcmd);
 		|		output.rcont = PIN_CONT=>;
 		|	}

@@ -63,6 +63,22 @@ class XM28(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|#define CMD_PMW	(1<<0xf)
+		|#define CMD_PMR	(1<<0xe)
+		|#define CMD_LMW	(1<<0xd)
+		|#define CMD_LMR	(1<<0xc)
+		|#define CMD_C01	(1<<0xb)
+		|#define CMD_MTT	(1<<0xa)
+		|#define CMD_C10	(1<<0x9)
+		|#define CMD_SFF	(1<<0x8)
+		|#define CMD_PTW	(1<<0x7)
+		|#define CMD_PTR	(1<<0x6)
+		|#define CMD_INI	(1<<0x5)
+		|#define CMD_LTR	(1<<0x4)
+		|#define CMD_NMQ	(1<<0x3)
+		|#define CMD_LRQ	(1<<0x2)
+		|#define CMD_AVQ	(1<<0x1)
+		|#define CMD_IDL	(1<<0x0)
 		|
 		|	bool clk2x_neg = PIN_CLK.negedge();
 		|	bool clk2x_pos = PIN_CLK.posedge();
@@ -81,6 +97,8 @@ class XM28(PartFactory):
 		|	bool high_board = !PIN_LOBRD=>;
 		|	unsigned cmd;
 		|	BUS_CMD_READ(cmd);
+		|	unsigned bcmd = 1 << cmd;
+		|#define CMDS(x) ((bcmd & (x)) != 0)
 		|	bool mcyc2 = PIN_MC2=>;
 		|	bool mcyc2_next = PIN_MC2N=>;
 		|
@@ -104,11 +122,6 @@ class XM28(PartFactory):
 		|		    (!aehit && blhit && !state->ahit1 && !state->bhit5)
 		|		);
 		|	}
-		|	if (q3pos) {
-		|		output.tagw = mcyc2 && !mcyc2_next && (
-		|		    cmd == 0xc || cmd == 0xd || cmd == 0x7 || cmd == 0x2
-		|		);
-		|	}
 		|	output.z_seta = !(state->ahit0145 && !exthit);
 		|	output.z_setb = !(state->bhit0246 && !exthit);
 		|	output.seta = output.z_seta;
@@ -129,33 +142,14 @@ class XM28(PartFactory):
 		|
 		|	if (clk2x_pos) {
 		|
-		|		bool seta_sel = !(
-		|			((0x8 <= pset && pset <= 0xb) && high_board) ||
-		|			((0x0 <= pset && pset <= 0x3) && !high_board)
+		|		output.txewe = CMDS(CMD_LRQ|CMD_LMW|CMD_LMR) && (
+		|			(q4pos &&  mcyc2 && !mcyc2_next) ||
+		|			(q2pos && !mcyc2 && !state->labort && state->output.txewe)
 		|		);
-		|		bool setb_sel = !(
-		|			((0xc <= pset && pset <= 0xf) && high_board) ||
-		|			((0x4 <= pset && pset <= 0x7) && !high_board)
+		|		output.txlwe = CMDS(CMD_LRQ|CMD_LMW|CMD_LMR) && (
+		|			(q4pos &&  mcyc2 && !mcyc2_next) ||
+		|			(q2pos && !mcyc2 && !state->labort && state->output.txlwe)
 		|		);
-		|
-		|		bool txoen = mcyc2 || q4pos || (cmd != 0x7);
-		|		output.txeoe = !(pset & 1) && txoen;
-		|		output.txloe =  (pset & 1) && txoen;
-		|
-		|		output.txxwe = (cmd == 0x7 && q4pos && !mcyc2_next && mcyc2);
-		|		bool cmd_2cd = (cmd == 0x2) || (cmd == 0xc) || (cmd == 0xd);
-		|		output.txewe = (
-		|			(output.txxwe && !(pset & 1)) ||
-		|			(cmd_2cd && q4pos &&  mcyc2 && !mcyc2_next) ||
-		|			(cmd_2cd && q2pos && !mcyc2 && !state->labort && state->output.txewe)
-		|		);
-		|		output.txlwe = (
-		|			(output.txxwe && (pset & 1)) ||
-		|			(cmd_2cd && q4pos &&  mcyc2 && !mcyc2_next) ||
-		|			(cmd_2cd && q2pos && !mcyc2 && !state->labort && state->output.txlwe)
-		|		);
-		|		output.tgace = !(output.txxwe && seta_sel);
-		|		output.tgbce = !(output.txxwe && setb_sel);
 		|
 		|		output.rclke = labort_y;
 		|
@@ -163,7 +157,7 @@ class XM28(PartFactory):
 		|			state->labort = labort_y;
 		|			output.eabrt = eabort_y;
 		|			output.labrt = state->labort;
-		|			output.tsc14 = !(!mcyc2_next && output.labrt);
+		|			output.tsc14 = (!mcyc2_next && output.labrt);
 		|		}
 		|	}
 		|
@@ -184,7 +178,7 @@ class XM28(PartFactory):
 		|				((pset & 0xb) == 0x2 && !high_board)
 		|			);
 		|
-		|			output.da2sl = miss && (((cmd & 0x6) == 0x4) || ((cmd & 0xc) == 0x0));
+		|			output.da2sl = miss && CMDS(CMD_IDL|CMD_AVQ|CMD_LRQ|CMD_NMQ|CMD_LTR|CMD_INI|CMD_LMR|CMD_LMW);
 		|
 		|			output.daa1d = !miss;
 		|
@@ -192,8 +186,7 @@ class XM28(PartFactory):
 		|			    ( !alhit ) ||
 		|			    ( !blhit ) ||
 		|			    ( pht26 ) ||
-		|			    ( (cmd & 0x6) == 0x4 ) ||
-		|			    ( (cmd & 0xc) == 0x0 )
+		|			    CMDS(CMD_IDL|CMD_AVQ|CMD_LRQ|CMD_NMQ|CMD_LTR|CMD_INI|CMD_LMR|CMD_LMW)
 		|			);
 		|		}
 		|
@@ -203,23 +196,18 @@ class XM28(PartFactory):
 		|		// TAGAPAL
 		|		bool p_lru_update = output.lrup;
 		|		output.lrup =
-		|		    ( q3pos && (!mcyc2_next) && mcyc2 && (cmd == 0xc || cmd == 0xd)) ||
-		|		    ( q3pos && (!mcyc2_next) && mcyc2 && (cmd == 0x2 || cmd == 0x3)) ||
+		|		    ( q3pos && (!mcyc2_next) && mcyc2 && CMDS(CMD_LMW|CMD_LMR|CMD_NMQ|CMD_LRQ)) ||
 		|		    ( q1pos && (!state->labort) && p_lru_update );
+		|		bool tmp0 = CMDS(CMD_IDL|CMD_AVQ|CMD_LRQ|CMD_NMQ|CMD_LTR|CMD_INI|CMD_LMR|CMD_LMW);
+		|		bool tmp1 = CMDS(CMD_PTR|CMD_PTW|CMD_SFF|CMD_C10|CMD_MTT|CMD_C01|CMD_PMR|CMD_PMW);
 		|		output.t12y =
-		|		    ( q1pos && ((cmd & 0x6) == 0x4)) ||
-		|		    ( q1pos && ((cmd & 0xc) == 0x0)) || 
+		|		    ( q1pos && tmp0) ||
 		|		    ( q1pos && !mcyc2 ) ||
-		|		    ( mcyc2 && (pset & 3) > 1 && ((cmd & 0x6) == 0x6)) ||
-		|		    ( mcyc2 && (pset & 3) > 1 && ((cmd & 0xa) == 0xa)) ||
-		|		    ( mcyc2 && (pset & 3) > 1 && ((cmd & 0xc) == 0x8));
+		|		    ( mcyc2 && (pset & 3) > 1 && tmp1);
 		|		output.t13y =
-		|		    ( q3pos && ((cmd & 0x6) == 0x4)) ||
-		|		    ( q3pos && ((cmd & 0xc) == 0x0)) ||
+		|		    ( q3pos && tmp0) ||
 		|		    ( q3pos && !mcyc2 ) ||
-		|		    ( mcyc2 && ((pset & 3) == 1 || (pset & 3) == 2) && ((cmd & 0x6) == 0x6)) ||
-		|		    ( mcyc2 && ((pset & 3) == 1 || (pset & 3) == 2) && ((cmd & 0xa) == 0xa)) ||
-		|		    ( mcyc2 && ((pset & 3) == 1 || (pset & 3) == 2) && ((cmd & 0xc) == 0x8));
+		|		    ( mcyc2 && ((pset & 3) == 1 || (pset & 3) == 2) && tmp1);
 		|	}
 		|
 		|''')

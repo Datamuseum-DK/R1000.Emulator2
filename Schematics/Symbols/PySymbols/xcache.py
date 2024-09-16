@@ -14,15 +14,19 @@ class XCACHE(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "DQV", 0, 63))
-        self.sig_left(ChipSig("-->+", "CWE", 0, 5))
-        self.sig_left(ChipSig("-->+", "CWL", 0, 5))
-        self.sig_left(ChipSig("-->+", "EVEN"))
-        self.sig_left(ChipSig("-->+", "LVEN"))
         self.sig_left(ChipSig("-->+", "EWE"))
         self.sig_left(ChipSig("-->+", "LWE"))
         self.sig_left(ChipSig("-->+", "SPC", 0, 2))
         self.sig_left(ChipSig("-->+", "ADR", 0, 56))
-        self.sig_left(ChipSig("-->+", "MC2N"))
+        self.sig_left(ChipSig("-->+", "PRI"))
+        self.sig_left(ChipSig("-->+", "SEC"))
+        self.sig_left(ChipSig("-->+", "SECN"))
+
+        self.sig_left(ChipSig("-->+", "MCMD", 0, 3))
+        self.sig_left(ChipSig("-->+", "CONT"))
+        self.sig_left(ChipSig("-->+", "LDWDR"))
+        self.sig_left(ChipSig("-->+", "BDISYN"))
+        self.sig_left(ChipSig("-->+", "BDIFRZ"))
 
         self.sig_right(ChipSig("+<->", "DQT", 0, 63))
         self.sig_right(ChipSig("+<->", "DQC", 0, 8))
@@ -32,7 +36,6 @@ class XCACHE(FChip):
         self.sig_right(ChipSig("+<--", "QCOE"))
 	
 
-        self.sig_right(ChipSig("+<--", "WE"))
         self.sig_right(ChipSig("+<--", "OE"))
 
         self.sig_right(ChipSig("+<--", "CLK"))
@@ -48,11 +51,9 @@ class XCACHE(FChip):
         self.sig_right(ChipSig("+<--", "K12"))
         self.sig_right(ChipSig("+<--", "K13"))
         self.sig_right(ChipSig("+<--", "CMD", 0, 3))
-        self.sig_right(ChipSig("+<--", "WCK"))
         self.sig_right(ChipSig("+<--", "QCK"))
         self.sig_right(ChipSig("+<--", "Q4"))
         self.sig_right(ChipSig("+<--", "LDMR"))
-        self.sig_right(ChipSig("+<--", "CSTP"))
         self.sig_right(ChipSig("+-->", "PS", 0, 3))
 
         self.sig_right(ChipSig("+<--", "ISLOW"))
@@ -63,6 +64,14 @@ class XCACHE(FChip):
         self.sig_right(ChipSig("+<--", "CAS"))
         self.sig_right(ChipSig("+<--", "Q2"))
         self.sig_right(ChipSig("+<--", "SET", 0, 1))
+
+        self.sig_right(ChipSig("+-->", "RCMD", 0, 3))
+        self.sig_right(ChipSig("+-->", "RCONT"))
+
+        self.sig_right(ChipSig("+-->", "DLRU"))
+        self.sig_right(ChipSig("+<--", "DLOE"))
+        self.sig_right(ChipSig("+<->", "DQL", 0, 3))
+        self.sig_right(ChipSig("+-->", "BLRU", 0, 3))
 
         self.finish(21)
 
