@@ -13,7 +13,6 @@ class XSREADS(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "DBZ"))
         self.sig_left(ChipSig("-->+", "IRD", 0, 2))
 
         self.sig_right(ChipSig("+-->", "PCOE"))

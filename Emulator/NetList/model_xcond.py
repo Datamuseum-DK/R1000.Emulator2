@@ -93,6 +93,7 @@ class XCOND(PartFactory):
 		|
 		|	unsigned condsel;
 		|	BUS_ICOND_READ(condsel);
+		|	condsel ^= BUS_ICOND_MASK;
 		|
 		|	uint8_t pa042 = state->elprom[condsel << 2];
 		|	bool is_e_ml = (pa042 >> 7) & 1;
@@ -140,10 +141,8 @@ class XCOND(PartFactory):
 		|		state->llcond = cond;
 		|	}
 		|
-		|	output.ocond = (condsel ^ BUS_OCOND_MASK);
 		|	output.e_ml = is_e_ml;
 		|	output.cndp = cond;
-		|	output.cndn = !cond;
 		|	output.cq3p = state->q3cond;
 		|	output.cq3n = !state->q3cond;
 		|	output.cllp = state->llcond;

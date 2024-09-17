@@ -34,7 +34,7 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XSEQ12(PartFactory):
     ''' SEQ 12 Noodle Logic '''
@@ -55,7 +55,7 @@ class XSEQ12(PartFactory):
         yield from self.event_or(
             "idle_event",
             "PIN_NAMOE",
-            "PIN_TYQOE",
+            "PIN_QTOE",
             "PIN_STCLK",
             "PIN_SVCLK",
             "PIN_TCLK",
@@ -68,7 +68,7 @@ class XSEQ12(PartFactory):
         yield from self.event_or(
             "idle_event_md",
             "PIN_NAMOE",
-            "PIN_TYQOE",
+            "PIN_QTOE",
             "PIN_STCLK",
             "PIN_SVCLK",
             "PIN_TCLK",
@@ -118,7 +118,7 @@ class XSEQ12(PartFactory):
 		|	}
 		|
 		|	unsigned typ;
-		|	BUS_TYP_READ(typ);
+		|	BUS_DT_READ(typ);
 		|
 		|	if (PIN_TCLK.posedge()) {
 		|		state->tosof = (typ >> 7) & 0xfffff;
@@ -192,7 +192,7 @@ class XSEQ12(PartFactory):
 		|
 		|	unsigned cnb;
 		|	if (!PIN_CMR=>) {
-		|		cnb = typ ^ BUS_TYP_MASK;
+		|		cnb = typ ^ BUS_DT_MASK;
 		|	} else {
 		|		BUS_FIU_READ(cnb);
 		|	}
@@ -239,11 +239,11 @@ class XSEQ12(PartFactory):
 		|	}
 		|	output_ob &= 0xfffff;
 		|	
-		|	output.z_tyq = PIN_TYQOE=>;
-		|	if (!output.z_tyq) {
-		|		BUS_CSA_READ(output.tyq);
-		|		output.tyq |= output_ob << 7;
-		|		output.tyq ^= BUS_TYQ_MASK;
+		|	output.z_qt = PIN_QTOE=>;
+		|	if (!output.z_qt) {
+		|		BUS_CSA_READ(output.qt);
+		|		output.qt |= output_ob << 7;
+		|		output.qt ^= BUS_QT_MASK;
 		|	}
 		|
 		|	uint64_t nam;
@@ -273,9 +273,9 @@ class XSEQ12(PartFactory):
 
     def doit_idle(self, file):
         file.fmt('''
-		|		if (output.z_nam && output.z_tyq && maybe_dispatch) {
+		|		if (output.z_nam && output.z_qt && maybe_dispatch) {
 		|			next_trigger(idle_event_md);
-		|		} else if (output.z_nam && output.z_tyq) {
+		|		} else if (output.z_nam && output.z_qt) {
 		|			next_trigger(idle_event);
 		|		}
 		|''')
@@ -283,4 +283,4 @@ class XSEQ12(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XSEQ12", PartModel("XSEQ12", XSEQ12))
+    part_lib.add_part("XSEQ12", PartModelDQ("XSEQ12", XSEQ12))

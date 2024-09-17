@@ -55,30 +55,20 @@ class XSREADS(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
 		|	unsigned idx;
 		|	BUS_IRD_READ(idx);
-		|	bool buzz = PIN_DBZ=>;
 		|
-		|	if (buzz) {
-		|		output.tvoe = true;
-		|		output.cinoe = true;
-		|		output.decoe = true;
-		|		output.tosoe = true;
-		|		output.rnmoe = true;
-		|		output.pcoe = true;
-		|	} else {
-		|		output.tvoe = idx != 0;
-		|		output.cinoe = idx != 1;
-		|		output.decoe = idx != 2;
-		|		output.tosoe = idx != 3;
-		|		output.rnmoe = idx != 5;
-		|		output.pcoe = idx < 4;
-		|	}
+		|	output.tvoe = idx != 0;
+		|	output.cinoe = idx != 1;
+		|	output.decoe = idx != 2;
+		|	output.tosoe = idx != 3;
+		|	output.rnmoe = idx != 5;
+		|	output.pcoe = idx < 4;
 		|	output.offoe = idx == 0;
 		|	output.cnmoe = (idx == 0 || idx == 5);
+		|	if (!output.pcoe)
+		|		output.decoe = false;
 		|	if (!output.cnmoe)
 		|		output.rnmoe = false;
 		|	

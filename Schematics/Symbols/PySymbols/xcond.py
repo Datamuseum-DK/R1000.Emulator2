@@ -31,10 +31,8 @@ class XCOND(FChip):
         self.sig_left(ChipSig("-->+", "SCKE"))
         self.sig_left(ChipSig("-->+", "SC", 0, 23))
 
-        self.sig_right(ChipSig("+-->", "OCOND", 0, 6))
         self.sig_right(ChipSig("+-->", "E_ML"))
         self.sig_right(ChipSig("+-->", "CNDP"))
-        self.sig_right(ChipSig("+-->", "CNDN"))
         self.sig_right(ChipSig("+-->", "CQ3P"))
         self.sig_right(ChipSig("+-->", "CQ3N"))
         self.sig_right(ChipSig("+-->", "CLLP"))

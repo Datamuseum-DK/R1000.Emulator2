@@ -59,10 +59,10 @@ class XSEQ79(PartFactory):
 		|		} else if (PIN_DSTOP=>) {
 		|			output.dget = false;
 		|		}
-		|		if (!PIN_DCLK=> && !PIN_SFSTP=>) {
+		|		if (!PIN_H1E=> && !PIN_SFSTP=>) {
 		|			output.aclk = false;
 		|		}
-		|		if (!PIN_PRDEC=> && !PIN_SFSTP=>) {
+		|		if (!PIN_H1E=> && !PIN_SFSTP=>) {
 		|			output.pclk = false;
 		|		}
 		|		if (output.dget && !PIN_LCLKE=>) {

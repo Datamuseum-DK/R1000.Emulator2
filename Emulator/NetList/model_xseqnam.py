@@ -52,10 +52,7 @@ class XSEQNAM(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|
-		|	output.nspoe = !(PIN_DADOF=> && !(PIN_DADON=> && PIN_SEQAE=>));
-		|
-		|	output.z_ospc = output.nspoe;
+		|	output.z_ospc = PIN_OSPCOE=>;
 		|	if (!output.z_ospc) {
 		|		BUS_ISPC_READ(output.ospc);
 		|		output.ospc ^= BUS_OSPC_MASK;
@@ -119,7 +116,7 @@ class XSEQNAM(PartFactory):
 		|		adr_name = name_bus;
 		|	}
 		|
-		|	output.z_adrn = output.nspoe;
+		|	output.z_adrn = PIN_ADRNOE=>;
 		|	if (!output.z_adrn)
 		|		output.adrn = adr_name;
 		|	

@@ -43,9 +43,16 @@ class XUSTK(PartFactory):
 
     def state(self, file):
         file.fmt('''
+		|	unsigned nxtuadr;	// Z029
 		|	uint16_t ram[16];
 		|	uint16_t topu;
 		|	uint16_t adr;
+		|	unsigned fiu;
+		|	unsigned other;
+		|	unsigned late_u;
+		|	unsigned prev;
+		|	unsigned uei;
+		|	unsigned uev;
 		|''')
 
     def sensitive(self):
@@ -53,6 +60,13 @@ class XUSTK(PartFactory):
         yield "PIN_Q4.pos()"
         yield "PIN_QFOE"
         yield "PIN_QVOE"
+
+        yield "PIN_FIU_CLK.pos()"
+        yield "PIN_LCLK.pos()"
+        yield "PIN_ACLK.pos()"
+        yield "PIN_Q1not.pos()"
+        yield "PIN_DV_U"
+        yield "PIN_BAD_HINT"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -62,7 +76,7 @@ class XUSTK(PartFactory):
         file.fmt('''
 		|	const char *what = "?";
 		|	bool stkclk = PIN_Q4.posedge() && !PIN_STKEN=>;
-		|	bool uevent = PIN_UEVENT=>;
+		|	bool uevent = output.u_event;
 		|
 		|	bool xwrite;
 		|	bool pop;
@@ -94,10 +108,10 @@ class XUSTK(PartFactory):
 		|		if (PIN_H2 && xwrite) {
 		|			switch(stkinpsel) {
 		|			case 0:
-		|				BUS_BRNCH_READ(state->topu);
+		|				BUS_BRN_READ(state->topu);
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
 		|				if (PIN_LATCHED) state->topu |= (1<<14);
-		|				state->topu ^= BUS_TOPU_MASK;
+		|				state->topu ^= 0xffff;;
 		|				what = "0";
 		|				break;
 		|			case 1:
@@ -106,18 +120,18 @@ class XUSTK(PartFactory):
 		|				what = "1";
 		|				break;
 		|			case 2:
-		|				BUS_CURU_READ(state->topu);
+		|				BUS_CUR_READ(state->topu);
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
 		|				if (PIN_LATCHED) state->topu |= (1<<14);
 		|				state->topu += 1;
-		|				state->topu ^= BUS_TOPU_MASK;
+		|				state->topu ^= 0xffff;;
 		|				what = "2";
 		|				break;
 		|			case 3:
-		|				BUS_CURU_READ(state->topu);
+		|				BUS_CUR_READ(state->topu);
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
 		|				if (PIN_LATCHED) state->topu |= (1<<14);
-		|				state->topu ^= BUS_TOPU_MASK;
+		|				state->topu ^= 0xffff;;
 		|				what = "3";
 		|				break;
 		|			}
@@ -125,7 +139,7 @@ class XUSTK(PartFactory):
 		|			what = "4";
 		|			state->topu = state->ram[state->adr];
 		|		}
-		|		output.topu = state->topu ^ 0xffff;
+		|		output.svlat = !((state->topu >> 14) & 0x1);
 		|	}
 		|	if (PIN_Q2.posedge()) {
 		|		state->ram[(state->adr + 1) & 0xf] = state->topu;
@@ -150,15 +164,130 @@ class XUSTK(PartFactory):
 		|
 		|	output.z_qf = PIN_QFOE=>;
 		|	if (!output.z_qf) {
-		|		output.qf = output.topu;
+		|		output.qf = state->topu ^ 0xffff;
 		|		output.qf ^= 0xffff;
 		|	}
 		|	output.z_qv = PIN_QVOE=>;
 		|	if (!output.z_qv) {
-		|		output.qv = output.topu;
+		|		output.qv = state->topu ^ 0xffff;
 		|		output.qv ^= BUS_QV_MASK;
 		|	}
 		|
+		|''')
+
+        file.fmt('''
+		|	unsigned data = 0, sel;
+		|	bool macro_hic = true;
+		|	bool u_event = true;
+		|
+		|	if (PIN_FIU_CLK.posedge()) {
+		|		BUS_DF_READ(state->fiu);
+		|		state->fiu &= 0x3fff;
+		|	}	
+		|
+		|	if (PIN_LCLK.posedge()) {
+		|		BUS_LATE_READ(state->late_u);
+		|		sel = 0;
+		|		if (!PIN_U_MUX_SEL) sel |= 4;
+		|		if (PIN_G_SEL0) sel |= 2;
+		|		if (PIN_G_SEL1) sel |= 1;
+		|		switch (sel) {
+		|		case 0:
+		|			BUS_BRN_READ(data);
+		|			data += state->fiu;
+		|			break;
+		|		case 1:
+		|			BUS_DEC_READ(data);
+		|			data <<= 1;
+		|			break;
+		|		case 2:
+		|			data = (state->topu ^ 0xffff) & 0x3fff;
+		|			break;
+		|		case 3:
+		|		case 4:
+		|			BUS_CUR_READ(data);
+		|			data += 1;
+		|			break;
+		|		case 5:
+		|		case 6:
+		|		case 7:
+		|			BUS_BRN_READ(data);
+		|			break;
+		|		default:
+		|			abort();
+		|		}
+		|		state->other = data;
+		|	}
+		|
+		|	if (!PIN_DV_U) {
+		|		data = state->nxtuadr;
+		|	} else if (PIN_BAD_HINT=>) {
+		|		data = state->other;
+		|	} else if (PIN_LMAC=>) {
+		|		// Not tested by expmon_test_seq ?
+		|		data = state->late_u << 3;
+		|		data ^= (7 << 3);
+		|		data |= 0x0140;
+		|		macro_hic = false;
+		|	} else if (state->uei != 0) {
+		|		data = state->uev;
+		|		data <<= 3;
+		|		data |= 0x0180;
+		|		u_event = false;
+		|	} else {
+		|		sel = 0;
+		|		if (PIN_U_MUX_SEL) sel |= 4;
+		|		if (PIN_G_SEL0) sel |= 2;
+		|		if (PIN_G_SEL1) sel |= 1;
+		|		switch (sel) {
+		|		case 0:
+		|			BUS_BRN_READ(data);
+		|			data += state->fiu;
+		|			break;
+		|		case 1:
+		|			BUS_DEC_READ(data);
+		|			data <<= 1;
+		|			break;
+		|		case 2:
+		|			data = (state->topu ^ 0xffff) & 0x3fff;
+		|			break;
+		|		case 3:
+		|		case 4:
+		|			BUS_CUR_READ(data);
+		|			data += 1;
+		|			break;
+		|		case 5:
+		|		case 6:
+		|		case 7:
+		|			BUS_BRN_READ(data);
+		|			break;
+		|		default:
+		|			abort();
+		|		}
+		|	}
+		|	if (PIN_Q1not.posedge()) {
+		|
+		|		uint8_t utrc[2];
+		|		utrc[0] = UT_UADR;
+		|		utrc[0] |= (data >> 8) & 0x3f;
+		|		utrc[1] = data & 0xff;
+		|		microtrace(utrc, sizeof utrc);
+		|
+		|		output.nu = data;
+		|	}
+		|
+		|	output.macro_hic = macro_hic;
+		|	output.u_event = !u_event;
+		|	output.u_eventnot = u_event;
+		|
+		|	if (PIN_ACLK.posedge()) {
+		|		BUS_UEI_READ(state->uei);
+		|		state->uei <<= 1;
+		|		state->uei |= 1;
+		|		state->uei ^= 0xffff;
+		|		state->uev = 16 - fls(state->uei);
+		|		output.uevp = state->uei == 0;
+		|	}
 		|''')
 
 def register(part_lib):

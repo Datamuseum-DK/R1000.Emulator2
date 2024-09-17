@@ -21,11 +21,6 @@ class XSEQNAM(FChip):
         self.sig_left(ChipSig("-->+", "ADRICD"))
 
 
-        self.sig_right(ChipSig("+<--", "SEQAE"))
-        self.sig_right(ChipSig("+<--", "DADOF"))
-        self.sig_right(ChipSig("+<--", "DADON"))
-        self.sig_right(ChipSig("+-->", "NSPOE"))
-        self.sig_right(ChipSig("+-->", "APAROE"))
         self.sig_right(ChipSig("+<--", "TYPOE"))
         self.sig_right(ChipSig("+<--", "VALOE"))
 
