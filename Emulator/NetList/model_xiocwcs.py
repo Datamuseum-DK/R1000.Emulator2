@@ -53,11 +53,13 @@ class XIOCWCS(PartFactory):
 		|	unsigned uir;
 		|	unsigned sr0, sr1;
 		|	unsigned tracnt;
+		|	unsigned aen;
 		|	bool csa_hit;
 		|	bool dummy_en;
 		|''')
 
     def sensitive(self):
+        yield "PIN_Q2.neg()"
         yield "PIN_Q4.pos()"
         yield "PIN_DGADR"
         yield "BUS_UADR_SENSITIVE()"
@@ -168,11 +170,14 @@ class XIOCWCS(PartFactory):
 		|		output.odg = state->uir & 0x0001;
 		|		output.odg |= (state->uir >>7) & 0x0002;
 		|
-		|		unsigned aen = (uir >> 6) & 3;
-		|		output.aen = (1 << aen) ^ 0xf;
+		|		state->aen = (uir >> 6) & 3;
 		|
 		|		unsigned fen = (uir >> 4) & 3;
 		|		output.fen = (1 << fen) ^ 0xf;
+		|	}
+		|
+		|	if (PIN_Q2.negedge()) {
+		|		output.aen = (1 << state->aen) ^ 0xf;
 		|	}
 		|
 		|	if (!PIN_TRRDD=>) {
