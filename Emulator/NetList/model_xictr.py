@@ -34,7 +34,7 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XICTR(PartFactory):
     ''' TYP A-side mux+latch '''
@@ -44,13 +44,15 @@ class XICTR(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	unsigned prescaler;
-		|	uint16_t delay;
-		|	uint16_t slice;
+		|	uint16_t delay, slice;
+		|	bool slice_ev, delay_ev;
+		|	bool sen, den, ten;
 		|''')
 
     def sensitive(self):
         yield "PIN_Q2.pos()"
         yield "PIN_Q4.pos()"
+        yield "PIN_QTOE"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -58,63 +60,67 @@ class XICTR(PartFactory):
         file.fmt('''
 		|	if (state->ctx.activations < 1000) {
 		|		output.sme = true;
-		|		output.sen = true;
+		|		state->sen = true;
+		|		output.dme = true;
+		|		state->den = true;
 		|	}
 		|
 		|	if (PIN_Q2.posedge()) {
-		|		if (output.sev && !output.ten) {
+		|		if (state->slice_ev && !state->ten) {
 		|			output.sme = false;
 		|		}
 		|		if (PIN_CSLC=>) {
 		|			output.sme = true;
 		|		}
+		|		if (state->delay_ev && !state->ten) {
+		|			output.dme = false;
+		|		}
+		|		if (PIN_CDLY=>) {
+		|			output.dme = true;
+		|		}
 		|	}
 		|
 		|	if (PIN_Q4.posedge()) {
 		|		state->prescaler++;
-		|		output.ten = state->prescaler != 0xf;
+		|		state->ten = state->prescaler != 0xf;
 		|		state->prescaler &= 0xf;
 		|		if (!PIN_SCE=>) {
 		|			if (PIN_ESLC=>)
-		|				output.sen = false;
+		|				state->sen = false;
 		|			if (PIN_DSLC=>)
-		|				output.sen = true;
+		|				state->sen = true;
 		|			if (PIN_EDLY=>)
-		|				output.den = false;
+		|				state->den = false;
 		|			if (PIN_DDLY=>)
-		|				output.den = true;
+		|				state->den = true;
 		|		}
 		|
-		|		output.sev = state->slice == 0xffff;
+		|		state->slice_ev= state->slice == 0xffff;
 		|		if (!PIN_LDSL=>) {
 		|			unsigned tmp;
 		|			BUS_DT_READ(tmp);
 		|			state->slice = tmp >> 16;
 		|			TRACE(<< " LD " << std::hex << state->slice);
-		|		} else 	if (!output.sen && !output.ten) {
+		|		} else 	if (!state->sen && !state->ten) {
 		|			state->slice++;
 		|		}
 		|
+		|		state->delay_ev= state->delay == 0xffff;
 		|		if (!PIN_LDDL=>) {
 		|			unsigned tmp;
 		|			BUS_DT_READ(tmp);
 		|			state->delay = tmp;
-		|		} else if (!output.den && !output.ten) {
+		|		} else if (!state->den && !state->ten) {
 		|			state->delay++;
 		|		}
-		|		output.dev = state->delay == 0xffff;
-		|		TRACE(
-		|			<< std::hex
-		|			<< " slc " << state->slice
-		|			<< " dly " << state->delay
-		|			<< " sen " << output.sen
-		|			<< " sev " << output.sev
-		|			<< " ten " << output.ten
-		|		);
+		|	}
+		|	output.z_qt = PIN_QTOE=>;
+		|	if (!output.z_qt) {
+		|		output.qt = ((unsigned)(state->slice) << 16) | state->delay;
 		|	}
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XICTR", PartModel("XICTR", XICTR))
+    part_lib.add_part("XICTR", PartModelDQ("XICTR", XICTR))

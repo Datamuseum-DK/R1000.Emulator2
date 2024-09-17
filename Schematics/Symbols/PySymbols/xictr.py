@@ -25,13 +25,8 @@ class XICTR(FChip):
         self.sig_left(ChipSig("-->+", "LDSL"))
         self.sig_left(ChipSig("-->+", "LDDL"))
 
-        self.sig_right(ChipSig("+<--", "DT", 0, 31))
+        self.sig_right(ChipSig("+<->", "DQT", 0, 31))
         self.sig_right(ChipSig("+<--", "QTOE"))
-        self.sig_right(ChipSig("+-->", "TEN"))
-        self.sig_right(ChipSig("+-->", "SEN"))
-        self.sig_right(ChipSig("+-->", "DEN"))
-        self.sig_right(ChipSig("+-->", "SEV"))
-        self.sig_right(ChipSig("+-->", "DEV"))
         self.sig_right(ChipSig("+-->", "SME"))
         self.sig_right(ChipSig("+-->", "DME"))
 
