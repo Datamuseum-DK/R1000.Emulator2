@@ -54,16 +54,12 @@ class XLRU(PartFactory):
 		|	bool hhit;
 		|	bool oeq;
 		|	bool oeh;
-		|	bool modd;
-		|	bool modm;
-		|	unsigned lrua, lrub;
 		|''')
 
     def sensitive(self):
         yield "PIN_CLK"
         yield "PIN_NMAT"
         yield "PIN_LRUP"
-        yield "BUS_LRI"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -88,10 +84,6 @@ class XLRU(PartFactory):
 		|		state->hhit = 0;
 		|		state->oeq = 1;
 		|		state->oeh = 1;
-		|		state->modd = 1;
-		|		state->modm = 0;
-		|		state->lrua = 8;
-		|		state->lrub = 8;
 		|	}
 		|
 		|	bool hit = true;
@@ -101,30 +93,9 @@ class XLRU(PartFactory):
 		|		hit = false;
 		|
 		|	if (pos) {
-		|		// LUXXPAL
-		|		if (state->dhit) {
-		|			state->lrua = state->dlru ^ 0xf;
-		|			state->lrub = state->dlru;
-		|			if (state->lrub > 0)
-		|				state->lrub -= 1;
-		|			state->lrub ^= 0xf;
-		|		} else {
-		|			bool mri7 = PIN_MRI7=>;
-		|			if (mri7) {
-		|				state->lrua = 0x8;
-		|				state->lrub = 0x8;
-		|			} else {
-		|				state->lrua = 0x0;
-		|				state->lrub = 0x0;
-		|			}
-		|		}
-		|
 		|		if (!late) {
-		|			state->modd = !(state->modm || (state->dsoil && !state->dhit));
-		|			state->modm = state->qmod;
 		|			state->oeq = !(PIN_LRUP=> && (!h1) && (!hit));
 		|		} else {
-		|			state->modd = !((state->qmod) || (state->dsoil && !state->dhit));
 		|			state->oeq = !(PIN_LRUP=> && !hit);
 		|		}
 		|		state->oeh = !(PIN_LRUP=> && (!h1) && (!state->dhit));
@@ -238,21 +209,6 @@ class XLRU(PartFactory):
 		|	if (pos) {
 		|		state->hhit = nxthhit;
 		|	}
-		|
-		|#if 0
-		|	unsigned wrd = BUS_WRD_MASK + 1;
-		|	wrd = 0;
-		|	wrd |= state->modd << 4;
-		|	unsigned lri;
-		|	BUS_LRI_READ(lri);
-		|	if (state->lrua < lri) {
-		|		wrd |= state->lrub;
-		|	} else {
-		|		wrd |= state->lrua;
-		|	}
-		|	wrd ^= BUS_WRD_MASK;
-		|	output.wrd = wrd;
-		|#endif
 		|''')
 
 def register(part_lib):

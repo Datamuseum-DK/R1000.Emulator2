@@ -85,7 +85,6 @@ class XM28(PartFactory):
 		|	bool h1 = PIN_H1=>;
 		|	bool q1 = PIN_Q1=>;
 		|	bool q1pos = clk2x_neg && h1;
-		|	bool q2pos = clk2x_pos && h1;
 		|	bool q3pos = clk2x_neg && !h1;
 		|	bool q4pos = clk2x_pos && !h1;
 		|	bool aehit = PIN_AEH=>;
@@ -100,7 +99,6 @@ class XM28(PartFactory):
 		|	unsigned bcmd = 1 << cmd;
 		|#define CMDS(x) ((bcmd & (x)) != 0)
 		|	bool mcyc2 = PIN_MC2=>;
-		|	bool mcyc2_next = PIN_MC2N=>;
 		|
 		|	if (q3pos) {
 		|		state->ahit0 = !aehit           &&  behit &&  blhit;
@@ -124,41 +122,23 @@ class XM28(PartFactory):
 		|	}
 		|	output.z_seta = !(state->ahit0145 && !exthit);
 		|	output.z_setb = !(state->bhit0246 && !exthit);
-		|	output.seta = output.z_seta;
-		|	output.setb = output.z_setb;
+		|	output.seta = 0;
+		|	output.setb = 0;
 		|
 		|	if (!q1) {
-		|		output.aht = alhit && !(state->ahit0 || state->ahit1 || !aehit);
-		|		output.bht = blhit && !(state->bhit4 || state->bhit5 || !behit);
-		|		output.baht = output.aht;
-		|		output.bbht = output.bht;
+		|		output.baht = alhit && !(state->ahit0 || state->ahit1 || !aehit);
+		|		output.bbht = blhit && !(state->bhit4 || state->bhit5 || !behit);
 		|	}
 		|
 		|	unsigned pset;
 		|	BUS_PSET_READ(pset);
 		|
-		|	bool eabort_y = !(PIN_EABT=> && PIN_ELABT=>);
-		|	bool labort_y = !(PIN_LABT=> && PIN_ELABT=> && !h1);
-		|
 		|	if (clk2x_pos) {
+		|		output.rclke = !(PIN_LABT=> && PIN_ELABT=> && !h1);
+		|	}
 		|
-		|		output.txewe = CMDS(CMD_LRQ|CMD_LMW|CMD_LMR) && (
-		|			(q4pos &&  mcyc2 && !mcyc2_next) ||
-		|			(q2pos && !mcyc2 && !state->labort && state->output.txewe)
-		|		);
-		|		output.txlwe = CMDS(CMD_LRQ|CMD_LMW|CMD_LMR) && (
-		|			(q4pos &&  mcyc2 && !mcyc2_next) ||
-		|			(q2pos && !mcyc2 && !state->labort && state->output.txlwe)
-		|		);
-		|
-		|		output.rclke = labort_y;
-		|
-		|		if (q4pos) {
-		|			state->labort = labort_y;
-		|			output.eabrt = eabort_y;
-		|			output.labrt = state->labort;
-		|			output.tsc14 = (!mcyc2_next && output.labrt);
-		|		}
+		|	if (q4pos) {
+		|		state->labort = !(PIN_LABT=> && PIN_ELABT=>);
 		|	}
 		|
 		|	if (clk2x_neg) {
@@ -193,11 +173,6 @@ class XM28(PartFactory):
 		|		state->dradpal_p22 = mcyc2;
 		|	}
 		|	if (clk2x_neg) {
-		|		// TAGAPAL
-		|		bool p_lru_update = output.lrup;
-		|		output.lrup =
-		|		    ( q3pos && (!mcyc2_next) && mcyc2 && CMDS(CMD_LMW|CMD_LMR|CMD_NMQ|CMD_LRQ)) ||
-		|		    ( q1pos && (!state->labort) && p_lru_update );
 		|		bool tmp0 = CMDS(CMD_IDL|CMD_AVQ|CMD_LRQ|CMD_NMQ|CMD_LTR|CMD_INI|CMD_LMR|CMD_LMW);
 		|		bool tmp1 = CMDS(CMD_PTR|CMD_PTW|CMD_SFF|CMD_C10|CMD_MTT|CMD_C01|CMD_PMR|CMD_PMW);
 		|		output.t12y =
