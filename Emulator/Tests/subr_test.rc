@@ -18,6 +18,15 @@ standard_patches() {
 	# Dont wiggle FIU::UIRCLK.EN~, we dont use it any more
 	cli firmware patch PA036-02 0x162 0xe1
 
+	# Dont wiggle IOC:DUIRG1:D1 (TRACE.WR)
+	cli firmware patch PA101-02 0x120 0xff
+
+	# Dont wiggle IOC:DUIRG2:D1-D4 (DIAG.UIRS[01][01])
+	cli firmware patch PA102-02 0x120 0x7f
+
+	# Dont wiggle IOC:DUIRG4:D1-D4 (DIAG.UIRS[01][01])
+	cli firmware patch PA104-02 0x120 0x27
+
 	# Dont wiggle IOC:DUIRG5:D0
 	cli firmware patch PA105-02 0x120 0x44
 
