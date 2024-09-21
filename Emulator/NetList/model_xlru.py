@@ -45,9 +45,6 @@ class XLRU(PartFactory):
         file.fmt('''
 		|	bool qhit;
 		|	bool qlog;
-		|	bool qsoil;
-		|	bool dsoil;
-		|	bool qmod;
 		|	unsigned qlru;
 		|	unsigned dlru;
 		|	bool dhit;
@@ -75,9 +72,6 @@ class XLRU(PartFactory):
 		|		// Crude, but gets the job done
 		|		state->qhit = 1;
 		|		state->qlog = 0;
-		|		state->qsoil = 0;
-		|		state->dsoil = 0;
-		|		state->qmod = 0;
 		|		state->qlru = 0;
 		|		state->dlru = 0;
 		|		state->dhit = 0;
@@ -105,7 +99,6 @@ class XLRU(PartFactory):
 		|	if (neg) {
 		|		// LRUREG
 		|		state->dhit = hit;
-		|		state->dsoil = state->qsoil;
 		|		state->dlru = state->qlru;
 		|	}
 		|
@@ -113,7 +106,6 @@ class XLRU(PartFactory):
 		|
 		|		unsigned tag, cmd;
 		|		BUS_TAG_READ(tag);
-		|		state->qmod = (tag >> 6) & 0x1;
 		|		state->qlru = (tag >> 2) & 0xf;
 		|
 		|		unsigned page_state = tag & 3;
@@ -177,8 +169,6 @@ class XLRU(PartFactory):
 		|				break;
 		|			}
 		|		}
-		|
-		|		state->qsoil = ((!state->qmod) && (!p_mcyc1) && cmd == 0xd);
 		|
 		|		output.logq = state->qlog;
 		|	}

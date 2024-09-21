@@ -39,8 +39,8 @@ class XCACHE(FChip):
         self.sig_right(ChipSig("+-->", "NME"))
         self.sig_right(ChipSig("+-->", "NML"))
 
-        self.sig_right(ChipSig("+-->", "CRE", 0, 6))
-        self.sig_right(ChipSig("+-->", "CRL", 0, 6))
+        self.sig_right(ChipSig("+-->", "CRE", 0, 5))
+        self.sig_right(ChipSig("+-->", "CRL", 0, 5))
 
         #self.sig_right(ChipSig("+-->", "PQ", 0, 7))
 

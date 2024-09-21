@@ -106,7 +106,7 @@ class XCACHE(PartFactory):
 		|static unsigned
 		|dolru(unsigned lru, unsigned before, unsigned cmd)
 		|{
-		|	unsigned now = before & 0xf;
+		|	unsigned now = (before >> 2) & 0xf;
 		|	if (now == lru) {
 		|		now = 7;
 		|		if (cmd == 0xd)
@@ -114,7 +114,7 @@ class XCACHE(PartFactory):
 		|	} else if (now > lru) {
 		|		now -= 1;
 		|	}
-		|	return ((before & 0x70) | now);
+		|	return ((before & 0x43) | (now << 2));
 		|}
 		|''')
 
@@ -210,8 +210,8 @@ class XCACHE(PartFactory):
 		|
 		|	if (q1pos && mcyc2 && CMDS(CMD_PMR|CMD_LMR|CMD_PTR)) {
 		|		uint8_t pdata = state->rame[eadr];
-		|		state->qreg = data & ~(0x7fULL << 8);
-		|		state->qreg |= (pdata & 0x7f) << 8;
+		|		state->qreg = data & ~(0x7fULL << 6);
+		|		state->qreg |= (pdata & 0x7f) << 6;
 		|	}
 		|
 		|	bool pos = PIN_CLK.posedge();
@@ -252,8 +252,8 @@ class XCACHE(PartFactory):
 		|			    << " set " << output.ps
 		|			    << " my " << state->myset
 		|			);
-		|			state->ram[adr] = state->vdreg & ~(0x7fULL << 8);
-		|			state->rame[eadr] = (state->vdreg >> 8) & 0x7f;
+		|			state->ram[adr] = state->vdreg & ~(0x7fULL << 6);
+		|			state->rame[eadr] = (state->vdreg >> 6) & 0x7f;
 		|		}
 		|	} else if (pos && mcyc2 && !state->labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
 		|		state->rame[adr & ~1] = dolru(state->hit_lru, state->rame[adr & ~1], cmd);
@@ -261,12 +261,8 @@ class XCACHE(PartFactory):
 		|	}
 		|
 		|	if (cmd) {
-		|		output.cre = state->rame[adr & ~1] << 2;
-		|		output.crl = state->rame[adr | 1] << 2;
-		|		output.cre &= ~3;
-		|		output.crl &= ~3;
-		|		output.cre |= (data >> 6) & 3;
-		|		output.crl |= (data >> 6) & 3;
+		|		output.cre = state->rame[adr & ~1] & BUS_CRE_MASK;
+		|		output.crl = state->rame[adr | 1] & BUS_CRL_MASK;
 		|	}
 		|
 		|	if (pos)
