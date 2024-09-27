@@ -41,6 +41,7 @@ class XROTF(FChip):
         self.sig_right(ChipSig("+<--", "OSRC"))
         self.sig_right(ChipSig("+-->", "XWRD"))
 
+        self.sig_right(ChipSig("+<--", "H1"))
         self.sig_right(ChipSig("+<--", "Q4"))
         self.sig_right(ChipSig("+<--", "LDMDR"))
         self.sig_right(ChipSig("+<--", "SCLKE"))
