@@ -32,7 +32,6 @@ class XM28(FChip):
         self.sig_right(ChipSig("+-->", "BBHT"))
         self.sig_right(ChipSig("+===", "SETA"))
         self.sig_right(ChipSig("+===", "SETB"))
-        self.sig_right(ChipSig("+-->", "RCLKE"))
 
         self.sig_right(ChipSig("+-->", "DAA1D"))
         self.sig_right(ChipSig("+-->", "DAA2D"))

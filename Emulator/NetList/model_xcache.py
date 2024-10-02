@@ -62,10 +62,6 @@ class XCACHE(PartFactory):
 		|	bool utrace_set;
 		|	enum microtrace utrace;
 		|	unsigned sr, word;
-		|	bool nme;
-		|	bool ome;
-		|	bool nml;
-		|	bool oml;
 		|	bool k12, k13;
 		|	uint64_t qreg;
 		|	unsigned hash;
@@ -97,9 +93,7 @@ class XCACHE(PartFactory):
         #yield "BUS_SPC"	Q4
         #yield "PIN_TGOE"	CLK.pos
 
-        yield "PIN_CAS"
         yield "PIN_QCOE"
-        yield "PIN_ICK.pos()"	# Low @20 High @70
 
     def extra(self, file):
         file.fmt('''
@@ -143,19 +137,23 @@ class XCACHE(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
+		|	bool pos = PIN_CLK.posedge();
+		|	bool neg = PIN_CLK.negedge();
+		|	bool h1pos = PIN_H1.posedge();
 		|
-		|	if (PIN_H1.posedge()) {
+		|	bool labort = !(PIN_LABT=> && PIN_ELABT=>);
+		|
+		|	if (h1pos) {
 		|		unsigned mcmd = state->q4cmd;
 		|		bool p_cmdcont = state->q4cont;
 		|		bool p_early_abort = state->eabort;
 		|		bool p_mcyc2_next_hd = state->p_mcyc2_next;
-		|		int out_mcyc2_next;
 		|		if (p_early_abort && p_mcyc2_next_hd) {
 		|			output.cmd = 0;
 		|		} else {
 		|			output.cmd = mcmd ^ 0xf;
 		|		}
-		|		out_mcyc2_next =
+		|		state->p_mcyc2_next =
 		|		    !(
 		|		        ((mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
 		|		        ((!p_cmdcont) && (!p_early_abort) && (!p_mcyc2_next_hd))
@@ -165,8 +163,6 @@ class XCACHE(PartFactory):
 		|		        ((mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd)
 		|		    );
 		|		output.cyt = p_mcyc2_next_hd;
-		|
-		|		state->p_mcyc2_next = output.mc2n = out_mcyc2_next;
 		|	}
 		|
 		|	bool mcyc2 = !output.cyt;
@@ -207,39 +203,38 @@ class XCACHE(PartFactory):
 		|
 		|	data = state->ram[adr];
 		|
-		|
 		|	if (q1pos && mcyc2 && CMDS(CMD_PMR|CMD_LMR|CMD_PTR)) {
 		|		uint8_t pdata = state->rame[eadr];
 		|		state->qreg = data & ~(0x7fULL << 6);
 		|		state->qreg |= (pdata & 0x7f) << 6;
 		|	}
 		|
-		|	bool pos = PIN_CLK.posedge();
-		|	bool neg = PIN_CLK.negedge();
+		|	if (!CMDS(CMD_IDL) && (pos || neg)) {
+		|		uint64_t ta = data >> 19;
+		|		uint64_t ts = data & 0x7;
 		|
-		|	uint64_t ta, ts;
-		|	bool name, offset;
+		|		bool name = (state->mar_name == (ta >> 13));
+		|		bool offset = (state->mar_page == (ta & 0x1fff)) && (state->mar_space == ts);
 		|
-		|	ta = data;
-		|	ts = ta & 0x7;
-		|	ta = ta >> 19;
-		|
-		|	if (!CMDS(CMD_IDL)) {
-		|		output.nme = state->nme && (CMDS(CMD_NMQ) || state->ome);
-		|		output.nml = state->nml && (CMDS(CMD_NMQ) || state->oml);
+		|		if (neg) {
+		|			output.nme = name && (CMDS(CMD_NMQ) || offset);
+		|		}
+		|		if (pos) {
+		|			output.nml = name && (CMDS(CMD_NMQ) || offset);
+		|		}
+		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|
-		|	name = (state->mar_name == (ta >> 13));
-		|	offset = (state->mar_page == (ta & 0x1fff)) && (state->mar_space == ts);
+		|	BUS_SET_READ(state->set);
+		|	if (q2pos && CMDS(CMD_LMW|CMD_PMW) && mcyc2 && !PIN_IHIT=> && !state->labort) {
+		|		uint32_t radr2 =
+		|			(state->set << 18) |
+		|			(state->cl << 6) |
+		|			state->wd;
 		|
-		|	if (neg) {
-		|		state->nme = name;
-		|		state->ome = offset;
-		|		next_trigger(5, sc_core::SC_NS);
-		|	} else if (pos) {
-		|		state->nml = name;
-		|		state->oml = offset;
-		|		next_trigger(5, sc_core::SC_NS);
+		|		state->bitc[radr2] = state->cdreg;
+		|		state->bitt[radr2+radr2] = state->tdreg;
+		|		state->bitt[radr2+radr2+1] = state->vdreg;
 		|	}
 		|
 		|	if (CMDS(CMD_PTW)) {
@@ -324,30 +319,23 @@ class XCACHE(PartFactory):
 		|			state->hash |= 1<<0;
 		|	}
 		|
-		|	if (PIN_CAS.negedge()) {
-		|		BUS_SET_READ(state->set);
-		|	}
 		|	if (q2pos) {
 		|		state->cl = state->hash;
 		|		state->wd = state->word;
 		|	}
 		|
-		|	uint32_t radr =
-		|		(state->set << 18) |
-		|		(state->cl << 6) |
-		|		state->wd;
+		|	if (q1pos && mcyc2 && CMDS(CMD_LMR|CMD_PMR) && !labort) {
+		|		uint32_t radr =
+		|			(state->set << 18) |
+		|			(state->cl << 6) |
+		|			state->wd;
+		|		assert(radr < (1 << 20));
 		|
-		|	assert(radr < (1 << 20));
-		|	if (PIN_CAS.negedge() && PIN_RWE=>) {
-		|		state->bitc[radr] = state->cdreg;
-		|		state->bitt[radr+radr] = state->tdreg;
-		|		state->bitt[radr+radr+1] = state->vdreg;
-		|	}
-		|	if (PIN_ICK.posedge() && !PIN_CAS=>) {
 		|		state->cqreg = state->bitc[radr];
 		|		state->tqreg = state->bitt[radr+radr];
 		|		state->vqreg = state->bitt[radr+radr+1];
 		|	}
+		|
 		|	output.z_qc = PIN_QCOE=>;
 		|	output.z_qt = output.z_qc;
 		|	output.z_qv = PIN_QVOE=>;
@@ -371,16 +359,15 @@ class XCACHE(PartFactory):
 		|		state->q4cont = PIN_CONT=>;
 		|	}
 		|	if (q4pos) {
-		|		state->labort = !(PIN_LABT=> && PIN_ELABT=>);
+		|		state->labort = labort;
 		|		state->eabort = !(PIN_EABT=> && PIN_ELABT=>);
-		|		output.labrt = state->labort;
 		|	}
 		|	if (q1pos) {
 		|		output.lrup = (!state->labort) && output.lrup;
 		|	}
 		|	if (q3pos) {
 		|		output.lrup =
-		|		    (!output.mc2n) && output.cyt && CMDS(CMD_LMW|CMD_LMR|CMD_NMQ|CMD_LRQ);
+		|		    (!state->p_mcyc2_next) && output.cyt && CMDS(CMD_LMW|CMD_LMR|CMD_NMQ|CMD_LRQ);
 		|	}
 		|''')
 

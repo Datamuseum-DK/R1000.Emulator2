@@ -116,7 +116,6 @@ class XLRU(PartFactory):
 		|
 		|		bool p_mcyc1 = PIN_CYC1=>;
 		|
-		|
 		|		if (p_mcyc1) {
 		|			state->qhit = !state->hhit;
 		|			state->qlog = false;

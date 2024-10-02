@@ -24,9 +24,6 @@ class XM30(FChip):
 
         self.sig_right(ChipSig("+-->", "CASA"))
         self.sig_right(ChipSig("+-->", "CASB"))
-        self.sig_right(ChipSig("+-->", "AWE"))
-
-        self.sig_right(ChipSig("+-->", "TRCE"))
 
         self.finish()
 

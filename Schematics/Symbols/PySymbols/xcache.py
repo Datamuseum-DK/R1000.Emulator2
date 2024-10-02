@@ -26,6 +26,8 @@ class XCACHE(FChip):
         self.sig_left(ChipSig("-->+", "EABT"))
         self.sig_left(ChipSig("-->+", "ELABT"))
         self.sig_left(ChipSig("-->+", "LABT"))
+        self.sig_left(ChipSig("-->+", "IHIT"))
+
 
         self.sig_right(ChipSig("+<->", "DQT", 0, 63))
         self.sig_right(ChipSig("+<->", "DQC", 0, 8))
@@ -35,12 +37,6 @@ class XCACHE(FChip):
         self.sig_right(ChipSig("+<--", "QCOE"))
 
         self.sig_right(ChipSig("+<--", "CLK"))
-
-        self.sig_right(ChipSig("+-->", "NME"))
-        self.sig_right(ChipSig("+-->", "NML"))
-
-        self.sig_right(ChipSig("+-->", "CRE", 0, 5))
-        self.sig_right(ChipSig("+-->", "CRL", 0, 5))
 
         #self.sig_right(ChipSig("+-->", "PQ", 0, 7))
 
@@ -54,9 +50,6 @@ class XCACHE(FChip):
 
         self.sig_right(ChipSig("+<--", "ISLOW"))
         self.sig_right(ChipSig("+<--", "ISA"))
-        self.sig_right(ChipSig("+<--", "ICK"))
-        self.sig_right(ChipSig("+<--", "RWE"))
-        self.sig_right(ChipSig("+<--", "CAS"))
         self.sig_right(ChipSig("+<--", "Q2"))
         self.sig_right(ChipSig("+<--", "SET", 0, 1))
 
@@ -64,12 +57,16 @@ class XCACHE(FChip):
         self.sig_right(ChipSig("+-->", "DLRU"))
         self.sig_right(ChipSig("+<--", "DLOE"))
         self.sig_right(ChipSig("+<->", "DQL", 0, 3))
-        self.sig_right(ChipSig("+-->", "LABRT"))
 
         self.sig_right(ChipSig("+-->", "CYO"))
         self.sig_right(ChipSig("+-->", "CYT"))
-        self.sig_right(ChipSig("+-->", "MC2N"))
         self.sig_right(ChipSig("+-->", "LRUP"))
+
+        self.sig_right(ChipSig("+-->", "NME"))
+        self.sig_right(ChipSig("+-->", "NML"))
+
+        self.sig_right(ChipSig("+-->", "CRE", 0, 5))
+        self.sig_right(ChipSig("+-->", "CRL", 0, 5))
 
         self.finish(21)
 

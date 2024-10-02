@@ -133,10 +133,6 @@ class XM28(PartFactory):
 		|	unsigned pset;
 		|	BUS_PSET_READ(pset);
 		|
-		|	if (clk2x_pos) {
-		|		output.rclke = !(PIN_LABT=> && PIN_ELABT=> && !h1);
-		|	}
-		|
 		|	if (q4pos) {
 		|		state->labort = !(PIN_LABT=> && PIN_ELABT=>);
 		|	}

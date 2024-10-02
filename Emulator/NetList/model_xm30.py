@@ -41,8 +41,7 @@ class XM30(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	bool awe, cas_a, cas_b;
-		|	bool trdr;
+		|	bool cas_a, cas_b;
 		|''')
 
     def sensitive(self):
@@ -69,14 +68,6 @@ class XM30(PartFactory):
 		|#define CMD_AVQ	(1<<0x1)	// AVAILABLE QUERY
 		|#define CMD_IDL	(1<<0x0)	// IDLE
 		|
-		|	if (state->ctx.job & 1) {
-		|		state->ctx.job &= ~1;
-		|		PIN_AWE<=(state->awe);
-		|		PIN_TRCE<=(state->trdr);
-		|		if (state->ctx.job & 2)
-		|			next_trigger(30, sc_core::SC_NS);
-		|		return;
-		|	}
 		|	if (state->ctx.job & 2) {
 		|		state->ctx.job &= ~2;
 		|		PIN_CASA<=(state->cas_a);
@@ -105,7 +96,6 @@ class XM30(PartFactory):
 		|		    (CMDS(CMD_LMR|CMD_PMR) && !h1 && !mcyc2_next) ||
 		|		    (CMDS(CMD_LMW|CMD_PMW) && h1 && !mcyc2 && !bhit && !late_abort)
 		|		);
-		|		bool awe = (CMDS(CMD_LMW|CMD_PMW) && h1 && !mcyc2);
 		|
 		|		if (
 		|		    cas_a != state->cas_a ||
@@ -114,25 +104,8 @@ class XM30(PartFactory):
 		|			state->ctx.job |= 2;
 		|			state->cas_a = cas_a;
 		|			state->cas_b = cas_b;
-		|		}
-		|
-		|		bool trdr =
-		|		    !(
-		|		        (CMDS(CMD_LMR|CMD_PMR) && !h1  && (!mcyc2_next)) ||
-		|		        (CMDS(CMD_INI) && !h1 )
-		|		    );
-		|		if (
-		|		    awe != state->awe ||
-		|		    trdr != state->trdr
-		|		) {
-		|			state->ctx.job |= 1;
-		|			state->awe = awe;
-		|			state->trdr = trdr;
-		|		}
-		|		if (state->ctx.job & 1)
-		|			next_trigger(5, sc_core::SC_NS);
-		|		else if (state->ctx.job & 2)
 		|			next_trigger(35, sc_core::SC_NS);
+		|		}
 		|
 		|	}
 		|''')
