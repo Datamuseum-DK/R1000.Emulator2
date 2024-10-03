@@ -168,18 +168,6 @@ class XM28(PartFactory):
 		|
 		|		state->dradpal_p22 = mcyc2;
 		|	}
-		|	if (clk2x_neg) {
-		|		bool tmp0 = CMDS(CMD_IDL|CMD_AVQ|CMD_LRQ|CMD_NMQ|CMD_LTR|CMD_INI|CMD_LMR|CMD_LMW);
-		|		bool tmp1 = CMDS(CMD_PTR|CMD_PTW|CMD_SFF|CMD_C10|CMD_MTT|CMD_C01|CMD_PMR|CMD_PMW);
-		|		output.t12y =
-		|		    ( q1pos && tmp0) ||
-		|		    ( q1pos && !mcyc2 ) ||
-		|		    ( mcyc2 && (pset & 3) > 1 && tmp1);
-		|		output.t13y =
-		|		    ( q3pos && tmp0) ||
-		|		    ( q3pos && !mcyc2 ) ||
-		|		    ( mcyc2 && ((pset & 3) == 1 || (pset & 3) == 2) && tmp1);
-		|	}
 		|
 		|''')
 

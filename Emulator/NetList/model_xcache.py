@@ -62,7 +62,7 @@ class XCACHE(PartFactory):
 		|	bool utrace_set;
 		|	enum microtrace utrace;
 		|	unsigned sr, word;
-		|	bool k12, k13;
+		|	unsigned a0;
 		|	uint64_t qreg;
 		|	unsigned hash;
 		|	uint64_t mar_space, mar_name, mar_page;
@@ -76,23 +76,9 @@ class XCACHE(PartFactory):
 		|''')
 
     def sensitive(self):
-        #yield "BUS_ADR"	Q4
         yield "PIN_CLK"
         yield "PIN_H1.pos()"
-        # yield "BUS_CMD"
-        #yield "BUS_CWE"	CLK.pos()
-        #yield "BUS_CWL"	CLK.neg()
-        #yield "PIN_DIR"	CLK.pos()
-        #yield "PIN_EWE"	CLK.pos
-        #yield "BUS_K"		CLK.pos(12)+neg(13)
-        #yield "PIN_LDMR"	Q4
-        #yield "PIN_LWE"	CLK.pos
-        #yield "PIN_OE"		CLK.pos
-        #yield "PIN_Q4"		CLK
         yield "PIN_QVOE"
-        #yield "BUS_SPC"	Q4
-        #yield "PIN_TGOE"	CLK.pos
-
         yield "PIN_QCOE"
 
     def extra(self, file):
@@ -195,10 +181,25 @@ class XCACHE(PartFactory):
 		|	}
 		|
 		|	adr = state->hash << 2;
-		|	if (state->k12)
-		|		adr |= 2;
-		|	if (state->k13)
-		|		adr |= 1;
+		|	if (CMDS(CMD_PTR|CMD_PTW|CMD_PMR|CMD_PMW)) {
+		|		if ((output.ps & 3) > 1)
+		|			adr |= 2;
+		|		if ((output.ps & 3) == 1 || (output.ps & 3) == 2)
+		|			adr |= 1;
+		|	} else {
+		|		adr |= state->a0;
+		|	}
+		|
+		|	if (q1pos) {
+		|		state->a0 = 1;
+		|	} else if (q2pos) {
+		|		state->a0 = 3;
+		|	} else if (q3pos) {
+		|		state->a0 = 2;
+		|	} else if (q4pos) {
+		|		state->a0 = 0;
+		|	}
+		|
 		|	unsigned eadr = (adr & ~1) | (output.ps & 1);
 		|
 		|	data = state->ram[adr];
@@ -259,11 +260,6 @@ class XCACHE(PartFactory):
 		|		output.cre = state->rame[adr & ~1] & BUS_CRE_MASK;
 		|		output.crl = state->rame[adr | 1] & BUS_CRL_MASK;
 		|	}
-		|
-		|	if (pos)
-		|		state->k12 = PIN_K12=>;
-		|	if (neg)
-		|		state->k13 = PIN_K13=>;
 		|
 		|	if (q4pos && !PIN_LDMR=> && state->cstop) {
 		|		uint64_t a;

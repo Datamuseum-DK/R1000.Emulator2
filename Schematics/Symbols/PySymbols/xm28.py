@@ -37,9 +37,6 @@ class XM28(FChip):
         self.sig_right(ChipSig("+-->", "DAA2D"))
         self.sig_right(ChipSig("+-->", "DA2SL"))
 
-        self.sig_right(ChipSig("+-->", "T12Y"))
-        self.sig_right(ChipSig("+-->", "T13Y"))
-
         self.finish()
 
 def register():

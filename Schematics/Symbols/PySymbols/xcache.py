@@ -40,8 +40,6 @@ class XCACHE(FChip):
 
         #self.sig_right(ChipSig("+-->", "PQ", 0, 7))
 
-        self.sig_right(ChipSig("+<--", "K12"))
-        self.sig_right(ChipSig("+<--", "K13"))
         self.sig_right(ChipSig("+-->", "CMD", 0, 3))
         self.sig_right(ChipSig("+<--", "H1"))
         self.sig_right(ChipSig("+<--", "Q4"))
