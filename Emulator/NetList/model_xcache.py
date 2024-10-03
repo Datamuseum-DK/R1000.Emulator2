@@ -223,7 +223,6 @@ class XCACHE(PartFactory):
 		|		if (pos) {
 		|			output.nml = name && (CMDS(CMD_NMQ) || offset);
 		|		}
-		|		next_trigger(5, sc_core::SC_NS);
 		|	}
 		|
 		|	BUS_SET_READ(state->set);
@@ -257,8 +256,17 @@ class XCACHE(PartFactory):
 		|	}
 		|
 		|	if (cmd) {
-		|		output.cre = state->rame[adr & ~1] & BUS_CRE_MASK;
-		|		output.crl = state->rame[adr | 1] & BUS_CRL_MASK;
+		|		unsigned adr2 = state->hash << 2;
+		|		if (CMDS(CMD_PTR|CMD_PTW|CMD_PMR|CMD_PMW)) {
+		|			if ((output.ps & 3) > 1)
+		|				adr2 |= 2;
+		|			if ((output.ps & 3) == 1 || (output.ps & 3) == 2)
+		|				adr2 |= 1;
+		|		} else {
+		|			adr2 |= state->a0;
+		|		}
+		|		output.cre = state->rame[adr2 & ~1] & BUS_CRE_MASK;
+		|		output.crl = state->rame[adr2 | 1] & BUS_CRL_MASK;
 		|	}
 		|
 		|	if (q4pos && !PIN_LDMR=> && state->cstop) {
