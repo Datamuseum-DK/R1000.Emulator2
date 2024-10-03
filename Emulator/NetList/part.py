@@ -508,7 +508,7 @@ class PartFactory(Part):
             return
 
         file.fmt('''
-		|	if (state->ctx.do_trace & 1) {
+		|	if ((state->ctx.do_trace & 2) || ((state->ctx.do_trace & 1) && state->ctx.job)) {
 		|		char trc[4096];
 		|		trc[0] = '\\0';
 		|		std::stringstream trcs(trc);
