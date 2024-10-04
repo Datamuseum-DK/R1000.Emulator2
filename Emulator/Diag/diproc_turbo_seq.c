@@ -169,11 +169,35 @@ prep_run_seq(const struct diagproc *dp)
 	struct ctx *ctx;
 	uint16_t *nxtuadr;
 
+	// The code portion of PREP_RUN.SEQ (ie: from 0x30)
+	const uint8_t reduced[] = {
+		0xbc, 0x02,		// FSM     {02}
+	//	0xc3, 0x59,		// WP12    R2,{59}
+	//	0x74,			// INC     R2
+	//	0xc3, 0x58,		// WP12    R2,{58}
+		0xbc, 0x38,		// FSM     {38}
+	//	0xda, 0xa2, 0x2a, 0x32,	// CHN_RCV {S.UIR:32},0x2a
+	//	0x97, 0x3f, 0x2e,	// AND     #0x3f,0x2e
+	//	0xda, 0xa0, 0x2a, 0x41,	// CHN_SND 0x2a,{S.UIR:41}
+	//	0xda, 0xa0, 0x25, 0x42,	// CHN_SND 0x25,{S.DECODER:42}
+	//	0x90, 0x18, 0x1c,	// MOV.W   0x18,0x1c
+	//	0xda, 0xc0, 0x1c, 0x43,	// CHN_SND 0x1c,{S.MISC:43}
+	//	0x70, 0x1a,		// LD      R2,0x1a
+	//	0xbf, 0x59,		// WP1     R2,{59}
+	//	0x74,			// INC     R2
+	//	0xbf, 0x58,		// WP1     R2,{58}
+		0xbc, 0x02,		// FSM     {02}
+		0x5c,			// RET
+	};
+
 	ctx = CTX_Find(COMP_Z029);
 	AN(ctx);
 	nxtuadr = (uint16_t *)(void*)(ctx + 1);
 
-	*nxtuadr = vbe16dec(dp->ram + 0x18);
+	nxtuadr[0] = vbe16dec(dp->ram + 0x18);
+	nxtuadr[1] = vbe16dec(dp->ram + 0x18);
+
+	memmove(dp->ram + 0x30, reduced, sizeof(reduced));
 
 	sc_tracef(dp->name, "Turbo PREP_RUN.SEQ");
 	return (0);
@@ -185,6 +209,7 @@ int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_seq(const struct diagproc *dp)
 {
 	if (dp->dl_hash == CLEAR_PARITY_SEQ_HASH) {
+		sc_tracef(dp->name, "Turbo CLEAR_PARITY.SEQ");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == READ_NOVRAM_DATA_SEQ_HASH) {
@@ -204,7 +229,6 @@ diagproc_turbo_seq(const struct diagproc *dp)
 	}
 	if (dp->dl_hash == LOAD_COUNTER_SEQ_HASH) {
 		seq_ptr = 0x100;
-		return (0);
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_SEQ_HASH ||
@@ -216,6 +240,11 @@ diagproc_turbo_seq(const struct diagproc *dp)
 	}
 
 	if (dp->dl_hash == PREP_LOAD_DISPATCH_RAMS_SEQ_HASH) {
+		sc_tracef(dp->name, "Turbo PREP_LOAD_DISPATCH_RAMS.SEQ");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == CLR_BREAK_MASK_SEQ_HASH) {
+		sc_tracef(dp->name, "Turbo CLR_BREAK_MASK.SEQ");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 

@@ -55,7 +55,7 @@ class XSEQ12(PartFactory):
         yield from self.event_or(
             "idle_event",
             "PIN_NAMOE",
-            "PIN_QTOE",
+            "PIN_QTLOE",
             "PIN_STCLK",
             "PIN_SVCLK",
             "PIN_TCLK",
@@ -68,7 +68,7 @@ class XSEQ12(PartFactory):
         yield from self.event_or(
             "idle_event_md",
             "PIN_NAMOE",
-            "PIN_QTOE",
+            "PIN_QTLOE",
             "PIN_STCLK",
             "PIN_SVCLK",
             "PIN_TCLK",
@@ -118,7 +118,7 @@ class XSEQ12(PartFactory):
 		|	}
 		|
 		|	unsigned typ;
-		|	BUS_DT_READ(typ);
+		|	BUS_DTL_READ(typ);
 		|
 		|	if (PIN_TCLK.posedge()) {
 		|		state->tosof = (typ >> 7) & 0xfffff;
@@ -192,7 +192,7 @@ class XSEQ12(PartFactory):
 		|
 		|	unsigned cnb;
 		|	if (!PIN_CMR=>) {
-		|		cnb = typ ^ BUS_DT_MASK;
+		|		cnb = typ ^ BUS_DTL_MASK;
 		|	} else {
 		|		BUS_FIU_READ(cnb);
 		|	}
@@ -239,22 +239,20 @@ class XSEQ12(PartFactory):
 		|	}
 		|	output_ob &= 0xfffff;
 		|	
-		|	output.z_qt = PIN_QTOE=>;
-		|	if (!output.z_qt) {
-		|		BUS_CSA_READ(output.qt);
-		|		output.qt |= output_ob << 7;
-		|		output.qt ^= BUS_QT_MASK;
+		|	output.z_qtl = PIN_QTLOE=>;
+		|	if (!output.z_qtl) {
+		|		BUS_CSA_READ(output.qtl);
+		|		output.qtl |= output_ob << 7;
+		|		output.qtl ^= BUS_QTL_MASK;
 		|	}
 		|
 		|	uint64_t nam;
 		|
 		|	if (!PIN_RESDR=>) {
-		|		//BUS_RES_READ(nam);
 		|		nam = output_rofs;
 		|	} else if (PIN_ADRIC=>) {
 		|		BUS_CODE_READ(nam);
 		|	} else {
-		|		//BUS_OFFS_READ(nam);
 		|		nam = output_ob;
 		|	}
 		|	nam <<= 7;
@@ -273,9 +271,9 @@ class XSEQ12(PartFactory):
 
     def doit_idle(self, file):
         file.fmt('''
-		|		if (output.z_nam && output.z_qt && maybe_dispatch) {
+		|		if (output.z_nam && output.z_qtl && maybe_dispatch) {
 		|			next_trigger(idle_event_md);
-		|		} else if (output.z_nam && output.z_qt) {
+		|		} else if (output.z_nam && output.z_qtl) {
 		|			next_trigger(idle_event);
 		|		}
 		|''')

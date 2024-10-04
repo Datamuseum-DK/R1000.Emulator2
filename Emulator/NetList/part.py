@@ -227,18 +227,25 @@ class PartFactory(Part):
         self.comp = None
         yield self.scm.sf_hh.filename
 
+    def priv_decl(self, _file):
+        ''' further private decls '''
+
+    def priv_impl(self, _file):
+        ''' further private decls '''
+
     def build(self, cpu):
         ''' Build this component (if/when used) '''
 
         self.scm = cpu.sc_mod(self.name)
         self.subs(self.scm.sf_cc)
-        self.scm.std_hh(self.pin_iterator())
+        self.scm.std_hh(self.pin_iterator(), self.priv_decl)
         self.scm.std_cc(
             extra = self.real_extra,
             state = self.real_state,
             init = self.real_init,
             sensitive = self.sensitive,
             doit = self.real_doit,
+            further = self.priv_impl,
         )
         self.scm.commit()
 

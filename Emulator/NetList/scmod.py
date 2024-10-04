@@ -223,7 +223,7 @@ class SystemCModule():
         txt += "\t@${SC_CC} -o " + obj + " " + self.sf_cc.filename + "\n"
         makefile.add_stanza(hdr, txt)
 
-    def std_hh(self, pin_iterator):
+    def std_hh(self, pin_iterator, further):
         ''' Produce a stanard .sf_hh file '''
         self.sf_hh.fmt('''
 		|#ifndef R1000_«mmm»
@@ -245,12 +245,18 @@ class SystemCModule():
 		|	private:
 		|	struct scm_«lll»_state *state;
 		|	void doit(void);
+		|''')
+
+        if further:
+            further(self.sf_hh)
+
+        self.sf_hh.fmt('''
 		|};
 		|
 		|#endif /* R1000_«mmm» */
 		|''')
 
-    def std_cc(self, extra=None, state=None, init=None, sensitive=None, doit=None):
+    def std_cc(self, extra=None, state=None, init=None, sensitive=None, doit=None, further=None):
         ''' Produce a standard .sf_cc file '''
 
         if extra:
@@ -313,6 +319,9 @@ class SystemCModule():
         doit(self.sf_cc)
 
         self.sf_cc.write("}\n")
+
+        if further:
+            further(self.sf_cc)
 
     def instantiate(self, name):
         ''' How to instantiate ourselves '''

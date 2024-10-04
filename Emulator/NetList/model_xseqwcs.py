@@ -32,6 +32,17 @@
    SEQ Writeable Control Store
    ===========================
 
+			VAL                                             TYP
+IR0     IR1     IR2     0-32            32-47           48-63           0-31            32-63
+0       0       0       TYPE_VAL.OE~    TYPE_VAL.OE~    TYPE_VAL.OE~    TYPE_VAL.OE~    TYPE_VAL.OE~    TYPE VAL BUS
+0       0       1       OFFS.OE~        OFFS.OE~        CUR_INSTRA.OE~  CUR_NAME.OE~    OFFS.OE~        CURRENT MACRO INSTRUCTION
+0       1       0       OFFS.OE~        OFFS.OE~        DECODE.OE~      CUR_NAME.OE~    OFFS.OE~        DECODING MACRO INSTRUCTION
+0       1       1       OFFS.OE~        OFFS.OE~        TOP_STACK.OE~   CUR_NAME.OE~    OFFS.OE~        TOP OF THE MICRO STACK
+1       0       0       OFFS.OE~        OFFS.OE~        PC.OE~          CUR_NAME.OE~    OFFS.OE~        SAVE OFFSET
+1       0       1       OFFS.OE~        OFFS.OE~        PC.OE~          REF_NAME.OE~    OFFS.OE~        RESOLVE RAM
+1       1       0       OFFS.OE~        OFFS.OE~        PC.OE~          CUR_NAME.OE~    OFFS.OE~        CONTROL TOP
+1       1       1       OFFS.OE~        OFFS.OE~        PC.OE~          CUR_NAME.OE~    OFFS.OE~        CONTROL PRED
+
 '''
 
 from part import PartModel, PartFactory
@@ -45,7 +56,19 @@ class XSEQWCS(PartFactory):
         file.fmt('''
 		|	uint64_t ram[1<<BUS_UA_WIDTH];
 		|	uint64_t wcs;
+		|	uint8_t prom0[512];
+		|	uint8_t prom2[512];
 		|	bool ff0, ff1, ff2;
+		|''')
+
+    def init(self, file):
+        file.fmt('''
+		|	load_programmable(this->name(),
+		|	    state->prom0, sizeof state->prom0,
+		|	    "PA045-03");
+		|	load_programmable(this->name(),
+		|	    state->prom2, sizeof state->prom2,
+		|	    "PA047-02");
 		|''')
 
     def sensitive(self):
@@ -57,7 +80,7 @@ class XSEQWCS(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	unsigned um, tmp, ua;
+		|	unsigned um, tmp, ua, rnd;
 		|
 		|	if (PIN_CLK.posedge()) {
 		|		BUS_UM_READ(um);
@@ -69,7 +92,10 @@ class XSEQWCS(PartFactory):
 		|			output.llm = !(PIN_SCE=> || !PIN_LMAC=>);
 		|			output.llmi = !output.llm;
 		|			output.uir = state->wcs;
-		|			output.uir ^= 0x7fULL << 13;
+		|			output.uir ^= 0x7fULL << 13;	// Invert condsel
+		|			rnd = state->wcs & 0x7f;
+		|			output.r = state->prom0[rnd | 0x100] << 8;
+		|			output.r |= state->prom2[rnd | 0x100];
 		|			break;
 		|		case 0: // noop
 		|			break;
@@ -78,23 +104,37 @@ class XSEQWCS(PartFactory):
 		|	if (PIN_PDCK.posedge()) {
 		|		BUS_UA_READ(ua);
 		|		tmp = state->ram[ua];
-		|		state->ff0 = !(
-		|			(((tmp >> 22) & 3) == 3) ||
-		|			(((tmp >> 24) & 3) != 3)
-		|		);
+		|		unsigned br_type = (tmp >> 22) & 0xf;
+		|		state->ff0 = 0xb < br_type && br_type < 0xf;
 		|		output.mdsp = !state->ff0;
-		|		state->ff1 = ((tmp >> 12) & 0x1);
-		|		state->ff2 = ((tmp >> 11) & 0x3) == 0;
+		|		unsigned lex_adr = (tmp >> 11) & 0x3;
+		|		state->ff1 = lex_adr & 0x2;
+		|		state->ff2 = lex_adr == 0;
 		|		if (!state->ff2)
 		|			output.ras &= ~1;
 		|		else
 		|			output.ras |= 1;
-		|		output.lexi = !(state->ff1 || state->ff2);
+		|		output.lexi = lex_adr == 1;
 		|	}
-		|	if ((state->ff0 && !PIN_DSP0=>) || (state->ff1))
+		|	if ((state->ff0 && !PIN_DSP0=>) || state->ff1)
 		|		output.ras &= ~2;
 		|	else
 		|		output.ras |= 2;
+		|
+		|	unsigned intreads = (output.uir >> 7) & 0x7;
+		|
+		|	output.tvoe = intreads != 0;
+		|	output.cinoe = intreads != 1;
+		|	output.decoe = intreads != 2;
+		|	output.tosoe = intreads != 3;
+		|	output.rnmoe = intreads != 5;
+		|	// output.pcoe = intreads < 4;
+		|	output.offoe = intreads == 0;
+		|	output.cnmoe = (intreads == 0 || intreads == 5);
+		|	if (!(intreads < 4))
+		|		output.decoe = false;
+		|	if (!output.cnmoe)
+		|		output.rnmoe = false;
 		''')
 
 def register(part_lib):

@@ -33,24 +33,11 @@ class XUSTK(FChip):
         self.sig_left(ChipSig("-->+", "RETURN"))
         self.sig_left(ChipSig("-->+", "POPRND"))
 
-        
-        self.sig_right(ChipSig("+-->", "SVLAT"))
-        self.sig_right(ChipSig("+<--", "CSR"))
-        self.sig_right(ChipSig("+<--", "STOP"))
-        self.sig_right(ChipSig("+-->", "SSZ"))
-
-        self.sig_right(ChipSig("+<--", "QFOE"))
-        self.sig_right(ChipSig("+===", "DQF", 0, 63))
-
-        ####### 
-
         self.sig_left(ChipSig("-->+", "DV_U"))
         self.sig_left(ChipSig("-->+", "BAD_HINT"))
         self.sig_left(ChipSig("-->+", "LMAC"))
-        self.sig_left(ChipSig("-->+", "G_SEL", 0, 1))
         self.sig_left(ChipSig("-->+", "U_MUX_SEL"))
 
-        self.sig_left(ChipSig("-->+", "CUR", 0, 13))
         self.sig_left(ChipSig("-->+", "BRN", 0, 13))
 
         self.sig_left(ChipSig("<--+", "U_EVENT"))
@@ -61,6 +48,17 @@ class XUSTK(FChip):
 
         self.sig_left(ChipSig("-->+", "UEI", 0, 14))
         self.sig_left(ChipSig("-->+", "ACLK"))
+        self.sig_left(ChipSig("-->+", "BRTYP", 0, 3))
+        self.sig_left(ChipSig("-->+", "SSTOP"))
+
+        
+        self.sig_right(ChipSig("+-->", "SVLAT"))
+        self.sig_right(ChipSig("+<--", "CSR"))
+        self.sig_right(ChipSig("+<--", "STOP"))
+        self.sig_right(ChipSig("+-->", "SSZ"))
+
+        self.sig_right(ChipSig("+<--", "QFOE"))
+        self.sig_right(ChipSig("+===", "DQF", 0, 63))
 
         self.sig_right(ChipSig("+<--", "FIU_CLK"))
 

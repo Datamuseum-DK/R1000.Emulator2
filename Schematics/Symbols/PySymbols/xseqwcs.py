@@ -22,6 +22,8 @@ class XSEQWCS(FChip):
         self.sig_left(ChipSig("-->+", "PDCK"))
         self.sig_left(ChipSig("-->+", "LMAC"))
 
+        self.sig_left(ChipSig("<--+", "R", 0, 15))
+
         self.sig_right(ChipSig("+-->", "UIR", 0, 41))
         self.sig_right(ChipSig("+-->", "HALT"))
         self.sig_right(ChipSig("+-->", "LLM"))
@@ -29,6 +31,14 @@ class XSEQWCS(FChip):
         self.sig_right(ChipSig("+-->", "MDSP"))
         self.sig_right(ChipSig("+-->", "LEXI"))
         self.sig_right(ChipSig("+-->", "RAS", 0, 1))
+
+        self.sig_right(ChipSig("+-->", "TVOE"))
+        self.sig_right(ChipSig("+-->", "CINOE"))
+        self.sig_right(ChipSig("+-->", "DECOE"))
+        self.sig_right(ChipSig("+-->", "TOSOE"))
+        self.sig_right(ChipSig("+-->", "RNMOE"))
+        self.sig_right(ChipSig("+-->", "OFFOE"))
+        self.sig_right(ChipSig("+-->", "CNMOE"))
 
         self.finish()
 

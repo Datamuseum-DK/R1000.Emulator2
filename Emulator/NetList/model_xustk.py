@@ -43,7 +43,8 @@ class XUSTK(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	unsigned nxtuadr;	// Z029
+		|	uint16_t nxtuadr;	// Z029
+		|	uint16_t curuadr;	// Z029
 		|	uint16_t ram[16];
 		|	uint16_t topu;
 		|	uint16_t adr;
@@ -68,10 +69,48 @@ class XUSTK(PartFactory):
         yield "PIN_DV_U"
         yield "PIN_BAD_HINT"
 
+    def priv_decl(self, file):
+        file.fmt('''
+		|	unsigned group_sel(void);
+		|''')
+
+    def priv_impl(self, file):
+        file.fmt('''
+		|unsigned
+		|SCM_«mmm» ::
+		|group_sel(void)
+		|{
+		|	unsigned br_type;
+		|	BUS_BRTYP_READ(br_type);
+		|
+		|	unsigned retval;
+		|	switch(br_type) {
+		|	case 0x0: retval = 3; break;
+		|	case 0x1: retval = 3; break;
+		|	case 0x2: retval = 3; break;
+		|	case 0x3: retval = 3; break;
+		|	case 0x4: retval = 3; break;
+		|	case 0x5: retval = 3; break;
+		|	case 0x6: retval = 3; break;
+		|	case 0x7: retval = 3; break;
+		|	case 0x8: retval = 2; break;
+		|	case 0x9: retval = 2; break;
+		|	case 0xa: retval = 2; break;
+		|	case 0xb: retval = 0; break;
+		|	case 0xc: retval = 1; break;
+		|	case 0xd: retval = 1; break;
+		|	case 0xe: retval = 1; break;
+		|	case 0xf: retval = 0; break;
+		|	}
+		|	if (PIN_U_MUX_SEL) {
+		|		retval |= 4;
+		|	}
+		|	return (retval);
+		|}
+		|''')
+
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|	const char *what = "?";
@@ -120,7 +159,7 @@ class XUSTK(PartFactory):
 		|				what = "1";
 		|				break;
 		|			case 2:
-		|				BUS_CUR_READ(state->topu);
+		|				state->topu = state->curuadr;
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
 		|				if (PIN_LATCHED) state->topu |= (1<<14);
 		|				state->topu += 1;
@@ -128,7 +167,7 @@ class XUSTK(PartFactory):
 		|				what = "2";
 		|				break;
 		|			case 3:
-		|				BUS_CUR_READ(state->topu);
+		|				state->topu = state->curuadr;
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
 		|				if (PIN_LATCHED) state->topu |= (1<<14);
 		|				state->topu ^= 0xffff;;
@@ -173,9 +212,6 @@ class XUSTK(PartFactory):
 		|		output.qv ^= BUS_QV_MASK;
 		|	}
 		|
-		|''')
-
-        file.fmt('''
 		|	unsigned data = 0, sel;
 		|	bool macro_hic = true;
 		|	bool u_event = true;
@@ -187,31 +223,28 @@ class XUSTK(PartFactory):
 		|
 		|	if (PIN_LCLK.posedge()) {
 		|		BUS_LATE_READ(state->late_u);
-		|		sel = 0;
-		|		if (!PIN_U_MUX_SEL) sel |= 4;
-		|		if (PIN_G_SEL0) sel |= 2;
-		|		if (PIN_G_SEL1) sel |= 1;
+		|		sel = group_sel();
 		|		switch (sel) {
 		|		case 0:
+		|		case 7:
+		|			data = state->curuadr;
+		|			data += 1;
+		|			break;
+		|		case 1:
+		|		case 2:
+		|		case 3:
+		|			BUS_BRN_READ(data);
+		|			break;
+		|		case 4:
 		|			BUS_BRN_READ(data);
 		|			data += state->fiu;
 		|			break;
-		|		case 1:
+		|		case 5:
 		|			BUS_DEC_READ(data);
 		|			data <<= 1;
 		|			break;
-		|		case 2:
-		|			data = (state->topu ^ 0xffff) & 0x3fff;
-		|			break;
-		|		case 3:
-		|		case 4:
-		|			BUS_CUR_READ(data);
-		|			data += 1;
-		|			break;
-		|		case 5:
 		|		case 6:
-		|		case 7:
-		|			BUS_BRN_READ(data);
+		|			data = (state->topu ^ 0xffff) & 0x3fff;
 		|			break;
 		|		default:
 		|			abort();
@@ -235,10 +268,7 @@ class XUSTK(PartFactory):
 		|		data |= 0x0180;
 		|		u_event = false;
 		|	} else {
-		|		sel = 0;
-		|		if (PIN_U_MUX_SEL) sel |= 4;
-		|		if (PIN_G_SEL0) sel |= 2;
-		|		if (PIN_G_SEL1) sel |= 1;
+		|		sel = group_sel();
 		|		switch (sel) {
 		|		case 0:
 		|			BUS_BRN_READ(data);
@@ -253,7 +283,7 @@ class XUSTK(PartFactory):
 		|			break;
 		|		case 3:
 		|		case 4:
-		|			BUS_CUR_READ(data);
+		|			data = state->curuadr;
 		|			data += 1;
 		|			break;
 		|		case 5:
@@ -287,7 +317,12 @@ class XUSTK(PartFactory):
 		|		state->uei ^= 0xffff;
 		|		state->uev = 16 - fls(state->uei);
 		|		output.uevp = state->uei == 0;
+		|
+		|		if (PIN_SSTOP=>) {
+		|			state->curuadr = output.nu;
+		|		}
 		|	}
+		|
 		|''')
 
 def register(part_lib):

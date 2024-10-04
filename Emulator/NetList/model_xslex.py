@@ -63,64 +63,18 @@ class XSLEX(PartFactory):
         yield "BUS_RES"
         # yield "BUS_LRN"
 
-    def doit(self, file):
-        ''' The meat of the doit() function '''
-
+    def priv_decl(self, file):
         file.fmt('''
-		|
-		|	unsigned res;
-		|	BUS_RES_READ(res);
-		|
+		|       unsigned nxt_lex_valid(void);
+		|''')
+
+    def priv_impl(self, file):
+        file.fmt('''
+		|unsigned
+		|SCM_«mmm» ::
+		|nxt_lex_valid(void)
+		|{
 		|	unsigned adr;
-		|
-		|	if (PIN_Q4.posedge()) {
-		|		uint16_t nv = 0;
-		|		adr = ((state->lex_valid >> 12) & 0xf) << 5;
-		|		adr |= state->dra << 3;
-		|		adr |= ((state->dlr >> 2) & 1) << 2;
-		|		adr |= ((state->dns >> 3) & 1) << 1;
-		|		bool pm3 = !((state->dns & 0x7) && !(state->dlr & 1));
-		|		adr |= pm3;
-		|		nv |= (state->pa041[adr] >> 4) << 12;
-		|
-		|		adr = ((state->lex_valid >> 8) & 0xf) << 5;
-		|		adr |= state->dra << 3;
-		|		adr |= ((state->dlr >> 2) & 1) << 2;
-		|		adr |= ((state->dns >> 2) & 1) << 1;
-		|		bool pm2 = !((state->dns & 0x3) && !(state->dlr & 1));
-		|		adr |= pm2;
-		|		nv |= (state->pa041[adr] >> 4) << 8;
-		|
-		|		adr = ((state->lex_valid >> 4) & 0xf) << 5;
-		|		adr |= state->dra << 3;
-		|		adr |= ((state->dlr >> 2) & 1) << 2;
-		|		adr |= ((state->dns >> 1) & 1) << 1;
-		|		bool pm1 = !((state->dns & 0x1) && !(state->dlr & 1));
-		|		adr |= pm1;
-		|		nv |= (state->pa041[adr] >> 4) << 4;
-		|
-		|		adr = ((state->lex_valid >> 0) & 0xf) << 5;
-		|		adr |= state->dra << 3;
-		|		adr |= ((state->dlr >> 2) & 1) << 2;
-		|		adr |= ((state->dns >> 0) & 1) << 1;
-		|		adr |= (state->dlr >> 0) & 1;
-		|		nv |= (state->pa041[adr] >> 4) << 0;
-		|
-		|		state->lex_valid = nv;
-		|	}
-		|
-		|	if (PIN_SCLK.posedge()) {
-		|		unsigned lex_random;
-		|		BUS_LRN_READ(lex_random);
-		|		state->dra = res & 3;
-		|		state->dlr = lex_random;
-		|		if (lex_random & 0x2) {
-		|			state->dns = 0xf;
-		|		} else {
-		|			state->dns = 0xf ^ (0x8 >> (res >> 2));
-		|		}
-		|	}
-		|
 		|	uint16_t nv = 0;
 		|	adr = ((state->lex_valid >> 12) & 0xf) << 5;
 		|	adr |= state->dra << 3;
@@ -153,7 +107,35 @@ class XSLEX(PartFactory):
 		|	adr |= (state->dlr >> 0) & 1;
 		|	nv |= (state->pa041[adr] >> 4) << 0;
 		|
-		|	output.lxcn = !((nv >> (15 - res)) & 1);
+		|	return(nv);
+		|}
+		|''')
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
+
+        file.fmt('''
+		|
+		|	unsigned res;
+		|	BUS_RES_READ(res);
+		|
+		|	if (PIN_SCLK.posedge()) {
+		|		unsigned lex_random;
+		|		BUS_LRN_READ(lex_random);
+		|		state->dra = res & 3;
+		|		state->dlr = lex_random;
+		|		if (lex_random & 0x2) {
+		|			state->dns = 0xf;
+		|		} else {
+		|			state->dns = 0xf ^ (0x8 >> (res >> 2));
+		|		}
+		|	}
+		|
+		|	if (PIN_Q4.posedge()) {
+		|		state->lex_valid = nxt_lex_valid();
+		|	}
+		|
+		|	output.lxcn = !((nxt_lex_valid() >> (15 - res)) & 1);
 		|''')
 
 def register(part_lib):

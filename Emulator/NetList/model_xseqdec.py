@@ -67,26 +67,23 @@ class XSEQDEC(PartFactory):
 		|
 		|	if (clk) {
 		|		BUS_EMAC_READ(state->emac);
-		|		output.me = state->emac;
-		|		output.emp = state->emac != BUS_EMAC_MASK;
 		|	}
-		|	if (output.emp) {
+		|	if (state->emac != BUS_EMAC_MASK) {
 		|		unsigned uad = 0;
 		|		if (!(state->emac & 0x40))
-		|			uad = 0x009c;
+		|			uad = 0x04e0;
 		|		else if (!(state->emac & 0x20))
-		|			uad = 0x0098;
+		|			uad = 0x04c0;
 		|		else if (!(state->emac & 0x10))
-		|			uad = 0x0094;
+		|			uad = 0x04a0;
 		|		else if (!(state->emac & 0x08))
-		|			uad = 0x0090;
+		|			uad = 0x0480;
 		|		else if (!(state->emac & 0x04))
-		|			uad = 0x008c;
+		|			uad = 0x0460;
 		|		else if (!(state->emac & 0x02))
-		|			uad = 0x0088;
+		|			uad = 0x0440;
 		|		else if (!(state->emac & 0x01))
-		|			uad = 0x0084;
-		|		uad <<= 3;
+		|			uad = 0x0420;
 		|		output.uad = uad;
 		|		state->last = uad << 16;
 		|	} else {

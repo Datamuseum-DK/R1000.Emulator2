@@ -66,7 +66,6 @@ class XSUDEC(PartFactory):
 		|	    state->prom44, sizeof state->prom44,
 		|	    "PA044-01");
 		|''')
-        super().init(file)
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -76,27 +75,6 @@ class XSUDEC(PartFactory):
 		|	BUS_BRTYP_READ(br_type);
 		|
 		|	bool bad_hint = PIN_BADH=>;
-		|
-		|	unsigned group_sel;
-		|	switch(br_type) {
-		|	case 0x0: group_sel = 3; break;
-		|	case 0x1: group_sel = 3; break;
-		|	case 0x2: group_sel = 3; break;
-		|	case 0x3: group_sel = 3; break;
-		|	case 0x4: group_sel = 3; break;
-		|	case 0x5: group_sel = 3; break;
-		|	case 0x6: group_sel = 3; break;
-		|	case 0x7: group_sel = 3; break;
-		|	case 0x8: group_sel = 2; break;
-		|	case 0x9: group_sel = 2; break;
-		|	case 0xa: group_sel = 2; break;
-		|	case 0xb: group_sel = 0; break;
-		|	case 0xc: group_sel = 1; break;
-		|	case 0xd: group_sel = 1; break;
-		|	case 0xe: group_sel = 1; break;
-		|	case 0xf: group_sel = 0; break;
-		|	}
-		|	output.gsel = group_sel;
 		|
 		|	bool brtm3;
 		|	unsigned btimm;
@@ -126,7 +104,6 @@ class XSUDEC(PartFactory):
 		|	unsigned rom = state->prom43[adr];
 		|
 		|	output.wdisp  = !(((rom >> 5) & 1) && !output.uasel);
-		|	output.casen  = !(((rom >> 4) & 1) && !output.uasel);
 		|	output.rtn    = !(((rom >> 3) & 1) ||  output.uasel);
 		|	output.pushbr =    (rom >> 1) & 1;
 		|	output.push   = !(((rom >> 0) & 1) ||
@@ -145,30 +122,12 @@ class XSUDEC(PartFactory):
 		|		} else {
 		|			rom ^= 0x2;
 		|		}
-		|		unsigned mode = 0;
-		|		if (!PIN_DMODE=>) {
-		|			BUS_SCNMD_READ(mode);
-		|		} else if (PIN_BHCKE=>) {
-		|			mode = 3;
-		|		}
-		|		mode ^= 0x3;
-		|
-		|		switch (mode) {
-		|		case 0:
-		|			break;
-		|		case 1:
-		|			state->bhreg <<= 1;
-		|			state->bhreg |= 1;
-		|			break;
-		|		case 2:
-		|			state->bhreg >>= 1;
-		|			if (PIN_DIN=>)
-		|				state->bhreg |= 0x80;
-		|			break;
-		|		case 3:
+		|		unsigned mode = 3;
+		|		if (!PIN_BHCKE=>) {
+		|			mode = 0;
 		|			state->bhreg = rom;
-		|			break;
 		|		}
+		|
 		|		output.lhint = (state->bhreg >> 1) & 1;
 		|		output.lhintt = (state->bhreg >> 0) & 1;
 		|	}

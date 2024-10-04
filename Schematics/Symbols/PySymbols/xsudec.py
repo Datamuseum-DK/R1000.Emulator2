@@ -24,17 +24,12 @@ class XSUDEC(FChip):
 
         self.sig_left(ChipSig("-->+", "SCLKEN"))
 
-        self.sig_left(ChipSig("-->+", "SCNMD", 0, 1))
         self.sig_left(ChipSig("-->+", "BHCKE"))
-        self.sig_left(ChipSig("-->+", "DMODE"))
-        self.sig_left(ChipSig("-->+", "DIN"))
         self.sig_left(ChipSig("-->+", "MPRND"))
 
         self.sig_right(ChipSig("+-->", "UASEL"))
-        self.sig_right(ChipSig("+-->", "GSEL", 0, 1))
 
         self.sig_right(ChipSig("+-->", "WDISP"))
-        self.sig_right(ChipSig("+-->", "CASEN"))
         self.sig_right(ChipSig("+-->", "RTN"))
         self.sig_right(ChipSig("+-->", "PUSHBR"))
         self.sig_right(ChipSig("+-->", "PUSH"))

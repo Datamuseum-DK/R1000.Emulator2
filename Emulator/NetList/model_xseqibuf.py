@@ -43,6 +43,14 @@ class XSEQIBUF(PartFactory):
 
     def state(self, file):
         file.fmt('''
+		|	uint32_t top[1<<10];	// Z020
+		|	uint32_t bot[1<<10];	// Z020
+		|	uint32_t reg, last, cbot, ctop;
+		|	unsigned prev_dsp;
+		|	unsigned emac;
+		|	unsigned curins;
+		|	bool topbot;
+		|
 		|	uint64_t typ, val;
 		|	unsigned word;
 		|	unsigned mpc;
@@ -56,7 +64,6 @@ class XSEQIBUF(PartFactory):
         yield "PIN_BCLK.pos()"
         yield "PIN_WDISP"
         yield "PIN_MIBMT"
-        yield "BUS_CURI"
         yield "BUS_URAND"
 
     def doit(self, file):
@@ -68,19 +75,17 @@ class XSEQIBUF(PartFactory):
 		|		BUS_TYP_READ(state->typ);
 		|		BUS_VAL_READ(state->val);
 		|	} 
-		|{
-		|	unsigned boff = 0;
-		|	bool wdisp, mibmt, oper;
+		|
 		|	unsigned macro_pc_ofs = state->mpc;
-		|	unsigned a, b;
 		|
 		|	if (PIN_RCLK.posedge()) {
 		|		state->retrn_pc_ofs = state->mpc;
 		|	}
 		|
-		|	wdisp = PIN_WDISP;
-		|	mibmt = PIN_MIBMT;
-		|	b = macro_pc_ofs;
+		|	bool wdisp = PIN_WDISP;
+		|	bool mibmt = PIN_MIBMT;
+		|	bool oper;
+		|	unsigned a;
 		|	if (!wdisp && !mibmt) {
 		|		a = 0;
 		|		oper = true;
@@ -88,33 +93,30 @@ class XSEQIBUF(PartFactory):
 		|		a = output.disp;
 		|		oper = false;
 		|	} else if (wdisp && !mibmt) {
-		|		BUS_CURI_READ(a);
-		|		a |= 0xf800;
+		|		a = state->curins;
 		|		oper = true;
 		|	} else {
-		|		BUS_CURI_READ(a);
-		|		a |= 0xf800;
+		|		a = state->curins;
 		|		oper = true;
 		|	}
 		|	a &= 0x7ff;
 		|	if (a & 0x400)
 		|		a |= 0x7800;
 		|	a ^= 0x7fff;
-		|	b &= 0x7fff;
+		|	unsigned b = macro_pc_ofs & 0x7fff;
 		|	if (oper) {
 		|		if (wdisp)
 		|			a += 1;
 		|		a &= 0x7fff;
-		|		boff = a + b;
+		|		state->boff = a + b;
 		|	} else {
 		|		if (!wdisp)
 		|			a += 1;
-		|		boff = b - a;
+		|		state->boff = b - a;
 		|	}
-		|	boff &= 0x7fff;
-		|	state->boff = boff;
-		|	output.bridx = boff & 7;
-		|}
+		|	state->boff &= 0x7fff;
+		|	output.bridx = state->boff & 7;
+		|
 		|	if (PIN_BCLK.posedge()) {
 		|		unsigned mode = 0;
 		|		unsigned u = 0;
@@ -152,20 +154,20 @@ class XSEQIBUF(PartFactory):
 		|				state->word -= 1;
 		|		}
 		|	}
-		|{
-		|	unsigned rand, coff;
+		|
+		|	unsigned rand;
 		|	BUS_URAND_READ(rand);
 		|	switch (rand & 3) {
-		|	case 3:	coff = state->retrn_pc_ofs; break;
-		|	case 2: coff = state->boff; break;
-		|	case 1: coff = state->mpc; break;
-		|	case 0: coff = state->boff; break;
+		|	case 3:	output.coff = state->retrn_pc_ofs; break;
+		|	case 2: output.coff = state->boff; break;
+		|	case 1: output.coff = state->mpc; break;
+		|	case 0: output.coff = state->boff; break;
 		|	}
-		|	coff ^= BUS_COFF_MASK;
-		|	output.coff = coff;
-		|}
+		|	output.coff ^= BUS_COFF_MASK;
 		|
-		|	output.emp = state->word != 0;
+		|	unsigned disp = output.disp;
+		|
+		|	output.empty = state->word != 0;
 		|
 		|	if (state->word == 7)
 		|		output.disp = state->typ >> 48;
@@ -187,7 +189,6 @@ class XSEQIBUF(PartFactory):
 		|		output.disp = 0xffff;
 		|	output.disp &= 0xffff;
 		|
-		|if (1) {
 		|	unsigned val, iclex;
 		|
 		|	BUS_VAL_READ(val);
@@ -226,7 +227,7 @@ class XSEQIBUF(PartFactory):
 		|		output.icond = !(res_addr == 0xf);
 		|		output.sext = !((res_addr > 0xd));
 		|	}		
-		|}
+		|
 		|	output.z_qb = PIN_QBOE=>;
 		|	if (!output.z_qb) {
 		|		unsigned ird;
@@ -239,6 +240,111 @@ class XSEQIBUF(PartFactory):
 		|			output.qb ^= BUS_QB_MASK;
 		|		}
 		|	}
+		|
+		|	if (PIN_ACLK.posedge()) {
+		|		BUS_EMAC_READ(state->emac);
+		|		output.me = state->emac;
+		|		output.emp = state->emac != BUS_EMAC_MASK;
+		|	}
+		|
+		|	bool aclk = PIN_ACLK.posedge();
+		|
+		|
+		|	if (aclk) {
+		|		BUS_EMAC_READ(state->emac);
+		|	}
+		|	if (state->emac != BUS_EMAC_MASK) {
+		|		unsigned uad = 0;
+		|		if (!(state->emac & 0x40))
+		|			uad = 0x04e0;
+		|		else if (!(state->emac & 0x20))
+		|			uad = 0x04c0;
+		|		else if (!(state->emac & 0x10))
+		|			uad = 0x04a0;
+		|		else if (!(state->emac & 0x08))
+		|			uad = 0x0480;
+		|		else if (!(state->emac & 0x04))
+		|			uad = 0x0460;
+		|		else if (!(state->emac & 0x02))
+		|			uad = 0x0440;
+		|		else if (!(state->emac & 0x01))
+		|			uad = 0x0420;
+		|		output.uad = uad;
+		|		state->last = uad << 16;
+		|	} else {
+		|		unsigned ai = disp;
+		|		ai ^= 0xffff;
+		|		bool top = (disp >> 10) != 0x3f;
+		|		uint32_t *ptr;
+		|		if (top)
+		|			ptr = &state->top[ai >> 6];
+		|		else
+		|			ptr = &state->bot[ai & 0x3ff];
+		|		output.uad = (*ptr >> 16);
+		|		output.dec = (*ptr >> 8);
+		|		state->last = *ptr & 0xffffff00;
+		|	}
+		|
+		|	if (aclk) {
+		|		unsigned tdec;
+		|		tdec = state->last & 0xffffff0f;
+		|		tdec |= output.ccl << 4;
+		|		state->reg = tdec;
+		|		state->reg |= 0x0f;
+		|	}
+		|
+		|	if (aclk && !PIN_SCLKE=>) {
+		|		unsigned dsp = 0;
+		|		if (!PIN_IMX=>) {
+		|			dsp = disp;
+		|		} else {
+		|			uint64_t tval;
+		|			BUS_VAL_READ(tval);
+		|			dsp = tval & 0xffff;
+		|		}
+		|		dsp ^= BUS_DSP_MASK;
+		|
+		|		bool gate = !(PIN_ILDRN=> && PIN_DISPA=>);
+		|		if (gate && state->topbot)
+		|			state->ctop = dsp;
+		|		if (gate && !state->topbot)
+		|			state->cbot = dsp;
+		|	}
+		|
+		|	if (PIN_FLIP.posedge()) {
+		|		state->topbot = !state->topbot;
+		|	}
+		|
+		|	if (state->topbot) 
+		|		state->curins = state->cbot;
+		|	else
+		|		state->curins = state->ctop;
+		|
+		|	if (state->prev_dsp != state->curins) {
+		|		uint8_t utrc[4];
+		|		utrc[0] = UT_CURINS;
+		|		utrc[1] = 0;
+		|		utrc[2] = state->curins >> 8;
+		|		utrc[3] = state->curins;
+		|		microtrace(utrc, sizeof utrc);
+		|		state->prev_dsp = state->curins;
+		|	}
+		|
+		|	uint32_t *ciptr;
+		|	if (state->curins & 0xfc00) {
+		|		ciptr = &state->top[state->curins >> 6];
+		|	} else {
+		|		ciptr = &state->bot[state->curins & 0x3ff];
+		|	}
+		|
+		|	output.ccl = (*ciptr >> 4) & 0xf;
+		|
+		|	output.z_qv = PIN_QVOE=>;
+		|	if (!output.z_qv) {
+		|		output.qv = state->curins ^ BUS_QV_MASK;
+		|	}
+		|	output.dsp = state->curins;
+		|
 		|''')
 
 def register(part_lib):
