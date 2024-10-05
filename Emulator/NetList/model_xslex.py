@@ -56,7 +56,6 @@ class XSLEX(PartFactory):
 		|	    state->pa041, sizeof state->pa041,
 		|	    "PA041-01");
 		|''')
-        super().init(file)
 
     def sensitive(self):
         yield "PIN_Q4.pos()"

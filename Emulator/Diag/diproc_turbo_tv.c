@@ -100,20 +100,10 @@ load_register_file_val(const struct diagproc *dp)
 		AN(ctx);
 		val_aram = (uint64_t *)(void*)(ctx + 1);
 	}
-#if defined(HAS_Z014)
-	if (val_bram == NULL) {
-		ctx = CTX_Find(COMP_Z014);
-		AN(ctx);
-		val_bram = (uint64_t *)(void*)(ctx + 1);
-	}
-#endif
-
+	
 	for (i = 0; i < 16; i++, val_ptr++) {
 		wdr = get_wdr(dp, 0x18 + i * 12);
 		val_aram[val_ptr] = wdr;
-#if defined(HAS_Z014)
-		val_bram[val_ptr] = wdr;
-#endif
 	}
 
 	sc_tracef(dp->name, "Turbo LOAD_REGISTER_FILE_200.VAL");

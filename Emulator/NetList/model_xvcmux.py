@@ -44,7 +44,7 @@ class XVCMUX(PartFactory):
     def state(self, file):
  
         file.fmt('''
-		|	uint64_t rfram[1<<10];
+		|	uint64_t rfram[1<<10];		// Z013
 		|	uint64_t a, b, c;
 		|	uint64_t wdr;
 		|	uint64_t zero;
@@ -59,6 +59,18 @@ class XVCMUX(PartFactory):
 		|	unsigned aadr;
 		|	unsigned badr;
 		|	unsigned cadr;
+		|	uint8_t pa010[512];
+		|	uint8_t pa011[512];
+		|''')
+
+    def init(self, file):
+        file.fmt('''
+		|	load_programmable(this->name(),
+		|	    state->pa010, sizeof state->pa010,
+		|	    "PA010");
+		|	load_programmable(this->name(),
+		|	    state->pa011, sizeof state->pa011,
+		|	    "PA011");
 		|''')
 
     def sensitive(self):
@@ -154,14 +166,8 @@ class XVCMUX(PartFactory):
 		|	bool start_mult = rand != 0xc;
 		|	bool prod_16 = rand != 0xd;
 		|	bool prod_32 = rand != 0xe;
-		|	if (rand < 8) {
-		|		output.alur = 7;
-		|	} else {
-		|		output.alur = 15 - rand;
-		|	}
 		|	output.cntz = rand != 0x5;
 		|	output.div = rand != 0xb;
-		|	output.sneak = (rand != 0x3) && (rand != 0x6);
 		|
 		|	output.z_qf = PIN_QFOE=>;
 		|	if (q2pos || (!h2 && !output.z_qf)) {
@@ -241,22 +247,37 @@ class XVCMUX(PartFactory):
 		|
 		|	if (q2pos) {
 		|		struct f181 f181l, f181h;
-		|		unsigned tmp;
+		|		unsigned tmp, proma, alur;
 		|
-		|		BUS_ACL_READ(tmp);
-		|		f181l.ctl = tmp >> 1;
-		|		f181l.ctl |= (tmp & 1) << 4;
+		|		BUS_RAND_READ(tmp);
+		|		if (tmp < 8) {
+		|			alur = 7;
+		|		} else {
+		|			alur = 15 - tmp;
+		|		}
+		|
+		|		BUS_AFNC_READ(proma);
+		|		proma |= alur << 5;
+		|		if (PIN_ACND=>)
+		|			proma |= 0x100;
+		|
+		|		tmp = state->pa011[proma];			// S0-4.LOW
+		|		output.isbin = (tmp >> 1) & 1;			// IS_BINARY
+		|		f181l.ctl = (tmp >> 4) & 0xf;
+		|		f181l.ctl |= ((tmp >> 3) & 1) << 4;
 		|		f181l.ctl |= 1 << 5;
-		|		f181l.ci = PIN_CI=>;
+		|		f181l.ci = (state->pa011[proma] >> 2) & 1;	// ALU.C15
 		|		f181l.a = state->a & 0xffffffff;
 		|		f181l.b = state->b & 0xffffffff;
 		|		f181_alu(&f181l);
 		|		output.com = f181l.co;
 		|		state->alu = f181l.o;
 		|
-		|		BUS_ACH_READ(tmp);
-		|		f181h.ctl = tmp >> 1;
-		|		f181h.ctl |= (tmp & 1) << 4;
+		|		tmp = state->pa010[proma];			// S0-4.HIGH
+		|		output.ovren = (tmp >> 1) & 1;			// OVR.EN~
+		|		output.sea = (tmp >> 2) & 1;			// SUB_ELSE_ADD
+		|		f181h.ctl = (tmp >> 4) & 0xf;
+		|		f181h.ctl |= ((tmp>>3) & 1) << 4;
 		|		f181h.ctl |= 1 << 5;
 		|		f181h.ci = f181l.co;
 		|		f181h.a = state->a >> 32;
@@ -326,13 +347,42 @@ class XVCMUX(PartFactory):
 		|		}
 		|		if (efiu1) {
 		|			c |= fiu & 0xfffffffeULL;
-		|			unsigned csel;
-		|			BUS_CSEL_READ(csel);
-		|			if (csel == 7) {
+		|			if ((rand != 0x3) && (rand != 0x6)) {
 		|				c |= fiu & 0x1ULL;
 		|			} else {
-		|				unsigned cond = PIN_COND=>;
-		|				c |= cond & 1;
+		|				unsigned csel;
+		|				BUS_CSEL_READ(csel);
+		|				bool fcond;
+		|				switch (csel) {
+		|				case 0x00:
+		|					fcond = output.zero == 0xff;
+		|					break;
+		|				case 0x01:
+		|					fcond = output.zero != 0xff;
+		|					break;
+		|				case 0x02:
+		|					if (output.amsb ^ output.bmsb) {
+		|						fcond = output.bmsb;
+		|					} else {
+		|						fcond = !output.coh;
+		|					}
+		|					break;
+		|				case 0x0f:
+		|				case 0x16:		// Undocumented
+		|					fcond = PIN_LVAL=>;
+		|					break;
+		|				default:
+		|					ALWAYS_TRACE(
+		|						<< std::hex << "BAD FIUCOND"
+		|						<< " rand " << rand
+		|						<< " csel " << csel
+		|					);
+		|					fcond = true;
+		|					// assert(false);
+		|					break;
+		|				}
+		|				fcond = !fcond;
+		|				c |= fcond & 1;
 		|			}
 		|			clo = true;
 		|		} else if (!sel0) {

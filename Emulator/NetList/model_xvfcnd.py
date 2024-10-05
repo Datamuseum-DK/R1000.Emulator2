@@ -45,65 +45,41 @@ class XVFCND(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|
-		|	output.fcond = false;
-		|	unsigned zero = 0;
-		|	switch (output.fcsel) {
-		|	case 0:
-		|		output.fcond = !PIN_ACO=>;
-		|		break;
-		|	case 1:
-		|	case 3:
-		|		output.fcond = PIN_LVAL=>;
-		|		break;
-		|	case 2:
-		|		output.fcond = PIN_BBD0=>;
-		|		break;
-		|	case 4:
-		|		BUS_AZ_READ(zero);
-		|		output.fcond = (zero == 0xff);
-		|		break;
-		|	case 6:
-		|		BUS_AZ_READ(zero);
-		|		output.fcond = (zero != 0xff);
-		|		break;
-		|
-		|	default:
-		|		output.fcond = true;
-		|		break;
-		|	}
-		|	output.fcond = !output.fcond;
-		|
 		|	unsigned sel;
 		|	BUS_SEL_READ(sel);
 		|
-		|	output.fcsel = 0;
+		|	output.fcond = false;
+		|	unsigned zero = 0;
 		|
-		|	if (!(sel & 0x02))
-		|		output.fcsel |= 0x4;
-		|
-		|	if ((sel & 0x2) && (PIN_BAD0=> ^ PIN_BBD0=>))
-		|		output.fcsel |= 0x2;
-		|
-		|	if ((sel & 3) == 1)
-		|		output.fcsel |= 0x2;
-		|
-		|	if (sel & 0x10)
-		|		output.fcsel |= 0x1;
-		|
-		|	if ((sel & 0x06) == 0x06)
-		|		output.fcsel |= 0x1;
-		|
-		|	if (PIN_SNK=>) {
-		|		output.fcsel = 0x7;
+		|	switch (sel) {
+		|	case 0x00:
+		|		BUS_AZ_READ(zero);
+		|		output.fcond = (zero == 0xff);
+		|		break;
+		|	case 0x01:
+		|		BUS_AZ_READ(zero);
+		|		output.fcond = (zero != 0xff);
+		|		break;
+		|	case 0x02:
+		|		if (PIN_BAD0=> ^ PIN_BBD0=>) {
+		|			output.fcond = PIN_BBD0=>;
+		|		} else {
+		|			output.fcond = !PIN_ACO=>;
+		|		}
+		|		break;
+		|	case 0x0f:
+		|		output.fcond = PIN_LVAL=>;
+		|		break;
+		|	default:
+		|		output.fcond = true;
 		|	}
-		|''')
-
-    def doit_idle(self, file):
-        file.fmt('''
-		|	if (PIN_SNK=> && output.fcsel == 7) {
+		|	if (PIN_SNK=>) {
+		|		output.fcond = true;
 		|		next_trigger(PIN_SNK.negedge_event());
 		|	}
+		|
+		|	output.fcond = !output.fcond;
+		|
 		|''')
 
 def register(part_lib):
