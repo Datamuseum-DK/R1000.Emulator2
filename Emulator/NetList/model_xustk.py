@@ -318,7 +318,7 @@ class XUSTK(PartFactory):
 		|		state->uev = 16 - fls(state->uei);
 		|		output.uevp = state->uei == 0;
 		|
-		|		if (PIN_SSTOP=>) {
+		|		if (PIN_SSTOP=> && PIN_DMODE=>) {
 		|			state->curuadr = output.nu;
 		|		}
 		|	}

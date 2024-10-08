@@ -67,6 +67,7 @@ class XS52MISC(PartFactory):
 		|		unsigned prev_rreg = state->rreg;
 		|		unsigned rmode;
 		|		BUS_RMOD_READ(rmode);
+		|		rmode ^= BUS_RMOD_MASK;
 		|		switch (rmode) {
 		|		case 0:
 		|			break;
@@ -78,8 +79,7 @@ class XS52MISC(PartFactory):
 		|		case 2:
 		|			state->rreg >>= 1;
 		|			state->rreg &= 0x7;
-		|			if (PIN_RSIN=>)
-		|				state->rreg |= 0x8;
+		|			state->rreg |= 0x8;
 		|			break;
 		|		case 3:
 		|			unsigned restrt_rnd;
@@ -98,6 +98,9 @@ class XS52MISC(PartFactory):
 		|			break;
 		|		}
 		|		output.rq = state->rreg;
+		|
+		|		unsigned lin;
+		|		BUS_LIN_READ(lin);
 		|
 		|		switch (rmode) {
 		|		case 0:
@@ -120,28 +123,29 @@ class XS52MISC(PartFactory):
 		|		}
 		|		output.fo7 = state->treg >> 3;
 		|
-		|
-		|		unsigned lmode;
-		|		BUS_LMOD_READ(lmode);
-		|		switch (lmode) {
-		|		case 0:
-		|			break;
-		|		case 1:
-		|			state->lreg <<= 1;
-		|			state->lreg &= 0xe;
-		|			state->lreg |= 0x1;
-		|			break;
-		|		case 2:
-		|			state->lreg >>= 1;
-		|			state->lreg &= 0x7;
-		|			state->lreg |= 0x8;
-		|			break;
-		|		case 3:
-		|			BUS_LIN_READ(state->lreg);
-		|			break;
+		|		if (!PIN_SCKEN=>) {
+		|			state->lreg = lin;
 		|		}
 		|		output.lq = state->lreg;
 		|		output.lqn = !(state->lreg & 1);
+		|
+		|		if ((lin & 0x4) && !PIN_SCKEN=>) {
+		|			output.lcp = PIN_COND=>;
+		|			output.lcn = !output.lcp;
+		|		}
+		|
+		|		switch(output.lq & 0x6) {
+		|		case 0x0:
+		|		case 0x4:
+		|			output.ldc = (output.lq >> 3) & 1;
+		|			break;
+		|		case 0x2:
+		|			output.ldc = (output.lq >> 0) & 1;
+		|			break;
+		|		case 0x6:
+		|			output.ldc = output.lcp;
+		|			break;
+		|		}
 		|	}
 		|		
 		|''')

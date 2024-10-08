@@ -50,6 +50,7 @@ class XUSTK(FChip):
         self.sig_left(ChipSig("-->+", "ACLK"))
         self.sig_left(ChipSig("-->+", "BRTYP", 0, 3))
         self.sig_left(ChipSig("-->+", "SSTOP"))
+        self.sig_left(ChipSig("-->+", "DMODE"))
 
         
         self.sig_right(ChipSig("+-->", "SVLAT"))

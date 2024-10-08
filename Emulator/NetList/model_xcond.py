@@ -45,7 +45,6 @@ class XCOND(PartFactory):
         file.fmt('''
 		|	uint8_t elprom[512];
 		|	bool q3cond;
-		|	bool llcond;
 		|''')
 
     def private(self):
@@ -53,25 +52,41 @@ class XCOND(PartFactory):
         for i in range(16):
             if i == 4:
                 yield from self.event_or(
-                   "event_%x" % i,
+                   "event_%x_a" % i,
                    "PIN_CXC.default_event()",
                    "PIN_CXF.default_event()",
-                   "PIN_Q4.default_event()",
+                   "BUS_ICOND",
+                )
+                yield from self.event_or(
+                   "event_%x_b" % i,
+                   "PIN_CXC.default_event()",
+                   "PIN_CXF.default_event()",
+                   "PIN_Q4.negedge_event()",
                    "BUS_ICOND",
                 )
             elif i not in (5, 6, 7):
                 yield from self.event_or(
-                   "event_%x" % i,
+                   "event_%x_a" % i,
                    "PIN_CX%X.default_event()" % i,
-                   "PIN_Q4.default_event()",
+                   "BUS_ICOND",
+                )
+                yield from self.event_or(
+                   "event_%x_b" % i,
+                   "PIN_CX%X.default_event()" % i,
+                   "PIN_Q4.negedge_event()",
                    "BUS_ICOND",
                 )
 
         for i in range(0x5 << 3, 0x8 << 3):
             yield from self.event_or(
-               "event_%02x" % i,
+               "event_%02x_a" % i,
                "PIN_SC%d.default_event()" % (i - (0x5 << 3)),
-               "PIN_Q4.default_event()",
+               "BUS_ICOND",
+            )
+            yield from self.event_or(
+               "event_%02x_b" % i,
+               "PIN_SC%d.default_event()" % (i - (0x5 << 3)),
+               "PIN_Q4.negedge_event()",
                "BUS_ICOND",
             )
 
@@ -84,7 +99,7 @@ class XCOND(PartFactory):
 
     def sensitive(self):
         yield "BUS_ICOND_SENSITIVE()"
-        yield "PIN_Q4"
+        yield "PIN_Q4.neg()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -109,27 +124,45 @@ class XCOND(PartFactory):
             if pin == 4:
                 file.fmt('''
 		|		cond = !(PIN_CXC=> && PIN_CXF=>);
-		|		idle_next = &event_%x;
+		|		if (is_e_ml || cond == state->q3cond)
+		|		    idle_next = &event_%x_a;
+		|		else
+		|		    idle_next = &event_%x_b;
 		|		break;
-		|''' % pin)
+		|''' % (pin, pin))
             elif pin in (5,):
                 for i in range(8):
                     j = (pin << 3) | i
                     file.fmt('''
-		|	case 0x%x: cond = !PIN_SC%d=>; idle_next = &event_%02x; break;
-		|''' % (j, j - (5<<3), j))
+		|	case 0x%x:
+		|		cond = !PIN_SC%d=>;
+		|		if (is_e_ml || cond == state->q3cond)
+		|			idle_next = &event_%02x_a;
+		|		else
+		|			idle_next = &event_%02x_b;
+		|		break;
+		|''' % (j, j - (5<<3), j, j))
             elif pin in (6, 7):
                 for i in range(8):
                     j = (pin << 3) | i
                     file.fmt('''
-		|	case 0x%x: cond = PIN_SC%d=>; idle_next = &event_%02x; break;
-		|''' % (j, j - (5<<3), j))
+		|	case 0x%x:
+		|		cond = PIN_SC%d=>;
+		|		if (is_e_ml || cond == state->q3cond)
+		|			idle_next = &event_%02x_a;
+		|		else
+		|			idle_next = &event_%02x_b;
+		|		break;
+		|''' % (j, j - (5<<3), j, j))
             else:
                 file.fmt('''
 		|		cond = PIN_CX%X=>;
-		|		idle_next = &event_%x;
+		|		if (is_e_ml || cond == state->q3cond)
+		|			idle_next = &event_%x_a;
+		|		else
+		|			idle_next = &event_%x_b;
 		|		break;
-		|''' % (pin, pin))
+		|''' % (pin, pin, pin))
 
         file.fmt('''
 		|	}
@@ -137,16 +170,11 @@ class XCOND(PartFactory):
 		|	if (!is_e_ml && PIN_Q4.negedge()) {
 		|		state->q3cond = cond;
 		|	}
-		|	if (is_e_ml && !PIN_SCKE=> && PIN_Q4.posedge()) {
-		|		state->llcond = cond;
-		|	}
 		|
 		|	output.e_ml = is_e_ml;
 		|	output.cndp = cond;
 		|	output.cq3p = state->q3cond;
 		|	output.cq3n = !state->q3cond;
-		|	output.cllp = state->llcond;
-		|	output.clln = !state->llcond;
 		|''')
 
 def register(part_lib):

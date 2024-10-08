@@ -15,11 +15,10 @@ class XS52MISC(FChip):
 
         self.sig_left(ChipSig("-->+", "CLK"))
 
-        self.sig_left(ChipSig("-->+", "RSIN"))
+        self.sig_left(ChipSig("-->+", "SCKEN"))
         self.sig_left(ChipSig("-->+", "RMOD", 0, 1))
         self.sig_right(ChipSig("+-->", "RQ", 0, 3))
 
-        self.sig_left(ChipSig("-->+", "LMOD", 0, 1))
         self.sig_left(ChipSig("-->+", "LIN", 0, 3))
         self.sig_right(ChipSig("+-->", "LQ", 0, 3))
         self.sig_right(ChipSig("+-->", "LQN"))
@@ -31,6 +30,11 @@ class XS52MISC(FChip):
         self.sig_left(ChipSig("-->+", "WDISP"))
         self.sig_left(ChipSig("-->+", "RRND", 0, 1))
         self.sig_left(ChipSig("-->+", "MEV"))
+
+        self.sig_left(ChipSig("-->+", "COND"))
+        self.sig_right(ChipSig("+-->", "LCP"))
+        self.sig_right(ChipSig("+-->", "LCN"))
+        self.sig_right(ChipSig("+-->", "LDC"))
 
         self.finish()
 
