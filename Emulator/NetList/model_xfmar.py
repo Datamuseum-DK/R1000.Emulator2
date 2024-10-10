@@ -133,7 +133,7 @@ class XFMAR(PartFactory):
 		|	if (PIN_Q4.posedge()) {
 		|		unsigned mode;
 		|		bool load_mar = PIN_LMAR=>;
-		|		bool sclk_en = PIN_SCLKE=>;
+		|		bool sclk_en = !PIN_SCLKE=>;
 		|
 		|		if (load_mar && sclk_en) {
 		|			mode = 3;

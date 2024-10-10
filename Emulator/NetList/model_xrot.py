@@ -306,7 +306,7 @@ class XROTF(PartFactory):
 		|		output.qf = vout ^ BUS_QF_MASK;
 		|	}
 		|
-		|	if (q4pos && PIN_LDMDR=> && PIN_SCLKE) {
+		|	if (q4pos && PIN_LDMDR=> && !PIN_SCLKE) {
 		|		uint64_t yl = 0, yh = 0, q;
 		|		fs = s & ~3;
 		|		yl = ft >> fs;

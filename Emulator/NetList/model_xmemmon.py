@@ -55,12 +55,12 @@ class XMEMMON(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	unsigned qms;
+		|	uint64_t mstat[32];
 		|	bool state0, state1, labort, e_abort_dly;
-		|	uint8_t promz[512];
-		|	uint8_t promo[512];
-		|	uint8_t promd[512];
-		|	uint8_t promt[512];
+		|	uint8_t pa025[512];
+		|	uint8_t pa026[512];
+		|	uint8_t pa027[512];
+		|	uint8_t pa028[512];
 		|	uint8_t pcntl_d;
 		|	uint8_t lcntl;
 		|	uint8_t mcntl;
@@ -89,27 +89,46 @@ class XMEMMON(PartFactory):
     def init(self, file):
         file.fmt('''
 		|	load_programmable(this->name(),
-		|	    state->promz, sizeof state->promz,
-		|	    "PA025-03");
+		|	    state->pa025, sizeof state->pa025, "PA025-03");
 		|	load_programmable(this->name(),
-		|	    state->promo, sizeof state->promo,
-		|	    "PA026-02");
+		|	    state->pa026, sizeof state->pa026, "PA026-02");
 		|	load_programmable(this->name(),
-		|	    state->promd, sizeof state->promd,
-		|	    "PA027-01");
+		|	    state->pa027, sizeof state->pa027, "PA027-01");
 		|	load_programmable(this->name(),
-		|	    state->promt, sizeof state->promt,
-		|	    "PA028-02");
+		|	    state->pa028, sizeof state->pa028, "PA028-02");
 		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	unsigned mstart;
-		|	BUS_MSTRT_READ(mstart);
-		|	state->qms = mstart ^ 0x1e;
-		|	output.ackrfs = state->qms == 0x6;
+		|/*
+		| logrw   phys_ref
+		| 0       1       0000  PHYSICAL_MEM_WRITE
+		| 0       1       0001  PHYSICAL_MEM_READ
+		| 1       0       0010  LOGICAL_MEM_WRITE
+		| 1       0       0011  LOGICAL_MEM_READ
+		| 1       0       0100  COPY 0 TO 1 *
+		| 1       0       0101  MEMORY_TO_TAGSTORE *
+		| 1       0       0110  COPY 1 to 0 *
+		| 1       0       0111  SET HIT FLIP FLOPS *
+		| 0       1       1000  PHYSICAL TAG WRITE
+		| 0       1       1001  PHYSICAL TAG READ
+		| 0       0       1010  INITIALIZE MRU
+		| 0       0       1011  LOGICAL TAG READ
+		| 0       0       1100  NAME QUERY
+		| 0       0       1101  LRU QUERY
+		| 0       0       1110  AVAILABLE QUERY
+		| 0       0       1111  IDLE
+		|*/
+		|	bool pos = PIN_Q4.posedge();
+		|
+		|	unsigned mem_start;
+		|	BUS_MSTRT_READ(mem_start);
+		|	mem_start ^= 0x1e;
+		|	if (pos)
+		|		state->mstat[mem_start]++;
+		|	output.ackrfs = mem_start != 0x6;
 		|
 		|	unsigned condsel;
 		|	BUS_CNDSL_READ(condsel);
@@ -121,65 +140,61 @@ class XMEMMON(PartFactory):
 		|
 		|	unsigned mar_cntl;
 		|	BUS_MCTL_READ(mar_cntl);
-		|	output.rmarp = (mar_cntl & 0xe) == 0x4;
+		|	bool rmarp = (mar_cntl & 0xe) == 0x4;
 		|
-		|	unsigned promza = 0;
-		|	promza |= state->qms;
-		|	promza |= state->state0 << 8;
-		|	promza |= state->state1 << 7;
-		|	promza |= state->labort << 6;
-		|	promza |= state->e_abort_dly << 5;
-		|	unsigned prmz = state->promz[promza];
+		|	unsigned pa025a = 0;
+		|	pa025a |= mem_start;
+		|	pa025a |= state->state0 << 8;
+		|	pa025a |= state->state1 << 7;
+		|	pa025a |= state->labort << 6;
+		|	pa025a |= state->e_abort_dly << 5;
+		|	unsigned pa025 = state->pa025[pa025a];
+		|	bool memcyc1 = (pa025 >> 1) & 1;
+		|	bool memstart = (pa025 >> 0) & 1;
 		|
-		|	unsigned promoa = 0;
-		|	promoa |= state->qms;
+		|	unsigned pa026a = 0;
+		|	pa026a |= mem_start;
 		|	if (output.omq & 0x02)	// INIT_MRU_D
-		|		promoa |= 0x20;
+		|		pa026a |= 0x20;
 		|	if (state->phys_last)
-		|		promoa |= 0x40;
+		|		pa026a |= 0x40;
 		|	if (state->write_last)
-		|		promoa |= 0x80;
+		|		pa026a |= 0x80;
 		|	if (state->rtv_next_d)
-		|		promoa |= 0x100;
-		|	unsigned prmo = state->promo[promoa];
+		|		pa026a |= 0x100;
+		|	unsigned pa026 = state->pa026[pa026a];
 		|	// INIT_MRU, ACK_REFRESH, START_IF_INCM, START_TAG_RD, PCNTL0-3
+		|	bool start_if_incw = (pa026 >> 5) & 1;
 		|
-		|	unsigned board_hit, prmda = 0;
+		|	unsigned board_hit, pa027a = 0;
 		|	BUS_BDHIT_READ(board_hit);
-		|	prmda = 0;
-		|	prmda |= board_hit << 5;
-		|	prmda |= state->init_mru_d << 4;
-		|	prmda |= (output.omq & 0xc);
-		|	prmda |= 1 << 1;
-		|	prmda |= PIN_PGMOD=> << 0;
-		|	unsigned prmd = state->promd[prmda];
+		|	pa027a = 0;
+		|	pa027a |= board_hit << 5;
+		|	pa027a |= state->init_mru_d << 4;
+		|	pa027a |= (output.omq & 0xc);
+		|	pa027a |= 1 << 1;
+		|	pa027a |= PIN_PGMOD=> << 0;
+		|	unsigned pa027 = state->pa027[pa027a];
 		|
-		|	bool memcyc1 = (prmz >> 1) & 1;
-		|	bool memstart = (prmz >> 0) & 1;
-		|	bool start_if_incw = (prmo >> 5) & 1;
 		|
-		|	bool pos = PIN_Q4.posedge();
 		|	if (pos) {
-		|		state->state0 = (prmz >> 7) & 1;
-		|		state->state1 = (prmz >> 6) & 1;
-		|		output.st1 = state->state1;
+		|		state->state0 = (pa025 >> 7) & 1;
+		|		state->state1 = (pa025 >> 6) & 1;
 		|		state->labort = !(l_abort && le_abort);
 		|		state->e_abort_dly = eabrt;
-		|		output.eabd = state->e_abort_dly;
-		|		state->pcntl_d = prmo & 0xf;
-		|		BUS_IQF_READ(output.oqf);
-		|		output.oqf &= 0x0f;
-		|		output.oqf ^= 0x3;
+		|		state->pcntl_d = pa026 & 0xf;
+		|		output.dumon = PIN_IDUM=>;
+		|		output.csaht = !PIN_ICSA=>;
 		|	}
 		|
 		|	uint32_t ti = 0;
-		|	if (output.rmarp)
+		|	if (rmarp)
 		|		BUS_TI_READ(ti);
 		|
 		|	bool scav_trap_next = state->scav_trap;
 		|	if (condsel == 0x69) {		// SCAVENGER_HIT
 		|		scav_trap_next = false;
-		|	} else if (output.rmarp) {
+		|	} else if (rmarp) {
 		|		scav_trap_next = (ti >> (63 - 32)) & 1;
 		|	} else if (state->log_query) {
 		|		scav_trap_next = false;
@@ -188,7 +203,7 @@ class XMEMMON(PartFactory):
 		|	bool cache_miss_next = state->cache_miss;
 		|	if (condsel == 0x6b) {		// CACHE_MISS
 		|		cache_miss_next = false;
-		|	} else if (output.rmarp) {
+		|	} else if (rmarp) {
 		|		cache_miss_next = (ti >> (63 - 35)) & 1;
 		|	} else if (state->log_query) {
 		|		cache_miss_next = PIN_MISS=>;
@@ -197,7 +212,7 @@ class XMEMMON(PartFactory):
 		|	bool csa_oor_next = state->csa_oor;
 		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
 		|		csa_oor_next = false;
-		|	} else if (output.rmarp) {
+		|	} else if (rmarp) {
 		|		csa_oor_next = (ti >> (63 - 33)) & 1;
 		|	} else if (state->log_query) {
 		|		csa_oor_next = PIN_CSAOOR=>;
@@ -209,7 +224,7 @@ class XMEMMON(PartFactory):
 		|		state->csa_oor = csa_oor_next;
 		|		state->rtv_next_d = state->rtv_next;
 		|
-		|		if (output.rmarp) {
+		|		if (rmarp) {
 		|			state->mar_modified = (ti >> (63 - 39)) & 1;
 		|		} else if (condsel == 0x6d) {
 		|			state->mar_modified = 1;
@@ -218,14 +233,14 @@ class XMEMMON(PartFactory):
 		|		} else if (!memstart && PIN_EVENT=>) {
 		|			state->mar_modified = PIN_EVENT=>;
 		|		}
-		|		if (output.rmarp) {
+		|		if (rmarp) {
 		|			state->incmplt_mcyc = (ti >> (63 - 40)) & 1;
 		|		} else if (start_if_incw) {
 		|			state->incmplt_mcyc = true;
 		|		} else if (memcyc1) {
 		|			state->incmplt_mcyc = PIN_EVENT=>;
 		|		}
-		|		if (output.rmarp) {
+		|		if (rmarp) {
 		|			state->phys_last = (ti >> (63 - 37)) & 1;
 		|			state->write_last = (ti >> (63 - 38)) & 1;
 		|		} else if (memcyc1) {
@@ -238,13 +253,13 @@ class XMEMMON(PartFactory):
 		|		state->omf20 = (
 		|			memcyc1 &&
 		|			((output.prmt >> 3) & 1) &&
-		|			PIN_SCKE=>
+		|			!PIN_SCLKE=>
 		|		);
 		|		
 		|		if (memcyc1)
 		|			state->mctl_is_read = !(state->lcntl & 1);
 		|		else
-		|			state->mctl_is_read = !(prmo & 1);
+		|			state->mctl_is_read = !(pa026 & 1);
 		|
 		|		state->logrw_d = state->logrw;
 		|	}
@@ -266,23 +281,23 @@ class XMEMMON(PartFactory):
 		|		);
 		|	}
 		|
-		|	if (pos && PIN_SCKE=> && !PIN_Q4DIS=>) {
+		|	if (pos && !PIN_SCLKE=> && !PIN_Q4DIS=>) {
 		|		output.omq = 0;
-		|		output.omq |= (prmd & 3) << 2;
-		|		output.omq |= ((prmd >> 5) & 1) << 1;
-		|		if (output.rmarp)
+		|		output.omq |= (pa027 & 3) << 2;
+		|		output.omq |= ((pa027 >> 5) & 1) << 1;
+		|		if (rmarp)
 		|			state->page_xing = (ti >> (63 - 34)) & 1;
 		|		else
 		|			state->page_xing = PIN_PXNXT=>;
-		|		state->init_mru_d = (prmo >> 7) & 1;
+		|		state->init_mru_d = (pa026 >> 7) & 1;
 		|	}
 		|	if (PIN_H2.posedge()) {
 		|		state->lcntl = state->mcntl;
 		|		state->drive_mru = state->init_mru_d;
 		|		// output.tmp = state->drive_mru;
-		|		state->rtv_next = (prmo >> 4) & 1; // START_TAG_RD
-		|		state->memcnd = (prmz >> 4) & 1;	// CM_CTL0
-		|		state->cndtru = (prmz >> 3) & 1;	// CM_CTL1
+		|		state->rtv_next = (pa026 >> 4) & 1; // START_TAG_RD
+		|		state->memcnd = (pa025 >> 4) & 1;	// CM_CTL0
+		|		state->cndtru = (pa025 >> 3) & 1;	// CM_CTL1
 		|	}
 		|
 		|	if (memstart) {
@@ -290,63 +305,40 @@ class XMEMMON(PartFactory):
 		|	} else {
 		|		state->mcntl = state->pcntl_d;
 		|	}
-		|/*
-		| logrw   phys_ref
-		| 0       1       0000  PHYSICAL_MEM_WRITE
-		| 0       1       0001  PHYSICAL_MEM_READ
-		| 1       0       0010  LOGICAL_MEM_WRITE
-		| 1       0       0011  LOGICAL_MEM_READ
-		| 1       0       0100  COPY 0 TO 1 *
-		| 1       0       0101  MEMORY_TO_TAGSTORE *
-		| 1       0       0110  COPY 1 to 0 *
-		| 1       0       0111  SET HIT FLIP FLOPS *
-		| 0       1       1000  PHYSICAL TAG WRITE
-		| 0       1       1001  PHYSICAL TAG READ
-		| 0       0       1010  INITIALIZE MRU
-		| 0       0       1011  LOGICAL TAG READ
-		| 0       0       1100  NAME QUERY
-		| 0       0       1101  LRU QUERY
-		| 0       0       1110  AVAILABLE QUERY
-		| 0       0       1111  IDLE
-		|*/
 		|
 		|	state->phys_ref = !(state->mcntl & 0x6);
 		|	output.mcntl3 = state->mcntl & 1;
+		|	output.logrwn = !(state->logrw && memcyc1);
 		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
-		|	output.logrw = state->logrw;
-		|	output.logrwn = !(output.logrw && memcyc1);
 		|
 		|	if (memcyc1) {
 		|		output.memct = state->lcntl;
 		|	} else {
-		|		output.memct = prmo & 0xf;
+		|		output.memct = pa026 & 0xf;
 		|	}
 		|
-		|	promza = 0;
-		|	promza |= state->qms;
-		|	promza |= state->state0 << 8;
-		|	promza |= state->state1 << 7;
-		|	promza |= state->labort << 6;
-		|	promza |= state->e_abort_dly << 5;
-		|	prmz = state->promz[promza];
-		|	output.prmz = prmz & 0x2;
-		|	bool contin = (prmz >> 5) & 1;
+		|	pa025a = 0;
+		|	pa025a |= mem_start;
+		|	pa025a |= state->state0 << 8;
+		|	pa025a |= state->state1 << 7;
+		|	pa025a |= state->labort << 6;
+		|	pa025a |= state->e_abort_dly << 5;
+		|	pa025 = state->pa025[pa025a];
+		|	output.mcyc1 = (pa025 >> 1) & 1;
+		|	bool contin = (pa025 >> 5) & 1;
 		|	output.contin = !(contin);
-		|	output.wrscav = (prmz >> 2) & 1;
 		|
-		|	promoa = 0;
-		|	promoa |= state->qms;
+		|	pa026a = 0;
+		|	pa026a |= mem_start;
 		|	if (output.omq & 0x02)	// INIT_MRU_D
-		|		promoa |= 0x20;
+		|		pa026a |= 0x20;
 		|	if (state->phys_last)
-		|		promoa |= 0x40;
+		|		pa026a |= 0x40;
 		|	if (state->write_last)
-		|		promoa |= 0x80;
+		|		pa026a |= 0x80;
 		|	if (state->rtv_next_d)
-		|		promoa |= 0x100;
-		|	prmo = state->promo[promoa];
-		|	//output.ackrfs = (prmo >> 6) & 1;
-		|	// INIT_MRU, ACK_REFRESH, START_IF_INCM, START_TAG_RD, PCNTL0-3
+		|		pa026a |= 0x100;
+		|	pa026 = state->pa026[pa026a];
 		|
 		|	output.cond6a = condsel != 0x6a;
 		|	output.cond6e = condsel != 0x6e;
@@ -361,37 +353,36 @@ class XMEMMON(PartFactory):
 		|	output.cond |= state->mar_modified << 1;
 		|	output.cond |= state->incmplt_mcyc << 0;
 		|
-		|	prmda = 0;
-		|	prmda |= board_hit << 5;
-		|	prmda |= state->init_mru_d << 4;
-		|	prmda |= (output.omq & 0xc);
-		|	prmda |= 1 << 1;
-		|	prmda |= PIN_PGMOD=> << 0;
-		|	prmd = state->promd[prmda];
-		|	output.setq = (prmd >> 3) & 3;
+		|	pa027a = 0;
+		|	pa027a |= board_hit << 5;
+		|	pa027a |= state->init_mru_d << 4;
+		|	pa027a |= (output.omq & 0xc);
+		|	pa027a |= 1 << 1;
+		|	pa027a |= PIN_PGMOD=> << 0;
+		|	pa027 = state->pa027[pa027a];
+		|	output.setq = (pa027 >> 3) & 3;
 		|
 		|	output.pgstq = 0;
-		|	if (!state->drive_mru || !(prmd & 0x40))
+		|	if (!state->drive_mru || !(pa027 & 0x40))
 		|		output.pgstq |= 1;
-		|	if (!state->drive_mru || !(prmd & 0x80))
+		|	if (!state->drive_mru || !(pa027 & 0x80))
 		|		output.pgstq |= 2;
 		|	output.rtvnxt = !(state->rtv_next);
 		|	output.memcnd = !(state->memcnd);
 		|	output.cndtru = !(state->cndtru);
 		|	output.nohit = board_hit != 0xf;
 		|
-		|	unsigned prmta = mar_cntl << 5;
-		|	prmta |= (output.cond & 1) << 4;
-		|	prmta |= output.eabd << 3;
-		|	prmta |= output.st1 << 2;
-		|	prmta |= state->mctl_is_read << 1;
-		|	prmta |= (output.oqf >> 3) & 1;
-		|	output.prmt = state->promt[prmta];
+		|	unsigned pa028a = mar_cntl << 5;
+		|	pa028a |= (output.cond & 1) << 4;
+		|	pa028a |= state->e_abort_dly << 3;
+		|	pa028a |= state->state1 << 2;
+		|	pa028a |= state->mctl_is_read << 1;
+		|	pa028a |= output.dumon;
+		|	output.prmt = state->pa028[pa028a];
 		|	output.prmt ^= 0x02;
 		|	output.prmt &= 0x7b;
 		|
 		|	output.scvhit = false;
-		|	output.mcisrd = state->mctl_is_read;
 		|	output.logrwd = state->logrw_d;
 		|''')
 
