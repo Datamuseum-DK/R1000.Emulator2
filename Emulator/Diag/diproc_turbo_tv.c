@@ -291,6 +291,30 @@ load_control_store_200_val(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_typ(const struct diagproc *dp)
 {
+	if (dp->dl_hash == RUN_NORMAL_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo RUN_NORMAL.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == PREP_RUN_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo PREP_RUN.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == PREP_WRITE_REG_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo PREP_WRITE_REG.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == WRITE_REG_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo WRITE_REG.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == LOAD_BENIGN_UWORD_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo LOAD_BENIGN_UWORD.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == LOAD_WDR_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo LOAD_WDR.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 	if (dp->dl_hash == ALIGN_CSA_TYP_HASH) {
 		sc_tracef(dp->name, "Turbo ALIGN_CSA.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
@@ -311,10 +335,12 @@ diagproc_turbo_typ(const struct diagproc *dp)
 	}
 	if (dp->dl_hash == PREP_LOAD_REGISTER_FILE_TYP_HASH) {
 		typ_ptr = 0;
-		return (0);
+		sc_tracef(dp->name, "Turbo PREP_LOAD_REGISTER_FILE.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_DIAG_COUNTER_TYP_HASH) {
 		typ_ptr = 0x100;
+		sc_tracef(dp->name, "Turbo LOAD_DIAG_COUNTER.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_REGISTER_FILE_200_TYP_HASH ||
@@ -330,6 +356,10 @@ diagproc_turbo_typ(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_val(const struct diagproc *dp)
 {
+	if (dp->dl_hash == LOAD_WDR_VAL_HASH) {
+		sc_tracef(dp->name, "Turbo LOAD_WDR.VAL");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 	if (dp->dl_hash == ALIGN_CSA_VAL_HASH) {
 		sc_tracef(dp->name, "Turbo ALIGN_CSA.VAL");
 		return ((int)DIPROC_RESPONSE_DONE);
@@ -350,10 +380,12 @@ diagproc_turbo_val(const struct diagproc *dp)
 	}
 	if (dp->dl_hash == PREP_LOAD_REGISTER_FILE_VAL_HASH) {
 		val_ptr = 0;
-		return (0);
+		sc_tracef(dp->name, "Turbo PREP_LOAD_REGISTER_FILE.VAL");
+		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_DIAG_COUNTER_VAL_HASH) {
 		val_ptr = 0x100;
+		return ((int)DIPROC_RESPONSE_DONE);
 		return (0);
 	}
 	if (dp->dl_hash == LOAD_REGISTER_FILE_200_VAL_HASH ||

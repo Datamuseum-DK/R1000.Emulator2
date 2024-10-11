@@ -14,7 +14,6 @@ class XVALWCS(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "UCLK"))
-        self.sig_left(ChipSig("-->+", "USEL"))
         self.sig_left(ChipSig("-->+", "UAC", 0, 13))
         self.sig_left(ChipSig("-->+", "UAD", 0, 13))
         self.sig_left(ChipSig("-->+", "DUAS"))

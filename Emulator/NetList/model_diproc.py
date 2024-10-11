@@ -161,6 +161,11 @@ class DIPROC(PartFactory):
 		|		state->diagproc->do_movx = 0;
 		|		PIN_WR = true;
 		|		DiagProcStep(state->diagproc, &state->dctx);
+		|#if defined(BUS_ID_READ)
+		|		BUS_ID_READ(state->diagproc->ident);
+		|#else
+		|		state->diagproc->ident = 0xf;
+		|#endif
 		|		return;
 		|	}
 		|	if (PIN_XTAL2.posedge()) {

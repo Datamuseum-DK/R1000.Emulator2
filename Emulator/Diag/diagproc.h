@@ -20,6 +20,7 @@ struct diagproc {
 	unsigned mod;
 	struct mcs51 *mcs51;
 	int version;
+	int ident;
 	int idle;
 	uint32_t *do_trace;
 	struct elastic_subscriber *diag_bus;

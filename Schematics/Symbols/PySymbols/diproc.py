@@ -18,6 +18,7 @@ class DIPROC(FChip):
         self.sig_left(ChipSig("-->+", "INT0"))
         self.sig_left(ChipSig("-->+", "INT1"))
         self.sig_left(ChipSig("-->+", "DBUS"))
+        self.sig_left(ChipSig("-->+", "ID", 0, 3))
 
         self.sig_right(ChipSig("+-->", "WR"))
         self.sig_right(ChipSig("+-->", "A", 0, 7))

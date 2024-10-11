@@ -293,6 +293,8 @@ diagproc_istep(struct diagproc *dp, struct diagproc_context *dctx)
 
 	dp->mcs51->do_trace = *dp->do_trace;
 	opc = dp->mcs51->pc;
+	if (dp->ident != 0xf)
+		dp->mcs51->iram[3] = dp->ident;
 	npc = MCS51_SingleStep(dp->mcs51);
 	dctx->instructions++;
 
