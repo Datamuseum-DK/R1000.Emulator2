@@ -49,12 +49,12 @@ class XCACHE(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t ram[1<<14];	// Turbo
-		|	uint8_t rame[1<<14];	// Turbo
+		|	uint64_t ram[1<<15];	// Turbo
+		|	uint8_t rame[1<<15];	// Turbo
 		|
-		|	uint16_t bitc[1 << 20];	// Turbo
-		|	uint64_t bitt[1 << 21];	// Turbo
-		|	unsigned set, cl, wd;
+		|	uint16_t bitc[1 << 21];	// Turbo
+		|	uint64_t bitt[1 << 22];	// Turbo
+		|	unsigned cl, wd;
 		|	uint16_t cdreg, cqreg;
 		|	uint64_t tdreg, tqreg;
 		|	uint64_t vdreg, vqreg;
@@ -73,6 +73,8 @@ class XCACHE(PartFactory):
 		|	bool p_mcyc2_next;
 		|	unsigned q4cmd;
 		|	unsigned q4cont;
+		|	unsigned hits;
+		|	bool cyt;
 		|''')
 
     def sensitive(self):
@@ -95,6 +97,57 @@ class XCACHE(PartFactory):
 		|		now -= 1;
 		|	}
 		|	return ((before & 0x43) | (now << 2));
+		|}
+		|''')
+
+    def priv_decl(self, file):
+        file.fmt('''
+		|	unsigned find_set(unsigned cmd);
+		|''')
+
+    def priv_impl(self, file):
+        file.fmt('''
+		|unsigned
+		|SCM_«mmm» ::
+		|find_set(unsigned cmd)
+		|{
+		|	unsigned set2 = 0;
+		|	if (state->hits & 0x05) {
+		|		set2 = 0;
+		|	} else if (state->hits & 0x0a) {
+		|		set2 = 1;
+		|	} else if (state->hits & 0x50) {
+		|		set2 = 2;
+		|	} else if (state->hits & 0xa0) {
+		|		set2 = 3;
+		|	} else if (cmd == 0xe && ((state->output.ps & ~4) == 2)) {
+		|		set2 = 1;
+		|#if 0
+		|	} else if (cmd == 0xe) {
+		|		set2 = 0;
+		|	} else if (!PIN_ISA=> && !PIN_BEHIT) {
+		|		set2 = 1;
+		|	} else if (PIN_ISA=> && !PIN_AEHIT) {
+		|		set2 = 1;
+		|#endif
+		|	} else {
+		|		set2 = 0;
+		|	}
+		|#if 0
+		|	bool mid = !(PIN_LOG=> && state->output.nme && PIN_ELSEL=>);
+		|	bool end = !(mid && PIN_LP=>);
+		|	unsigned set1 = PIN_A1=> << 1;
+		|	set1 |= end;
+		|if (set1 != set2) ALWAYS_TRACE(
+		|		<< std::hex << " SETS "
+		|		<< set1 << " " << set2
+		|		<< " hits " << state->hits
+		|		<< " cmd " << cmd
+		|		// << " el " << state->eabort << state->labort
+		|		<< " p " << PIN_AEHIT=> << PIN_ALHIT=> << PIN_BEHIT=> << PIN_BLHIT=>
+		|	);
+		|#endif
+		|	return (set2);
 		|}
 		|''')
 
@@ -148,10 +201,10 @@ class XCACHE(PartFactory):
 		|		    !(
 		|		        ((mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd)
 		|		    );
-		|		output.cyt = p_mcyc2_next_hd;
+		|		state->cyt = p_mcyc2_next_hd;
 		|	}
 		|
-		|	bool mcyc2 = !output.cyt;
+		|	bool mcyc2 = !state->cyt;
 		|
 		|	unsigned cmd = output.cmd;
 		|	unsigned bcmd = 1 << cmd;
@@ -225,10 +278,10 @@ class XCACHE(PartFactory):
 		|		}
 		|	}
 		|
-		|	BUS_SET_READ(state->set);
 		|	if (q2pos && CMDS(CMD_LMW|CMD_PMW) && mcyc2 && !PIN_IHIT=> && !state->labort) {
+		|		unsigned set = find_set(cmd);
 		|		uint32_t radr2 =
-		|			(state->set << 18) |
+		|			(set << 18) |
 		|			(state->cl << 6) |
 		|			state->wd;
 		|
@@ -328,29 +381,6 @@ class XCACHE(PartFactory):
 		|		state->wd = state->word;
 		|	}
 		|
-		|	if (q1pos && mcyc2 && CMDS(CMD_LMR|CMD_PMR) && !labort) {
-		|		uint32_t radr =
-		|			(state->set << 18) |
-		|			(state->cl << 6) |
-		|			state->wd;
-		|		assert(radr < (1 << 20));
-		|
-		|		state->cqreg = state->bitc[radr];
-		|		state->tqreg = state->bitt[radr+radr];
-		|		state->vqreg = state->bitt[radr+radr+1];
-		|	}
-		|
-		|	output.z_qc = PIN_QCOE=>;
-		|	output.z_qt = output.z_qc;
-		|	output.z_qv = PIN_QVOE=>;
-		|	if (!output.z_qv && output.z_qt) {
-		|		output.qv = state->qreg;
-		|	}
-		|	if (!output.z_qc) {
-		|		output.qc = state->cqreg;
-		|		output.qt = state->tqreg;
-		|		output.qv = state->vqreg;
-		|	}
 		|
 		|	if (q3pos) {
 		|		bool diag_sync = !PIN_BDISYN=>;
@@ -371,7 +401,61 @@ class XCACHE(PartFactory):
 		|	}
 		|	if (q3pos) {
 		|		output.lrup =
-		|		    (!state->p_mcyc2_next) && output.cyt && CMDS(CMD_LMW|CMD_LMR|CMD_NMQ|CMD_LRQ);
+		|		    (!state->p_mcyc2_next) && state->cyt && CMDS(CMD_LMW|CMD_LMR|CMD_NMQ|CMD_LRQ);
+		|	}
+		|
+		|	if (q3pos) {
+		|		state->hits = 0;
+		|		state->hits |= !PIN_AEHIT=> << 7;
+		|		state->hits |= !PIN_ALHIT=> << 6;
+		|		state->hits |= !PIN_BEHIT=> << 5;
+		|		state->hits |= !PIN_BLHIT=> << 4;
+		|	}
+		|	if (q1pos) {
+		|		state->hits |= !PIN_AEHIT=> << 3;
+		|		state->hits |= !PIN_ALHIT=> << 2;
+		|		state->hits |= !PIN_BEHIT=> << 1;
+		|		state->hits |= !PIN_BLHIT=> << 0;
+		|		if        (state->hits & 0x20) { output.seta = 0; output.setb = 0;
+		|		} else if (state->hits & 0x10) { output.seta = 0; output.setb = 1;
+		|		} else if (state->hits & 0x02) { output.seta = 1; output.setb = 0;
+		|		} else if (state->hits & 0x01) { output.seta = 1; output.setb = 1;
+		|		} else if (state->hits & 0x80) { output.seta = 0; output.setb = 0;
+		|		} else if (state->hits & 0x40) { output.seta = 0; output.setb = 1;
+		|		} else if (state->hits & 0x08) { output.seta = 1; output.setb = 0;
+		|		} else                         { output.seta = 1; output.setb = 1;
+		|		}
+		|
+		|		output.hita = true;
+		|		output.hitb = true;
+		|		if (state->hits & 0xcc)
+		|			output.hita = false;
+		|		if (state->hits & 0x33)
+		|			output.hitb = false;
+		|	}
+		|	if (q1pos && mcyc2 && CMDS(CMD_LMR|CMD_PMR) && !labort) {
+		|		unsigned set = find_set(cmd);
+		|		uint32_t radr =
+		|			(set << 18) |
+		|			(state->cl << 6) |
+		|			state->wd;
+		|		assert(radr < (1 << 20));
+		|
+		|		state->cqreg = state->bitc[radr];
+		|		state->tqreg = state->bitt[radr+radr];
+		|		state->vqreg = state->bitt[radr+radr+1];
+		|	}
+		|
+		|	output.z_qc = PIN_QCOE=>;
+		|	output.z_qt = output.z_qc;
+		|	output.z_qv = PIN_QVOE=>;
+		|	if (!output.z_qv && output.z_qt) {
+		|		output.qv = state->qreg;
+		|	}
+		|	if (!output.z_qc) {
+		|		output.qc = state->cqreg;
+		|		output.qt = state->tqreg;
+		|		output.qv = state->vqreg;
 		|	}
 		|''')
 

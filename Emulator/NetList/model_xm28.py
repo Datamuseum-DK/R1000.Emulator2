@@ -45,19 +45,13 @@ class XM28(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	bool ahit0145, bhit0246;
 		|	bool bhit, ahit;
-		|	bool ahit0, ahit1, bhit4, bhit5;
-		|	bool labort;
 		|	bool dradpal_p22;
+		|	unsigned hits;
 		|''')
 
     def sensitive(self):
-        yield "PIN_CLK"
-        yield "PIN_AEH"
-        yield "PIN_ALH"
-        yield "PIN_BEH"
-        yield "PIN_BLH"
+        yield "PIN_CLK.neg()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -81,18 +75,13 @@ class XM28(PartFactory):
 		|#define CMD_IDL	(1<<0x0)
 		|
 		|	bool clk2x_neg = PIN_CLK.negedge();
-		|	bool clk2x_pos = PIN_CLK.posedge();
 		|	bool h1 = PIN_H1=>;
-		|	bool q1 = PIN_Q1=>;
 		|	bool q1pos = clk2x_neg && h1;
-		|	bool q3pos = clk2x_neg && !h1;
-		|	bool q4pos = clk2x_pos && !h1;
 		|	bool aehit = PIN_AEH=>;
 		|	bool alhit = PIN_ALH=>;
 		|	bool behit = PIN_BEH=>;
 		|	bool blhit = PIN_BLH=>;
 		|	bool miss = aehit && alhit && behit && blhit;
-		|	bool exthit = PIN_EHIT=>;
 		|	bool high_board = !PIN_LOBRD=>;
 		|	unsigned cmd;
 		|	BUS_CMD_READ(cmd);
@@ -100,42 +89,8 @@ class XM28(PartFactory):
 		|#define CMDS(x) ((bcmd & (x)) != 0)
 		|	bool mcyc2 = PIN_MC2=>;
 		|
-		|	if (q3pos) {
-		|		state->ahit0 = !aehit           &&  behit &&  blhit;
-		|		state->ahit1 =  aehit && !alhit &&  behit &&  blhit;
-		|		state->bhit4 =                     !behit;
-		|		state->bhit5 =                      behit && !blhit;
-		|	}
-		|	if (q1pos) {
-		|		state->ahit0145 = (
-		|		    (state->bhit5) ||
-		|		    (state->bhit4) ||
-		|		    (behit && blhit && state->ahit0) ||
-		|		    (behit && blhit && state->ahit1)
-		|		);
-		|		state->bhit0246 = (
-		|		    (state->bhit4) ||
-		|		    (!behit &&                           !state->bhit5) ||
-		|		    ( behit && blhit &&  state->ahit0) ||
-		|		    (!aehit && blhit && !state->ahit1 && !state->bhit5)
-		|		);
-		|	}
-		|	output.z_seta = !(state->ahit0145 && !exthit);
-		|	output.z_setb = !(state->bhit0246 && !exthit);
-		|	output.seta = 0;
-		|	output.setb = 0;
-		|
-		|	if (!q1) {
-		|		output.baht = alhit && !(state->ahit0 || state->ahit1 || !aehit);
-		|		output.bbht = blhit && !(state->bhit4 || state->bhit5 || !behit);
-		|	}
-		|
 		|	unsigned pset;
 		|	BUS_PSET_READ(pset);
-		|
-		|	if (q4pos) {
-		|		state->labort = !(PIN_LABT=> && PIN_ELABT=>);
-		|	}
 		|
 		|	if (clk2x_neg) {
 		|		if (!mcyc2) {

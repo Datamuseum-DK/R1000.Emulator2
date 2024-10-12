@@ -14,7 +14,6 @@ class XM28(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "CLK"))
-        self.sig_left(ChipSig("-->+", "Q1"))
         self.sig_left(ChipSig("-->+", "H1"))
         self.sig_left(ChipSig("-->+", "MC2"))
         self.sig_left(ChipSig("-->+", "LOBRD"))
@@ -27,11 +26,6 @@ class XM28(FChip):
         self.sig_left(ChipSig("-->+", "EHIT"))
         self.sig_left(ChipSig("-->+", "ELABT"))
         self.sig_left(ChipSig("-->+", "LABT"))
-
-        self.sig_right(ChipSig("+-->", "BAHT"))
-        self.sig_right(ChipSig("+-->", "BBHT"))
-        self.sig_right(ChipSig("+===", "SETA"))
-        self.sig_right(ChipSig("+===", "SETB"))
 
         self.sig_right(ChipSig("+-->", "DAA1D"))
         self.sig_right(ChipSig("+-->", "DAA2D"))

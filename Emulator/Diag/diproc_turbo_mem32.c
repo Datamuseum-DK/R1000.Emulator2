@@ -28,13 +28,13 @@ clear_tagstore_m32(const struct diagproc *dp)
 	ctx = CTX_Find(COMP_Z000);
 	AN(ctx);
 	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr, 0x00, (1 << 17) + (1 << 14));
+	memset(ptr, 0x00, 9 << 15);
 
 	// TBR
 	ctx = CTX_Find(COMP_Z001);
 	AN(ctx);
 	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr, 0x00, (1 << 17) + (1 << 14));
+	memset(ptr, 0x00, 9 << 15);
 
 	sc_tracef(dp->name, "Turbo CLEAR_TAGSTORE.M32");
 	return ((int)DIPROC_RESPONSE_DONE);
@@ -63,9 +63,9 @@ fill_memory_m32(const struct diagproc *dp)
 	ctx = CTX_Find(COMP_Z000);
 	AN(ctx);
 	uint8_t *ptr = (void*)(ctx + 1);
-	ptrc = (uint16_t *)(void*)(ptr + (9 << 14));
-	ptrt = (uint64_t *)(void*)(ptrc + (1<<20));
-	for (i = 0; i < 1<<20; i++) {
+	ptrc = (uint16_t *)(void*)(ptr + (9 << 15));
+	ptrt = (uint64_t *)(void*)(ptrc + (1<<21));
+	for (i = 0; i < 1<<21; i++) {
 		ptrc[i] = cbit;
 		ptrt[i+i] = typ;
 		ptrt[i+i+1] = val;
@@ -75,9 +75,9 @@ fill_memory_m32(const struct diagproc *dp)
 	ctx = CTX_Find(COMP_Z001);
 	AN(ctx);
 	ptr = (void*)(ctx + 1);
-	ptrc = (uint16_t *)(void*)(ptr + (9 << 14));
-	ptrt = (uint64_t *)(void*)(ptrc + (1<<20));
-	for (i = 0; i < 1<<20; i++) {
+	ptrc = (uint16_t *)(void*)(ptr + (9 << 15));
+	ptrt = (uint64_t *)(void*)(ptrc + (1<<21));
+	for (i = 0; i < 1<<21; i++) {
 		ptrc[i] = cbit;
 		ptrt[i+i] = typ;
 		ptrt[i+i+1] = val;
