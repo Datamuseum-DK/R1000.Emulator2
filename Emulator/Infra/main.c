@@ -60,6 +60,8 @@ static struct timespec t0;
 void
 microtrace(const uint8_t *p, size_t l)
 {
+	if (utrace_file == NULL)
+		return;
 	if (l == 18) {
 		assert((p[0] & 0xf0) == 0x70);
 	} else if (l == 10) {
@@ -195,12 +197,14 @@ main(int argc, char **argv)
 		exit(2);
 	}
 
-	bprintf(buf, "%s.utrace", tracepath);
-	utrace_file = fopen(buf, "w");
-	if (utrace_file == NULL) {
-		fprintf(stderr, "Cannot open utracefile '%s': %s\n",
-		    buf, strerror(errno));
-		exit(2);
+	if (0) {
+		bprintf(buf, "%s.utrace", tracepath);
+		utrace_file = fopen(buf, "w");
+		if (utrace_file == NULL) {
+			fprintf(stderr, "Cannot open utracefile '%s': %s\n",
+			    buf, strerror(errno));
+			exit(2);
+		}
 	}
 
 	CTX_init(tracepath);
