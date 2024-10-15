@@ -32,6 +32,25 @@
    TYP A-side mux+latch
    ====================
 
+TYP drivers
+
+IOP     CPURAM  RTC     CTR     CBBUF
+--------------------------------------------- 
+-       X       -       X       -       0-31
+-       -       X       -       -       32-47
+X       -       -       -       X       48-63
+---------------------------------------------
+0x05    -       0x05    0x05    -       XXX
+
+-       -       0x08    0x08    0x8     XXX
+-       -       0x09    0x09    0x9     XXX
+-       -       0x19    0x19    0x19    XXX
+
+-       0x16    0x16    -       0x16    XXX
+-       0x1c    0x1c    -       0x1c    XXX
+-       0x1d    0x1d    -       0x1d    XXX
+---------------------------------------------
+
 '''
 
 from part import PartModel, PartFactory
@@ -64,7 +83,6 @@ class XIOC53(PartFactory):
 		|	    state->pb013, sizeof state->pb013,
 		|	    "PB013");
 		|''')
-        super().init(file)
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -122,6 +140,7 @@ class XIOC53(PartFactory):
 		|	output.r |= state->pb011[rand] << 12;
 		|	output.r |= state->pb012[rand] << 4;
 		|	output.r |= state->pb013[rand] >> 4;
+		|	output.r &= 0x21f0640;
 		|
 		|	bool uir_load_wdr = !(load_wdr || PIN_DIAGLW=>);
 		|
@@ -132,20 +151,22 @@ class XIOC53(PartFactory):
 		|
 		|	output.lddum = !(rddum && !rstrdr);
 		|
-		|	bool disable_ecc = (output.r >> (27-15)) & 1;
+		|	bool disable_ecc = ((state->pb011[rand] >> 0) & 1);
 		|	output.decc = !(disable_ecc || output.memtv);
 		|
-		|	bool drive_other_cb = (output.r >> (27-10)) & 1;
+		|	bool drive_other_cb = ((state->pb011[rand] >> 5) & 1);
 		|	output.ncben = !(uir_load_wdr && drive_other_cb && output.memtv);
 		|
-		|	bool norcv = !(PIN_DIAGDR=> || !rddum);
-		|
-		|	bool rcv_type = (output.r >> (27-20)) & 1;
+		|	bool rcv_type = ((state->pb012[rand] >> 3) & 1);
 		|	bool typpc = !(ldrst && rcv_type && output.memtv);
 		|	bool valpc = !(ldrst && output.memtv);
 		|
-		|	output.trcv = !(typpc && norcv);
-		|	output.vrcv = !(valpc && norcv);
+		|	output.trcv = !(typpc && rddum);
+		|	output.vrcv = !(valpc && rddum);
+		|
+		|	bool read_rdr_t = ((state->pb013[rand] >> 6) & 1);
+		|	output.dumvoe = output.ioctv;
+		|	output.dumtoe = output.ioctv || read_rdr_t;
 		|''')
 
 def register(part_lib):

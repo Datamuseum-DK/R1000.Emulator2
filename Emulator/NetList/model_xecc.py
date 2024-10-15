@@ -48,7 +48,7 @@ CBITS = '''
 '''
 
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XECC(PartFactory):
     ''' IOC Full ECC/Parity implementation '''
@@ -69,6 +69,7 @@ class XECC(PartFactory):
         file.fmt('''
 		|	uint8_t elprom[512];
 		|	uint8_t eidrg;
+		|	unsigned cbreg1;
 		|''')
 
     def init(self, file):
@@ -79,6 +80,18 @@ class XECC(PartFactory):
 		|''')
         super().init(file)
 
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+            "write_event",
+            "PIN_Q2.posedge_event()",
+            "PIN_Q4.posedge_event()",
+            "PIN_QTOE",
+        )
+
+    def sensitive(self):
+        yield "PIN_Q2.pos()"
+        yield "PIN_QTOE"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -89,9 +102,8 @@ class XECC(PartFactory):
 		|	BUS_T_READ(typ);
 		|	BUS_V_READ(val);
 		|
-		|	if (!PIN_GEN=>) {
-		|		BUS_CBI_READ(cbi);
-		|		cbi ^= BUS_CBI_MASK;
+		|	if (!PIN_TVEN=>) {
+		|		BUS_DC_READ(cbi);
 		|	} else {
 		|		cbi = 0;
 		|	}
@@ -109,21 +121,31 @@ class XECC(PartFactory):
 
         file.fmt('''
 		|	cbo ^= cbi;
-		|	output.z_co = PIN_COOE=>;
-		|	if (!output.z_co) {
-		|		output.co = cbo;
+		|	output.z_qc = PIN_QCOE=>;
+		|	if (!output.z_qc) {
+		|		output.qc = cbo;
 		|	}
 		|	output.err = cbo != 0;
 		|
+		|	if (!PIN_TVEN=> && state->eidrg != state->elprom[cbo]) {
+		|		idle_next = &write_event;
+		|	}
+		|
 		|	if (PIN_Q4.posedge() && !PIN_TVEN=>) {
 		|		state->eidrg = state->elprom[cbo];
-		|		output.id = state->eidrg >> 1;
 		|		output.cber = (state->eidrg & 0x81) != 0x81;
 		|		output.mber = state->eidrg & 1;
+		|		BUS_DC_READ(state->cbreg1);
+		|		state->cbreg1 ^= BUS_DC_MASK;
+		|	}
+		|	output.z_qt = PIN_QTOE=>;
+		|	if (!output.z_qt) {
+		|		output.qt = state->eidrg >> 1;
+		|		output.qt |= state->cbreg1 << 7;
 		|	}
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XECC", PartModel("XECC", XECC))
+    part_lib.add_part("XECC", PartModelDQ("XECC", XECC))

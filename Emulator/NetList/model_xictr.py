@@ -66,37 +66,49 @@ class XICTR(PartFactory):
 		|	}
 		|
 		|	if (PIN_Q2.posedge()) {
+		|		unsigned rnd;
+		|		BUS_RND_READ(rnd);
 		|		if (state->slice_ev && !state->ten) {
 		|			output.sme = false;
 		|		}
-		|		if (PIN_CSLC=>) {
+		|		if (rnd == 0x0a) {
 		|			output.sme = true;
 		|		}
 		|		if (state->delay_ev && !state->ten) {
 		|			output.dme = false;
 		|		}
-		|		if (PIN_CDLY=>) {
+		|		if (rnd == 0x0b) {
 		|			output.dme = true;
 		|		}
 		|	}
 		|
 		|	if (PIN_Q4.posedge()) {
+		|		unsigned rnd;
+		|		BUS_RND_READ(rnd);
 		|		state->prescaler++;
 		|		state->ten = state->prescaler != 0xf;
 		|		state->prescaler &= 0xf;
 		|		if (!PIN_SCE=>) {
-		|			if (PIN_ESLC=>)
+		|			if (rnd == 0x0c) {
 		|				state->sen = false;
-		|			if (PIN_DSLC=>)
+		|			}
+		|			if (rnd == 0x0d) {
+		|				assert(rnd == 0x0d);
 		|				state->sen = true;
-		|			if (PIN_EDLY=>)
+		|			}
+		|			if (rnd == 0x0e) {
+		|				assert(rnd == 0x0e);
 		|				state->den = false;
-		|			if (PIN_DDLY=>)
+		|			}
+		|			if (rnd == 0x0f) {
+		|				assert(rnd == 0x0f);
 		|				state->den = true;
+		|			}
 		|		}
 		|
 		|		state->slice_ev= state->slice == 0xffff;
-		|		if (!PIN_LDSL=>) {
+		|		// if (!PIN_LDSL=>) {
+		|		if (rnd == 0x06) {
 		|			unsigned tmp;
 		|			BUS_DT_READ(tmp);
 		|			state->slice = tmp >> 16;
@@ -106,7 +118,8 @@ class XICTR(PartFactory):
 		|		}
 		|
 		|		state->delay_ev= state->delay == 0xffff;
-		|		if (!PIN_LDDL=>) {
+		|		// if (!PIN_LDDL=>) {
+		|		if (rnd == 0x07) {
 		|			unsigned tmp;
 		|			BUS_DT_READ(tmp);
 		|			state->delay = tmp;

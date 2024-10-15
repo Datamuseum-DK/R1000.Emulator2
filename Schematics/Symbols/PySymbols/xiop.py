@@ -16,13 +16,10 @@ class XIOP(FChip):
         self.sig_left(ChipSig("-->+", "CLK"))
         self.sig_left(ChipSig("-->o", "RESET"))
 
-        self.sig_left(ChipSig("-->+", "CPURN"))
-
         self.sig_left(ChipSig("-->+", "EXTID", 0, 2))
         self.sig_left(ChipSig("-->+", "KEY"))
 
         self.sig_left(ChipSig("-->+", "SCLK"))
-        self.sig_left(ChipSig("-->+", "MKREQ"))
         self.sig_left(ChipSig("-->+", "OTYPOE"))
 
 
@@ -30,6 +27,8 @@ class XIOP(FChip):
 
         self.sig_right(ChipSig("+-->", "REQEMP"))
         self.sig_right(ChipSig("+-->", "RSPEMP"))
+
+        self.sig_right(ChipSig("+<--", "RND", 0, 4))
 
         self.sig_level()
         self.sig_left(ChipSig("-->+", "ITYP", 0, 15))

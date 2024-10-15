@@ -43,11 +43,10 @@ class XIOP(PartFactory):
     def sensitive(self):
         yield "PIN_CLK.pos()"
         yield "PIN_SCLK.pos()"
-        yield "PIN_MKREQ.pos()"
+        # yield "PIN_MKREQ.pos()"
         yield "PIN_OTYPOE"
 
     def extra(self, file):
-        super().extra(file)
         # The meat of the doit() function lives in a separate file so
         # that fidling with it does not require a rerun of the python code.
         file.write('\t#define XIOP_VARIANT 1\n')
@@ -66,18 +65,26 @@ class XIOP(PartFactory):
 		|	bool response_int_en;
 		|	unsigned reqfifo[1024], reqwrp, reqrdp, reqreg;
 		|	unsigned rspfifo[1024], rspwrp, rsprdp, rspreg;
+		|	bool cpu_running;
 		|''');
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         # The meat of the doit() function lives in a separate file so
         # that fidling with it does not require a rerun of the python code.
 
         file.fmt('''
-		|// This source file is included in the IOC's 68K20's doit() SystemC function
+		|	bool sclk_pos = PIN_SCLK.posedge();
+		|	unsigned rnd;
+		|	BUS_RND_READ(rnd);
+		|
+		|	if (sclk_pos) {
+		|		if (rnd == 0x23)
+		|			state->cpu_running = true;
+		|		if (rnd == 0x24)
+		|			state->cpu_running = false;
+		|	}
 		|
 		|	if ((state->request_int_en && state->reqrdp != state->reqwrp) && state->iack != 6) {
 		|		state->iack = 6;
@@ -90,7 +97,7 @@ class XIOP(PartFactory):
 		|		TRACE( << " IRQ 7 ");
 		|	}
 		|
-		|	if (PIN_MKREQ.posedge()) {
+		|	if (sclk_pos && rnd == 0x04) {
 		|		unsigned ityp;
 		|		BUS_ITYP_READ(ityp);
 		|		state->reqfifo[state->reqwrp++] = ityp;
@@ -124,7 +131,7 @@ class XIOP(PartFactory):
 		|		BUS_OTYP_Z();
 		|	}
 		|
-		|	if (PIN_SCLK.posedge() && !PIN_OTYPOE) {
+		|	if (sclk_pos && !PIN_OTYPOE) {
 		|		state->rsprdp++;
 		|		state->rsprdp &= 0x3ff;
 		|		PIN_RSPEMP = state->rspwrp != state->rsprdp;
@@ -226,7 +233,9 @@ class XIOP(PartFactory):
 		|		/* READ STATUS */
 		|		unsigned tmp;
 		|		state->xact->data 			   = 0x9000ff80;
-		|		if (PIN_CPURN)			state->xact->data |= 0x40000000;
+		|		if (state->cpu_running) {
+		|			state->xact->data |= 0x40000000;
+		|		}
 		|		// if (PIN_PROTE)			state->xact->data |= 0x02000000;
 		|		if (state->fffff400 & 8)	state->xact->data |= 0x00080000; // IOP.INTR_EN
 		|		if (state->fffff400 & 4)	state->xact->data |= 0x00040000; // GOOD_PARITY

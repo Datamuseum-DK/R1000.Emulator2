@@ -20,7 +20,9 @@ class XIOC53(FChip):
         self.sig_left(ChipSig("-->+", "DIAGLW"))
         self.sig_left(ChipSig("-->+", "SCLKST"))
         self.sig_left(ChipSig("-->+", "RSTRDR"))
-        self.sig_left(ChipSig("-->+", "DIAGDR"))
+
+        self.sig_left(ChipSig("<--+", "DUMTOE"))
+        self.sig_left(ChipSig("<--+", "DUMVOE"))
 
         self.sig_right(ChipSig("+-->", "SEQTV"))
         self.sig_right(ChipSig("+-->", "FIUV"))

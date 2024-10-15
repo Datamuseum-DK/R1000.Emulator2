@@ -82,8 +82,11 @@ class XCPURAM(PartFactory):
 		|		BUS_OTYP_Z();
 		|	}
 		|	if (PIN_SCLK.posedge()) {
+		|		unsigned rand;
+		|		BUS_RND_READ(rand);
 		|		unsigned adr = (state->areg | state->acnt) << 2;
-		|		if (!PIN_RD=>) {
+		|		//if (!PIN_RD=>) {
+		|		if ((rand == 0x1c) || (rand == 0x1d)) {
 		|			state->rdata = vbe32dec(state->ram + adr);
 		|			if (state->ctx.do_trace & 4) {
 		|				sc_tracef(this->name(), "RD 0x%08x 0x%08x",
@@ -97,7 +100,8 @@ class XCPURAM(PartFactory):
 		|			vbe32enc(utrc + 6, state->rdata);
 		|			microtrace(utrc, sizeof utrc);
 		|		}
-		|		if (PIN_WR=>) {
+		|		// if (PIN_WR=>) {
+		|		if ((rand == 0x1e) || (rand == 0x1f)) {
 		|			uint64_t typ;
 		|			BUS_ITYP_READ(typ);
 		|			uint32_t data = typ >> 32;
@@ -115,12 +119,15 @@ class XCPURAM(PartFactory):
 		|			vbe32enc(utrc + 6, data);
 		|			microtrace(utrc, sizeof utrc);
 		|		}
-		|		if (!PIN_LDA=>) {
+		|		// if (!PIN_LDA=>) {
+		|		if (rand == 0x01) {
 		|			uint64_t typ;
 		|			BUS_ITYP_READ(typ);
 		|			state->acnt = (typ >> 2) & 0x00fff;
 		|			state->areg = (typ >> 2) & 0x1f000;
-		|		} else if (PIN_INCA=>) {
+		|		}
+		|		// if (PIN_INCA=>) {
+		|		if ((rand == 0x1c) || (rand == 0x1e)) {
 		|			state->acnt += 1;
 		|			state->acnt &= 0xfff;
 		|		}
@@ -130,11 +137,7 @@ class XCPURAM(PartFactory):
 		|	TRACE(
 		|	    << " clk^ " << PIN_SCLK.posedge()
 		|	    << " oe " << PIN_OE?
-		|	    << " inca " << PIN_INCA?
-		|	    << " lda " << PIN_LDA?
 		|	    << " oflo " << PIN_OFLO?
-		|	    << " wr " << PIN_WR?
-		|	    << " rd " << PIN_RD?
 		|	    << std::hex
 		|	    << " areg " << state->areg
 		|	    << " acnt " << state->acnt

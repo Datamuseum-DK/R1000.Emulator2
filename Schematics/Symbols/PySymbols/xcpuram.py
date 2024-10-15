@@ -16,11 +16,8 @@ class XCPURAM(FChip):
         self.sig_right(ChipSig("+===", "OTYP", 0, 31))
         self.sig_right(ChipSig("+<--", "OE"))
         self.sig_right(ChipSig("+<--", "SCLK"))
-        self.sig_right(ChipSig("+<--", "INCA"))
-        self.sig_right(ChipSig("+<--", "LDA"))
         self.sig_right(ChipSig("+-->", "OFLO"))
-        self.sig_right(ChipSig("+<--", "WR"))
-        self.sig_right(ChipSig("+<--", "RD"))
+        self.sig_right(ChipSig("+<--", "RND", 0, 4))
 
         self.finish()
 
