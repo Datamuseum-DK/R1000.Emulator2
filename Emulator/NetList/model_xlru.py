@@ -46,11 +46,8 @@ class XLRU(PartFactory):
 		|	bool qhit;
 		|	bool qlog;
 		|	unsigned qlru;
-		|	unsigned dlru;
 		|	bool dhit;
 		|	bool hhit;
-		|	bool oeq;
-		|	bool oeh;
 		|''')
 
     def sensitive(self):
@@ -73,11 +70,8 @@ class XLRU(PartFactory):
 		|		state->qhit = 1;
 		|		state->qlog = 0;
 		|		state->qlru = 0;
-		|		state->dlru = 0;
 		|		state->dhit = 0;
 		|		state->hhit = 0;
-		|		state->oeq = 1;
-		|		state->oeh = 1;
 		|	}
 		|
 		|	bool hit = true;
@@ -87,19 +81,11 @@ class XLRU(PartFactory):
 		|		hit = false;
 		|
 		|	if (pos) {
-		|		if (!late) {
-		|			state->oeq = !(PIN_LRUP=> && (!h1) && (!hit));
-		|		} else {
-		|			state->oeq = !(PIN_LRUP=> && !hit);
-		|		}
-		|		state->oeh = !(PIN_LRUP=> && (!h1) && (!state->dhit));
 		|		nxthhit = state->dhit;
 		|	}
 		|
 		|	if (neg) {
-		|		// LRUREG
 		|		state->dhit = hit;
-		|		state->dlru = state->qlru;
 		|	}
 		|
 		|	if ((!late && neg) || (late && pos)) {
@@ -120,16 +106,6 @@ class XLRU(PartFactory):
 		|			state->qhit = !state->hhit;
 		|			state->qlog = false;
 		|		} else {
-		|			unsigned phys;
-		|			BUS_PHYS_READ(phys);
-		|			unsigned set = late;
-		|			if (!h1)
-		|				set |= 2;
-		|			if (PIN_AB=>)
-		|				set |= 4;
-		|			if (!PIN_LOWB=>)
-		|				set |= 8;
-		|			bool p_phit = set != phys;
 		|
 		|			state->qhit = false;
 		|			state->qlog = false;
@@ -153,7 +129,18 @@ class XLRU(PartFactory):
 		|			case 0xb:	// COPY 0 TO 1
 		|			case 0xe:	// PHYSICAL_MEM_READ
 		|			case 0xf:	// PHYSICAL_MEM_WRITE
-		|				state->qhit = !p_phit;
+		|				{
+		|				unsigned phys;
+		|				BUS_PHYS_READ(phys);
+		|				unsigned set = late;
+		|				if (!h1)
+		|					set |= 2;
+		|				if (PIN_AB=>)
+		|					set |= 4;
+		|				if (!PIN_LOWB=>)
+		|					set |= 8;
+		|				state->qhit = (set == phys);
+		|				}
 		|				break;
 		|			case 0x9:	// COPY 1 to 0
 		|				state->qhit = !state->hhit;
@@ -177,23 +164,8 @@ class XLRU(PartFactory):
 		|		hit = false;
 		|	if (PIN_NMAT=> && state->qlog)
 		|		hit = false;
-		|	PIN_HIT<=(hit);
-		|
-		|	if (late) {
-		|		state->oeq = !(PIN_LRUP=> && !hit); 
-		|	} else {
-		|		state->oeq = !(PIN_LRUP=> && (!h1) && (!hit));
-		|	}
-		|
-		|	if (!state->oeq) {
-		|		output.hlru = state->qlru;
-		|		output.z_hlru = false;
-		|	} else if (!state->oeh) {
-		|		output.hlru = state->dlru;
-		|		output.z_hlru = false;
-		|	} else {
-		|		output.z_hlru = true;
-		|	}
+		|	// PIN_HIT<=(hit);
+		|	output.hit = hit;
 		|
 		|	if (pos) {
 		|		state->hhit = nxthhit;

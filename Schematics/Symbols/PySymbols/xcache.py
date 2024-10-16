@@ -26,17 +26,20 @@ class XCACHE(FChip):
         self.sig_left(ChipSig("-->+", "EABT"))
         self.sig_left(ChipSig("-->+", "ELABT"))
         self.sig_left(ChipSig("-->+", "LABT"))
-        self.sig_left(ChipSig("-->+", "IHIT"))
         self.sig_left(ChipSig("-->+", "LOG"))
         self.sig_left(ChipSig("-->+", "AEHIT"))
         self.sig_left(ChipSig("-->+", "ALHIT"))
         self.sig_left(ChipSig("-->+", "BEHIT"))
         self.sig_left(ChipSig("-->+", "BLHIT"))
+        self.sig_left(ChipSig("-->+", "TVDRV"))
+        self.sig_left(ChipSig("-->+", "VDRV"))
 
         self.sig_right(ChipSig("+<->", "DQT", 0, 63))
         self.sig_right(ChipSig("+<->", "DQC", 0, 8))
 
+        self.sig_right(ChipSig("+-->", "QVDR"))
         self.sig_right(ChipSig("+<--", "QVOE"))
+        self.sig_right(ChipSig("+-->", "QTDR"))
         self.sig_right(ChipSig("+<--", "QTOE"))
         self.sig_right(ChipSig("+<--", "QCOE"))
 

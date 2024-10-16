@@ -25,7 +25,6 @@ class XLRU(FChip):
 
         self.sig_right(ChipSig("+-->", "LOGQ"))
         self.sig_right(ChipSig("+-->", "HIT"))
-        self.sig_right(ChipSig("+===", "HLRU", 0, 3))
         self.sig_right(ChipSig("+<--", "LOWB"))
         self.sig_right(ChipSig("+<--", "PHYS", 0, 3))
 
