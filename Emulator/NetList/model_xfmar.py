@@ -123,45 +123,20 @@ class XFMAR(PartFactory):
 		|		output.oor = !(co || name_match);
 		|	}
 		|}
-		|''')
-
-        file.fmt('''
 		|	uint64_t adr;
 		|	BUS_DADR_READ(adr);
 		|
-		|
 		|	if (PIN_Q4.posedge()) {
-		|		unsigned mode;
 		|		bool load_mar = PIN_LMAR=>;
 		|		bool sclk_en = !PIN_SCLKE=>;
 		|
 		|		if (load_mar && sclk_en) {
-		|			mode = 3;
-		|		} else {
-		|			mode = 0;
-		|		}
-		|
-		|		if (mode == 3) {
 		|			uint64_t tmp;
 		|			state->srn = adr >> 32;
 		|			state->sro = adr & 0xffffff80;
 		|			BUS_DSPC_READ(tmp);
 		|			state->sro |= tmp << 4;
 		|			state->sro |= 0xf;
-		|		} else if (mode == 2) {
-		|			state->srn >>= 1;
-		|			state->sro >>= 1;
-		|			uint8_t diag = 0xff;
-		|			state->srn &= 0x7f7f7f7f;
-		|			state->srn |= ((diag >> 7) & 0x1) << 0x1f;
-		|			state->srn |= ((diag >> 6) & 0x1) << 0x17;
-		|			state->srn |= ((diag >> 5) & 0x1) << 0x0f;
-		|			state->srn |= ((diag >> 4) & 0x1) << 0x07;
-		|			state->sro &= 0x7f7f7f7f;
-		|			state->sro |= ((diag >> 3) & 0x1) << 0x1f;
-		|			state->sro |= ((diag >> 2) & 0x1) << 0x17;
-		|			state->sro |= ((diag >> 1) & 0x1) << 0x0f;
-		|			state->sro |= ((diag >> 0) & 0x1) << 0x07;
 		|		}
 		|		output.mspc = (state->sro >> 4) & BUS_MSPC_MASK;
 		|		state->moff = (state->sro >> 7) & 0xffffff;
@@ -195,8 +170,6 @@ class XFMAR(PartFactory):
 		|	if (!output.z_qadr) {
 		|		output.qadr = (uint64_t)state->srn << 32;
 		|		output.qadr |= state->sro & 0xfffff000;
-		|		//unsigned inc;
-		|		//BUS_INC_READ(inc);
 		|		output.qadr |= (inco & 0x1f) << 7;
 		|		output.qadr |= oreg;
 		|	}

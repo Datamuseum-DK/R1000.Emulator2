@@ -31,7 +31,6 @@ class XMEMMON(FChip):
         self.sig_left(ChipSig("-->+", "MISS"))
         self.sig_left(ChipSig("-->+", "CSAOOR"))
         self.sig_left(ChipSig("-->+", "PXNXT"))
-        self.sig_left(ChipSig("-->+", "EVENT"))
         self.sig_left(ChipSig("-->+", "TI", 0, 31))
         self.sig_left(ChipSig("-->+", "FRDRDR"))
         self.sig_left(ChipSig("-->+", "FRDTYP"))
@@ -59,6 +58,7 @@ class XMEMMON(FChip):
         self.sig_right(ChipSig("+-->", "NOHIT"))
         self.sig_right(ChipSig("+-->", "SCVHIT"))
         self.sig_right(ChipSig("+-->", "LOGRWD"))
+        self.sig_right(ChipSig("+-->", "DNEXT"))
 
         self.finish()
 

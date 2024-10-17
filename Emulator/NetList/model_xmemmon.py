@@ -177,13 +177,25 @@ class XMEMMON(PartFactory):
 		|	unsigned pa027 = state->pa027[pa027a];
 		|
 		|
+		|	bool sel = !(
+		|		(PIN_UEVSTP=> && memcyc1) ||
+		|		(PIN_SCLKE=> && !memcyc1)
+		|	);
 		|	if (pos) {
+		|		bool idum;
+		|		if (sel) {
+		|			idum = (state->output.prmt >> 5) & 1;
+		|			output.dnext = !((state->output.prmt >> 0) & 1);
+		|		} else {
+		|			idum = state->output.dumon;
+		|			output.dnext = !state->output.dumon;
+		|		}
 		|		state->state0 = (pa025 >> 7) & 1;
 		|		state->state1 = (pa025 >> 6) & 1;
 		|		state->labort = !(l_abort && le_abort);
 		|		state->e_abort_dly = eabrt;
 		|		state->pcntl_d = pa026 & 0xf;
-		|		output.dumon = PIN_IDUM=>;
+		|		output.dumon = idum;
 		|		output.csaht = !PIN_ICSA=>;
 		|	}
 		|
@@ -229,16 +241,16 @@ class XMEMMON(PartFactory):
 		|		} else if (condsel == 0x6d) {
 		|			state->mar_modified = 1;
 		|		} else if (state->omf20) {
-		|			state->mar_modified = PIN_EVENT=>;
-		|		} else if (!memstart && PIN_EVENT=>) {
-		|			state->mar_modified = PIN_EVENT=>;
+		|			state->mar_modified = le_abort;
+		|		} else if (!memstart && le_abort) {
+		|			state->mar_modified = le_abort;
 		|		}
 		|		if (rmarp) {
 		|			state->incmplt_mcyc = (ti >> (63 - 40)) & 1;
 		|		} else if (start_if_incw) {
 		|			state->incmplt_mcyc = true;
 		|		} else if (memcyc1) {
-		|			state->incmplt_mcyc = PIN_EVENT=>;
+		|			state->incmplt_mcyc = le_abort;
 		|		}
 		|		if (rmarp) {
 		|			state->phys_last = (ti >> (63 - 37)) & 1;
@@ -324,7 +336,7 @@ class XMEMMON(PartFactory):
 		|	pa025a |= state->labort << 6;
 		|	pa025a |= state->e_abort_dly << 5;
 		|	pa025 = state->pa025[pa025a];
-		|	output.mcyc1 = (pa025 >> 1) & 1;
+		|	// output.mcyc1 = (pa025 >> 1) & 1;
 		|	bool contin = (pa025 >> 5) & 1;
 		|	output.contin = !(contin);
 		|
@@ -384,6 +396,12 @@ class XMEMMON(PartFactory):
 		|
 		|	output.scvhit = false;
 		|	output.logrwd = state->logrw_d;
+		|
+		|	if (sel) {
+		|		output.dnext = !((state->output.prmt >> 0) & 1);
+		|	} else {
+		|		output.dnext = !state->output.dumon;
+		|	}
 		|''')
 
 def register(part_lib):
