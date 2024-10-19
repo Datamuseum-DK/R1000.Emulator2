@@ -59,12 +59,33 @@ class XSEQIBUF(PartFactory):
 		|	unsigned boff;
 		|''')
 
-    def xsensitive(self):
-        yield "PIN_ICLK.pos()"
+    def sensitive(self):
+        yield "PIN_ACLK.pos()"
         yield "PIN_BCLK.pos()"
-        yield "PIN_WDISP"
+        yield "PIN_CLCLK.pos()"
+        # yield "PIN_CNDLD"		# BCLK
+        # yield "PIN_DISPA"		# ACLK
+        # yield "BUS_EMAC"		# ACLK
+        yield "PIN_FLIP.pos()"
+        yield "PIN_ICLK.pos()"
+        # yield "PIN_ILDRN"		# ACLK
+        # yield "PIN_IMX"		# ACLK
+        yield "BUS_IRD"
+        yield "BUS_LAUIR"
+        yield "PIN_LINC"
+        # yield "PIN_MD0"		# BCLK
         yield "PIN_MIBMT"
+        yield "PIN_MUX"
+        yield "PIN_QBOE"
+        yield "PIN_QVOE"
+        yield "BUS_RASEL"
+        yield "PIN_RCLK.pos()"
+        # yield "PIN_RND1"		# BCLK
+        yield "PIN_SCLKE"
+        # yield "BUS_TYP"		# ICLK
         yield "BUS_URAND"
+        yield "BUS_VAL"
+        yield "PIN_WDISP"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -241,17 +262,12 @@ class XSEQIBUF(PartFactory):
 		|		}
 		|	}
 		|
-		|	if (PIN_ACLK.posedge()) {
-		|		BUS_EMAC_READ(state->emac);
-		|		output.me = state->emac;
-		|		output.emp = state->emac != BUS_EMAC_MASK;
-		|	}
-		|
 		|	bool aclk = PIN_ACLK.posedge();
-		|
 		|
 		|	if (aclk) {
 		|		BUS_EMAC_READ(state->emac);
+		|		output.me = state->emac;
+		|		output.emp = state->emac != BUS_EMAC_MASK;
 		|	}
 		|	if (state->emac != BUS_EMAC_MASK) {
 		|		unsigned uad = 0;

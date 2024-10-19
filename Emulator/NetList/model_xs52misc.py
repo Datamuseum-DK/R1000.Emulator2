@@ -65,9 +65,11 @@ class XS52MISC(PartFactory):
 		|
 		|	if (PIN_CLK.posedge()) {
 		|		unsigned prev_rreg = state->rreg;
-		|		unsigned rmode;
-		|		BUS_RMOD_READ(rmode);
-		|		rmode ^= BUS_RMOD_MASK;
+		|		unsigned rmode = 0x0;
+		|		if (PIN_SSTOP=> && PIN_BHEN=> && PIN_BHIN2=>)
+		|			rmode |= 2;
+		|		if (PIN_SSTOP=> && PIN_BHEN=>)
+		|			rmode |= 1;
 		|		switch (rmode) {
 		|		case 0:
 		|			break;
