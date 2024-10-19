@@ -32,13 +32,12 @@ class XIOC53(FChip):
         self.sig_right(ChipSig("+-->", "IOCTV"))
         self.sig_right(ChipSig("+-->", "VALV"))
         self.sig_right(ChipSig("+-->", "TYPT"))
-        self.sig_right(ChipSig("+-->", "R", 0, 27))
+        self.sig_right(ChipSig("+-->", "R", 0, 16))
         self.sig_right(ChipSig("+-->", "LDWDR"))
         self.sig_right(ChipSig("+-->", "LDDUM"))
         self.sig_right(ChipSig("+-->", "DECC"))
         self.sig_right(ChipSig("+-->", "NCBEN"))
         self.sig_right(ChipSig("+-->", "TRCV"))
-        self.sig_right(ChipSig("+-->", "VRCV"))
 
 
         self.finish(22)

@@ -50,7 +50,6 @@ class XIOCWCS(PartFactory):
 		|	uint64_t ram[1<<14];
 		|	uint16_t tram[1<<11];
 		|	unsigned ctr;
-		|	unsigned uir;
 		|	unsigned sr0, sr1;
 		|	unsigned tracnt;
 		|	unsigned aen;
@@ -70,7 +69,7 @@ class XIOCWCS(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|
+		|	bool q4_pos = PIN_Q4.posedge();
 		|	unsigned uadr;
 		|
 		|	if (PIN_DGADR=>) {
@@ -81,7 +80,7 @@ class XIOCWCS(PartFactory):
 		|
 		|	bool uir_clk = false;
 		|
-		|	if (PIN_Q4.posedge()) {
+		|	if (q4_pos) {
 		|		state->dummy_en = !PIN_DUMNXT=>;
 		|		output.dumen = state->dummy_en;
 		|		state->csa_hit = !PIN_ICSAH=>;
@@ -118,7 +117,7 @@ class XIOCWCS(PartFactory):
 		|
 		|	}
 		|
-		|	if (uir_clk) {
+		|	if (q4_pos && uir_clk) {
 		|		unsigned uirs, diag;
 		|		BUS_UIRS_READ(uirs);
 		|		BUS_IDG_READ(diag);
@@ -165,15 +164,15 @@ class XIOCWCS(PartFactory):
 		|		unsigned uir = (state->sr0 << 8) | state->sr1;
 		|		assert(uir <= 0xffff);
 		|
-		|		state->uir = uir;
-		|		output.uir = state->uir;
-		|		output.odg = state->uir & 0x0001;
-		|		output.odg |= (state->uir >>7) & 0x0002;
+		|		output.uir = uir;
+		|		output.odg = uir & 0x0001;
+		|		output.odg |= (uir >> 7) & 0x0002;
 		|
 		|		state->aen = (uir >> 6) & 3;
 		|
 		|		unsigned fen = (uir >> 4) & 3;
 		|		output.fen = (1 << fen) ^ 0xf;
+		|
 		|	}
 		|
 		|	if (PIN_Q2.negedge()) {

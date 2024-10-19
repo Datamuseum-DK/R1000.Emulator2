@@ -136,11 +136,10 @@ class XIOC53(PartFactory):
 		|	bool load_wdr = rand >> 5;
 		|	rand &= 0x1f;
 		|	output.r = 0;
-		|	output.r |= state->pb010[rand] << 20;
-		|	output.r |= state->pb011[rand] << 12;
-		|	output.r |= state->pb012[rand] << 4;
-		|	output.r |= state->pb013[rand] >> 4;
-		|	output.r &= 0x21f0640;
+		|	output.r |= state->pb010[rand] << 16;
+		|	output.r |= state->pb011[rand] << 8;
+		|	output.r |= state->pb012[rand] << 0;
+		|	output.r &= 0x01f064;
 		|
 		|	bool uir_load_wdr = !(load_wdr || PIN_DIAGLW=>);
 		|
@@ -159,10 +158,8 @@ class XIOC53(PartFactory):
 		|
 		|	bool rcv_type = ((state->pb012[rand] >> 3) & 1);
 		|	bool typpc = !(ldrst && rcv_type && output.memtv);
-		|	bool valpc = !(ldrst && output.memtv);
 		|
 		|	output.trcv = !(typpc && rddum);
-		|	output.vrcv = !(valpc && rddum);
 		|
 		|	bool read_rdr_t = ((state->pb013[rand] >> 6) & 1);
 		|	output.dumvoe = output.ioctv;

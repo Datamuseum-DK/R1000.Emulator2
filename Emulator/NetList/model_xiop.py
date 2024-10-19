@@ -34,23 +34,28 @@
 
 '''
 
-from part import PartModel, PartFactory
+from part import PartModelDQ, PartFactory
 
 class XIOP(PartFactory):
 
     ''' XIOP CPU'''
 
+    autopin = True
+
     def sensitive(self):
         yield "PIN_CLK.pos()"
         yield "PIN_SCLK.pos()"
-        # yield "PIN_MKREQ.pos()"
-        yield "PIN_OTYPOE"
+        yield "PIN_QTHOE"
+        yield "PIN_QTMOE"
+        yield "PIN_QTLOE"
 
     def extra(self, file):
         # The meat of the doit() function lives in a separate file so
         # that fidling with it does not require a rerun of the python code.
         file.write('\t#define XIOP_VARIANT 1\n')
         self.scm.sf_cc.include("Iop/iop_sc_68k20.hh")
+        file.include("Infra/vend.h")
+
 
     def state(self, file):
         ''' Extra state variable '''
@@ -66,82 +71,33 @@ class XIOP(PartFactory):
 		|	unsigned reqfifo[1024], reqwrp, reqrdp, reqreg;
 		|	unsigned rspfifo[1024], rspwrp, rsprdp, rspreg;
 		|	bool cpu_running;
+		|	uint8_t *ram;
+		|	unsigned acnt;
+		|	unsigned areg;
+		|	unsigned rdata;
+		|	unsigned rtc;
 		|''');
 
-    def doit(self, file):
-        ''' The meat of the doit() function '''
-
-        # The meat of the doit() function lives in a separate file so
-        # that fidling with it does not require a rerun of the python code.
+    def init(self, file):
 
         file.fmt('''
-		|	bool sclk_pos = PIN_SCLK.posedge();
-		|	unsigned rnd;
-		|	BUS_RND_READ(rnd);
-		|
-		|	if (sclk_pos) {
-		|		if (rnd == 0x23)
-		|			state->cpu_running = true;
-		|		if (rnd == 0x24)
-		|			state->cpu_running = false;
-		|	}
-		|
-		|	if ((state->request_int_en && state->reqrdp != state->reqwrp) && state->iack != 6) {
-		|		state->iack = 6;
-		|		ioc_sc_bus_start_iack(6);
-		|		TRACE( << " IRQ 6 ");
-		|	}
-		|	if ((!state->request_int_en || state->reqrdp == state->reqwrp) && state->iack != 7) {
-		|		state->iack = 7;
-		|		ioc_sc_bus_start_iack(7);
-		|		TRACE( << " IRQ 7 ");
-		|	}
-		|
-		|	if (sclk_pos && rnd == 0x04) {
-		|		unsigned ityp;
-		|		BUS_ITYP_READ(ityp);
-		|		state->reqfifo[state->reqwrp++] = ityp;
-		|		state->reqwrp &= 0x3ff;
-		|
-		|		uint8_t utrc[2];
-		|		utrc[0] = UT_REQ_FIFO_WR;
-		|		utrc[1] = ityp;
-		|		microtrace(utrc, sizeof utrc);
-		|
-		|		TRACE(
-		|			<< "FIFO REQ " << std::hex << ityp
-		|			<< " wr " << state->reqwrp
-		|			<< " rd " << state->reqrdp
-		|		);
-		|		PIN_REQEMP = state->reqwrp != state->reqrdp;
-		|	}
-		|
-		|	if (PIN_OTYPOE.negedge()) {
-		|		TRACE(<< "OE FIFO RSP " << std::hex << state->rspfifo[state->rsprdp]);
-		|
-		|		uint8_t utrc[2];
-		|		utrc[0] = UT_RESP_FIFO_RD;
-		|		utrc[1] = state->rspfifo[state->rsprdp];
-		|		microtrace(utrc, sizeof utrc);
-		|
-		|		BUS_OTYP_WRITE(state->rspfifo[state->rsprdp]);
-		|	}
-		|	if (PIN_OTYPOE.posedge()) {
-		|		TRACE(<< "OE FIFO RSP Z ");
-		|		BUS_OTYP_Z();
-		|	}
-		|
-		|	if (sclk_pos && !PIN_OTYPOE) {
-		|		state->rsprdp++;
-		|		state->rsprdp &= 0x3ff;
-		|		PIN_RSPEMP = state->rspwrp != state->rsprdp;
-		|		TRACE(
-		|			<< "FIFO RSP++ " << std::hex
-		|			<< " wr " << state->rspwrp
-		|			<< " rd " << state->rsprdp
-		|		);
-		|	}
-		|
+		|	struct ctx *c1 = CTX_Find("IOP.ram_space");
+		|	assert(c1 != NULL);
+		|	state->ram = (uint8_t*)(c1 + 1);
+		|''')
+
+    def priv_decl(self, file):
+        ''' further private decls '''
+        file.fmt('''
+		|       void do_xact(struct output_pins *output);
+		|''')
+
+    def priv_impl(self, file):
+        file.fmt('''
+		|void
+		|SCM_«mmm» ::
+		|do_xact(struct output_pins *output)
+		|{
 		|	if (!state->xact)
 		|		state->xact = ioc_sc_bus_get_xact();
 		|
@@ -182,8 +138,6 @@ class XIOP(PartFactory):
 		|		TRACE("WR FIFO INIT " << std::hex << state->xact->data);
 		|		state->reqwrp = state->reqrdp = 0;
 		|		state->rspwrp = state->rsprdp = 0;
-		|		PIN_REQEMP = state->reqwrp != state->reqrdp;
-		|		PIN_RSPEMP = state->rspwrp != state->rsprdp;
 		|		ioc_sc_bus_done(&state->xact);
 		|		return;
 		|	}
@@ -194,17 +148,11 @@ class XIOP(PartFactory):
 		|		state->rspfifo[state->rspwrp++] = state->xact->data;
 		|		state->rspwrp &= 0x3ff;
 		|
-		|		uint8_t utrc[2];
-		|		utrc[0] = UT_RESP_FIFO_WR;
-		|		utrc[1] = state->xact->data;
-		|		microtrace(utrc, sizeof utrc);
-		|
 		|		TRACE(
 		|			"WR FIFO RSP " << std::hex << state->xact->data
 		|			<< " wr " << state->rspwrp
 		|			<< " rd " << state->rsprdp
 		|		);
-		|		PIN_RSPEMP = state->rspwrp != state->rsprdp;
 		|		ioc_sc_bus_done(&state->xact);
 		|		return;
 		|	}
@@ -218,12 +166,6 @@ class XIOP(PartFactory):
 		|				<< " wr " << state->reqwrp
 		|				<< " rd " << state->reqrdp
 		|		);
-		|		PIN_REQEMP = state->reqwrp != state->reqrdp;
-		|
-		|		uint8_t utrc[2];
-		|		utrc[0] = UT_REQ_FIFO_RD;
-		|		utrc[1] = state->reqreg;
-		|		microtrace(utrc, sizeof utrc);
 		|
 		|		ioc_sc_bus_done(&state->xact);
 		|		return;
@@ -260,10 +202,8 @@ class XIOP(PartFactory):
 		|	if (state->xact->sc_state == 100 && state->xact->address == 0xfffffe00) {
 		|		/* WRITE CPU CONTROL */
 		|		TRACE("WR CPU CONTROL " << std::hex << state->xact->data);
-		|		if (state->xact->data & 1)
-		|			PIN_ORST = sc_dt::sc_logic_Z;
-		|		else
-		|			PIN_ORST = sc_dt::sc_logic_0;
+		|		output->orst = 0;
+		|		output->z_orst = state->xact->data & 1;
 		|		ioc_sc_bus_done(&state->xact);
 		|		return;
 		|	}
@@ -285,9 +225,107 @@ class XIOP(PartFactory):
 		|		<< " write= "
 		|		<< state->xact->is_write
 		|	);
+		|}
+		|''')
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
+
+        # The meat of the doit() function lives in a separate file so
+        # that fidling with it does not require a rerun of the python code.
+
+        file.fmt('''
+		|	bool q4_pos = PIN_CLK.posedge();
+		|	bool sclk_pos = PIN_SCLK.posedge();
+		|	unsigned rnd;
+		|	BUS_RND_READ(rnd);
+		|
+		|	if (sclk_pos) {
+		|		if (rnd == 0x23)
+		|			state->cpu_running = true;
+		|		if (rnd == 0x24)
+		|			state->cpu_running = false;
+		|	}
+		|
+		|	if (q4_pos && (state->request_int_en && state->reqrdp != state->reqwrp) && state->iack != 6) {
+		|		state->iack = 6;
+		|		ioc_sc_bus_start_iack(6);
+		|	}
+		|	if (q4_pos && (!state->request_int_en || state->reqrdp == state->reqwrp) && state->iack != 7) {
+		|		state->iack = 7;
+		|		ioc_sc_bus_start_iack(7);
+		|	}
+		|
+		|	if (q4_pos)
+		|		do_xact(&output);
+		|
+		|	if (sclk_pos && rnd == 0x04) {
+		|		uint64_t ityp;
+		|		BUS_ITYP_READ(ityp);
+		|		state->reqfifo[state->reqwrp++] = ityp & 0xffff;
+		|		state->reqwrp &= 0x3ff;
+		|	}
+		|
+		|	output.z_qtl = PIN_QTLOE=>;
+		|	if (!output.z_qtl) {
+		|		output.qtl = state->rspfifo[state->rsprdp];
+		|	}
+		|
+		|	output.rspemp = state->rspwrp != state->rsprdp;
+		|	output.rspemn = state->rspwrp == state->rsprdp;
+		|	output.reqemp = state->reqwrp != state->reqrdp;
+		|
+		|	if (sclk_pos && !output.z_qtl) {
+		|		state->rsprdp++;
+		|		state->rsprdp &= 0x3ff;
+		|	}
+		|
+		|	if (sclk_pos) {
+		|		unsigned adr = (state->areg | state->acnt) << 2;
+		|
+		|		if ((rnd == 0x1c) || (rnd == 0x1d)) {
+		|			state->rdata = vbe32dec(state->ram + adr);
+		|		}
+		|
+		|		if ((rnd == 0x1e) || (rnd == 0x1f)) {
+		|			uint64_t typ;
+		|			BUS_ITYP_READ(typ);
+		|			uint32_t data = typ >> 32;
+		|			vbe32enc(state->ram + adr, data);
+		|		}
+		|
+		|		if (rnd == 0x01) {
+		|			uint64_t typ;
+		|			BUS_ITYP_READ(typ);
+		|			state->acnt = (typ >> 2) & 0x00fff;
+		|			state->areg = (typ >> 2) & 0x1f000;
+		|		}
+		|
+		|		if ((rnd == 0x1c) || (rnd == 0x1e)) {
+		|			state->acnt += 1;
+		|			state->acnt &= 0xfff;
+		|		}
+		|		output.oflo = state->acnt == 0xfff;
+		|	}
+		|	output.z_qth = PIN_QTHOE=>;
+		|	if (!output.z_qth) {
+		|		output.qth = state->rdata;
+		|	}
+		|
+		|	if (sclk_pos && rnd == 0x08) {
+		|		state->rtc = 0;
+		|	}
+		|	if (q4_pos && !PIN_RTCEN=> && rnd != 0x08) {
+		|		state->rtc++;
+		|		state->rtc &= 0xffff;
+		|	}
+		|	output.z_qtm = PIN_QTMOE=>;
+		|	if (!output.z_qtm) {
+		|		output.qtm = state->rtc;
+		|	}
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XIOP", PartModel("XIOP", XIOP))
+    part_lib.add_part("XIOP", PartModelDQ("XIOP", XIOP))

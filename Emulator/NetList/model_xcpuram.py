@@ -39,9 +39,10 @@ from part import PartModel, PartFactory
 class XCPURAM(PartFactory):
     ''' TYP A-side mux+latch '''
 
+    autopin = True
+
     def extra(self, file):
         file.include("Infra/vend.h")
-        super().extra(file)
 
     def state(self, file):
         file.fmt('''
@@ -57,8 +58,6 @@ class XCPURAM(PartFactory):
 
     def init(self, file):
 
-        super().init(file)
-
         file.fmt('''
 		|	struct ctx *c1 = CTX_Find("IOP.ram_space");
 		|	assert(c1 != NULL);
@@ -68,80 +67,40 @@ class XCPURAM(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
         file.fmt('''
-		|	if (state->ctx.job) {
-		|		state->ctx.job = 0;
-		|		// BUS_A_WRITE(state->areg | state->acnt);
-		|		PIN_OFLO<=(state->acnt == 0xfff);
-		|	}
-		|	if (!PIN_OE=>) {
-		|		BUS_OTYP_WRITE(state->rdata);
-		|	} else {
-		|		BUS_OTYP_Z();
-		|	}
 		|	if (PIN_SCLK.posedge()) {
 		|		unsigned rand;
 		|		BUS_RND_READ(rand);
 		|		unsigned adr = (state->areg | state->acnt) << 2;
-		|		//if (!PIN_RD=>) {
+		|
 		|		if ((rand == 0x1c) || (rand == 0x1d)) {
 		|			state->rdata = vbe32dec(state->ram + adr);
-		|			if (state->ctx.do_trace & 4) {
-		|				sc_tracef(this->name(), "RD 0x%08x 0x%08x",
-		|				    ((state->areg | state->acnt) << 2), state->rdata);
-		|			}
-		|
-		|			uint8_t utrc[10];
-		|			utrc[0] = UT_RAM_RD;
-		|			utrc[1] = 0;
-		|			vbe32enc(utrc + 2, adr);
-		|			vbe32enc(utrc + 6, state->rdata);
-		|			microtrace(utrc, sizeof utrc);
 		|		}
-		|		// if (PIN_WR=>) {
+		|
 		|		if ((rand == 0x1e) || (rand == 0x1f)) {
 		|			uint64_t typ;
 		|			BUS_ITYP_READ(typ);
 		|			uint32_t data = typ >> 32;
-		|			if (state->ctx.do_trace & 2) {
-		|				sc_tracef(this->name(), "WR 0x%08x 0x%08x",
-		|				    ((state->areg | state->acnt) << 2), data);
-		|			}
-		|
 		|			vbe32enc(state->ram + adr, data);
-		|
-		|			uint8_t utrc[10];
-		|			utrc[0] = UT_RAM_WR;
-		|			utrc[1] = 0;
-		|			vbe32enc(utrc + 2, adr);
-		|			vbe32enc(utrc + 6, data);
-		|			microtrace(utrc, sizeof utrc);
 		|		}
-		|		// if (!PIN_LDA=>) {
+		|
 		|		if (rand == 0x01) {
 		|			uint64_t typ;
 		|			BUS_ITYP_READ(typ);
 		|			state->acnt = (typ >> 2) & 0x00fff;
 		|			state->areg = (typ >> 2) & 0x1f000;
 		|		}
-		|		// if (PIN_INCA=>) {
+		|
 		|		if ((rand == 0x1c) || (rand == 0x1e)) {
 		|			state->acnt += 1;
 		|			state->acnt &= 0xfff;
 		|		}
-		|		state->ctx.job = 1;
-		|		next_trigger(5, sc_core::SC_NS);
+		|		output.oflo = state->acnt == 0xfff;
 		|	}
-		|	TRACE(
-		|	    << " clk^ " << PIN_SCLK.posedge()
-		|	    << " oe " << PIN_OE?
-		|	    << " oflo " << PIN_OFLO?
-		|	    << std::hex
-		|	    << " areg " << state->areg
-		|	    << " acnt " << state->acnt
-		|	);
+		|	output.z_otyp = PIN_OE=>;
+		|	if (!output.z_otyp) {
+		|		output.otyp = state->rdata;
+		|	}
 		|''')
 
 def register(part_lib):
