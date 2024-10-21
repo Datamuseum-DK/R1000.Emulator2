@@ -21,9 +21,7 @@ class XLRU(FChip):
         self.sig_left(ChipSig("-->+", "TAG", 0, 5))
         self.sig_left(ChipSig("-->+", "NMAT"))
         self.sig_left(ChipSig("-->+", "H1"))
-        self.sig_left(ChipSig("-->+", "LRUP"))
 
-        self.sig_right(ChipSig("+-->", "LOGQ"))
         self.sig_right(ChipSig("+-->", "HIT"))
         self.sig_right(ChipSig("+<--", "LOWB"))
         self.sig_right(ChipSig("+<--", "PHYS", 0, 3))
@@ -32,5 +30,3 @@ class XLRU(FChip):
 
 def register():
     yield XLRU()
-
-

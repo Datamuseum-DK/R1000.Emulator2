@@ -53,7 +53,6 @@ class XLRU(PartFactory):
     def sensitive(self):
         yield "PIN_CLK"
         yield "PIN_NMAT"
-        yield "PIN_LRUP"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -155,8 +154,6 @@ class XLRU(PartFactory):
 		|				break;
 		|			}
 		|		}
-		|
-		|		output.logq = state->qlog;
 		|	}
 		|
 		|	hit = true;
