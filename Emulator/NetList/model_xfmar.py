@@ -59,7 +59,6 @@ class XFMAR(PartFactory):
         yield "PIN_QVIOE"
         yield "PIN_QSPCOE"
         yield "PIN_QADROE"
-        yield "PIN_COCLK.pos()"
         yield "BUS_CSA"
         yield "PIN_INMAR"
         yield "PIN_PXING"
@@ -67,19 +66,19 @@ class XFMAR(PartFactory):
         yield "PIN_SELIN"
         yield "PIN_Q4.pos()"
         yield "PIN_NMAT"
-        yield "PIN_OCLK.pos()"
-        yield "PIN_SCLK.pos()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         if True:
             file.fmt('''
+		|	bool q4pos = PIN_Q4.posedge();
+		|	bool sclk = q4pos && !PIN_SCLKE=>;
 		|{
 		|	unsigned a, b, dif;
 		|	bool co, name_match, in_range;
 		|
-		|	if (PIN_SCLK.posedge()) {
+		|	if (sclk) {
 		|		// CSAFFB
 		|		state->pdt = !PIN_PRED=>;
 		|
@@ -90,7 +89,7 @@ class XFMAR(PartFactory):
 		|	a = state->ctopo & 0xfffff;
 		|	b = state->moff & 0xfffff;
 		|
-		|	if (PIN_OCLK.posedge()) {
+		|	if (sclk && !PIN_COCLK=>) {
 		|		state->pdreg = a;
 		|	}
 		|
@@ -119,14 +118,14 @@ class XFMAR(PartFactory):
 		|		)
 		|	);
 		|
-		|	if (PIN_Q4.posedge()) {
+		|	if (q4pos) {
 		|		output.oor = !(co || name_match);
 		|	}
 		|}
 		|	uint64_t adr;
 		|	BUS_DADR_READ(adr);
 		|
-		|	if (PIN_Q4.posedge()) {
+		|	if (q4pos) {
 		|		bool load_mar = PIN_LMAR=>;
 		|		bool sclk_en = !PIN_SCLKE=>;
 		|
@@ -179,7 +178,7 @@ class XFMAR(PartFactory):
 		|		(!page_xing && sel_pg_xing && sel_incyc_px && inc_mar && marbot == 0x1f)
 		|	);
 		|
-		|	if (PIN_CTCLK.posedge()) {
+		|	if (sclk && !PIN_CTCLK=>) {
 		|		state->ctopn = adr >> 32;
 		|		output.nmatch =
 		|		    (state->ctopn != state->srn) ||
@@ -203,7 +202,7 @@ class XFMAR(PartFactory):
 		|	BUS_CSA_READ(csa);
 		|	output.lctp = csa != 0;
 		|
-		|	if (PIN_COCLK.posedge()) {
+		|	if (sclk && !PIN_COCLK=>) {
 		|		if (csa <= 1) {
 		|			state->ctopo = adr >> 7;
 		|		} else if (!(csa & 1)) {

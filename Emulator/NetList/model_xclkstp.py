@@ -44,6 +44,10 @@ class XCLKSTP(PartFactory):
     def private(self):
         ''' private variables '''
         yield from self.event_or(
+            "q3neg_event",
+            "PIN_Q3.negedge_event()",
+        )
+        yield from self.event_or(
             "idle_event",
             "PIN_DFCLK",
             "BUS_DIAG",
@@ -57,20 +61,20 @@ class XCLKSTP(PartFactory):
 		|	bool prev;
 		|''')
 
-    def xxsensitive(self):
-        yield "PIN_Q3"
-        yield "PIN_DFCLK"
-
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         file.fmt('''
 		|	unsigned diag;
 		|	BUS_DIAG_READ(diag);
+		|
 		|	unsigned clock_stop;
 		|	BUS_STOP_READ(clock_stop);
+		|
 		|	unsigned ecc;
 		|	BUS_ECC_READ(ecc);
+		|
+		|	bool q3 = PIN_Q3=>;
 		|	bool q3pos = PIN_Q3.posedge();
 		|	bool q3x = !PIN_DFCLK=>;
 		|
@@ -79,8 +83,8 @@ class XCLKSTP(PartFactory):
 		|		output.sfstp = state->sf_stop;
 		|	}
 		|
-		|	bool event = true;
 		|	if (!PIN_Q3=> || q3pos) {
+		|		bool event = true;
 		|		output.clkrun = true;
 		|
 		|		if (clock_stop != BUS_STOP_MASK) {
@@ -98,11 +102,13 @@ class XCLKSTP(PartFactory):
 		|			if (q3x)
 		|				output.clkrun = false;
 		|		}
+		|		if (q3pos) {
+		|			output.event = event;
+		|		}
 		|	}
 		|	output.clkstp = !output.clkrun;
-		|	if (q3pos) {
-		|		output.event = event;
-		|		next_trigger(PIN_Q3.negedge_event());
+		|	if (q3) {
+		|		idle_next = &q3neg_event;
 		|	}
 		|
 		|	if (state->idle > 5 && ecc == 2 && diag == 3 && clock_stop == 0xff) {
@@ -119,6 +125,10 @@ class XCLKSTPTV(PartFactory):
     def private(self):
         ''' private variables '''
         yield from self.event_or(
+            "q3neg_event",
+            "PIN_Q3.negedge_event()",
+        )
+        yield from self.event_or(
             "idle_event",
             "PIN_DFCLK",
             "PIN_CSAWR",
@@ -131,10 +141,6 @@ class XCLKSTPTV(PartFactory):
         file.fmt('''
 		|	bool sf_stop;
 		|''')
-
-    def xxsensitive(self):
-        yield "PIN_Q3"
-        yield "PIN_DFCLK"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -182,8 +188,8 @@ class XCLKSTPTV(PartFactory):
 		|		}
 		|	}
 		|
-		|	if (q3pos) {
-		|		next_trigger(PIN_Q3.negedge_event());
+		|	if (q3) {
+		|		idle_next = &q3neg_event;
 		|	}
 		|	if (state->idle > 5 && ecc == 2 && diag == 3 && clock_stop == 0xff) {
 		|		idle_next = &idle_event;

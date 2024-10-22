@@ -42,12 +42,11 @@ class XSCLK(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	unsigned data;
+		|	unsigned last;
 		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
-
-        super().doit(file)
 
         file.fmt('''
 		|
@@ -65,6 +64,12 @@ class XSCLK(PartFactory):
 		|		unsigned data;
 		|		if (!PIN_SCE=>) {
 		|			BUS_D_READ(data);
+		|#if 0
+		|if (data != state->last) {
+		|ALWAYS_TRACE(<< "DDD " << std::hex << data);
+		|state->last = data;
+		|}
+		|#endif
 		|		} else {
 		|			data = BUS_D_MASK;
 		|		}

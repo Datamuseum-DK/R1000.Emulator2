@@ -49,6 +49,9 @@ class XROTF(PartFactory):
 		|	uint64_t treg;
 		|	uint64_t vreg;
 		|	uint64_t rdq;
+		|	uint64_t refresh_reg;
+		|	uint64_t marh;
+		|	unsigned lfreg;
 		|	sc_core::sc_event_or_list *idle_this;
 		|''')
 
@@ -94,6 +97,8 @@ class XROTF(PartFactory):
         yield "BUS_DF"
         yield "BUS_DT"
         yield "BUS_DV"
+        yield "BUS_MCND"
+        yield "BUS_ASPC"
 
         # yield "BUS_AO"		# OCLK
         # yield "PIN_FSRC"		# UCODE, H1
@@ -120,12 +125,14 @@ class XROTF(PartFactory):
 
         file.fmt('''
 		|	bool q4pos = PIN_Q4.posedge();
+		|	bool sclk = q4pos && !PIN_SCLKE=>;
 		|	uint64_t ft, tir, vir, m;
 		|	unsigned msk, s, fs, u, sgn;
 		|	bool sgnbit;
 		|       bool need_fiu = false;
 		|       bool need_ti = false;
 		|       bool need_vi = false;
+		|       bool need_msr = false;
 		|
 		|	uint64_t ti, vi;
 		|	if (!PIN_FT=>) {				// UCODE
@@ -152,14 +159,14 @@ class XROTF(PartFactory):
 		|	if (PIN_FSRC=>) {				// UCODE
 		|		fill_mode = lfl >> 6;
 		|	} else {
-		|		fill_mode = (output.lfrg >> 6) & 1;
+		|		fill_mode = (state->lfreg >> 6) & 1;
 		|	}
 		|
 		|	unsigned lenone;
 		|	if (PIN_LSRC=>) {				// UCODE
 		|		lenone = lfl & 0x3f;
 		|	} else {
-		|		lenone = output.lfrg & 0x3f;
+		|		lenone = state->lfreg & 0x3f;
 		|	}
 		|
 		|	bool zero_length = !(fill_mode & (lenone == 0x3f));
@@ -175,7 +182,7 @@ class XROTF(PartFactory):
 		|	}
 		|
 		|	unsigned xword;
-		|	xword = state->oreg + (output.lfrg & 0x3f) + (output.lfrg & 0x80);
+		|	xword = state->oreg + (state->lfreg & 0x3f) + (state->lfreg & 0x80);
 		|	output.xwrd = xword > 255;
 		|
 		|	unsigned op, sbit, ebit;
@@ -341,7 +348,18 @@ class XROTF(PartFactory):
 		|	vout |= (tii & (vmsk ^ BUS_DV_MASK));
 		|
 		|	output.z_qt = PIN_QTOE=>;			// UCODE
-		|	if (!output.z_qt and !PIN_FT=>) {		// UCODE
+		|	if (!output.z_qt and !PIN_MOE=>) {		// UCODE
+		|		uint64_t tmp;
+		|		BUS_ASPC_READ(tmp);
+		|		state->marh &= ~BUS_ASPC_MASK;
+		|		state->marh |= tmp;
+		|		BUS_MCND_READ(tmp);
+		|		tmp ^= BUS_MCND_MASK;
+		|		state->marh &= ~(0x1efULL << 23ULL);
+		|		state->marh |= tmp << 23ULL;
+		|		output.qt = ~state->marh;
+		|		need_msr = true;
+		|	} else if (!output.z_qt and !PIN_FT=>) {	// UCODE
 		|               need_fiu = true;
 		|		BUS_DF_READ(output.qt);
 		|		output.qt ^= BUS_DF_MASK;
@@ -363,7 +381,14 @@ class XROTF(PartFactory):
 		|		output.qf = vout ^ BUS_QF_MASK;
 		|	}
 		|
-		|	if (q4pos && PIN_LDMDR=> && !PIN_SCLKE) {	// (UCODE)
+		|	if (sclk && !PIN_RFCK=>) {
+		|		BUS_DT_READ(state->refresh_reg);
+		|		state->marh &= 0xffffffffULL;
+		|		state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
+		|		state->marh ^= 0xffffffff00000000ULL;
+		|	}
+		|
+		|	if (sclk && PIN_LDMDR=>) {	// (UCODE)
 		|		uint64_t yl = 0, yh = 0, q;
 		|		fs = s & ~3;
 		|		yl = ft >> fs;
@@ -372,18 +397,18 @@ class XROTF(PartFactory):
 		|		state->mdreg = q;
 		|	}
 		|
-		|	if (PIN_TCLK.posedge()) {			// Q4~^
+		|	if (sclk && !PIN_TCLK=>) {			// Q4~^
 		|		uint64_t out = 0;
 		|		out = (state->rdq & tmsk);
 		|		out |= (ti & (tmsk ^ BUS_DT_MASK));
 		|		state->treg = out;
 		|	}
 		|
-		|	if (PIN_VCLK.posedge()) {			// Q4~^
+		|	if (sclk && !PIN_VCLK=>) {			// Q4~^
 		|		state->vreg = vout;
 		|	}
 		|
-		|	if (PIN_OCLK.posedge()) {			// Q4~^
+		|	if (sclk && !PIN_OCLK=>) {			// Q4~^
 		|		if (PIN_ORSR=>) {			// UCODE
 		|			state->oreg = off_lit;
 		|		} else {
@@ -392,40 +417,41 @@ class XROTF(PartFactory):
 		|		output.oreg = state->oreg;
 		|	}
 		|
-		|	if (PIN_LCLK.posedge()) {
+		|	if (sclk) {
 		|		unsigned lfrc;
 		|		BUS_LFRC_READ(lfrc);			// UCODE
 		|
-		|		unsigned lfrg = 0;
 		|		switch(lfrc) {
 		|		case 0:
-		|			lfrg = (((vi >> BUS_DV_LSB(31)) & 0x3f) + 1) & 0x3f;
+		|			state->lfreg = (((vi >> BUS_DV_LSB(31)) & 0x3f) + 1) & 0x3f;
 		|			if ((ti >> BUS_DT_LSB(36)) & 1)
-		|				lfrg |= (1 << 6);
+		|				state->lfreg |= (1 << 6);
 		|			else if (!((vi >> BUS_DV_LSB(25)) & 1))
-		|				lfrg |= (1 << 6);
-		|			lfrg = lfrg ^ 0x7f;
+		|				state->lfreg |= (1 << 6);
+		|			state->lfreg ^= 0x7f;
 		|			break;
 		|		case 1:
-		|			lfrg = lfl;
+		|			state->lfreg = lfl;
 		|			break;
 		|		case 2:
-		|			lfrg = (ti >> BUS_DT_LSB(48)) & 0x3f;
+		|			state->lfreg = (ti >> BUS_DT_LSB(48)) & 0x3f;
 		|			if ((ti >> BUS_DT_LSB(36)) & 1)
-		|				lfrg |= (1 << 6);
-		|			lfrg = lfrg ^ 0x7f;
+		|				state->lfreg |= (1 << 6);
+		|			state->lfreg = state->lfreg ^ 0x7f;
 		|			break;
 		|		case 3:	// No load
-		|			lfrg = output.lfrg;
 		|			break;
 		|		}
 		|
-		|		if (lfrg != 0x7f)
-		|			lfrg |= 1<<7;
+		|		state->marh &= ~(0x3fULL << 15);
+		|		state->marh |= (state->lfreg & 0x3f) << 15;
+		|		state->marh &= ~(1ULL << 27);
+		|		state->marh |= ((state->lfreg >> 6) & 1) << 27;
+		|		if (state->lfreg != 0x7f)
+		|			state->lfreg |= 1<<7;
 		|
-		|		output.lfrg = lfrg;
 		|	}
-		|	if (PIN_H1.posedge()) {
+		|	if (PIN_H1.posedge() && !need_msr) {
 		|		if (need_fiu && need_ti && need_vi) {
 		|			//state->idle_this = &ftv_event;
 		|		} else if (need_fiu && need_ti) {
@@ -446,7 +472,8 @@ class XROTF(PartFactory):
 		|			state->idle_this = &no_event;
 		|		}
 		|	}
-		|	if (q4pos) {
+		|	if (need_msr) {
+		|	} else if (q4pos) {
 		|		idle_next = &q4_event;
 		|		state->idle_this = NULL;
 		|	} else {

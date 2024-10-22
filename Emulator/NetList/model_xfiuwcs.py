@@ -95,6 +95,9 @@ class XFIUWCS(PartFactory):
 		|			tvoe = 0x10;	// MAR
 		|			break;
 		|		}
+		|		if (tvoe & 0x10) {
+		|			tvoe |= 0x80;
+		|		}
 		|		output.tvoe = tvoe ^ 0xff;
 		|	}
 		|''')
