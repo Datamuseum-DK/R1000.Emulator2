@@ -72,8 +72,11 @@ class XCACHE(PartFactory):
 		|	unsigned q4cmd;
 		|	unsigned q4cont;
 		|	unsigned hits;
-		|	bool cyt;
+		|	unsigned lhits;
+		|	bool cyo, cyt;
 		|	unsigned mylru, myhits;
+		|	unsigned cmd, bcmd;
+		|	unsigned mar_set;
 		|''')
 
     def sensitive(self):
@@ -81,6 +84,26 @@ class XCACHE(PartFactory):
         yield "PIN_H1.pos()"
 
     def extra(self, file):
+        file.fmt('''
+		|#define CMD_PMW	(1<<0xf)	// PHYSICAL_MEM_WRITE
+		|#define CMD_PMR	(1<<0xe)	// PHYSICAL_MEM_READ
+		|#define CMD_LMW	(1<<0xd)	// LOGICAL_MEM_WRITE
+		|#define CMD_LMR	(1<<0xc)	// LOGICAL_MEM_READ
+		|#define CMD_C01	(1<<0xb)	// COPY 0 TO 1
+		|#define CMD_MTT	(1<<0xa)	// MEMORY_TO_TAGSTORE
+		|#define CMD_C10	(1<<0x9)	// COPY 1 TO 0
+		|#define CMD_SFF	(1<<0x8)	// SET HIT FLIP FLOPS
+		|#define CMD_PTW	(1<<0x7)	// PHYSICAL TAG WRITE
+		|#define CMD_PTR	(1<<0x6)	// PHYSICAL TAG READ
+		|#define CMD_INI	(1<<0x5)	// INITIALIZE MRU
+		|#define CMD_LTR	(1<<0x4)	// LOGICAL TAG READ
+		|#define CMD_NMQ	(1<<0x3)	// NAME QUERY
+		|#define CMD_LRQ	(1<<0x2)	// LRU QUERY
+		|#define CMD_AVQ	(1<<0x1)	// AVAILABLE QUERY
+		|#define CMD_IDL	(1<<0x0)	// IDLE
+		|#define CMDS(x) ((state->bcmd & (x)) != 0)
+		|''')
+
         file.fmt('''
 		|static unsigned
 		|dolru(unsigned lru, unsigned before, unsigned cmd)
@@ -103,6 +126,7 @@ class XCACHE(PartFactory):
     def priv_decl(self, file):
         file.fmt('''
 		|	unsigned find_set(unsigned cmd);
+		|	bool is_hit(unsigned adr, unsigned eadr, unsigned set);
 		|''')
 
     def priv_impl(self, file):
@@ -120,12 +144,49 @@ class XCACHE(PartFactory):
 		|		set2 = 2;
 		|	} else if (state->hits & 0xa0) {
 		|		set2 = 3;
-		|	} else if (cmd == 0xe && ((state->output.ps & ~4) == 2)) {
+		|	} else if (cmd == 0xe && ((state->mar_set & ~4) == 2)) {
 		|		set2 = 1;
 		|	} else {
 		|		set2 = 0;
 		|	}
 		|	return (set2);
+		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|is_hit(unsigned adr, unsigned eadr, unsigned set)
+		|{
+		|	if (state->labort)
+		|		return false;
+		|
+		|	if CMDS(CMD_IDL)
+		|		return (true);
+		|
+		|	unsigned tag = state->rame[eadr];
+		|
+		|	unsigned page_state = tag & 3;
+		|	// R1000_Micro_Arch_Mem.pdf p19:
+		|	//    00: Loading, 01: Read-only, 10: Read-Write, 11: Invalid
+		|
+		|	uint64_t data = state->ram[adr];
+		|	uint64_t ta = data >> 19;
+		|	uint64_t ts = data & 0x7;
+		|
+		|	bool name = (state->mar_name == (ta >> 13));
+		|	bool offset = (state->mar_page == (ta & 0x1fff)) && (state->mar_space == ts);
+		|	if CMDS(CMD_AVQ)
+		|		return (page_state == 0);
+		|	if CMDS(CMD_LTR)
+		|		return (name && offset && page_state != 0);
+		|	if CMDS(CMD_LRQ)
+		|		return (((tag >> 2) & 0xf) == 0);
+		|	if CMDS(CMD_NMQ)
+		|		return (name && (page_state != 0));
+		|	if CMDS(CMD_LMR)
+		|		return (name && offset && (page_state == 1 || page_state == 2));
+		|	if CMDS(CMD_LMW)
+		|		return (name && offset && page_state == 1);
+		|	return (state->mar_set == set);
 		|}
 		|''')
 
@@ -133,29 +194,13 @@ class XCACHE(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|#define CMD_PMW	(1<<0xf)	// PHYSICAL_MEM_WRITE
-		|#define CMD_PMR	(1<<0xe)	// PHYSICAL_MEM_READ
-		|#define CMD_LMW	(1<<0xd)	// LOGICAL_MEM_WRITE
-		|#define CMD_LMR	(1<<0xc)	// LOGICAL_MEM_READ
-		|#define CMD_C01	(1<<0xb)	// COPY 0 TO 1
-		|#define CMD_MTT	(1<<0xa)	// MEMORY_TO_TAGSTORE
-		|#define CMD_C10	(1<<0x9)	// COPY 1 TO 0
-		|#define CMD_SFF	(1<<0x8)	// SET HIT FLIP FLOPS
-		|#define CMD_PTW	(1<<0x7)	// PHYSICAL TAG WRITE
-		|#define CMD_PTR	(1<<0x6)	// PHYSICAL TAG READ
-		|#define CMD_INI	(1<<0x5)	// INITIALIZE MRU
-		|#define CMD_LTR	(1<<0x4)	// LOGICAL TAG READ
-		|#define CMD_NMQ	(1<<0x3)	// NAME QUERY
-		|#define CMD_LRQ	(1<<0x2)	// LRU QUERY
-		|#define CMD_AVQ	(1<<0x1)	// AVAILABLE QUERY
-		|#define CMD_IDL	(1<<0x0)	// IDLE
 		|
 		|	bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	bool pos = PIN_CLK.posedge();
-		|	bool neg = PIN_CLK.negedge();
+		|	//bool pos = PIN_CLK.posedge();
+		|	//bool neg = PIN_CLK.negedge();
 		|	bool h1pos = PIN_H1.posedge();
 		|
 		|	bool labort = !(PIN_LABT=> && PIN_ELABT=>);
@@ -166,16 +211,16 @@ class XCACHE(PartFactory):
 		|		bool p_early_abort = state->eabort;
 		|		bool p_mcyc2_next_hd = state->p_mcyc2_next;
 		|		if (p_early_abort && p_mcyc2_next_hd) {
-		|			output.cmd = 0;
+		|			state->cmd = 0;
 		|		} else {
-		|			output.cmd = mcmd ^ 0xf;
+		|			state->cmd = mcmd ^ 0xf;
 		|		}
 		|		state->p_mcyc2_next =
 		|		    !(
 		|		        ((mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
 		|		        ((!p_cmdcont) && (!p_early_abort) && (!p_mcyc2_next_hd))
 		|		    );
-		|		output.cyo =
+		|		state->cyo =
 		|		    !(
 		|		        ((mcmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd)
 		|		    );
@@ -184,9 +229,8 @@ class XCACHE(PartFactory):
 		|
 		|	bool mcyc2 = !state->cyt;
 		|
-		|	unsigned cmd = output.cmd;
-		|	unsigned bcmd = 1 << cmd;
-		|#define CMDS(x) ((bcmd & (x)) != 0)
+		|	unsigned cmd = state->cmd;
+		|	state->bcmd = 1 << cmd;
 		|
 		|	unsigned adr = 0;
 		|
@@ -198,10 +242,10 @@ class XCACHE(PartFactory):
 		|
 		|	adr = state->hash << 3;
 		|	if (CMDS(CMD_PTR|CMD_PTW|CMD_PMR|CMD_PMW)) {
-		|		adr |= output.ps & 0x4;
-		|		if ((output.ps & 3) > 1)
+		|		adr |= state->mar_set & 0x4;
+		|		if ((state->mar_set & 3) > 1)
 		|			adr |= 2;
-		|		if ((output.ps & 3) == 1 || (output.ps & 3) == 2)
+		|		if ((state->mar_set & 3) == 1 || (state->mar_set & 3) == 2)
 		|			adr |= 1;
 		|	} else {
 		|		adr |= state->a0;
@@ -209,19 +253,15 @@ class XCACHE(PartFactory):
 		|
 		|	if (q1pos) {
 		|		state->a0 = 1;
-		|		if (!PIN_ISA=>) state->a0 |= 4;
 		|	} else if (q2pos) {
 		|		state->a0 = 3;
-		|		if (!PIN_ISA=>) state->a0 |= 4;
 		|	} else if (q3pos) {
 		|		state->a0 = 2;
-		|		if (!PIN_ISA=>) state->a0 |= 4;
 		|	} else if (q4pos) {
 		|		state->a0 = 0;
-		|		if (!PIN_ISA=>) state->a0 |= 4;
 		|	}
 		|
-		|	unsigned eadr = (adr & ~1) | (output.ps & 1);
+		|	unsigned eadr = (adr & ~1) | (state->mar_set & 1);
 		|
 		|
 		|	if (q1pos && mcyc2 && CMDS(CMD_PMR|CMD_LMR|CMD_PTR)) {
@@ -231,6 +271,7 @@ class XCACHE(PartFactory):
 		|		state->qreg |= (pdata & 0x7f) << 6;
 		|	}
 		|
+		|#if 0
 		|	if (!CMDS(CMD_IDL) && (pos || neg)) {
 		|		uint64_t data = state->ram[adr];
 		|		uint64_t ta = data >> 19;
@@ -257,9 +298,9 @@ class XCACHE(PartFactory):
 		|			output.nol = name && (CMDS(CMD_NMQ) || offset);
 		|		}
 		|	}
+		|#endif
 		|
-		|	bool ihit = PIN_ISA=> ? output.hita : output.hitb;
-		|	ihit = output.hita && output.hitb;
+		|	bool ihit = output.hita && output.hitb;
 		|	if (q2pos && CMDS(CMD_LMW|CMD_PMW) && mcyc2 && !ihit && !state->labort) {
 		|		unsigned set = find_set(cmd);
 		|		if (output.hita && !output.hitb)
@@ -279,7 +320,7 @@ class XCACHE(PartFactory):
 		|	}
 		|	if (CMDS(CMD_PTW)) {
 		|		bool my_board = !PIN_ISLOW=>;
-		|		bool which_board = output.ps >> 3;
+		|		bool which_board = state->mar_set >> 3;
 		|		if (q2pos && mcyc2 && which_board == my_board) {
 		|			state->ram[adr] = state->vdreg & ~(0x7fULL << 6);
 		|			state->rame[eadr] = (state->vdreg >> 6) & 0x7f;
@@ -290,13 +331,14 @@ class XCACHE(PartFactory):
 		|			state->rame[a0 + u] = dolru(state->hit_lru, state->rame[a0 + u], cmd);
 		|	}
 		|
+		|#if 0
 		|	if (cmd) {
 		|		unsigned adr2 = state->hash << 3;
 		|		if (CMDS(CMD_PTR|CMD_PTW|CMD_PMR|CMD_PMW)) {
-		|			adr2 |= output.ps & 0x4;
-		|			if ((output.ps & 3) > 1)
+		|			adr2 |= state->mar_set & 0x4;
+		|			if ((state->mar_set & 3) > 1)
 		|				adr2 |= 2;
-		|			if ((output.ps & 3) == 1 || (output.ps & 3) == 2)
+		|			if ((state->mar_set & 3) == 1 || (state->mar_set & 3) == 2)
 		|				adr2 |= 1;
 		|		} else {
 		|			adr2 |= state->a0;
@@ -306,6 +348,7 @@ class XCACHE(PartFactory):
 		|		output.coe = state->rame[(adr2 & ~1) ^ 4] & BUS_CRE_MASK;
 		|		output.col = state->rame[(adr2 | 1) ^ 4] & BUS_CRL_MASK;
 		|	}
+		|#endif
 		|
 		|	if (q4pos && !PIN_LDMR=> && state->cstop) {
 		|		uint64_t a;
@@ -316,7 +359,7 @@ class XCACHE(PartFactory):
 		|		state->mar_space = s;
 		|		state->mar_name = (a>>25) & 0xffffffffULL;
 		|		state->mar_page = (a>>12) & 0x1fff;
-		|		output.ps = (a>>BUS_ADR_LSB(27)) & 0xf;
+		|		state->mar_set = (a>>BUS_ADR_LSB(27)) & 0xf;
 		|
 		|		state->word = a & 0x3f;
 		|		state->hash = 0;
@@ -364,11 +407,7 @@ class XCACHE(PartFactory):
 		|		BUS_MCMD_READ(state->q4cmd);
 		|		state->q4cont = PIN_CONT=>;
 		|	}
-		|	if (q4pos) {
-		|		state->labort = labort;
-		|		state->eabort = !(PIN_EABT=> && PIN_ELABT=>);
-		|	}
-		|
+		|#if 0
 		|	if (q3pos) {
 		|		state->hits = 0;
 		|		state->hits |= !PIN_AEHIT=> << 7;
@@ -376,11 +415,40 @@ class XCACHE(PartFactory):
 		|		state->hits |= !PIN_BEHIT=> << 5;
 		|		state->hits |= !PIN_BLHIT=> << 4;
 		|	}
+		|#endif
+		|	if (q4pos && !state->cyo) {
+		|		state->lhits = 0;
+		|		unsigned badr = adr & ~0x7;
+		|		if (is_hit(badr | 0, badr | 0, 0)) state->lhits |= 0x80;
+		|		if (is_hit(badr | 1, badr | 1, 1)) state->lhits |= 0x40;
+		|		if (is_hit(badr | 3, badr | 2, 2)) state->lhits |= 0x08;
+		|		if (is_hit(badr | 2, badr | 3, 3)) state->lhits |= 0x04;
+		|		if (is_hit(badr | 4, badr | 4, 4)) state->lhits |= 0x20;
+		|		if (is_hit(badr | 5, badr | 5, 5)) state->lhits |= 0x10;
+		|		if (is_hit(badr | 7, badr | 6, 6)) state->lhits |= 0x02;
+		|		if (is_hit(badr | 6, badr | 7, 7)) state->lhits |= 0x01;
+		|	}
 		|	if (q1pos) {
+		|#if 0
 		|		state->hits |= !PIN_AEHIT=> << 3;
 		|		state->hits |= !PIN_ALHIT=> << 2;
 		|		state->hits |= !PIN_BEHIT=> << 1;
 		|		state->hits |= !PIN_BLHIT=> << 0;
+		|#endif
+		|if (0 && state->hits != state->lhits) {
+		|ALWAYS_TRACE(
+		|	<<std::hex << "LHITS"
+		|	<< " hits " << state->hits
+		|	<< " lhits " << state->lhits
+		|	<< " cmd " << cmd
+		|	<< " set " << state->mar_set
+		|	<< " o " << state->cyo
+		|	<< " t " << mcyc2
+		|	<< " a " << state->labort << labort
+		|	<< " p " << PIN_EABT=> << PIN_ELABT=> << PIN_LABT=>
+		|);
+		|}
+		|		state->hits = state->lhits;
 		|		if        (state->hits & 0x20) { output.seta = 0; output.setb = 0;
 		|		} else if (state->hits & 0x10) { output.seta = 0; output.setb = 1;
 		|		} else if (state->hits & 0x02) { output.seta = 1; output.setb = 0;
@@ -398,48 +466,28 @@ class XCACHE(PartFactory):
 		|		if (state->hits & 0x33)
 		|			output.hitb = false;
 		|		state->myhits = state->hits;
-		|		if (PIN_ISA=> && (state->hits & 0xcc)) {
+		|		if (state->hits) {
 		|			     if (state->hits & 0x80)	state->mylru = state->rame[(adr & ~3) | 0];
 		|			else if (state->hits & 0x40)	state->mylru = state->rame[(adr & ~3) | 1];
 		|			else if (state->hits & 0x08)	state->mylru = state->rame[(adr & ~3) | 2];
 		|			else if (state->hits & 0x04)	state->mylru = state->rame[(adr & ~3) | 3];
-		|			state->mylru >>= 2;
-		|			state->mylru &= 0xf;
-		|			//output.z_ql = false;
-		|			//output.ql = state->mylru;
-		|		} else if ((!PIN_ISA=>) && (state->hits & 0x33)) {
-		|			     if (state->hits & 0x20)	state->mylru = state->rame[(adr & ~3) | 0];
-		|			else if (state->hits & 0x10)	state->mylru = state->rame[(adr & ~3) | 1];
-		|			else if (state->hits & 0x02)	state->mylru = state->rame[(adr & ~3) | 2];
-		|			else if (state->hits & 0x01)	state->mylru = state->rame[(adr & ~3) | 3];
-		|			state->mylru >>= 2;
-		|			state->mylru &= 0xf;
-		|			//output.z_ql = false;
-		|			//output.ql = state->mylru;
-		|		} else if (!PIN_ISA=> && (state->hits & 0xcc)) {
-		|			     if (state->hits & 0x80)	state->mylru = state->rame[((adr & ~3) | 0) ^ 4];
-		|			else if (state->hits & 0x40)	state->mylru = state->rame[((adr & ~3) | 1) ^ 4];
-		|			else if (state->hits & 0x08)	state->mylru = state->rame[((adr & ~3) | 2) ^ 4];
-		|			else if (state->hits & 0x04)	state->mylru = state->rame[((adr & ~3) | 3) ^ 4];
-		|			state->mylru >>= 2;
-		|			state->mylru &= 0xf;
-		|			//output.z_ql = true;
-		|		} else if ((PIN_ISA=>) && (state->hits & 0x33)) {
-		|			     if (state->hits & 0x20)	state->mylru = state->rame[((adr & ~3) | 0) ^ 4];
+		|			else if (state->hits & 0x20)	state->mylru = state->rame[((adr & ~3) | 0) ^ 4];
 		|			else if (state->hits & 0x10)	state->mylru = state->rame[((adr & ~3) | 1) ^ 4];
 		|			else if (state->hits & 0x02)	state->mylru = state->rame[((adr & ~3) | 2) ^ 4];
 		|			else if (state->hits & 0x01)	state->mylru = state->rame[((adr & ~3) | 3) ^ 4];
 		|			state->mylru >>= 2;
 		|			state->mylru &= 0xf;
-		|			//output.z_ql = true;
 		|		} else {
 		|			state->mylru = 0xf;
-		|			//output.z_ql = true;
 		|		}
 		|	}
+		|	if (q4pos) {
+		|		state->labort = labort;
+		|		state->eabort = !(PIN_EABT=> && PIN_ELABT=>);
+		|	}
+		|
 		|	if (q1pos && mcyc2 && CMDS(CMD_LMR|CMD_PMR) && !labort) {
 		|		unsigned set = find_set(cmd);
-		|		//if (!PIN_ISA=>)
 		|		if (output.hita && !output.hitb)
 		|			set |= 4;
 		|		uint32_t radr =
@@ -456,22 +504,10 @@ class XCACHE(PartFactory):
 		|	bool b_tvdrv = PIN_TVDRV=>;
 		|	bool b_vdrv = PIN_VDRV=>;
 		|
-		|#if 0
-		|	bool ahit = output.hita;
-		|	bool bhit = output.hitb;
-		|	if (PIN_ISA=>) {
-		|		bool high_board = !PIN_ISLOW=>;
-		|		output.qtdr = !bhit || (ahit && high_board) || b_tvdrv;
-		|		output.qvdr = !bhit || (ahit && high_board) || b_vdrv;
-		|	} else {
-		|		output.qtdr = bhit ||          b_tvdrv;
-		|		output.qvdr = bhit ||          b_vdrv;
-		|	}
-		|#else
-		|		bool high_board = !PIN_ISLOW=>;
-		|		output.qtdr = b_tvdrv || (output.hita && output.hitb && high_board);
-		|		output.qvdr = b_vdrv || (output.hita && output.hitb && high_board);
-		|#endif
+		|	bool high_board = !PIN_ISLOW=>;
+		|	output.qtdr = b_tvdrv || (output.hita && output.hitb && high_board);
+		|	output.qvdr = b_vdrv || (output.hita && output.hitb && high_board);
+		|
 		|	if (!output.qtdr)
 		|		output.qvdr = false;
 		|

@@ -112,6 +112,7 @@ class XLRU(PartFactory):
 		|			switch(cmd) {
 		|			case 0x1:	// AVAILABLE QUERY
 		|				state->qhit = !page_state;
+		|				state->qhit = page_state == 0;
 		|				break;
 		|			case 0x2:	// LRU QUERY
 		|				state->qhit = (state->qlru == 0);
