@@ -54,7 +54,6 @@ class XTVSCLK(PartFactory):
 		|		output.aclk = true;
 		|		output.uclk = true;
 		|		output.arfwe = true;
-		|		output.brfwe = true;
 		|	} else if (PIN_Q4E.posedge()) {
 		|		bool uon = PIN_UON=>;
 		|		bool ram_stop = PIN_RMS=>;
@@ -71,7 +70,6 @@ class XTVSCLK(PartFactory):
 		|
 		|		bool ween = PIN_DSTOP=>;
 		|		output.arfwe = !(!(ween || PIN_ARFWR=>) && ram_stop);
-		|		output.brfwe = !(!(ween || PIN_BRFWR=>) && ram_stop);
 		|	}
 		|''')
 

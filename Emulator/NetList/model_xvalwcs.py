@@ -62,7 +62,7 @@ class XVALWCS(PartFactory):
 		|	unsigned uad, cnt;
 		|	BUS_UAC_READ(cnt);
 		|	BUS_UAD_READ(uad);
-		|	if (PIN_DUAS=>) {
+		|	if (!PIN_DUAS=>) {
 		|		uad ^= BUS_UAD_MASK;
 		|	} else {
 		|		uad = BUS_UAD_MASK;

@@ -96,7 +96,7 @@ class XVCMUX(PartFactory):
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool h2 = PIN_H2=>;
-		|	bool sclken = PIN_SCLKE=>;
+		|	bool sclken = !PIN_SCLKE=>;
 		|
 		|	bool uirsclk = PIN_UCLK.posedge();
 		|
