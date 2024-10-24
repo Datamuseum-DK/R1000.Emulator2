@@ -30,6 +30,17 @@ class XSEQIBUF(FChip):
         self.sig_left(ChipSig("-->+", "URAND", 0, 6))
         self.sig_left(ChipSig("-->+", "IRD", 0, 2))
         self.sig_left(ChipSig("-->+", "EMAC", 0, 6))
+        self.sig_left(ChipSig("-->+", "ACLK"))
+        self.sig_left(ChipSig("-->+", "IMX"))
+        self.sig_left(ChipSig("-->+", "SCLKE"))
+        self.sig_left(ChipSig("-->+", "ILDRN"))
+        self.sig_left(ChipSig("-->+", "DISPA"))
+        self.sig_left(ChipSig("-->+", "FLIP"))
+        self.sig_left(ChipSig("===+", "QV", 0, 15))
+        self.sig_left(ChipSig("-->+", "QVOE"))
+        self.sig_left(ChipSig("===+", "QB", 0, 15))
+        self.sig_left(ChipSig("-->+", "QBOE"))
+        self.sig_left(ChipSig("-->+", "BMCLK"))
 
         self.sig_right(ChipSig("+<--", "VAL", 0, 63))
         self.sig_right(ChipSig("+-->", "DISP", 0, 15))
@@ -42,22 +53,11 @@ class XSEQIBUF(FChip):
         self.sig_right(ChipSig("+-->", "EMP"))
         self.sig_right(ChipSig("+-->", "ME", 0, 6))
 
-        self.sig_left(ChipSig("-->+", "ACLK"))
-        self.sig_left(ChipSig("-->+", "IMX"))
-        self.sig_left(ChipSig("-->+", "SCLKE"))
-        self.sig_left(ChipSig("-->+", "ILDRN"))
-        self.sig_left(ChipSig("-->+", "DISPA"))
-        self.sig_left(ChipSig("-->+", "FLIP"))
-        self.sig_left(ChipSig("===+", "QV", 0, 15))
-        self.sig_left(ChipSig("-->+", "QVOE"))
-        self.sig_left(ChipSig("===+", "QB", 0, 15))
-        self.sig_left(ChipSig("-->+", "QBOE"))
 
         self.sig_right(ChipSig("+-->", "UAD", 0, 15))
         self.sig_right(ChipSig("+-->", "DEC", 0, 7))
-        self.sig_right(ChipSig("+-->", "CCL", 0, 3))
         self.sig_right(ChipSig("+-->", "DSP", 0, 15))
-
+        self.sig_right(ChipSig("+-->", "BMCLS"))
 
         self.finish()
 

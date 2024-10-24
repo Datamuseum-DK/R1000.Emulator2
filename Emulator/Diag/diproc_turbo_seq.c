@@ -74,9 +74,9 @@ load_dispatch_rams_200_seq(const struct diagproc *dp)
 		dst <<= 1; dst |= (src >> 20) & 1;
 		dst <<= 1; dst |= (src >> 28) & 1;
 		dst <<= 1; dst |= (src >> 36) & 1;
-		dst <<= 1; dst |= (src >> 44) & 1;
-		dst <<= 1; dst |= (src >> 52) & 1;	// 5
 		dst <<= 1; dst |= (src >> 60) & 1;
+		dst <<= 1; dst |= (src >> 52) & 1;	// 5
+		dst <<= 1; dst |= (src >> 44) & 1;
 		dst <<= 1; dst |= (src >>  5) & 1;
 		dst <<= 1; dst |= (src >> 21) & 1; // =0
 		dst <<= 1; dst |= (src >> 13) & 1; // =0

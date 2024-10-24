@@ -45,8 +45,7 @@ class XSEQIBUF(PartFactory):
         file.fmt('''
 		|	uint32_t top[1<<10];	// Z020
 		|	uint32_t bot[1<<10];	// Z020
-		|	uint32_t reg, last, cbot, ctop;
-		|	unsigned prev_dsp;
+		|	uint32_t cbot, ctop;
 		|	unsigned emac;
 		|	unsigned curins;
 		|	bool topbot;
@@ -57,6 +56,7 @@ class XSEQIBUF(PartFactory):
 		|	unsigned curr_lex;
 		|	unsigned retrn_pc_ofs;
 		|	unsigned boff;
+		|	unsigned break_mask;
 		|''')
 
     def sensitive(self):
@@ -91,6 +91,8 @@ class XSEQIBUF(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|	bool aclk = PIN_ACLK.posedge();
+		|	bool sclk = aclk && !PIN_SCLKE=>;
 		|
 		|	if (PIN_ICLK.posedge()) {
 		|		BUS_TYP_READ(state->typ);
@@ -262,7 +264,6 @@ class XSEQIBUF(PartFactory):
 		|		}
 		|	}
 		|
-		|	bool aclk = PIN_ACLK.posedge();
 		|
 		|	if (aclk) {
 		|		BUS_EMAC_READ(state->emac);
@@ -286,7 +287,6 @@ class XSEQIBUF(PartFactory):
 		|		else if (!(state->emac & 0x01))
 		|			uad = 0x0420;
 		|		output.uad = uad;
-		|		state->last = uad << 16;
 		|	} else {
 		|		unsigned ai = disp;
 		|		ai ^= 0xffff;
@@ -297,19 +297,10 @@ class XSEQIBUF(PartFactory):
 		|		else
 		|			ptr = &state->bot[ai & 0x3ff];
 		|		output.uad = (*ptr >> 16);
-		|		output.dec = (*ptr >> 8);
-		|		state->last = *ptr & 0xffffff00;
+		|		output.dec = (*ptr >> 8) & BUS_DEC_MASK;
 		|	}
 		|
-		|	if (aclk) {
-		|		unsigned tdec;
-		|		tdec = state->last & 0xffffff0f;
-		|		tdec |= output.ccl << 4;
-		|		state->reg = tdec;
-		|		state->reg |= 0x0f;
-		|	}
-		|
-		|	if (aclk && !PIN_SCLKE=>) {
+		|	if (sclk) {
 		|		unsigned dsp = 0;
 		|		if (!PIN_IMX=>) {
 		|			dsp = disp;
@@ -336,14 +327,10 @@ class XSEQIBUF(PartFactory):
 		|	else
 		|		state->curins = state->ctop;
 		|
-		|	if (state->prev_dsp != state->curins) {
-		|		uint8_t utrc[4];
-		|		utrc[0] = UT_CURINS;
-		|		utrc[1] = 0;
-		|		utrc[2] = state->curins >> 8;
-		|		utrc[3] = state->curins;
-		|		microtrace(utrc, sizeof utrc);
-		|		state->prev_dsp = state->curins;
+		|	if (sclk && !PIN_BMCLK=>) {
+		|		uint64_t tmp;
+		|		BUS_VAL_READ(tmp);
+		|		state->break_mask = (tmp >> 16) & 0xffff;
 		|	}
 		|
 		|	uint32_t *ciptr;
@@ -353,7 +340,14 @@ class XSEQIBUF(PartFactory):
 		|		ciptr = &state->bot[state->curins & 0x3ff];
 		|	}
 		|
-		|	output.ccl = (*ciptr >> 4) & 0xf;
+		|	unsigned ccl = (*ciptr >> 4) & 0xf;
+		|
+		|	if (ccl == 0) {
+		|		output.bmcls = false;
+		|	} else {
+		|		output.bmcls = (state->break_mask >> (15 - ccl)) & 1;
+		|	}
+		|	output.bmcls = !output.bmcls;
 		|
 		|	output.z_qv = PIN_QVOE=>;
 		|	if (!output.z_qv) {
