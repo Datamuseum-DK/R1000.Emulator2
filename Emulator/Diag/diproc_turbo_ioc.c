@@ -22,6 +22,7 @@ static int
 load_control_store_200_ioc(const struct diagproc *dp)
 {
 #if !defined(HAS_Z023)
+	fprintf(stderr, "NO Z023\n");
 	(void)dp;
 	return (0);
 #else

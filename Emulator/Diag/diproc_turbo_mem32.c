@@ -18,6 +18,7 @@ clear_tagstore_m32(const struct diagproc *dp)
 {
 
 #if !defined(HAS_Z000)
+	fprintf(stderr, "NO Z000\n");
 	(void)dp;
 	return (0);
 #else
@@ -39,6 +40,7 @@ static int
 fill_memory_m32(const struct diagproc *dp)
 {
 #if !defined(HAS_Z000)
+	fprintf(stderr, "NO Z000\n");
 	(void)dp;
 	return (0);
 #else

@@ -24,6 +24,7 @@ static int
 load_dispatch_rams_200_seq(const struct diagproc *dp)
 {
 #if !defined(HAS_Z020)
+	fprintf(stderr, "NO Z020\n");
 	(void)dp;
 	return (0);
 #else
@@ -95,6 +96,7 @@ static int
 load_control_store_200_seq(const struct diagproc *dp)
 {
 #if !defined(HAS_Z021)
+	fprintf(stderr, "NO Z021\n");
 	(void)dp;
 	return (0);
 #else
@@ -163,6 +165,7 @@ static int
 prep_run_seq(const struct diagproc *dp)
 {
 #if !defined(HAS_Z029)
+	fprintf(stderr, "NO Z029\n");
 	(void)dp;
 	return (0);
 #else

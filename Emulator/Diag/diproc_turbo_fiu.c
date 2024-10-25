@@ -22,6 +22,7 @@ static int
 load_control_store_200_fiu(const struct diagproc *dp)
 {
 #if !defined(HAS_Z022)
+	fprintf(stderr, "NO Z022\n");
 	(void)dp;
 	return (0);
 #else
@@ -97,6 +98,7 @@ static int
 load_hram_0_32(const struct diagproc *dp)
 {
 #if !defined(HAS_Z024)
+	fprintf(stderr, "NO Z024\n");
 	(void)dp;
 	return (0);
 #else
@@ -139,6 +141,7 @@ static int
 load_hram_1(const struct diagproc *dp)
 {
 #if !defined(HAS_Z024)
+	fprintf(stderr, "NO Z024\n");
 	(void)dp;
 	return (0);
 #else
@@ -183,6 +186,7 @@ load_counter(const struct diagproc *dp)
 {
 	fiu_ptr = vbe16dec(dp->ram + 0x28);
 #if !defined(HAS_Z025) || !defined(HAS_Z026)
+	fprintf(stderr, "NO Z025 Z026\n");
 	(void)dp;
 	return (0);
 #else

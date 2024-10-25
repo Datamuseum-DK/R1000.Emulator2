@@ -51,6 +51,7 @@ static int
 load_register_file_typ(const struct diagproc *dp)
 {
 #if !defined(HAS_Z016)
+	fprintf(stderr, "No Z016\n");
 	(void)dp;
 	return (0);
 #else
@@ -88,6 +89,7 @@ static int
 load_register_file_val(const struct diagproc *dp)
 {
 #if !defined(HAS_Z013)
+	fprintf(stderr, "NO Z013\n");
 	(void)dp;
 	return (0);
 #else
@@ -119,6 +121,7 @@ static int
 load_control_store_200_typ(const struct diagproc *dp)
 {
 #if !defined(HAS_Z015)
+	fprintf(stderr, "NO Z015\n");
 	(void)dp;
 	return (0);
 #else
@@ -212,6 +215,7 @@ static int
 load_control_store_200_val(const struct diagproc *dp)
 {
 #if !defined(HAS_Z012)
+	fprintf(stderr, "NO Z012\n");
 	(void)dp;
 	return (0);
 #else
