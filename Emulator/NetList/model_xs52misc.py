@@ -60,70 +60,38 @@ class XS52MISC(PartFactory):
         file.fmt('''
 		|	if (!PIN_TCLR=>) {
 		|		state->treg = 0;
-		|		output.fo7 = state->treg >> 3;
+		|		output.fo7 = false;
 		|	}
 		|
 		|	if (PIN_CLK.posedge()) {
-		|		unsigned prev_rreg = state->rreg;
-		|		unsigned rmode = 0x0;
-		|		if (PIN_SSTOP=> && PIN_BHEN=> && PIN_BHIN2=>)
-		|			rmode |= 2;
-		|		if (PIN_SSTOP=> && PIN_BHEN=>)
-		|			rmode |= 1;
-		|		switch (rmode) {
-		|		case 0:
-		|			break;
-		|		case 1:
-		|			state->rreg <<= 1;
-		|			state->rreg &= 0xe;
-		|			state->rreg |= 0x1;
-		|			break;
-		|		case 2:
-		|			state->rreg >>= 1;
-		|			state->rreg &= 0x7;
-		|			state->rreg |= 0x8;
-		|			break;
-		|		case 3:
+		|		if (PIN_SSTOP=> && PIN_BHEN=> && PIN_BHIN2=>) {
 		|			unsigned restrt_rnd;
 		|			BUS_RRND_READ(restrt_rnd);
 		|			if (!PIN_WDISP=>) {
 		|				state->rreg = 0xa;
 		|			} else if (restrt_rnd != 0) {
-		|				state->rreg = (restrt_rnd & 2) << 2;
-		|				state->rreg |= (restrt_rnd & 1) << 1;
+		|				state->rreg = (restrt_rnd & 0x3) << 1;
 		|			} else {
 		|				state->rreg &= 0xa;
 		|			}
 		|			if (PIN_MEV=>) {
 		|				state->rreg &= ~0x2;
 		|			}
-		|			break;
-		|		}
-		|		output.rq = state->rreg;
-		|
-		|		unsigned lin;
-		|		BUS_LIN_READ(lin);
-		|
-		|		switch (rmode) {
-		|		case 0:
-		|			break;
-		|		case 1:
+		|			BUS_TIN_READ(state->treg);
+		|			state->treg ^= 0x4;
+		|		} else if (PIN_SSTOP=> && PIN_BHEN=>) {
+		|			state->rreg <<= 1;
+		|			state->rreg &= 0xe;
+		|			state->rreg |= 0x1;
 		|			state->treg <<= 1;
 		|			state->treg &= 0xe;
 		|			state->treg |= 0x1;
-		|			break;
-		|		case 2:
-		|			state->treg >>= 1;
-		|			state->treg &= 0x7;
-		|			if (prev_rreg & 1)
-		|				state->treg |= 0x8;
-		|			break;
-		|		case 3:
-		|			BUS_TIN_READ(state->treg);
-		|			state->treg ^= 0x4;
-		|			break;
 		|		}
+		|		output.rq = state->rreg;
 		|		output.fo7 = state->treg >> 3;
+		|
+		|		unsigned lin;
+		|		BUS_LIN_READ(lin);
 		|
 		|		if (!PIN_SCKEN=>) {
 		|			state->lreg = lin;
