@@ -72,7 +72,6 @@ class XCACHE(PartFactory):
 		|	unsigned q4cmd;
 		|	unsigned q4cont;
 		|	unsigned hits;
-		|	unsigned lhits;
 		|	bool cyo, cyt;
 		|	unsigned mylru, myhits;
 		|	unsigned cmd, bcmd;
@@ -80,7 +79,8 @@ class XCACHE(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_CLK"
+        yield "PIN_Q2"
+        yield "PIN_Q4"
         yield "PIN_H1.pos()"
 
     def extra(self, file):
@@ -102,6 +102,15 @@ class XCACHE(PartFactory):
 		|#define CMD_AVQ	(1<<0x1)	// AVAILABLE QUERY
 		|#define CMD_IDL	(1<<0x0)	// IDLE
 		|#define CMDS(x) ((state->bcmd & (x)) != 0)
+		|
+		|#define BSET_0	0x80
+		|#define BSET_1	0x40
+		|#define BSET_2	0x08
+		|#define BSET_3	0x04
+		|#define BSET_4	0x20
+		|#define BSET_5	0x10
+		|#define BSET_6	0x02
+		|#define BSET_7	0x01
 		|''')
 
         file.fmt('''
@@ -127,6 +136,7 @@ class XCACHE(PartFactory):
         file.fmt('''
 		|	unsigned find_set(unsigned cmd);
 		|	bool is_hit(unsigned adr, unsigned eadr, unsigned set);
+		|	void load_mar(void);
 		|''')
 
     def priv_impl(self, file):
@@ -136,13 +146,13 @@ class XCACHE(PartFactory):
 		|find_set(unsigned cmd)
 		|{
 		|	unsigned set2 = 0;
-		|	if (state->hits & 0x05) {
+		|	if (state->hits & (BSET_3|BSET_7)) {
 		|		set2 = 0;
-		|	} else if (state->hits & 0x0a) {
+		|	} else if (state->hits & (BSET_2|BSET_6)) {
 		|		set2 = 1;
-		|	} else if (state->hits & 0x50) {
+		|	} else if (state->hits & (BSET_1|BSET_5)) {
 		|		set2 = 2;
-		|	} else if (state->hits & 0xa0) {
+		|	} else if (state->hits & (BSET_0|BSET_4)) {
 		|		set2 = 3;
 		|	} else if (cmd == 0xe && ((state->mar_set & ~4) == 2)) {
 		|		set2 = 1;
@@ -188,6 +198,51 @@ class XCACHE(PartFactory):
 		|		return (name && offset && page_state == 1);
 		|	return (state->mar_set == set);
 		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|load_mar(void)
+		|{
+		|	uint64_t a;
+		|	uint32_t s;
+		|
+		|	BUS_SPC_READ(s);
+		|	BUS_ADR_READ(a);
+		|	state->mar_space = s;
+		|	state->mar_name = (a>>25) & 0xffffffffULL;
+		|	state->mar_page = (a>>12) & 0x1fff;
+		|	state->mar_set = (a>>BUS_ADR_LSB(27)) & 0xf;
+		|
+		|	state->word = a & 0x3f;
+		|	state->hash = 0;
+		|#define GBIT(fld,bit,width) ((fld >> (width - (bit + 1))) & 1)
+		|	if (GBIT(s, 1, BUS_SPC_WIDTH) ^
+		|	    GBIT(a, 12, BUS_ADR_WIDTH) ^
+		|	    GBIT(a, 49, BUS_ADR_WIDTH))
+		|		state->hash |= 1<<11;
+		|	if (GBIT(a, 40, BUS_ADR_WIDTH) ^ GBIT(a, 13, BUS_ADR_WIDTH))
+		|		state->hash |= 1<<10;
+		|	if (GBIT(a, 41, BUS_ADR_WIDTH) ^ GBIT(a, 14, BUS_ADR_WIDTH))
+		|		state->hash |= 1<<9;
+		|	if (GBIT(a, 42, BUS_ADR_WIDTH) ^ GBIT(a, 15, BUS_ADR_WIDTH))
+		|		state->hash |= 1<<8;
+		|	if (GBIT(a, 39, BUS_ADR_WIDTH) ^ GBIT(a, 16, BUS_ADR_WIDTH))
+		|		state->hash |= 1<<7;
+		|	if (GBIT(a, 43, BUS_ADR_WIDTH) ^ GBIT(a, 17, BUS_ADR_WIDTH))
+		|		state->hash |= 1<<6;
+		|	if (GBIT(a, 47, BUS_ADR_WIDTH) ^ GBIT(a, 18, BUS_ADR_WIDTH))
+		|		state->hash |= 1<<5;
+		|	if (GBIT(a, 46, BUS_ADR_WIDTH) ^ GBIT(a, 19, BUS_ADR_WIDTH))
+		|		state->hash |= 1<<4;
+		|	if (GBIT(a, 45, BUS_ADR_WIDTH) ^ GBIT(a, 20, BUS_ADR_WIDTH))
+		|		state->hash |= 1<<3;
+		|	if (GBIT(a, 44, BUS_ADR_WIDTH) ^ GBIT(a, 21, BUS_ADR_WIDTH))
+		|		state->hash |= 1<<2;
+		|	if (GBIT(a, 50, BUS_ADR_WIDTH) ^ GBIT(s, 0, BUS_SPC_WIDTH))
+		|		state->hash |= 1<<1;
+		|	if (GBIT(a, 48, BUS_ADR_WIDTH) ^ GBIT(s, 2, BUS_SPC_WIDTH))
+		|		state->hash |= 1<<0;
+		|}
 		|''')
 
     def doit(self, file):
@@ -199,8 +254,6 @@ class XCACHE(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	//bool pos = PIN_CLK.posedge();
-		|	//bool neg = PIN_CLK.negedge();
 		|	bool h1pos = PIN_H1.posedge();
 		|
 		|	bool labort = !(PIN_LABT=> && PIN_ELABT=>);
@@ -271,35 +324,6 @@ class XCACHE(PartFactory):
 		|		state->qreg |= (pdata & 0x7f) << 6;
 		|	}
 		|
-		|#if 0
-		|	if (!CMDS(CMD_IDL) && (pos || neg)) {
-		|		uint64_t data = state->ram[adr];
-		|		uint64_t ta = data >> 19;
-		|		uint64_t ts = data & 0x7;
-		|
-		|		bool name = (state->mar_name == (ta >> 13));
-		|		bool offset = (state->mar_page == (ta & 0x1fff)) && (state->mar_space == ts);
-		|		if (neg) {
-		|			output.nme = name && (CMDS(CMD_NMQ) || offset);
-		|		}
-		|		if (pos) {
-		|			output.nml = name && (CMDS(CMD_NMQ) || offset);
-		|		}
-		|
-		|		data = state->ram[adr ^ 0x4];
-		|		ta = data >> 19;
-		|		ts = data & 0x7;
-		|		name = (state->mar_name == (ta >> 13));
-		|		offset = (state->mar_page == (ta & 0x1fff)) && (state->mar_space == ts);
-		|		if (neg) {
-		|			output.noe = name && (CMDS(CMD_NMQ) || offset);
-		|		}
-		|		if (pos) {
-		|			output.nol = name && (CMDS(CMD_NMQ) || offset);
-		|		}
-		|	}
-		|#endif
-		|
 		|	bool ihit = output.hita && output.hitb;
 		|	if (q2pos && CMDS(CMD_LMW|CMD_PMW) && mcyc2 && !ihit && !state->labort) {
 		|		unsigned set = find_set(cmd);
@@ -331,65 +355,9 @@ class XCACHE(PartFactory):
 		|			state->rame[a0 + u] = dolru(state->hit_lru, state->rame[a0 + u], cmd);
 		|	}
 		|
-		|#if 0
-		|	if (cmd) {
-		|		unsigned adr2 = state->hash << 3;
-		|		if (CMDS(CMD_PTR|CMD_PTW|CMD_PMR|CMD_PMW)) {
-		|			adr2 |= state->mar_set & 0x4;
-		|			if ((state->mar_set & 3) > 1)
-		|				adr2 |= 2;
-		|			if ((state->mar_set & 3) == 1 || (state->mar_set & 3) == 2)
-		|				adr2 |= 1;
-		|		} else {
-		|			adr2 |= state->a0;
-		|		}
-		|		output.cre = state->rame[adr2 & ~1] & BUS_CRE_MASK;
-		|		output.crl = state->rame[adr2 | 1] & BUS_CRL_MASK;
-		|		output.coe = state->rame[(adr2 & ~1) ^ 4] & BUS_CRE_MASK;
-		|		output.col = state->rame[(adr2 | 1) ^ 4] & BUS_CRL_MASK;
-		|	}
-		|#endif
 		|
 		|	if (q4pos && !PIN_LDMR=> && state->cstop) {
-		|		uint64_t a;
-		|		uint32_t s;
-		|
-		|		BUS_SPC_READ(s);
-		|		BUS_ADR_READ(a);
-		|		state->mar_space = s;
-		|		state->mar_name = (a>>25) & 0xffffffffULL;
-		|		state->mar_page = (a>>12) & 0x1fff;
-		|		state->mar_set = (a>>BUS_ADR_LSB(27)) & 0xf;
-		|
-		|		state->word = a & 0x3f;
-		|		state->hash = 0;
-		|#define GBIT(fld,bit,width) ((fld >> (width - (bit + 1))) & 1)
-		|		if (GBIT(s, 1, BUS_SPC_WIDTH) ^
-		|		    GBIT(a, 12, BUS_ADR_WIDTH) ^
-		|		    GBIT(a, 49, BUS_ADR_WIDTH))
-		|			state->hash |= 1<<11;
-		|		if (GBIT(a, 40, BUS_ADR_WIDTH) ^ GBIT(a, 13, BUS_ADR_WIDTH))
-		|			state->hash |= 1<<10;
-		|		if (GBIT(a, 41, BUS_ADR_WIDTH) ^ GBIT(a, 14, BUS_ADR_WIDTH))
-		|			state->hash |= 1<<9;
-		|		if (GBIT(a, 42, BUS_ADR_WIDTH) ^ GBIT(a, 15, BUS_ADR_WIDTH))
-		|			state->hash |= 1<<8;
-		|		if (GBIT(a, 39, BUS_ADR_WIDTH) ^ GBIT(a, 16, BUS_ADR_WIDTH))
-		|			state->hash |= 1<<7;
-		|		if (GBIT(a, 43, BUS_ADR_WIDTH) ^ GBIT(a, 17, BUS_ADR_WIDTH))
-		|			state->hash |= 1<<6;
-		|		if (GBIT(a, 47, BUS_ADR_WIDTH) ^ GBIT(a, 18, BUS_ADR_WIDTH))
-		|			state->hash |= 1<<5;
-		|		if (GBIT(a, 46, BUS_ADR_WIDTH) ^ GBIT(a, 19, BUS_ADR_WIDTH))
-		|			state->hash |= 1<<4;
-		|		if (GBIT(a, 45, BUS_ADR_WIDTH) ^ GBIT(a, 20, BUS_ADR_WIDTH))
-		|			state->hash |= 1<<3;
-		|		if (GBIT(a, 44, BUS_ADR_WIDTH) ^ GBIT(a, 21, BUS_ADR_WIDTH))
-		|			state->hash |= 1<<2;
-		|		if (GBIT(a, 50, BUS_ADR_WIDTH) ^ GBIT(s, 0, BUS_SPC_WIDTH))
-		|			state->hash |= 1<<1;
-		|		if (GBIT(a, 48, BUS_ADR_WIDTH) ^ GBIT(s, 2, BUS_SPC_WIDTH))
-		|			state->hash |= 1<<0;
+		|		load_mar();
 		|	}
 		|
 		|	if (q2pos) {
@@ -407,74 +375,47 @@ class XCACHE(PartFactory):
 		|		BUS_MCMD_READ(state->q4cmd);
 		|		state->q4cont = PIN_CONT=>;
 		|	}
-		|#if 0
-		|	if (q3pos) {
-		|		state->hits = 0;
-		|		state->hits |= !PIN_AEHIT=> << 7;
-		|		state->hits |= !PIN_ALHIT=> << 6;
-		|		state->hits |= !PIN_BEHIT=> << 5;
-		|		state->hits |= !PIN_BLHIT=> << 4;
-		|	}
-		|#endif
+		|
+		|
 		|	if (q4pos && !state->cyo) {
-		|		state->lhits = 0;
+		|		state->hits = 0;
 		|		unsigned badr = adr & ~0x7;
-		|		if (is_hit(badr | 0, badr | 0, 0)) state->lhits |= 0x80;
-		|		if (is_hit(badr | 1, badr | 1, 1)) state->lhits |= 0x40;
-		|		if (is_hit(badr | 3, badr | 2, 2)) state->lhits |= 0x08;
-		|		if (is_hit(badr | 2, badr | 3, 3)) state->lhits |= 0x04;
-		|		if (is_hit(badr | 4, badr | 4, 4)) state->lhits |= 0x20;
-		|		if (is_hit(badr | 5, badr | 5, 5)) state->lhits |= 0x10;
-		|		if (is_hit(badr | 7, badr | 6, 6)) state->lhits |= 0x02;
-		|		if (is_hit(badr | 6, badr | 7, 7)) state->lhits |= 0x01;
+		|		if (is_hit(badr | 0, badr | 0, 0)) state->hits |= BSET_0;
+		|		if (is_hit(badr | 1, badr | 1, 1)) state->hits |= BSET_1;
+		|		if (is_hit(badr | 3, badr | 2, 2)) state->hits |= BSET_2;
+		|		if (is_hit(badr | 2, badr | 3, 3)) state->hits |= BSET_3;
+		|		if (is_hit(badr | 4, badr | 4, 4)) state->hits |= BSET_4;
+		|		if (is_hit(badr | 5, badr | 5, 5)) state->hits |= BSET_5;
+		|		if (is_hit(badr | 7, badr | 6, 6)) state->hits |= BSET_6;
+		|		if (is_hit(badr | 6, badr | 7, 7)) state->hits |= BSET_7;
 		|	}
 		|	if (q1pos) {
-		|#if 0
-		|		state->hits |= !PIN_AEHIT=> << 3;
-		|		state->hits |= !PIN_ALHIT=> << 2;
-		|		state->hits |= !PIN_BEHIT=> << 1;
-		|		state->hits |= !PIN_BLHIT=> << 0;
-		|#endif
-		|if (0 && state->hits != state->lhits) {
-		|ALWAYS_TRACE(
-		|	<<std::hex << "LHITS"
-		|	<< " hits " << state->hits
-		|	<< " lhits " << state->lhits
-		|	<< " cmd " << cmd
-		|	<< " set " << state->mar_set
-		|	<< " o " << state->cyo
-		|	<< " t " << mcyc2
-		|	<< " a " << state->labort << labort
-		|	<< " p " << PIN_EABT=> << PIN_ELABT=> << PIN_LABT=>
-		|);
-		|}
-		|		state->hits = state->lhits;
-		|		if        (state->hits & 0x20) { output.seta = 0; output.setb = 0;
-		|		} else if (state->hits & 0x10) { output.seta = 0; output.setb = 1;
-		|		} else if (state->hits & 0x02) { output.seta = 1; output.setb = 0;
-		|		} else if (state->hits & 0x01) { output.seta = 1; output.setb = 1;
-		|		} else if (state->hits & 0x80) { output.seta = 0; output.setb = 0;
-		|		} else if (state->hits & 0x40) { output.seta = 0; output.setb = 1;
-		|		} else if (state->hits & 0x08) { output.seta = 1; output.setb = 0;
-		|		} else                         { output.seta = 1; output.setb = 1;
+		|		if        (state->hits & BSET_4) { output.seta = 0; output.setb = 0;
+		|		} else if (state->hits & BSET_5) { output.seta = 0; output.setb = 1;
+		|		} else if (state->hits & BSET_6) { output.seta = 1; output.setb = 0;
+		|		} else if (state->hits & BSET_7) { output.seta = 1; output.setb = 1;
+		|		} else if (state->hits & BSET_0) { output.seta = 0; output.setb = 0;
+		|		} else if (state->hits & BSET_1) { output.seta = 0; output.setb = 1;
+		|		} else if (state->hits & BSET_2) { output.seta = 1; output.setb = 0;
+		|		} else                           { output.seta = 1; output.setb = 1;
 		|		}
 		|
 		|		output.hita = true;
 		|		output.hitb = true;
-		|		if (state->hits & 0xcc)
+		|		if (state->hits & (BSET_0|BSET_1|BSET_2|BSET_3))
 		|			output.hita = false;
-		|		if (state->hits & 0x33)
+		|		if (state->hits & (BSET_4|BSET_5|BSET_6|BSET_7))
 		|			output.hitb = false;
 		|		state->myhits = state->hits;
 		|		if (state->hits) {
-		|			     if (state->hits & 0x80)	state->mylru = state->rame[(adr & ~3) | 0];
-		|			else if (state->hits & 0x40)	state->mylru = state->rame[(adr & ~3) | 1];
-		|			else if (state->hits & 0x08)	state->mylru = state->rame[(adr & ~3) | 2];
-		|			else if (state->hits & 0x04)	state->mylru = state->rame[(adr & ~3) | 3];
-		|			else if (state->hits & 0x20)	state->mylru = state->rame[((adr & ~3) | 0) ^ 4];
-		|			else if (state->hits & 0x10)	state->mylru = state->rame[((adr & ~3) | 1) ^ 4];
-		|			else if (state->hits & 0x02)	state->mylru = state->rame[((adr & ~3) | 2) ^ 4];
-		|			else if (state->hits & 0x01)	state->mylru = state->rame[((adr & ~3) | 3) ^ 4];
+		|			     if (state->hits & BSET_0)	state->mylru = state->rame[(adr & ~3) | 0];
+		|			else if (state->hits & BSET_1)	state->mylru = state->rame[(adr & ~3) | 1];
+		|			else if (state->hits & BSET_2)	state->mylru = state->rame[(adr & ~3) | 2];
+		|			else if (state->hits & BSET_3)	state->mylru = state->rame[(adr & ~3) | 3];
+		|			else if (state->hits & BSET_4)	state->mylru = state->rame[((adr & ~3) | 0) ^ 4];
+		|			else if (state->hits & BSET_5)	state->mylru = state->rame[((adr & ~3) | 1) ^ 4];
+		|			else if (state->hits & BSET_6)	state->mylru = state->rame[((adr & ~3) | 2) ^ 4];
+		|			else if (state->hits & BSET_7)	state->mylru = state->rame[((adr & ~3) | 3) ^ 4];
 		|			state->mylru >>= 2;
 		|			state->mylru &= 0xf;
 		|		} else {
