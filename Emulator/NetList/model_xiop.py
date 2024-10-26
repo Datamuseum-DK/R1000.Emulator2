@@ -89,14 +89,14 @@ class XIOP(PartFactory):
     def priv_decl(self, file):
         ''' further private decls '''
         file.fmt('''
-		|       void do_xact(struct output_pins *output);
+		|       void do_xact(void);
 		|''')
 
     def priv_impl(self, file):
         file.fmt('''
 		|void
 		|SCM_«mmm» ::
-		|do_xact(struct output_pins *output)
+		|do_xact(void)
 		|{
 		|	if (!state->xact)
 		|		state->xact = ioc_sc_bus_get_xact();
@@ -202,8 +202,8 @@ class XIOP(PartFactory):
 		|	if (state->xact->sc_state == 100 && state->xact->address == 0xfffffe00) {
 		|		/* WRITE CPU CONTROL */
 		|		TRACE("WR CPU CONTROL " << std::hex << state->xact->data);
-		|		output->orst = 0;
-		|		output->z_orst = state->xact->data & 1;
+		|		output.orst = 0;
+		|		output.z_orst = state->xact->data & 1;
 		|		ioc_sc_bus_done(&state->xact);
 		|		return;
 		|	}
@@ -257,7 +257,7 @@ class XIOP(PartFactory):
 		|	}
 		|
 		|	if (q4_pos)
-		|		do_xact(&output);
+		|		do_xact();
 		|
 		|	if (sclk_pos && rnd == 0x04) {
 		|		uint64_t ityp;

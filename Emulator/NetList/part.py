@@ -238,7 +238,8 @@ class PartFactory(Part):
 
         self.scm = cpu.sc_mod(self.name)
         self.subs(self.scm.sf_cc)
-        self.scm.std_hh(self.pin_iterator(), self.priv_decl)
+        self.autopin_output_pins(self.scm.sf_hh)
+        self.scm.std_hh(self.pin_iterator(), self.priv_decl, self.autopin_decl)
         self.scm.std_cc(
             extra = self.real_extra,
             state = self.real_state,
@@ -254,8 +255,6 @@ class PartFactory(Part):
 
     def real_extra(self, file):
         self.extra(file)
-        if self.autopin is not None:
-            self.autopin_extra(file)
         for node in self.comp:
             node.pin.netbus = node.netbus
         for bus in self.comp.busses.values():
@@ -448,14 +447,14 @@ class PartFactory(Part):
     def autopin_state(self, file):
         ''' Extra state variable '''
         file.fmt('''
-		|	struct output_pins output;
+		|	struct output_pins_«mmm» output;
 		|	int64_t idle;
 		|''')
 
     def autopin_doit_before(self, file):
         file.fmt('''
 		|	sc_core::sc_event_or_list *idle_next = NULL;
-		|	struct output_pins output = state->output;
+		|	output = state->output;
 		|	if (state->ctx.job & 1) {
 		|''')
         for node in self.comp:
@@ -563,9 +562,19 @@ class PartFactory(Part):
 		|	}
 		|''')
 
+    def autopin_decl(self, file):
+        if not self.autopin:
+            return
+        file.fmt('''
+		|	struct output_pins_«mmm» output;
+		|''')
 
-    def autopin_extra(self, file):
-        file.write('struct output_pins {\n')
+    def autopin_output_pins(self, file):
+        if not self.autopin:
+            return
+        file.fmt('''
+		|struct output_pins_«mmm» {
+		|''')
         for node in self.comp:
             if not self.is_autopin(node):
                 continue

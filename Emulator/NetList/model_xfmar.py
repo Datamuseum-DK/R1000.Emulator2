@@ -246,9 +246,7 @@ class XFMAR(PartFactory):
 		|	alo |= BITOFF(14) << 1;
 		|	alo |= BITOFF(15) << 0;
 		|
-		|	if (!PIN_BIG=>) {
-		|		q |= (BITSPC(1) ^ BITNAM(12) ^ BITOFF(17)) << (11- 0);
-		|	}
+		|	q |= (BITSPC(1) ^ BITNAM(12) ^ BITOFF(17)) << (11- 0);
 		|	q |= (BITOFF(8) ^ BITNAM(13)) << (11- 1);
 		|	q |= (BITSPC(0) ^ BITOFF(18)) << (11-10);
 		|	q |= (BITSPC(2) ^ BITOFF(16)) << (11-11);

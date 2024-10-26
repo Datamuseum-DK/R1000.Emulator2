@@ -131,7 +131,7 @@ sc_main(int argc, char *argv[])
 		double dt = sc_main_get_quota();
 		sc_start(dt * 1e6, SC_US);
 		cout << "@" << sc_time_stamp() << " DONE\n";
-		sc_close_vcd_trace_file(planes->tf);
+		// sc_close_vcd_trace_file(planes->tf);
 	}
 
 	return(0);

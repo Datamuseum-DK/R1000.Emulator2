@@ -223,7 +223,7 @@ class SystemCModule():
         txt += "\t@${SC_CC} -o " + obj + " " + self.sf_cc.filename + "\n"
         makefile.add_stanza(hdr, txt)
 
-    def std_hh(self, pin_iterator, further):
+    def std_hh(self, pin_iterator, *further_more):
         ''' Produce a stanard .sf_hh file '''
         self.sf_hh.fmt('''
 		|#ifndef R1000_«mmm»
@@ -247,7 +247,7 @@ class SystemCModule():
 		|	void doit(void);
 		|''')
 
-        if further:
+        for further in further_more:
             further(self.sf_hh)
 
         self.sf_hh.fmt('''
