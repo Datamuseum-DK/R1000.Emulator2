@@ -106,7 +106,7 @@ class XTCMUX(PartFactory):
             yield "PIN_Q4"
             yield "PIN_ALOOP"
             yield "PIN_BLOOP"
-            yield "BUS_SPC"
+            yield "BUS_DSP"
             yield "BUS_CSEL"
             yield "BUS_CLIT"
             yield "BUS_UPVC"
@@ -362,7 +362,7 @@ class XTCMUX(PartFactory):
 		|		output.z_adr = PIN_ADROE=>;
 		|		if (!output.z_adr) {
 		|			unsigned spc;
-		|			BUS_SPC_READ(spc);
+		|			BUS_DSP_READ(spc);
 		|			uint64_t alu = state->alu;
 		|
 		|			if (spc != 4) {
@@ -743,6 +743,22 @@ class XTCMUX(PartFactory):
 		|		output.t1stp = false;
 		|	if ((selcond == 0xf7 || selcond == 0xfb) && bop)
 		|		output.t1stp = false;
+		|
+		|	output.spdr = true;
+		|
+		|	output.spdr = PIN_ADROE=> && PIN_VAEN=>;
+		|	output.z_qsp = output.spdr;
+		|
+		|	if (q4pos || !output.z_qsp) {
+		|		unsigned marctl;
+		|		BUS_MCTL_READ(marctl);
+		|
+		|		if (marctl & 0x8) {
+		|			output.qsp = (marctl & 0x7) ^ 0x7;
+		|		} else {
+		|			output.qsp = output.b ^ 0x7;
+		|		}
+		|	}
 		|''')
 
 def register(part_lib):

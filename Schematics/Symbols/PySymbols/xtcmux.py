@@ -44,7 +44,6 @@ class XTCMUX(FChip):
         self.sig_left(ChipSig("-->+", "SCLKE"))
         self.sig_left(ChipSig("-->+", "ALOOP"))
         self.sig_left(ChipSig("-->+", "BLOOP"))
-        self.sig_left(ChipSig("-->+", "SPC", 0, 2))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
         self.sig_left(ChipSig("-->+", "CNCLK"))
         self.sig_left(ChipSig("-->+", "OFC"))
@@ -52,6 +51,8 @@ class XTCMUX(FChip):
         self.sig_left(ChipSig("-->+", "UPVC", 0, 2))
         self.sig_left(ChipSig("-->+", "UEN"))
         self.sig_left(ChipSig("-->+", "TQBIT"))
+        self.sig_left(ChipSig("-->+", "MCTL", 0, 3))
+        self.sig_left(ChipSig("-->+", "VAEN"))
 
         self.sig_right(ChipSig("+===", "ADR", 0, 63))
         self.sig_right(ChipSig("+<--", "ADROE"))
@@ -65,6 +66,9 @@ class XTCMUX(FChip):
         self.sig_right(ChipSig("+-->", "UE", 0, 5))
         self.sig_right(ChipSig("+-->", "T0STP"))
         self.sig_right(ChipSig("+-->", "T1STP"))
+        self.sig_right(ChipSig("+-->", "SPDR"))
+        self.sig_right(ChipSig("+<--", "QSPOE"))
+        self.sig_right(ChipSig("+<->", "DQSP", 0, 2))
 
         self.sig_right(ChipSig("+-->", "B", 0, 2))
         self.sig_right(ChipSig("+-->", "OCKEN"))
