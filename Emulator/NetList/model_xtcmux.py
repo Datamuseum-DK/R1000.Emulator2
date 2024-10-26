@@ -227,7 +227,6 @@ class XTCMUX(PartFactory):
 		|		}
 		|	}
 		|
-		|
 		|	output.z_qf = PIN_QFOE=>;
 		|
 		|	if (!h2) {
@@ -679,36 +678,30 @@ class XTCMUX(PartFactory):
 		|		state->ppriv = set_pass_priv;
 		|	}
 		|
-		|// if (1) {
-		|		bool micros_en = PIN_UEN=>;
+		|	bool micros_en = PIN_UEN=>;
 		|
-		|		unsigned selcond = 0xff;
-		|		if (state->ppriv && micros_en) {
-		|			selcond = 0x80 >> priv_check;
-		|			selcond ^= 0xff;
-		|		}
-		|#if 0
-		|if (micros_en && priv_check != 7)
-		|	ALWAYS_TRACE(<< std::hex << "SELCOND " << selcond << " PC " << priv_check << " PP " << state->ppriv << " RAND " << rand << " SCLKE " << sclke);
-		|#endif
+		|	unsigned selcond = 0xff;
+		|	if (state->ppriv && micros_en) {
+		|		selcond = 0x80 >> priv_check;
+		|		selcond ^= 0xff;
+		|	}
 		|
-		|		bool ucatol = rand != 0x4;
-		|		bool ucbtol = rand != 0x5;
-		|		bool ucatob = rand != 0x6;
-		|		bool ucabl = rand != 0x7;
-		|		bool uclsysb = rand != 0xe;
+		|	bool ucatol = rand != 0x4;
+		|	bool ucbtol = rand != 0x5;
+		|	bool ucatob = rand != 0x6;
+		|	bool ucabl = rand != 0x7;
+		|	bool uclsysb = rand != 0xe;
 		|
-		|		bool clce = 0x3 < rand && rand < 0x8;
+		|	bool clce = 0x3 < rand && rand < 0x8;
 		|
-		|		bool clev = !(
-		|			(!ucatol && !aeql) ||
-		|			(!ucatob && !aeqb) ||
-		|			(!ucbtol && !beql) ||
-		|			(!ucabl && !aeqb && !beql)
-		|		);
+		|	bool clev = !(
+		|		(!ucatol && !aeql) ||
+		|		(!ucatob && !aeqb) ||
+		|		(!ucbtol && !beql) ||
+		|		(!ucabl && !aeqb && !beql)
+		|	);
 		|
-		|		bool sysu = !(uclsysb || !beql);
-		|// }
+		|	bool sysu = !(uclsysb || !beql);
 		|
 		|	if (q3pos) {
 		|		output.ue = BUS_UE_MASK;

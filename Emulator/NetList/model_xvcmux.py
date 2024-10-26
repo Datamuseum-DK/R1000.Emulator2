@@ -171,10 +171,10 @@ class XVCMUX(PartFactory):
 		|
 		|	output.z_qf = PIN_QFOE=>;
 		|	if (q2pos || (!h2 && !output.z_qf)) {
-		|		if (uira ==0x28) {
+		|		if (uira == 0x28) {
 		|			state->a = state->count;
 		|			state->a |= ~BUS_CNT_MASK;
-		|		} else if (uira ==0x29) {
+		|		} else if (uira == 0x29) {
 		|			unsigned mdst;
 		|			// BUS_MDST_READ(mdst);
 		|			mdst = prod_32 << 1;
@@ -188,7 +188,7 @@ class XVCMUX(PartFactory):
 		|			state->a ^= BUS_DV_MASK;
 		|		} else if (uira == 0x2a) {
 		|			state->a = state->zero;
-		|		} else if (uira ==0x2b) {
+		|		} else if (uira == 0x2b) {
 		|			state->a = BUS_DV_MASK;
 		|		} else {
 		|			state->a = state->rfram[state->aadr];
@@ -456,13 +456,8 @@ class XVCMUX(PartFactory):
 		|		state->rfram[state->cadr] = state->c;
 		|	}
 		|	if (PIN_ZSCK.posedge()) {
-		|		uint64_t probe = (1ULL<<63), count;
-		|		for (count = 0; count < 65; count++) {
-		|			if (!(state->alu & probe))
-		|				break;
-		|			probe >>= 1;
-		|		}
-		|		state->zero = ~count;
+		|		uint64_t count2 = 0x40 - flsll(~state->alu);
+		|		state->zero = ~count2;
 		|	}
 		|	if (q4pos && !PIN_LDWDR=> && sclken) {
 		|		BUS_DV_READ(state->wdr);
