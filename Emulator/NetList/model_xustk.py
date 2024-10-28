@@ -57,7 +57,7 @@ class XUSTK(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_Q2.pos()"
+        yield "PIN_Q2"
         yield "PIN_Q4.pos()"
         yield "PIN_QFOE"
         yield "PIN_QVOE"
@@ -65,7 +65,6 @@ class XUSTK(PartFactory):
         yield "PIN_FIU_CLK.pos()"
         yield "PIN_LCLK.pos()"
         yield "PIN_ACLK.pos()"
-        yield "PIN_Q1not.pos()"
         yield "PIN_DV_U"
         yield "PIN_BAD_HINT"
 
@@ -113,50 +112,51 @@ class XUSTK(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	const char *what = "?";
-		|	bool stkclk = PIN_Q4.posedge() && !PIN_STKEN=>;
+		|	bool q1pos = PIN_Q2.negedge();
+		|	bool stkclk = PIN_Q4.posedge() && PIN_SSTOP=> && output.macro_hic;
 		|	bool uevent = output.u_event;
 		|
-		|	bool xwrite;
-		|	bool pop;
-		|	bool stkcnt_ena;
-		|	bool stkinpsel_0;
-		|	bool stkinpsel_1;
-		|	if (uevent) {
-		|		xwrite = true;
-		|		pop = true;
-		|		stkinpsel_0 = true;
-		|		stkinpsel_1 = true;
-		|	} else if (!PIN_PUSH=>) {
-		|		xwrite = true;
-		|		pop = false;
-		|		stkinpsel_0 = !PIN_PUSHBR=>;
-		|		stkinpsel_1 = !PIN_BADHINT=>;
-		|	} else {
-		|		xwrite = !PIN_PUSHRND=>;
-		|		pop = !!(PIN_RETURN=> || PIN_POPRND=>);
-		|		stkinpsel_0 = false;
-		|		stkinpsel_1 = true;
+		|	if (PIN_Q2.posedge()) {
+		|		state->ram[(state->adr + 1) & 0xf] = state->topu;
 		|	}
-		|	stkcnt_ena = !(xwrite || pop);
-		|	unsigned stkinpsel = 0;
-		|	if (stkinpsel_0) stkinpsel |= 2;
-		|	if (stkinpsel_1) stkinpsel |= 1;
 		|
-		|	if (stkclk && !stkcnt_ena) {
-		|		if (PIN_H2 && xwrite) {
+		|	if (stkclk) {
+		|		bool xwrite;
+		|		bool pop;
+		|		bool stkinpsel_0;
+		|		bool stkinpsel_1;
+		|		if (uevent) {
+		|			xwrite = true;
+		|			pop = true;
+		|			stkinpsel_0 = true;
+		|			stkinpsel_1 = true;
+		|		} else if (!PIN_PUSH=>) {
+		|			xwrite = true;
+		|			pop = false;
+		|			stkinpsel_0 = !PIN_PUSHBR=>;
+		|			stkinpsel_1 = PIN_BAD_HINT=>;
+		|		} else {
+		|			xwrite = !PIN_PUSHRND=>;
+		|			pop = !!(PIN_RETURN=> || PIN_POPRND=>);
+		|			stkinpsel_0 = false;
+		|			stkinpsel_1 = true;
+		|		}
+		|
+		|		unsigned stkinpsel = 0;
+		|		if (stkinpsel_0) stkinpsel |= 2;
+		|		if (stkinpsel_1) stkinpsel |= 1;
+		|
+		|		if (xwrite) {
 		|			switch(stkinpsel) {
 		|			case 0:
 		|				BUS_BRN_READ(state->topu);
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
 		|				if (PIN_LATCHED) state->topu |= (1<<14);
 		|				state->topu ^= 0xffff;;
-		|				what = "0";
 		|				break;
 		|			case 1:
 		|				BUS_DF_READ(state->topu);
 		|				state->topu &= 0xffff;
-		|				what = "1";
 		|				break;
 		|			case 2:
 		|				state->topu = state->curuadr;
@@ -164,29 +164,22 @@ class XUSTK(PartFactory):
 		|				if (PIN_LATCHED) state->topu |= (1<<14);
 		|				state->topu += 1;
 		|				state->topu ^= 0xffff;;
-		|				what = "2";
 		|				break;
 		|			case 3:
 		|				state->topu = state->curuadr;
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
 		|				if (PIN_LATCHED) state->topu |= (1<<14);
 		|				state->topu ^= 0xffff;;
-		|				what = "3";
 		|				break;
 		|			}
-		|		} else {
-		|			what = "4";
+		|		} else if (pop) {
 		|			state->topu = state->ram[state->adr];
 		|		}
 		|		output.svlat = !((state->topu >> 14) & 0x1);
-		|	}
-		|	if (PIN_Q2.posedge()) {
-		|		state->ram[(state->adr + 1) & 0xf] = state->topu;
-		|	}
-		|	if (stkclk) {
+		|
 		|		if (PIN_CSR=> && PIN_STOP=>) {
 		|			state->adr = xwrite;
-		|		} else if (!stkcnt_ena) {
+		|		} else if (xwrite || pop) {
 		|			if (xwrite) {
 		|				state->adr = (state->adr + 1) & 0xf;
 		|			} else {
@@ -194,11 +187,6 @@ class XUSTK(PartFactory):
 		|			}
 		|		}
 		|		output.ssz = state->adr == 0;
-		|	}
-		|
-		|	if (PIN_LCLK.posedge()) {
-		|		uint64_t fiu;
-		|		BUS_DF_READ(fiu);
 		|	}
 		|
 		|	output.z_qf = PIN_QFOE=>;
@@ -295,13 +283,7 @@ class XUSTK(PartFactory):
 		|			abort();
 		|		}
 		|	}
-		|	if (PIN_Q1not.posedge()) {
-		|
-		|		uint8_t utrc[2];
-		|		utrc[0] = UT_UADR;
-		|		utrc[0] |= (data >> 8) & 0x3f;
-		|		utrc[1] = data & 0xff;
-		|		microtrace(utrc, sizeof utrc);
+		|	if (q1pos) {
 		|
 		|		output.nu = data;
 		|	}
