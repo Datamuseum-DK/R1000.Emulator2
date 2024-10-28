@@ -20,6 +20,9 @@ class XECC(FChip):
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "TVEN"))
         self.sig_left(ChipSig("-->+", "QTOE"))
+        self.sig_left(ChipSig("-->+", "LDCB"))
+        self.sig_left(ChipSig("-->+", "DROT"))
+        self.sig_left(ChipSig("-->+", "CSTP"))
 
         self.sig_right(ChipSig("+<--", "V", 0, 63))
         self.sig_right(ChipSig("+-->", "ERR"))

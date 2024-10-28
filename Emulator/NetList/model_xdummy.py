@@ -53,7 +53,6 @@ class XDUMMY(PartFactory):
             "PIN_QTYPOE",
             "PIN_QVALOE",
             "PIN_LDDUM",
-            "PIN_DGSEL",
         )
 
     def sensitive(self):

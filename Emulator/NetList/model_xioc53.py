@@ -155,6 +155,8 @@ class XIOC53(PartFactory):
 		|
 		|	bool drive_other_cb = ((state->pb011[rand] >> 5) & 1);
 		|	output.ncben = !(uir_load_wdr && drive_other_cb && output.memtv);
+		|	if (!(output.r & 0x2000))
+		|		output.ncben = false;
 		|
 		|	bool rcv_type = ((state->pb012[rand] >> 3) & 1);
 		|	bool typpc = !(ldrst && rcv_type && output.memtv);

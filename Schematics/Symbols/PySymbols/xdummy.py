@@ -18,9 +18,7 @@ class XDUMMY(FChip):
 
         self.sig_right(ChipSig("+<->", "DQVAL", 0, 63))
         self.sig_right(ChipSig("+<--", "QVALOE"))
-        self.sig_right(ChipSig("+<--", "DGS", 0, 1))
         self.sig_right(ChipSig("+<--", "LDDUM"))
-        self.sig_right(ChipSig("+<--", "DGSEL"))
         self.sig_right(ChipSig("+<--", "ITYP"))
         self.sig_right(ChipSig("+<--", "IVAL"))
         self.sig_right(ChipSig("+<--", "Q4"))

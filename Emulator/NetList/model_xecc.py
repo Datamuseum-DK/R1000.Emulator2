@@ -70,6 +70,7 @@ class XECC(PartFactory):
 		|	uint8_t elprom[512];
 		|	uint8_t eidrg;
 		|	unsigned cbreg1;
+		|	unsigned cbreg2;
 		|''')
 
     def init(self, file):
@@ -120,18 +121,29 @@ class XECC(PartFactory):
                 file.fmt('\tcbo ^= 1;\n')
 
         file.fmt('''
+		|	bool q4_pos = PIN_Q4.posedge();
+		|
+		|	if (q4_pos && !PIN_CSTP=> && !PIN_LDCB=>) {
+		|		state->cbreg2 = (typ >> 7) & 0x1ff;
+		|	}
+		|
 		|	cbo ^= cbi;
 		|	output.z_qc = PIN_QCOE=>;
 		|	if (!output.z_qc) {
-		|		output.qc = cbo;
+		|		if (!PIN_DROT=>)
+		|			output.qc = state->cbreg2;
+		|		else
+		|			output.qc = cbo;
 		|	}
 		|	output.err = cbo != 0;
 		|
 		|	if (!PIN_TVEN=> && state->eidrg != state->elprom[cbo]) {
 		|		idle_next = &write_event;
+		|	} else if (!PIN_LDCB=>) {
+		|		idle_next = &write_event;
 		|	}
 		|
-		|	if (PIN_Q4.posedge() && !PIN_TVEN=>) {
+		|	if (q4_pos && !PIN_TVEN=>) {
 		|		state->eidrg = state->elprom[cbo];
 		|		output.cber = (state->eidrg & 0x81) != 0x81;
 		|		output.mber = state->eidrg & 1;

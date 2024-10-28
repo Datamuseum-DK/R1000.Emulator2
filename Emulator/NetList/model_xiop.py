@@ -44,7 +44,6 @@ class XIOP(PartFactory):
 
     def sensitive(self):
         yield "PIN_CLK.pos()"
-        yield "PIN_SCLK.pos()"
         yield "PIN_QTHOE"
         yield "PIN_QTMOE"
         yield "PIN_QTLOE"
@@ -236,7 +235,7 @@ class XIOP(PartFactory):
 
         file.fmt('''
 		|	bool q4_pos = PIN_CLK.posedge();
-		|	bool sclk_pos = PIN_SCLK.posedge();
+		|	bool sclk_pos = q4_pos && !PIN_SCLK;
 		|	unsigned rnd;
 		|	BUS_RND_READ(rnd);
 		|
