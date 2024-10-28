@@ -82,37 +82,50 @@ class XTCMUX(PartFactory):
         super().init(file)
 
     def sensitive(self):
-            yield "BUS_DF"
-            yield "BUS_DT"
-            yield "PIN_QTOE"
-            yield "BUS_UIRA"
-            yield "BUS_UIRB"
-            yield "BUS_FRM"
-            yield "BUS_RAND"
-            yield "BUS_UIRC"
-            yield "PIN_SEL"
-            yield "BUS_AFNC"
-            yield "PIN_CSRC"
-            yield "PIN_Q2"
-            yield "PIN_LBOT"
-            yield "PIN_LTOP"
-            yield "PIN_LPOP"
-            yield "BUS_CSAO"
-            yield "PIN_CSAH"
-            yield "PIN_CSAW"
-            yield "PIN_H2.pos()"
-            yield "PIN_WE.pos()"
-            yield "PIN_LDWDR"
-            yield "PIN_Q4"
-            yield "PIN_ALOOP"
-            yield "PIN_BLOOP"
-            yield "BUS_DSP"
-            yield "BUS_CSEL"
-            yield "BUS_CLIT"
-            yield "BUS_UPVC"
-            yield "PIN_UEN"
+            #yield "PIN_CCLK"		# q4pos,prev
+            #yield "PIN_CNCLK"		# q4pos,prev
+            #yield "BUS_MCTL"		# uir q4pos,prev
+            #yield "PIN_OFC.pos()"	# prev
+            #yield "PIN_QFOE"		# prev
+            #yield "PIN_QSPOE"		# SPDR,prev
+            #yield "PIN_QTOE"		# prev
+            #yield "PIN_SCLKE"		# q4pos,prev
+            #yield "PIN_TQBIT"		# q2pos,prev
+            #yield "PIN_UCLK"		# q4pos,prev
+            #yield "PIN_VAEN"		# prev
 
-            yield "PIN_ADROE"
+            #yield "PIN_ALOOP"		# uir q1pos
+            #yield "PIN_BLOOP"		# uir q1pos
+            #yield "BUS_UIRA"		# uir
+            #yield "BUS_UIRB"		# uir
+            #yield "BUS_UIRC"		# uir
+            #yield "BUS_FRM"		# uir q1pos & q3pos
+            #yield "BUS_RAND"		# uir
+            #yield "BUS_CLIT"		# uir
+            #yield "BUS_AFNC"		# uir q2pos
+            #yield "PIN_CSRC"		# uir WEpos
+            #yield "PIN_SEL"		# uir WEpos
+            #yield "BUS_UPVC"		# uir
+
+            #yield "PIN_ADROE"		# h1?
+            #yield "PIN_CSAH"		# UCLK
+            #yield "BUS_CSAO"		# UCLK, CCLK
+            #yield "PIN_CSAW"		# UCLK
+            #yield "BUS_DF"		# WEpos
+            #yield "PIN_LBOT"		# CCLK
+            #yield "PIN_LDWDR"		# q4pos
+            #yield "PIN_LPOP"		# CCLK
+            #yield "PIN_LTOP"		# CCLK
+
+            yield "BUS_CSEL"		# uir? h1
+            yield "BUS_DT"		# q2pos, q4pos
+
+            yield "BUS_DSP"		# q2pos
+            yield "PIN_H2.neg()"
+            yield "PIN_Q2"
+            yield "PIN_Q4"
+            yield "PIN_UEN"
+            #yield "PIN_WE.pos()"	# q4?
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -295,7 +308,6 @@ class XTCMUX(PartFactory):
 		|		} else {
 		|			state->b = state->rfram[state->badr];
 		|		}
-		|		output.b = state->b & 0x7;
 		|	}
 		|	if (q2pos) {
 		|		output.ocken = rand != 0xc;
@@ -756,7 +768,7 @@ class XTCMUX(PartFactory):
 		|		if (marctl & 0x8) {
 		|			output.qsp = (marctl & 0x7) ^ 0x7;
 		|		} else {
-		|			output.qsp = output.b ^ 0x7;
+		|			output.qsp = state->b ^ 0x7;
 		|		}
 		|	}
 		|''')

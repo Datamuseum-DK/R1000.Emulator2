@@ -70,7 +70,6 @@ class XTCMUX(FChip):
         self.sig_right(ChipSig("+<--", "QSPOE"))
         self.sig_right(ChipSig("+<->", "DQSP", 0, 2))
 
-        self.sig_right(ChipSig("+-->", "B", 0, 2))
         self.sig_right(ChipSig("+-->", "OCKEN"))
 
         self.finish()
