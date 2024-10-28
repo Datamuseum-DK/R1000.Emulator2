@@ -43,6 +43,9 @@ class XFMAR(PartFactory):
 
     autopin = True
 
+    def extra(self, file):
+        file.include("Infra/cache_line.h")
+
     def state(self, file):
         file.fmt('''
 		|	uint8_t hramhi[1<<10];
@@ -70,11 +73,10 @@ class XFMAR(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        if True:
-            file.fmt('''
+        file.fmt('''
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool sclk = q4pos && !PIN_SCLKE=>;
-		|{
+		|
 		|	unsigned a, b, dif;
 		|	bool co, name_match, in_range;
 		|
@@ -121,7 +123,7 @@ class XFMAR(PartFactory):
 		|	if (q4pos) {
 		|		output.oor = !(co || name_match);
 		|	}
-		|}
+		|
 		|	uint64_t adr;
 		|	BUS_DADR_READ(adr);
 		|
@@ -215,11 +217,11 @@ class XFMAR(PartFactory):
 		|	}
 		|
 		|	// HASH RAM
-		|	unsigned q = 0, ahi=0, alo=0, spc, nam, off;
-		|	spc = output.mspc;
-		|	nam = state->srn;
-		|	off = state->moff;
-		|
+		|	unsigned spc = output.mspc;
+		|	unsigned nam = state->srn;
+		|	unsigned off = state->moff;
+		|#if 0
+		|	unsigned q = 0, ahi=0, alo=0;
 		|#define BITSPC(n) ((spc >> (2 - n)) & 1)
 		|#define BITNAM(n) ((nam >> (31 - n)) & 1)
 		|#define BITOFF(n) ((off >> (24 - n)) & 1)
@@ -254,6 +256,29 @@ class XFMAR(PartFactory):
 		|	q |= state->hramlo[alo] << 2;
 		|	q ^= 0xff << 2;
 		|	output.line = q;
+		|#else
+		|	unsigned hash2 = 0;
+		|	hash2 ^= cache_line_tbl_h[(nam >> 10) & 0x3ff];
+		|	hash2 ^= cache_line_tbl_l[(off >> (13 - 7)) & 0xfff];
+		|	hash2 ^= cache_line_tbl_s[spc];
+		|	output.line = hash2;
+		|#endif
+		|#if 0
+		|	if (hash2 != q && (nam || off || spc)) {
+		|		ALWAYS_TRACE(
+		|			<< std::hex
+		|			<< "WRONGHASH "
+		|			<< nam << " " << off << " " << spc
+		|			<< " " << q
+		|			<< " " << hash2
+		|			<< " - " << ((nam >> 10) & 0x3ff)
+		|			<< " > " << cache_line_tbl_h[(nam >> 10) & 0x3ff]
+		|			<< " " << ((off >> 13) & 0xfff)
+		|			<< " > " << cache_line_tbl_l[(off >> 13) & 0xfff]
+		|			<< " " << cache_line_tbl_s[spc]
+		|		);
+		|	}
+		|#endif
 		|''')
 
 

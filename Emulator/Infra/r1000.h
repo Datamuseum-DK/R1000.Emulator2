@@ -190,4 +190,3 @@ void hexdump(struct vsb *vsb, const void *ptr, size_t len, unsigned offset);
 		ibprintf = snprintf(buf, sizeof buf, fmt, __VA_ARGS__);	\
 		assert(ibprintf >= 0 && ibprintf < (int)sizeof buf);	\
 	} while (0)
-

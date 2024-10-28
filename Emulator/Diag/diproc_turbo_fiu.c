@@ -223,9 +223,13 @@ diagproc_turbo_fiu(const struct diagproc *dp)
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_HRAM_32_0_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo LOAD_HRAM_32_0.FIU");
+		return ((int)DIPROC_RESPONSE_DONE);
 		return(load_hram_0_32(dp));
 	}
 	if (dp->dl_hash == LOAD_HRAM_1_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo LOAD_HRAM_1.FIU");
+		return ((int)DIPROC_RESPONSE_DONE);
 		return(load_hram_1(dp));
 	}
 	if (dp->dl_hash == READ_NOVRAM_DATA_FIU_HASH) {

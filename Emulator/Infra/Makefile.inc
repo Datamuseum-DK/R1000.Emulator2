@@ -1,4 +1,11 @@
 CFLAGS += -g
+
+OBJS += ${OBJDIR}/cache_line.o
+${OBJDIR}/cache_line.o: \
+    Infra/cache_line.c \
+    Infra/cache_line.h
+	${CC} ${CFLAGS} -c Infra/cache_line.c -o ${OBJDIR}/cache_line.o
+
 OBJS += ${OBJDIR}/callout.o
 ${OBJDIR}/callout.o: \
     Infra/callout.c \
