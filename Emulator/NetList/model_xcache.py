@@ -44,9 +44,6 @@ class XCACHE(PartFactory):
 
     autopin = True
 
-    def extra(self, file):
-        file.include("Infra/vend.h")
-
     def state(self, file):
         file.fmt('''
 		|	uint64_t ram[1<<15];	// Turbo 12 bit line, 3 bit set
@@ -54,12 +51,13 @@ class XCACHE(PartFactory):
 		|
 		|	uint16_t bitc[1 << 21];	// Turbo 12 bit line, 3 bit set, 6 bit word
 		|	uint64_t bitt[1 << 22];	// Turbo 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
+		|
 		|	unsigned cl, wd;
 		|	uint16_t cdreg, cqreg;
 		|	uint64_t tdreg, tqreg;
 		|	uint64_t vdreg, vqreg;
 		|
-		|	unsigned sr, word;
+		|	unsigned word;
 		|	unsigned a0;
 		|	uint64_t qreg;
 		|	unsigned hash;
@@ -73,7 +71,7 @@ class XCACHE(PartFactory):
 		|	unsigned q4cont;
 		|	unsigned hits;
 		|	bool cyo, cyt;
-		|	unsigned mylru, myhits;
+		|	unsigned myhits;
 		|	unsigned cmd, bcmd;
 		|	unsigned mar_set;
 		|''')
@@ -103,14 +101,14 @@ class XCACHE(PartFactory):
 		|#define CMD_IDL	(1<<0x0)	// IDLE
 		|#define CMDS(x) ((state->bcmd & (x)) != 0)
 		|
-		|#define BSET_0	0x80
-		|#define BSET_1	0x40
-		|#define BSET_2	0x08
-		|#define BSET_3	0x04
-		|#define BSET_4	0x20
-		|#define BSET_5	0x10
-		|#define BSET_6	0x02
-		|#define BSET_7	0x01
+		|#define BSET_0	0x01
+		|#define BSET_1	0x02
+		|#define BSET_2	0x04
+		|#define BSET_3	0x08
+		|#define BSET_4	0x10
+		|#define BSET_5	0x20
+		|#define BSET_6	0x40
+		|#define BSET_7	0x80
 		|''')
 
         file.fmt('''
@@ -147,17 +145,20 @@ class XCACHE(PartFactory):
 		|{
 		|	unsigned set2 = 0;
 		|	if (state->hits & (BSET_3|BSET_7)) {
-		|		set2 = 0;
-		|	} else if (state->hits & (BSET_2|BSET_6)) {
-		|		set2 = 1;
-		|	} else if (state->hits & (BSET_1|BSET_5)) {
-		|		set2 = 2;
-		|	} else if (state->hits & (BSET_0|BSET_4)) {
 		|		set2 = 3;
-		|	} else if (cmd == 0xe && ((state->mar_set & ~4) == 2)) {
+		|	} else if (state->hits & (BSET_2|BSET_6)) {
+		|		set2 = 2;
+		|	} else if (state->hits & (BSET_1|BSET_5)) {
 		|		set2 = 1;
-		|	} else {
+		|	} else if (state->hits & (BSET_0|BSET_4)) {
 		|		set2 = 0;
+		|	} else if (cmd == 0xe && ((state->mar_set & ~4) == 2)) {
+		|		set2 = 2;
+		|	} else {
+		|		set2 = 3;
+		|	}
+		|	if (state->hits & (BSET_4|BSET_5|BSET_6|BSET_7)) {
+		|		set2 |= 4;
 		|	}
 		|	return (set2);
 		|}
@@ -327,8 +328,6 @@ class XCACHE(PartFactory):
 		|	bool ihit = output.hita && output.hitb;
 		|	if (q2pos && CMDS(CMD_LMW|CMD_PMW) && mcyc2 && !ihit && !state->labort) {
 		|		unsigned set = find_set(cmd);
-		|		if (output.hita && !output.hitb)
-		|			set |= 4;
 		|		uint32_t radr2 =
 		|			(set << 18) |
 		|			(state->cl << 6) |
@@ -339,9 +338,6 @@ class XCACHE(PartFactory):
 		|		state->bitt[radr2+radr2+1] = state->vdreg;
 		|	}
 		|
-		|	if (q2pos) {
-		|		state->hit_lru = state->mylru;
-		|	}
 		|	if (CMDS(CMD_PTW)) {
 		|		bool my_board = !PIN_ISLOW=>;
 		|		bool which_board = state->mar_set >> 3;
@@ -354,7 +350,6 @@ class XCACHE(PartFactory):
 		|		for (unsigned u = 0; u < 8; u++)
 		|			state->rame[a0 + u] = dolru(state->hit_lru, state->rame[a0 + u], cmd);
 		|	}
-		|
 		|
 		|	if (q4pos && !PIN_LDMR=> && state->cstop) {
 		|		load_mar();
@@ -375,7 +370,6 @@ class XCACHE(PartFactory):
 		|		BUS_MCMD_READ(state->q4cmd);
 		|		state->q4cont = PIN_CONT=>;
 		|	}
-		|
 		|
 		|	if (q4pos && !state->cyo) {
 		|		state->hits = 0;
@@ -408,18 +402,19 @@ class XCACHE(PartFactory):
 		|			output.hitb = false;
 		|		state->myhits = state->hits;
 		|		if (state->hits) {
-		|			     if (state->hits & BSET_0)	state->mylru = state->rame[(adr & ~3) | 0];
-		|			else if (state->hits & BSET_1)	state->mylru = state->rame[(adr & ~3) | 1];
-		|			else if (state->hits & BSET_2)	state->mylru = state->rame[(adr & ~3) | 2];
-		|			else if (state->hits & BSET_3)	state->mylru = state->rame[(adr & ~3) | 3];
-		|			else if (state->hits & BSET_4)	state->mylru = state->rame[((adr & ~3) | 0) ^ 4];
-		|			else if (state->hits & BSET_5)	state->mylru = state->rame[((adr & ~3) | 1) ^ 4];
-		|			else if (state->hits & BSET_6)	state->mylru = state->rame[((adr & ~3) | 2) ^ 4];
-		|			else if (state->hits & BSET_7)	state->mylru = state->rame[((adr & ~3) | 3) ^ 4];
-		|			state->mylru >>= 2;
-		|			state->mylru &= 0xf;
+		|			unsigned tadr = adr & ~3;
+		|			     if (state->hits & BSET_0)	state->hit_lru = state->rame[tadr | 0];
+		|			else if (state->hits & BSET_1)	state->hit_lru = state->rame[tadr | 1];
+		|			else if (state->hits & BSET_2)	state->hit_lru = state->rame[tadr | 2];
+		|			else if (state->hits & BSET_3)	state->hit_lru = state->rame[tadr | 3];
+		|			else if (state->hits & BSET_4)	state->hit_lru = state->rame[(tadr | 0) ^ 4];
+		|			else if (state->hits & BSET_5)	state->hit_lru = state->rame[(tadr | 1) ^ 4];
+		|			else if (state->hits & BSET_6)	state->hit_lru = state->rame[(tadr | 2) ^ 4];
+		|			else if (state->hits & BSET_7)	state->hit_lru = state->rame[(tadr | 3) ^ 4];
+		|			state->hit_lru >>= 2;
+		|			state->hit_lru &= 0xf;
 		|		} else {
-		|			state->mylru = 0xf;
+		|			state->hit_lru = 0xf;
 		|		}
 		|	}
 		|	if (q4pos) {
@@ -429,8 +424,6 @@ class XCACHE(PartFactory):
 		|
 		|	if (q1pos && mcyc2 && CMDS(CMD_LMR|CMD_PMR) && !labort) {
 		|		unsigned set = find_set(cmd);
-		|		if (output.hita && !output.hitb)
-		|			set |= 4;
 		|		uint32_t radr =
 		|			(set << 18) |
 		|			(state->cl << 6) |
