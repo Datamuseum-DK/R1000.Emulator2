@@ -82,6 +82,7 @@ class XCACHE(PartFactory):
         yield "PIN_H1.pos()"
 
     def extra(self, file):
+        file.include("Infra/cache_line.h")
         file.fmt('''
 		|#define CMD_PMW	(1<<0xf)	// PHYSICAL_MEM_WRITE
 		|#define CMD_PMR	(1<<0xe)	// PHYSICAL_MEM_READ
@@ -216,33 +217,9 @@ class XCACHE(PartFactory):
 		|
 		|	state->word = a & 0x3f;
 		|	state->hash = 0;
-		|#define GBIT(fld,bit,width) ((fld >> (width - (bit + 1))) & 1)
-		|	if (GBIT(s, 1, BUS_SPC_WIDTH) ^
-		|	    GBIT(a, 12, BUS_ADR_WIDTH) ^
-		|	    GBIT(a, 49, BUS_ADR_WIDTH))
-		|		state->hash |= 1<<11;
-		|	if (GBIT(a, 40, BUS_ADR_WIDTH) ^ GBIT(a, 13, BUS_ADR_WIDTH))
-		|		state->hash |= 1<<10;
-		|	if (GBIT(a, 41, BUS_ADR_WIDTH) ^ GBIT(a, 14, BUS_ADR_WIDTH))
-		|		state->hash |= 1<<9;
-		|	if (GBIT(a, 42, BUS_ADR_WIDTH) ^ GBIT(a, 15, BUS_ADR_WIDTH))
-		|		state->hash |= 1<<8;
-		|	if (GBIT(a, 39, BUS_ADR_WIDTH) ^ GBIT(a, 16, BUS_ADR_WIDTH))
-		|		state->hash |= 1<<7;
-		|	if (GBIT(a, 43, BUS_ADR_WIDTH) ^ GBIT(a, 17, BUS_ADR_WIDTH))
-		|		state->hash |= 1<<6;
-		|	if (GBIT(a, 47, BUS_ADR_WIDTH) ^ GBIT(a, 18, BUS_ADR_WIDTH))
-		|		state->hash |= 1<<5;
-		|	if (GBIT(a, 46, BUS_ADR_WIDTH) ^ GBIT(a, 19, BUS_ADR_WIDTH))
-		|		state->hash |= 1<<4;
-		|	if (GBIT(a, 45, BUS_ADR_WIDTH) ^ GBIT(a, 20, BUS_ADR_WIDTH))
-		|		state->hash |= 1<<3;
-		|	if (GBIT(a, 44, BUS_ADR_WIDTH) ^ GBIT(a, 21, BUS_ADR_WIDTH))
-		|		state->hash |= 1<<2;
-		|	if (GBIT(a, 50, BUS_ADR_WIDTH) ^ GBIT(s, 0, BUS_SPC_WIDTH))
-		|		state->hash |= 1<<1;
-		|	if (GBIT(a, 48, BUS_ADR_WIDTH) ^ GBIT(s, 2, BUS_SPC_WIDTH))
-		|		state->hash |= 1<<0;
+		|	state->hash ^= cache_line_tbl_h[(a >> 35) & 0x3ff];
+		|	state->hash ^= cache_line_tbl_l[(a >> 6) & 0xfff];
+		|	state->hash ^= cache_line_tbl_s[state->mar_space & 0x7];
 		|}
 		|''')
 
@@ -317,7 +294,6 @@ class XCACHE(PartFactory):
 		|
 		|	unsigned eadr = (adr & ~1) | (state->mar_set & 1);
 		|
-		|
 		|	if (q1pos && mcyc2 && CMDS(CMD_PMR|CMD_LMR|CMD_PTR)) {
 		|		uint64_t data = state->ram[adr];
 		|		uint8_t pdata = state->rame[eadr];
@@ -346,7 +322,7 @@ class XCACHE(PartFactory):
 		|			state->rame[eadr] = (state->vdreg >> 6) & 0x7f;
 		|		}
 		|	} else if (q2pos && mcyc2 && !state->labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
-		|		unsigned a0 = adr & ~7;
+		|		unsigned a0 = state->hash << 3;
 		|		for (unsigned u = 0; u < 8; u++)
 		|			state->rame[a0 + u] = dolru(state->hit_lru, state->rame[a0 + u], cmd);
 		|	}
@@ -373,7 +349,7 @@ class XCACHE(PartFactory):
 		|
 		|	if (q4pos && !state->cyo) {
 		|		state->hits = 0;
-		|		unsigned badr = adr & ~0x7;
+		|		unsigned badr = state->hash << 3;
 		|		if (is_hit(badr | 0, badr | 0, 0)) state->hits |= BSET_0;
 		|		if (is_hit(badr | 1, badr | 1, 1)) state->hits |= BSET_1;
 		|		if (is_hit(badr | 3, badr | 2, 2)) state->hits |= BSET_2;
@@ -402,15 +378,15 @@ class XCACHE(PartFactory):
 		|			output.hitb = false;
 		|		state->myhits = state->hits;
 		|		if (state->hits) {
-		|			unsigned tadr = adr & ~3;
+		|			unsigned tadr = state->hash << 3;
 		|			     if (state->hits & BSET_0)	state->hit_lru = state->rame[tadr | 0];
 		|			else if (state->hits & BSET_1)	state->hit_lru = state->rame[tadr | 1];
 		|			else if (state->hits & BSET_2)	state->hit_lru = state->rame[tadr | 2];
 		|			else if (state->hits & BSET_3)	state->hit_lru = state->rame[tadr | 3];
-		|			else if (state->hits & BSET_4)	state->hit_lru = state->rame[(tadr | 0) ^ 4];
-		|			else if (state->hits & BSET_5)	state->hit_lru = state->rame[(tadr | 1) ^ 4];
-		|			else if (state->hits & BSET_6)	state->hit_lru = state->rame[(tadr | 2) ^ 4];
-		|			else if (state->hits & BSET_7)	state->hit_lru = state->rame[(tadr | 3) ^ 4];
+		|			else if (state->hits & BSET_4)	state->hit_lru = state->rame[tadr | 4];
+		|			else if (state->hits & BSET_5)	state->hit_lru = state->rame[tadr | 5];
+		|			else if (state->hits & BSET_6)	state->hit_lru = state->rame[tadr | 6];
+		|			else if (state->hits & BSET_7)	state->hit_lru = state->rame[tadr | 7];
 		|			state->hit_lru >>= 2;
 		|			state->hit_lru &= 0xf;
 		|		} else {
