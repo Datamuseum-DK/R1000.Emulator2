@@ -57,7 +57,7 @@ class XUSTK(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_Q2"
+        yield "PIN_Q2.pos()"
         yield "PIN_Q4.pos()"
         yield "PIN_QFOE"
         yield "PIN_QVOE"
@@ -112,11 +112,11 @@ class XUSTK(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	bool q1pos = PIN_Q2.negedge();
+		|	bool q2pos = PIN_Q2.posedge();
 		|	bool stkclk = PIN_Q4.posedge() && PIN_SSTOP=> && output.macro_hic;
 		|	bool uevent = output.u_event;
 		|
-		|	if (PIN_Q2.posedge()) {
+		|	if (q2pos) {
 		|		state->ram[(state->adr + 1) & 0xf] = state->topu;
 		|	}
 		|
@@ -283,7 +283,7 @@ class XUSTK(PartFactory):
 		|			abort();
 		|		}
 		|	}
-		|	if (q1pos) {
+		|	if (q2pos) {
 		|
 		|		output.nu = data;
 		|	}
