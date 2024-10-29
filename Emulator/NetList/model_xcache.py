@@ -273,11 +273,11 @@ class XCACHE(PartFactory):
 		|
 		|	adr = state->hash << 3;
 		|	if (CMDS(CMD_PTR|CMD_PTW|CMD_PMR|CMD_PMW)) {
-		|		adr |= state->mar_set & 0x4;
-		|		if ((state->mar_set & 3) > 1)
-		|			adr |= 2;
-		|		if ((state->mar_set & 3) == 1 || (state->mar_set & 3) == 2)
-		|			adr |= 1;
+		|		adr |= state->mar_set & 0x7;
+		|		//if ((state->mar_set & 3) > 1)
+		|		//	adr |= 2;
+		|		//if ((state->mar_set & 3) == 1 || (state->mar_set & 3) == 2)
+		|		//	adr |= 1;
 		|	} else {
 		|		adr |= state->a0;
 		|	}
@@ -285,9 +285,9 @@ class XCACHE(PartFactory):
 		|	if (q1pos) {
 		|		state->a0 = 1;
 		|	} else if (q2pos) {
-		|		state->a0 = 3;
-		|	} else if (q3pos) {
 		|		state->a0 = 2;
+		|	} else if (q3pos) {
+		|		state->a0 = 3;
 		|	} else if (q4pos) {
 		|		state->a0 = 0;
 		|	}
@@ -352,12 +352,12 @@ class XCACHE(PartFactory):
 		|		unsigned badr = state->hash << 3;
 		|		if (is_hit(badr | 0, badr | 0, 0)) state->hits |= BSET_0;
 		|		if (is_hit(badr | 1, badr | 1, 1)) state->hits |= BSET_1;
-		|		if (is_hit(badr | 3, badr | 2, 2)) state->hits |= BSET_2;
-		|		if (is_hit(badr | 2, badr | 3, 3)) state->hits |= BSET_3;
+		|		if (is_hit(badr | 2, badr | 2, 2)) state->hits |= BSET_2;
+		|		if (is_hit(badr | 3, badr | 3, 3)) state->hits |= BSET_3;
 		|		if (is_hit(badr | 4, badr | 4, 4)) state->hits |= BSET_4;
 		|		if (is_hit(badr | 5, badr | 5, 5)) state->hits |= BSET_5;
-		|		if (is_hit(badr | 7, badr | 6, 6)) state->hits |= BSET_6;
-		|		if (is_hit(badr | 6, badr | 7, 7)) state->hits |= BSET_7;
+		|		if (is_hit(badr | 6, badr | 6, 6)) state->hits |= BSET_6;
+		|		if (is_hit(badr | 7, badr | 7, 7)) state->hits |= BSET_7;
 		|	}
 		|	if (q1pos) {
 		|		if        (state->hits & BSET_4) { output.seta = 0; output.setb = 0;
