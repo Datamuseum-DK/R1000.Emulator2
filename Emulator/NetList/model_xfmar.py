@@ -48,8 +48,6 @@ class XFMAR(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint8_t hramhi[1<<10];
-		|	uint8_t hramlo[1<<10];
 		|	uint32_t srn, sro, par, ctopn, ctopo;
 		|	unsigned nve, pdreg;
 		|	unsigned moff;
@@ -62,11 +60,6 @@ class XFMAR(PartFactory):
         yield "PIN_QVIOE"
         yield "PIN_QSPCOE"
         yield "PIN_QADROE"
-        yield "BUS_CSA"
-        yield "PIN_INMAR"
-        yield "PIN_PXING"
-        yield "PIN_SELPG"
-        yield "PIN_SELIN"
         yield "PIN_Q4.pos()"
         yield "PIN_NMAT"
 
@@ -180,7 +173,10 @@ class XFMAR(PartFactory):
 		|		(!page_xing && sel_pg_xing && sel_incyc_px && inc_mar && marbot == 0x1f)
 		|	);
 		|
-		|	if (sclk && !PIN_CTCLK=>) {
+		|	unsigned csa;
+		|	BUS_CSA_READ(csa);
+		|
+		|	if (sclk && (csa == 0)) {
 		|		state->ctopn = adr >> 32;
 		|		output.nmatch =
 		|		    (state->ctopn != state->srn) ||
@@ -200,10 +196,6 @@ class XFMAR(PartFactory):
 		|		output.qspc = (state->sro >> 4) & 7;
 		|	}
 		|
-		|	unsigned csa;
-		|	BUS_CSA_READ(csa);
-		|	output.lctp = csa != 0;
-		|
 		|	if (sclk && !PIN_COCLK=>) {
 		|		if (csa <= 1) {
 		|			state->ctopo = adr >> 7;
@@ -216,69 +208,10 @@ class XFMAR(PartFactory):
 		|
 		|	}
 		|
-		|	// HASH RAM
-		|	unsigned spc = output.mspc;
-		|	unsigned nam = state->srn;
-		|	unsigned off = state->moff;
-		|#if 0
-		|	unsigned q = 0, ahi=0, alo=0;
-		|#define BITSPC(n) ((spc >> (2 - n)) & 1)
-		|#define BITNAM(n) ((nam >> (31 - n)) & 1)
-		|#define BITOFF(n) ((off >> (24 - n)) & 1)
-		|
-		|	ahi |= BITNAM(14) << 9;
-		|	ahi |= BITNAM(15) << 8;
-		|	ahi |= BITNAM(16) << 7;
-		|	ahi |= BITNAM(17) << 6;
-		|	ahi |= BITOFF( 9) << 5;
-		|	ahi |= BITOFF(10) << 4;
-		|	ahi |= BITOFF(11) << 3;
-		|	ahi |= BITOFF( 7) << 2;
-		|	ahi |= BITOFF(17) << 1;
-		|	ahi |= BITOFF(18) << 0;
-		|
-		|	alo |= BITNAM(18) << 9;
-		|	alo |= BITNAM(19) << 8;
-		|	alo |= BITNAM(20) << 7;
-		|	alo |= BITNAM(21) << 6;
-		|	alo |= BITOFF(10) << 5;
-		|	alo |= BITOFF(11) << 4;
-		|	alo |= BITOFF(12) << 3;
-		|	alo |= BITOFF(13) << 2;
-		|	alo |= BITOFF(14) << 1;
-		|	alo |= BITOFF(15) << 0;
-		|
-		|	q |= (BITSPC(1) ^ BITNAM(12) ^ BITOFF(17)) << (11- 0);
-		|	q |= (BITOFF(8) ^ BITNAM(13)) << (11- 1);
-		|	q |= (BITSPC(0) ^ BITOFF(18)) << (11-10);
-		|	q |= (BITSPC(2) ^ BITOFF(16)) << (11-11);
-		|	q |= state->hramhi[ahi] << 6;
-		|	q |= state->hramlo[alo] << 2;
-		|	q ^= 0xff << 2;
-		|	output.line = q;
-		|#else
-		|	unsigned hash2 = 0;
-		|	hash2 ^= cache_line_tbl_h[(nam >> 10) & 0x3ff];
-		|	hash2 ^= cache_line_tbl_l[(off >> (13 - 7)) & 0xfff];
-		|	hash2 ^= cache_line_tbl_s[spc];
-		|	output.line = hash2;
-		|#endif
-		|#if 0
-		|	if (hash2 != q && (nam || off || spc)) {
-		|		ALWAYS_TRACE(
-		|			<< std::hex
-		|			<< "WRONGHASH "
-		|			<< nam << " " << off << " " << spc
-		|			<< " " << q
-		|			<< " " << hash2
-		|			<< " - " << ((nam >> 10) & 0x3ff)
-		|			<< " > " << cache_line_tbl_h[(nam >> 10) & 0x3ff]
-		|			<< " " << ((off >> 13) & 0xfff)
-		|			<< " > " << cache_line_tbl_l[(off >> 13) & 0xfff]
-		|			<< " " << cache_line_tbl_s[spc]
-		|		);
-		|	}
-		|#endif
+		|	output.line = 0;
+		|	output.line ^= cache_line_tbl_h[(state->srn >> 10) & 0x3ff];
+		|	output.line ^= cache_line_tbl_l[(state->moff >> (13 - 7)) & 0xfff];
+		|	output.line ^= cache_line_tbl_s[output.mspc];
 		|''')
 
 

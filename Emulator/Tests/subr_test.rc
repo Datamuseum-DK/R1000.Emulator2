@@ -76,6 +76,7 @@ standard_patches
 
 sc_boards() {
 	cli '# => sc_all_boards'
+	cli trace +ioc_pit
 	cli trace +systemc
 	cli sc launch $*
 	for brd in ioc fiu mem0 mem1 mem2 mem3 seq typ val

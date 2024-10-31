@@ -59,6 +59,7 @@ class XMEMMON(FChip):
         self.sig_right(ChipSig("+-->", "SCVHIT"))
         self.sig_right(ChipSig("+-->", "LOGRWD"))
         self.sig_right(ChipSig("+-->", "DNEXT"))
+        self.sig_right(ChipSig("+-->", "CSAWR"))
 
         self.finish()
 

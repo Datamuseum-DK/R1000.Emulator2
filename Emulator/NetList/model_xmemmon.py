@@ -51,7 +51,7 @@ class XMEMMON(PartFactory):
         yield "PIN_H2.pos()"
         yield "BUS_CNDSL_SENSITIVE()"
         yield "BUS_BDHIT_SENSITIVE()"
-        yield "PIN_PGMOD"
+        #yield "PIN_PGMOD"
 
     def state(self, file):
         file.fmt('''
@@ -166,6 +166,7 @@ class XMEMMON(PartFactory):
 		|	// INIT_MRU, ACK_REFRESH, START_IF_INCM, START_TAG_RD, PCNTL0-3
 		|	bool start_if_incw = (pa026 >> 5) & 1;
 		|
+		|	bool pgmod = (output.omq >> 1) & 1;
 		|	unsigned board_hit, pa027a = 0;
 		|	BUS_BDHIT_READ(board_hit);
 		|	pa027a = 0;
@@ -173,7 +174,7 @@ class XMEMMON(PartFactory):
 		|	pa027a |= state->init_mru_d << 4;
 		|	pa027a |= (output.omq & 0xc);
 		|	pa027a |= 1 << 1;
-		|	pa027a |= PIN_PGMOD=> << 0;
+		|	pa027a |= pgmod << 0;
 		|	unsigned pa027 = state->pa027[pa027a];
 		|
 		|
@@ -370,7 +371,7 @@ class XMEMMON(PartFactory):
 		|	pa027a |= state->init_mru_d << 4;
 		|	pa027a |= (output.omq & 0xc);
 		|	pa027a |= 1 << 1;
-		|	pa027a |= PIN_PGMOD=> << 0;
+		|	pa027a |= pgmod << 0;
 		|	pa027 = state->pa027[pa027a];
 		|	output.setq = (pa027 >> 3) & 3;
 		|
@@ -402,6 +403,15 @@ class XMEMMON(PartFactory):
 		|	} else {
 		|		output.dnext = !state->output.dumon;
 		|	}
+		|
+		|	output.csawr = !(
+		|		PIN_LABR=> &&
+		|		PIN_LEABR=> &&
+		|		!(
+		|			output.logrwn ||
+		|			output.mcntl3
+		|		)
+		|	);
 		|''')
 
 def register(part_lib):
