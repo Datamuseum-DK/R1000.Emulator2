@@ -46,10 +46,17 @@ class XSUDEC(PartFactory):
 		|	uint8_t prom43[512];
 		|	uint8_t prom44[512];
 		|	uint8_t bhreg;
+		|	unsigned rreg;
+		|	unsigned lreg;
+		|	unsigned treg;
+		|	bool hint_last;
+		|	bool hint_t_last;
+		|	bool last_late_cond;
 		|''')
 
     def sensitive(self):
         yield "PIN_CLK.pos()"
+        yield "PIN_TCLR"
         yield "PIN_COND"
         yield "PIN_LCOND"
         yield "PIN_BADH"
@@ -103,7 +110,8 @@ class XSUDEC(PartFactory):
 		|	if (state->bhreg & 0x80) adr |= 0x100;
 		|	unsigned rom = state->prom43[adr];
 		|
-		|	output.wdisp  = !(((rom >> 5) & 1) && !output.uasel);
+		|	bool wanna_dispatch = !(((rom >> 5) & 1) && !output.uasel);
+		|	output.wdisp  = wanna_dispatch;
 		|	output.rtn    = !(((rom >> 3) & 1) ||  output.uasel);
 		|	output.pushbr =    (rom >> 1) & 1;
 		|	output.push   = !(((rom >> 0) & 1) ||
@@ -117,7 +125,7 @@ class XSUDEC(PartFactory):
 		|		adr |= br_type << 5;
 		|		rom = state->prom44[adr];
 		|
-		|		if (PIN_SCLKEN=>) {
+		|		if (PIN_SCLKE=>) {
 		|			rom |= 0x2;
 		|		} else {
 		|			rom ^= 0x2;
@@ -128,19 +136,94 @@ class XSUDEC(PartFactory):
 		|			state->bhreg = rom;
 		|		}
 		|
-		|		output.lhint = (state->bhreg >> 1) & 1;
-		|		output.lhintt = (state->bhreg >> 0) & 1;
+		|		state->hint_last = (state->bhreg >> 1) & 1;
+		|		state->hint_t_last = (state->bhreg >> 0) & 1;
 		|	}
 		|	output.dtime = !(!bad_hint && (state->bhreg & 0x10));
 		|	output.dbhint = !(!bad_hint || (state->bhreg & 0x08));
-		|	output.bhint = (!bad_hint || (state->bhreg & 0x08));
+		|	bool bhint2 = (!bad_hint || (state->bhreg & 0x08));
 		|	output.dmdisp = !(!bad_hint || (state->bhreg & 0x04));
 		|	if (!bad_hint) {
 		|		output.mpcmb = PIN_MPRND=>;
 		|	} else {
 		|		output.mpcmb = !((state->bhreg >> 2) & 1);
 		|	}
+       		| 
+		|	if (!PIN_TCLR=>) {
+		|		state->treg = 0;
+		|		output.fo7 = false;
+		|	}
+		|
+		|	if (PIN_CLK.posedge()) {
+		|		if (PIN_SSTOP=> && PIN_BHEN=> && bhint2) {
+		|			unsigned restrt_rnd;
+		|			BUS_RRND_READ(restrt_rnd);
+		|			if (!wanna_dispatch) {
+		|				state->rreg = 0xa;
+		|			} else if (restrt_rnd != 0) {
+		|				state->rreg = (restrt_rnd & 0x3) << 1;
+		|			} else {
+		|				state->rreg &= 0xa;
+		|			}
+		|			if (PIN_MEV=>) {
+		|				state->rreg &= ~0x2;
+		|			}
+		|			BUS_TIN_READ(state->treg);
+		|			state->treg ^= 0x4;
+		|		} else if (PIN_SSTOP=> && PIN_BHEN=>) {
+		|			state->rreg <<= 1;
+		|			state->rreg &= 0xe;
+		|			state->rreg |= 0x1;
+		|			state->treg <<= 1;
+		|			state->treg &= 0xe;
+		|			state->treg |= 0x1;
+		|		}
+		|		output.rq = state->rreg;
+		|		output.fo7 = state->treg >> 3;
+		|
+		|		unsigned lin;
+		|		BUS_LIN_READ(lin);
+		|
+		|		if (!PIN_SCLKE=>) {
+		|			state->lreg = lin;
+		|		}
+		|
+		|		if ((lin & 0x4) && !PIN_SCLKE=>) {
+		|			state->last_late_cond = PIN_COND=>;
+		|		}
+		|
+		|		switch(state->lreg & 0x6) {
+		|		case 0x0:
+		|		case 0x4:
+		|			output.ldc = (state->lreg >> 3) & 1;
+		|			break;
+		|		case 0x2:
+		|			output.ldc = (state->lreg >> 0) & 1;
+		|			break;
+		|		case 0x6:
+		|			output.ldc = state->last_late_cond;
+		|			break;
+		|		}
+		|	}
+		|
+		|	bool last_cond_late = (state->lreg >> 2) & 1;
+		|	if (state->hint_last) {
+		|		output.bhp = false;
+		|	} else if (!last_cond_late && !state->hint_t_last) {
+		|		bool e_or_ml_cond = state->lreg & 1;
+		|		output.bhp = e_or_ml_cond;
+		|	} else if (!last_cond_late &&  state->hint_t_last) {
+		|		bool e_or_ml_cond = state->lreg & 1;
+		|		output.bhp = !e_or_ml_cond;
+		|	} else if ( last_cond_late && !state->hint_t_last) {
+		|		output.bhp = state->last_late_cond;
+		|	} else if ( last_cond_late &&  state->hint_t_last) {
+		|		output.bhp = !state->last_late_cond;
+		|	}
+		|	output.bhn = !output.bhp;
+		|		
 		|''')
+
 
 def register(part_lib):
     ''' Register component model '''
