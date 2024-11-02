@@ -47,11 +47,10 @@ class XIOCWCS(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t ram[1<<14];
-		|	uint16_t tram[1<<11];
-		|	unsigned ctr;
+		|	uint64_t ram[1<<14];	// Z023
+		|	uint16_t tram[1<<11];	// Z023
+		|	unsigned tracnt;	// Z023
 		|	unsigned sr0, sr1;
-		|	unsigned tracnt;
 		|	unsigned aen;
 		|	bool csa_hit;
 		|	bool dummy_en;
@@ -60,10 +59,6 @@ class XIOCWCS(PartFactory):
     def sensitive(self):
         yield "PIN_Q2.neg()"
         yield "PIN_Q4.pos()"
-        yield "PIN_DGADR"
-        yield "BUS_UADR_SENSITIVE()"
-        yield "PIN_TRRDD"
-        yield "PIN_TRRDA"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -72,11 +67,7 @@ class XIOCWCS(PartFactory):
 		|	bool q4_pos = PIN_Q4.posedge();
 		|	unsigned uadr;
 		|
-		|	if (PIN_DGADR=>) {
-		|		BUS_UADR_READ(uadr);
-		|	} else {
-		|		uadr = state->ctr & BUS_UADR_MASK;
-		|	}
+		|	BUS_UADR_READ(uadr);
 		|
 		|	bool uir_clk = false;
 		|
@@ -85,88 +76,34 @@ class XIOCWCS(PartFactory):
 		|		output.dumen = state->dummy_en;
 		|		state->csa_hit = !PIN_ICSAH=>;
 		|		output.csahit = state->csa_hit;
-		|		if (PIN_TRAWR=>) {
-		|			unsigned tmp = 0;
-		|			if (PIN_CLKSTP=>)
-		|				tmp |= 0x8000;
-		|			if (state->csa_hit)
-		|				tmp |= 0x4000;
-		|			tmp |= uadr & 0x3fff;
-		|			state->tram[state->tracnt] = tmp;
-		|		}
-		|		if (!PIN_TRALD=>) {
-		|			BUS_IDG_READ(state->tracnt);
-		|			state->tracnt &= 0x7ff;
-		|		} else 	if (PIN_TRAEN=>) {
+		|
+		|		unsigned tmp = 0;
+		|		if (PIN_CLKSTP=>)
+		|			tmp |= 0x8000;
+		|		if (state->csa_hit)
+		|			tmp |= 0x4000;
+		|		tmp |= uadr & 0x3fff;
+		|		state->tram[state->tracnt] = tmp;
+		|
+		|		if (PIN_TRAEN=>) {
 		|			state->tracnt += 1;
 		|			state->tracnt &= 0x7ff;
 		|		}
 		|
-		|		if (!PIN_SFSTOP=> && !PIN_DGUCEN=>)
+		|		if (!PIN_SFSTOP=>)
 		|			uir_clk = true;
-		|		if (!PIN_CTRCLR=>) {
-		|			// Sync reset
-		|			state->ctr = 0;
-		|		} else if (PIN_CTRCNT=>) {
-		|			// Hold
-		|		} else {
-		|			// Count Down
-		|			state->ctr += 0xffff;
-		|		}
-		|		state->ctr &= 0xffff;
-		|
 		|	}
 		|
 		|	if (q4_pos && uir_clk) {
-		|		unsigned uirs, diag;
-		|		BUS_UIRS_READ(uirs);
-		|		BUS_IDG_READ(diag);
-		|		switch (uirs & 0xc) {
-		|		case 0x0:
-		|			break;
-		|		case 0x4:
-		|			state->sr0 <<= 1;
-		|			state->sr0 |= 1;
-		|			break;
-		|		case 0x8:
-		|			state->sr0 >>= 1;
-		|			if (diag & 0x8000)
-		|				state->sr0 |= 0x80;
-		|			else
-		|				state->sr0 &= 0x7f;
-		|			break;
-		|		case 0xc:
-		|			state->sr0 = state->ram[uadr] >> 8;
-		|			break;
-		|		}
+		|		state->sr0 = state->ram[uadr] >> 8;
 		|		state->sr0 &= 0xff;
-		|
-		|		switch (uirs & 0x3) {
-		|		case 0x0:
-		|			break;
-		|		case 0x1:
-		|			state->sr1 <<= 1;
-		|			state->sr1 |= 1;
-		|			break;
-		|		case 0x2:
-		|			state->sr1 >>= 1;
-		|			if (diag & 0x4000)
-		|				state->sr1 |= 0x80;
-		|			else
-		|				state->sr1 &= 0x7f;
-		|			break;
-		|		case 0x3:
-		|			state->sr1 = state->ram[uadr] & 0xff;
-		|			break;
-		|		}
+		|		state->sr1 = state->ram[uadr] & 0xff;
 		|		state->sr1 &= 0xff;
 		|
 		|		unsigned uir = (state->sr0 << 8) | state->sr1;
 		|		assert(uir <= 0xffff);
 		|
 		|		output.uir = uir;
-		|		output.odg = uir & 0x0001;
-		|		output.odg |= (uir >> 7) & 0x0002;
 		|
 		|		state->aen = (uir >> 6) & 3;
 		|
@@ -177,16 +114,6 @@ class XIOCWCS(PartFactory):
 		|
 		|	if (PIN_Q2.negedge()) {
 		|		output.aen = (1 << state->aen) ^ 0xf;
-		|	}
-		|
-		|	if (!PIN_TRRDD=>) {
-		|		output.z_dgo = false;
-		|		output.dgo = state->tram[state->tracnt];
-		|	} else if (!PIN_TRRDA=>) {
-		|		output.z_dgo = false;
-		|		output.dgo = state->tracnt | 0xb800;
-		|	} else {
-		|		output.z_dgo = true;
 		|	}
 		|
 		|''')

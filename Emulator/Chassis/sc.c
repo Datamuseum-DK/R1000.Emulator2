@@ -136,8 +136,6 @@ load_programmable(const char *who, void *dst, size_t size, const char *arg)
 		fprintf(stderr, "Firmware '%s' missing for '%s'\n", arg, who);
 		fprintf(stderr, "(run 'make setup_systemc' ?)\n");
 		exit(2);
-	} else {
-		sc_tracef(who, "FIRMWARE %s => %s", arg, buf);
 	}
 }
 

@@ -141,7 +141,7 @@ class XIOC53(PartFactory):
 		|	output.r |= state->pb012[rand] << 0;
 		|	output.r &= 0x01f064;
 		|
-		|	bool uir_load_wdr = !(load_wdr || PIN_DIAGLW=>);
+		|	bool uir_load_wdr = !load_wdr;
 		|
 		|	output.ldwdr = !(uir_load_wdr && PIN_SCLKST=>);
 		|

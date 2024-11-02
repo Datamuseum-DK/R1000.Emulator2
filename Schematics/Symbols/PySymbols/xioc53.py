@@ -17,7 +17,6 @@ class XIOC53(FChip):
         self.sig_left(ChipSig("-->+", "DUMEN"))
         self.sig_left(ChipSig("-->+", "CSAHIT"))
         self.sig_left(ChipSig("-->+", "RAND", 0, 5))
-        self.sig_left(ChipSig("-->+", "DIAGLW"))
         self.sig_left(ChipSig("-->+", "SCLKST"))
         self.sig_left(ChipSig("-->+", "RSTRDR"))
 
