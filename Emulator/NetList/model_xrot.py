@@ -42,6 +42,9 @@ class XROTF(PartFactory):
 
     autopin = True
 
+    def extra(self, file):
+        file.include("Infra/cache_line.h")
+
     def state(self, file):
         file.fmt('''
 		|       unsigned oreg;
@@ -53,6 +56,11 @@ class XROTF(PartFactory):
 		|	uint64_t marh;
 		|	unsigned lfreg;
 		|	sc_core::sc_event_or_list *idle_this;
+		|
+		|	uint32_t srn, sro, par, ctopn, ctopo;
+		|	unsigned nve, pdreg;
+		|	unsigned moff;
+		|	bool pdt;
 		|''')
 
     def private(self):
@@ -98,7 +106,13 @@ class XROTF(PartFactory):
         yield "BUS_DT"
         yield "BUS_DV"
         yield "BUS_MCND"
-        yield "BUS_ASPC"
+
+        yield "PIN_CLK2X.pos()"
+        # yield "BUS_IREG"
+        # yield "PIN_QVIOE"
+        yield "PIN_QSPCOE"
+        yield "PIN_QADROE"
+        # yield "PIN_Q4.pos()"
 
         # yield "BUS_AO"		# OCLK
         # yield "PIN_FSRC"		# UCODE, H1
@@ -126,6 +140,14 @@ class XROTF(PartFactory):
         file.fmt('''
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool sclk = q4pos && !PIN_SCLKE=>;
+		|
+		|	unsigned csa;
+		|	BUS_CSA_READ(csa);
+		|
+		|	unsigned mcnd;
+		|	BUS_MCND_READ(mcnd);
+		|
+		|{
 		|	uint64_t ft, tir, vir, m;
 		|	unsigned msk, s, fs, u, sgn;
 		|	bool sgnbit;
@@ -347,14 +369,14 @@ class XROTF(PartFactory):
 		|	vout = (state->rdq & vmsk);
 		|	vout |= (tii & (vmsk ^ BUS_DV_MASK));
 		|
+		|
 		|	output.z_qt = PIN_QTOE=>;			// UCODE
-		|	if (!output.z_qt and !PIN_MOE=>) {		// UCODE
+		|	if (!output.z_qt and !PIN_MAROE=>) {		// UCODE
 		|		uint64_t tmp;
-		|		BUS_ASPC_READ(tmp);
-		|		state->marh &= ~BUS_ASPC_MASK;
+		|		tmp = (state->sro >> 4) & 0x7;
+		|		state->marh &= ~0x07;
 		|		state->marh |= tmp;
-		|		BUS_MCND_READ(tmp);
-		|		tmp ^= BUS_MCND_MASK;
+		|		tmp = mcnd ^ BUS_MCND_MASK; 
 		|		state->marh &= ~(0x1efULL << 23ULL);
 		|		state->marh |= tmp << 23ULL;
 		|		output.qt = ~state->marh;
@@ -414,7 +436,7 @@ class XROTF(PartFactory):
 		|		} else {
 		|			BUS_AO_READ(state->oreg);	// ???
 		|		}
-		|		output.oreg = state->oreg;
+		|		output.oreg0 = state->oreg >> 6;
 		|	}
 		|
 		|	if (sclk) {
@@ -479,6 +501,150 @@ class XROTF(PartFactory):
 		|	} else {
 		|		idle_next = state->idle_this;
 		|	}
+		|	idle_next = NULL;
+		|}
+		|''')
+
+        file.fmt('''
+		|{
+		|	unsigned a, b, dif;
+		|	bool co, name_match, in_range;
+		|
+		|	if (sclk) {
+		|		// CSAFFB
+		|		state->pdt = !PIN_PRED=>;
+		|
+		|		// NVEMUX + CSAREG
+		|		BUS_CNV_READ(state->nve);
+		|	}
+		|
+		|	a = state->ctopo & 0xfffff;
+		|	b = state->moff & 0xfffff;
+		|
+		|	if (sclk && !(csa >> 2)) {
+		|		state->pdreg = a;
+		|	}
+		|
+		|	if (state->pdt) {
+		|		co = a <= state->pdreg;
+		|		dif = ~0xfffff + state->pdreg - a;
+		|	} else {
+		|		co = b <= a;
+		|		dif = ~0xfffff + a - b;
+		|	}
+		|	dif &= 0xfffff;
+		|
+		|	name_match = 
+		|		    (state->ctopn != state->srn) ||
+		|		    ((state->sro & 0xf8000070 ) != 0x10);
+		|
+		|	// CNAN0B, CINV0B, CSCPR0
+		|	in_range = (!state->pdt && name_match) || (dif & 0xffff0);
+		|	output.inrg = in_range;
+		|
+		|	output.hofs = 0xf + state->nve - (dif & 0xf);
+		|
+		|	output.chit = !(
+		|		co &&
+		|		!(
+		|			in_range ||
+		|			((dif & 0xf) >= state->nve)
+		|		)
+		|	);
+		|
+		|	if (q4pos) {
+		|		output.oor = !(co || name_match);
+		|	}
+		|
+		|	uint64_t adr;
+		|	BUS_DADR_READ(adr);
+		|
+		|	if (q4pos) {
+		|		bool load_mar = PIN_LMAR=>;
+		|		bool sclk_en = !PIN_SCLKE=>;
+		|
+		|		if (load_mar && sclk_en) {
+		|			uint64_t tmp;
+		|			state->srn = adr >> 32;
+		|			state->sro = adr & 0xffffff80;
+		|			BUS_DSPC_READ(tmp);
+		|			state->sro |= tmp << 4;
+		|			state->sro |= 0xf;
+		|		}
+		|		// output.mspc = (state->sro >> 4) & BUS_MSPC_MASK;
+		|		state->moff = (state->sro >> 7) & 0xffffff;
+		|
+		|		output.wez = (state->moff & 0x3f) == 0;
+		|		output.ntop = !	((state->moff & 0x3f) > 0x30);
+		|
+		|		state->par = odd_parity64(state->srn) << 4;
+		|		state->par |= offset_parity(state->sro) ^ 0xf;
+		|		output.nmatch =
+		|		    (state->ctopn != state->srn) ||
+		|		    ((state->sro & 0xf8000070 ) != 0x10);
+		|	}
+		|
+		|	unsigned mar_offset = state->moff;
+		|	bool inc_mar = PIN_INMAR=>;
+		|	bool page_xing = (mcnd >> 6) & 1;
+		|	bool sel_pg_xing = PIN_SELPG=>;
+		|	bool sel_incyc_px = PIN_SELIN=>;
+		|
+		|	unsigned marbot = mar_offset & 0x1f;
+		|	unsigned inco = marbot;
+		|	if (inc_mar && inco != 0x1f)
+		|		inco += 1;
+		|	inco |= mar_offset & 0x20;
+		|
+		|	output.z_qadr = PIN_QADROE=>;
+		|	if (!output.z_qadr) {
+		|		output.qadr = (uint64_t)state->srn << 32;
+		|		output.qadr |= state->sro & 0xfffff000;
+		|		output.qadr |= (inco & 0x1f) << 7;
+		|		output.qadr |= state->oreg;
+		|	}
+		|
+		|	output.pxnx = (
+		|		(page_xing && sel_pg_xing && sel_incyc_px) ||
+		|		(!page_xing && sel_pg_xing && sel_incyc_px && inc_mar && marbot == 0x1f)
+		|	);
+		|
+		|	if (sclk && (csa == 0)) {
+		|		state->ctopn = adr >> 32;
+		|		output.nmatch =
+		|		    (state->ctopn != state->srn) ||
+		|		    ((state->sro & 0xf8000070 ) != 0x10);
+		|	}
+		|
+		|	if (!output.z_qv && !PIN_MAROE=>) {
+		|		output.qv = (uint64_t)state->srn << 32;
+		|		output.qv |= state->sro & 0xffffff80;
+		|		output.qv |= state->oreg;
+		|		output.qv ^= BUS_QV_MASK;
+		|	}
+		|
+		|	output.z_qspc = PIN_QSPCOE=>;
+		|	if (!output.z_qspc) {
+		|		output.qspc = (state->sro >> 4) & 7;
+		|	}
+		|
+		|	if (sclk && !(csa >> 2)) {
+		|		if (csa <= 1) {
+		|			state->ctopo = adr >> 7;
+		|		} else if (!(csa & 1)) {
+		|			state->ctopo += 1;
+		|		} else {
+		|			state->ctopo += 0xfffff;
+		|		}
+		|		state->ctopo &= 0xfffff;
+		|
+		|	}
+		|
+		|	output.line = 0;
+		|	output.line ^= cache_line_tbl_h[(state->srn >> 10) & 0x3ff];
+		|	output.line ^= cache_line_tbl_l[(state->moff >> (13 - 7)) & 0xfff];
+		|	output.line ^= cache_line_tbl_s[(state->sro >> 4) & 0x7];
+		|}
 		|''')
 
 def register(part_lib):
