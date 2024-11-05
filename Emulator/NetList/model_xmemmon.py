@@ -128,7 +128,6 @@ class XMEMMON(PartFactory):
 		|	mem_start ^= 0x1e;
 		|	if (pos)
 		|		state->mstat[mem_start]++;
-		|	output.ackrfs = mem_start != 0x6;
 		|
 		|	unsigned condsel;
 		|	BUS_CNDSL_READ(condsel);
@@ -200,7 +199,7 @@ class XMEMMON(PartFactory):
 		|		output.csaht = !PIN_ICSA=>;
 		|	}
 		|
-		|	uint32_t ti = 0;
+		|	uint64_t ti = 0;
 		|	if (rmarp)
 		|		BUS_TI_READ(ti);
 		|
@@ -208,7 +207,7 @@ class XMEMMON(PartFactory):
 		|	if (condsel == 0x69) {		// SCAVENGER_HIT
 		|		scav_trap_next = false;
 		|	} else if (rmarp) {
-		|		scav_trap_next = (ti >> (63 - 32)) & 1;
+		|		scav_trap_next = (ti >> BUS_TI_LSB(32)) & 1;
 		|	} else if (state->log_query) {
 		|		scav_trap_next = false;
 		|	}
@@ -217,7 +216,7 @@ class XMEMMON(PartFactory):
 		|	if (condsel == 0x6b) {		// CACHE_MISS
 		|		cache_miss_next = false;
 		|	} else if (rmarp) {
-		|		cache_miss_next = (ti >> (63 - 35)) & 1;
+		|		cache_miss_next = (ti >> BUS_TI_LSB(35)) & 1;
 		|	} else if (state->log_query) {
 		|		cache_miss_next = PIN_MISS=>;
 		|	}
@@ -226,7 +225,7 @@ class XMEMMON(PartFactory):
 		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
 		|		csa_oor_next = false;
 		|	} else if (rmarp) {
-		|		csa_oor_next = (ti >> (63 - 33)) & 1;
+		|		csa_oor_next = (ti >> BUS_TI_LSB(33)) & 1;
 		|	} else if (state->log_query) {
 		|		csa_oor_next = PIN_CSAOOR=>;
 		|	}
@@ -238,7 +237,7 @@ class XMEMMON(PartFactory):
 		|		state->rtv_next_d = state->rtv_next;
 		|
 		|		if (rmarp) {
-		|			state->mar_modified = (ti >> (63 - 39)) & 1;
+		|			state->mar_modified = (ti >> BUS_TI_LSB(39)) & 1;
 		|		} else if (condsel == 0x6d) {
 		|			state->mar_modified = 1;
 		|		} else if (state->omf20) {
@@ -247,15 +246,15 @@ class XMEMMON(PartFactory):
 		|			state->mar_modified = le_abort;
 		|		}
 		|		if (rmarp) {
-		|			state->incmplt_mcyc = (ti >> (63 - 40)) & 1;
+		|			state->incmplt_mcyc = (ti >> BUS_TI_LSB(40)) & 1;
 		|		} else if (start_if_incw) {
 		|			state->incmplt_mcyc = true;
 		|		} else if (memcyc1) {
 		|			state->incmplt_mcyc = le_abort;
 		|		}
 		|		if (rmarp) {
-		|			state->phys_last = (ti >> (63 - 37)) & 1;
-		|			state->write_last = (ti >> (63 - 38)) & 1;
+		|			state->phys_last = (ti >> BUS_TI_LSB(37)) & 1;
+		|			state->write_last = (ti >> BUS_TI_LSB(38)) & 1;
 		|		} else if (memcyc1) {
 		|			state->phys_last = state->phys_ref;
 		|			state->write_last = output.mcntl3;
@@ -299,7 +298,7 @@ class XMEMMON(PartFactory):
 		|		output.omq |= (pa027 & 3) << 2;
 		|		output.omq |= ((pa027 >> 5) & 1) << 1;
 		|		if (rmarp)
-		|			state->page_xing = (ti >> (63 - 34)) & 1;
+		|			state->page_xing = (ti >> BUS_TI_LSB(34)) & 1;
 		|		else
 		|			state->page_xing = PIN_PXNXT=>;
 		|		state->init_mru_d = (pa026 >> 7) & 1;

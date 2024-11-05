@@ -45,7 +45,7 @@ class XROTF(FChip):
         self.sig_left(ChipSig("-->+", "FSRC"))
         self.sig_left(ChipSig("-->+", "LSRC"))
         self.sig_left(ChipSig("-->+", "ORSR"))
-        self.sig_left(ChipSig("-->+", "AO", 0, 6))
+        self.sig_left(ChipSig("-->+", "MSTA", 0, 4))
 
         self.sig_right(ChipSig("+<->", "DQV", 0, 63))
         self.sig_right(ChipSig("+<--", "QVOE"))
@@ -76,6 +76,7 @@ class XROTF(FChip):
         self.sig_right(ChipSig("+-->", "HOFS", 0, 3))
         self.sig_right(ChipSig("+-->", "INRG"))
         self.sig_right(ChipSig("+-->", "CHIT"))
+        self.sig_right(ChipSig("+-->", "RFSH"))
         self.finish()
 
 def register():

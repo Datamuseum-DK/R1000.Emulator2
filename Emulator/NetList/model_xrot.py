@@ -47,6 +47,7 @@ class XROTF(PartFactory):
 
     def state(self, file):
         file.fmt('''
+		|	uint16_t refresh_count;			// Z025
 		|       unsigned oreg;
 		|       uint64_t mdreg;
 		|	uint64_t treg;
@@ -61,6 +62,7 @@ class XROTF(PartFactory):
 		|	unsigned nve, pdreg;
 		|	unsigned moff;
 		|	bool pdt;
+		|
 		|''')
 
     def private(self):
@@ -114,7 +116,6 @@ class XROTF(PartFactory):
         yield "PIN_QADROE"
         # yield "PIN_Q4.pos()"
 
-        # yield "BUS_AO"		# OCLK
         # yield "PIN_FSRC"		# UCODE, H1
         # yield "PIN_FT"		# UCODE, H1
         # yield "PIN_FV"		# UCODE, H1
@@ -434,7 +435,8 @@ class XROTF(PartFactory):
 		|		if (PIN_ORSR=>) {			// UCODE
 		|			state->oreg = off_lit;
 		|		} else {
-		|			BUS_AO_READ(state->oreg);	// ???
+		|			BUS_DADR_READ(state->oreg);
+		|			state->oreg &= 0x7f;
 		|		}
 		|		output.oreg0 = state->oreg >> 6;
 		|	}
@@ -645,6 +647,19 @@ class XROTF(PartFactory):
 		|	output.line ^= cache_line_tbl_l[(state->moff >> (13 - 7)) & 0xfff];
 		|	output.line ^= cache_line_tbl_s[(state->sro >> 4) & 0x7];
 		|}
+		|
+		|	if (q4pos) {
+		|		unsigned mem_start;
+		|		BUS_MSTA_READ(mem_start);
+		|		if (mem_start == 0x18) {
+		|			uint64_t tmp;
+		|			BUS_DT_READ(tmp);
+		|			state->refresh_count = tmp >> 48;
+		|		} else if (state->refresh_count != 0xffff) {
+		|			state->refresh_count++;
+		|		}
+		|		output.rfsh = state->refresh_count != 0xffff;
+		|	}
 		|''')
 
 def register(part_lib):
