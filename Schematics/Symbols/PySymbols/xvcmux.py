@@ -16,13 +16,6 @@ class XVCMUX(FChip):
         self.sig_left(ChipSig("===+", "DQF", 0, 63))
         self.sig_left(ChipSig("-->+", "QFOE"))
 
-        self.sig_right(ChipSig("+<->", "DQV", 0, 63))
-        self.sig_right(ChipSig("+<--", "QVOE"))
-
-        self.sig_right(ChipSig("+===", "ADR", 0, 63))
-        self.sig_right(ChipSig("+<--", "ADROE"))
-
-        # self.sig_left(ChipSig("-->+", "ALU", 0, 63))
         self.sig_left(ChipSig("-->+", "SEL", 0, 1))
         self.sig_left(ChipSig("-->+", "CSRC"))
         self.sig_left(ChipSig("-->+", "Q2"))
@@ -39,9 +32,6 @@ class XVCMUX(FChip):
         self.sig_left(ChipSig("-->+", "UIRC", 0, 5))
         self.sig_left(ChipSig("-->+", "MSRC", 0, 3))
         self.sig_left(ChipSig("-->+", "SPC", 0, 2))
-        self.sig_left(ChipSig("<--+", "COM"))
-        self.sig_left(ChipSig("<--+", "COH"))
-        self.sig_left(ChipSig("<--+", "ZERO", 0, 7))
         self.sig_left(ChipSig("-->+", "RAND", 0, 3))
         self.sig_left(ChipSig("-->+", "LBOT"))
         self.sig_left(ChipSig("-->+", "LTOP"))
@@ -52,25 +42,29 @@ class XVCMUX(FChip):
         self.sig_left(ChipSig("-->+", "ALOOP"))
         self.sig_left(ChipSig("-->+", "BLOOP"))
         self.sig_left(ChipSig("-->+", "AFNC", 0, 4))
-        self.sig_left(ChipSig("-->+", "ACND"))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
-        self.sig_left(ChipSig("-->+", "LVAL"))
+        self.sig_left(ChipSig("-->+", "AWE"))
+        self.sig_left(ChipSig("-->+", "CNCLK"))
+        self.sig_left(ChipSig("-->+", "QBI"))
 
-        self.sig_right(ChipSig("+<--", "AWE"))
 
-        self.sig_right(ChipSig("+-->", "AMSB"))
-        self.sig_right(ChipSig("+-->", "BMSB"))
-        self.sig_right(ChipSig("+-->", "CMSB"))
+        self.sig_right(ChipSig("+<->", "DQV", 0, 63))
+        self.sig_right(ChipSig("+<--", "QVOE"))
+
+        self.sig_right(ChipSig("+===", "ADR", 0, 63))
+        self.sig_right(ChipSig("+<--", "ADROE"))
 
         self.sig_right(ChipSig("+-->", "CNTZ"))
         self.sig_right(ChipSig("+-->", "DIV"))
-        self.sig_right(ChipSig("+-->", "CNT", 0, 9))
         self.sig_right(ChipSig("+-->", "CNTOV"))
         self.sig_right(ChipSig("+-->", "CWE"))
         self.sig_right(ChipSig("+-->", "WEN"))
-        self.sig_right(ChipSig("+-->", "ISBIN"))
-        self.sig_right(ChipSig("+-->", "SEA"))
-        self.sig_right(ChipSig("+-->", "OVREN"))
+        self.sig_right(ChipSig("+-->", "COH"))
+        self.sig_right(ChipSig("+-->", "VCNDA"))
+        self.sig_right(ChipSig("+-->", "VCNDB"))
+        self.sig_right(ChipSig("+-->", "VCNDC"))
+        self.sig_right(ChipSig("+-->", "M"))
+        self.sig_right(ChipSig("+-->", "QBIT"))
 
         self.finish()
 

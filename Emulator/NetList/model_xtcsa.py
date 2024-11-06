@@ -45,6 +45,8 @@ class XTCSA(PartFactory):
         file.fmt('''
 		|	uint8_t elprom[512];
 		|	uint8_t sr;
+		|	bool inval_csa;
+		|	bool tf_pred;
 		|''')
 
     def init(self, file):
@@ -68,15 +70,15 @@ class XTCSA(PartFactory):
 
         file.fmt('''
 		|
-		|	bool invlast = (state->sr >> 1) & 1;
-		|	bool pdc1 = state->sr & 1;
+		|	bool invlast = state->inval_csa;
+		|	bool pdc1 = state->tf_pred;
 		|	bool invalidate_csa = !(PIN_CSAHIT=> && !pdc1);
 		|	unsigned hit_offs;
 		|	BUS_HITOF_READ(hit_offs);
 		|
 		|	unsigned adr;
 		|	if (pdc1) {
-		|		adr = state->sr >> 4;
+		|		adr = state->sr;
 		|		adr |= 0x100;
 		|	} else {
 		|		BUS_HITOF_READ(adr);
@@ -89,7 +91,6 @@ class XTCSA(PartFactory):
 		|	if (invlast)
 		|		adr |= (1<<7);
 		|
-		|	output.nve = state->elprom[adr] >> 4;
 		|	unsigned q = state->elprom[adr];
 		|	bool load_ctl_top = (q >> 3) & 0x1;
 		|	bool load_top_bot = (q >> 2) & 0x1;
@@ -111,18 +112,11 @@ class XTCSA(PartFactory):
 		|	}
 		|
 		|	if (PIN_CSACLK.posedge()) {
-		|		if (!PIN_UIRSL0=>) {
-		|			state->sr = state->output.nve << 4;
-		|			if (load_ctl_top) state->sr |= 0x8;
-		|			if (load_top_bot) state->sr |= 0x4;
-		|			if (invalidate_csa) state->sr |= 0x2;
-		|			if (PIN_TFPRED=>) state->sr |= 0x1;
-		|		} else {
-		|			state->sr >>= 1;
-		|			if (PIN_DIAG14=>)
-		|				state->sr |= 0x80;
-		|		}
+		|		state->sr = output.nve;
+		|		state->inval_csa = invalidate_csa;
+		|		state->tf_pred = PIN_TFPRED=>;
 		|	}
+		|	output.nve = q >> 4;
 		|
 		|''')
 

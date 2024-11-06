@@ -16,8 +16,6 @@ class XTCSA(FChip):
         self.sig_left(ChipSig("-->+", "HITOF", 0, 3))
         self.sig_left(ChipSig("-->+", "CSACT", 0, 2))
         self.sig_left(ChipSig("-->+", "CSACLK"))
-        self.sig_left(ChipSig("-->+", "UIRSL0"))
-        self.sig_left(ChipSig("-->+", "DIAG14"))
         self.sig_left(ChipSig("-->+", "TFPRED"))
         self.sig_left(ChipSig("-->+", "CSAHIT"))
 

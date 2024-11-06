@@ -47,7 +47,7 @@ class XVCMUX(PartFactory):
 		|	uint64_t rfram[1<<10];		// Z013
 		|	uint64_t a, b, c;
 		|	uint64_t wdr;
-		|	uint64_t zero;
+		|	uint64_t zerocnt;
 		|	uint64_t malat, mblat, mprod, msrc;
 		|	uint64_t alu;
 		|	unsigned count;
@@ -61,6 +61,9 @@ class XVCMUX(PartFactory):
 		|	unsigned cadr;
 		|	uint8_t pa010[512];
 		|	uint8_t pa011[512];
+		|	bool amsb, bmsb, cmsb, mbit, last_cond;
+		|	bool isbin, sub_else_add, ovren, carry_middle;
+		|	uint8_t zero;
 		|''')
 
     def init(self, file):
@@ -86,6 +89,137 @@ class XVCMUX(PartFactory):
         yield "PIN_UCLK.pos()"
         yield "PIN_CCLK.pos()"
         yield "PIN_H2"
+
+    def priv_decl(self, file):
+        file.fmt('''
+		|	bool ovrsgn(void);
+		|	bool cond_a(unsigned csel);
+		|	bool cond_b(unsigned csel);
+		|	bool cond_c(unsigned csel);
+		|''')
+
+    def priv_impl(self, file):
+        file.fmt('''
+		|bool
+		|SCM_«mmm» ::
+		|ovrsgn(void)
+		|{
+		|	bool a0 = state->amsb;
+		|	bool b0 = state->bmsb;
+		|	bool se = state->isbin;
+		|	return (!(
+		|		(se && (a0 ^ b0)) ||
+		|		(!se && !a0)
+		|	));
+		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|cond_a(unsigned csel)
+		|{
+		|	bool cond;
+		|	switch (csel & 0x7) {
+		|	case 0:
+		|		cond = (state->zero != 0xff);
+		|		break;
+		|	case 1:
+		|	case 6:
+		|		cond = (state->zero == 0xff);
+		|		break;
+		|	case 2:
+		|		cond = !(
+		|			(state->bmsb && (state->amsb ^ state->bmsb)) ||
+		|			(!output.coh && (ovrsgn() ^ state->sub_else_add))
+		|		);
+		|		break;
+		|	case 4:
+		|		cond = state->count != 0x3ff;
+		|		break;
+		|	case 7:
+		|		cond = state->carry_middle;
+		|		break;
+		|	default:
+		|		cond = true;
+		|		break;
+		|	}
+		|	output.vcnda = !cond;
+		|	if (PIN_CNCLK.posedge()) {
+		|		state->last_cond = cond;
+		|	}
+		|	return (cond);
+		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|cond_b(unsigned csel)
+		|{
+		|	bool cond;
+		|	switch (csel & 0x7) {
+		|	case 0:
+		|		cond = !output.coh;
+		|		break;
+		|	case 1:
+		|		cond = state->ovren || !(ovrsgn() ^ state->sub_else_add ^ (!output.coh) ^ state->cmsb);
+		|		break;
+		|	case 2:
+		|		cond = state->cmsb;
+		|		break;
+		|	case 3:
+		|		cond = !state->cmsb || (state->zero == 0xff);
+		|		break;
+		|	case 4:
+		|		cond = (state->amsb ^ state->bmsb);
+		|		break;
+		|	case 7:
+		|		cond = state->last_cond;
+		|		break;
+		|	default:
+		|		cond = true;
+		|		break;
+		|	}
+		|	output.vcndb = !cond;
+		|	if (PIN_CNCLK.posedge()) {
+		|		state->last_cond = cond;
+		|	}
+		|	return (cond);
+		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|cond_c(unsigned csel)
+		|{
+		|	bool cond;
+		|	
+		|	switch (csel & 7) {
+		|	case 0:
+		|		cond = ((state->zero & 0xf0) != 0xf0);
+		|		break;
+		|	case 1:
+		|		cond = ((state->zero & 0xfc) != 0xfc);
+		|		break;
+		|	case 2:
+		|		cond = ((state->zero & 0x0c) != 0x0c);
+		|		break;
+		|	case 3:
+		|		cond = PIN_QBI=>;
+		|		break;
+		|	case 5:
+		|		cond = state->mbit;
+		|		break;
+		|	case 6:
+		|		cond = false;
+		|		break;
+		|	default:
+		|		cond = true;
+		|		break;
+		|	}
+		|	output.vcndc = !cond;
+		|	if (PIN_CNCLK.posedge()) {
+		|		state->last_cond = cond;
+		|	}
+		|	return (cond);
+		|}
+		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -173,7 +307,7 @@ class XVCMUX(PartFactory):
 		|	if (q2pos || (!h2 && !output.z_qf)) {
 		|		if (uira == 0x28) {
 		|			state->a = state->count;
-		|			state->a |= ~BUS_CNT_MASK;
+		|			state->a |= ~0x3ff;
 		|		} else if (uira == 0x29) {
 		|			unsigned mdst;
 		|			// BUS_MDST_READ(mdst);
@@ -187,7 +321,7 @@ class XVCMUX(PartFactory):
 		|			}
 		|			state->a ^= BUS_DV_MASK;
 		|		} else if (uira == 0x2a) {
-		|			state->a = state->zero;
+		|			state->a = state->zerocnt;
 		|		} else if (uira == 0x2b) {
 		|			state->a = BUS_DV_MASK;
 		|		} else {
@@ -196,7 +330,7 @@ class XVCMUX(PartFactory):
 		|		if (!output.z_qf) {
 		|			output.qf = state->a ^ BUS_QF_MASK;
 		|		}
-		|		output.amsb = state->a >> 63;
+		|		state->amsb = state->a >> 63;
 		|	}
 		|
 		|	output.z_qv = PIN_QVOE=>;
@@ -234,7 +368,7 @@ class XVCMUX(PartFactory):
 		|		if (!output.z_qv) {
 		|			output.qv = state->b ^ BUS_QV_MASK;
 		|		}
-		|		output.bmsb = state->b >> 63;
+		|		state->bmsb = state->b >> 63;
 		|	}
 		|
 		|	if (q2pos) {
@@ -258,11 +392,17 @@ class XVCMUX(PartFactory):
 		|
 		|		BUS_AFNC_READ(proma);
 		|		proma |= alur << 5;
-		|		if (PIN_ACND=>)
+		|		if (
+		|			!(
+		|				(state->last_cond && output.div) ||
+		|				(PIN_QBI=> && !output.div)
+		|			)
+		|		) {
 		|			proma |= 0x100;
+		|		}
 		|
 		|		tmp = state->pa011[proma];			// S0-4.LOW
-		|		output.isbin = (tmp >> 1) & 1;			// IS_BINARY
+		|		state->isbin = (tmp >> 1) & 1;			// IS_BINARY
 		|		f181l.ctl = (tmp >> 4) & 0xf;
 		|		f181l.ctl |= ((tmp >> 3) & 1) << 4;
 		|		f181l.ctl |= 1 << 5;
@@ -270,12 +410,12 @@ class XVCMUX(PartFactory):
 		|		f181l.a = state->a & 0xffffffff;
 		|		f181l.b = state->b & 0xffffffff;
 		|		f181_alu(&f181l);
-		|		output.com = f181l.co;
+		|		state->carry_middle = f181l.co;
 		|		state->alu = f181l.o;
 		|
 		|		tmp = state->pa010[proma];			// S0-4.HIGH
-		|		output.ovren = (tmp >> 1) & 1;			// OVR.EN~
-		|		output.sea = (tmp >> 2) & 1;			// SUB_ELSE_ADD
+		|		state->ovren = (tmp >> 1) & 1;			// OVR.EN~
+		|		state->sub_else_add = (tmp >> 2) & 1;			// SUB_ELSE_ADD
 		|		f181h.ctl = (tmp >> 4) & 0xf;
 		|		f181h.ctl |= ((tmp>>3) & 1) << 4;
 		|		f181h.ctl |= 1 << 5;
@@ -285,17 +425,17 @@ class XVCMUX(PartFactory):
 		|		f181_alu(&f181h);
 		|		output.coh = f181h.co;
 		|		state->alu |= ((uint64_t)f181h.o) << 32;
-		|		output.zero = 0;
-		|		if (!(state->alu & (0xffULL) <<  0)) output.zero |= 0x01;
-		|		if (!(state->alu & (0xffULL) <<  8)) output.zero |= 0x02;
-		|		if (!(state->alu & (0xffULL) << 16)) output.zero |= 0x04;
-		|		if (!(state->alu & (0xffULL) << 24)) output.zero |= 0x08;
-		|		if (!(state->alu & (0xffULL) << 32)) output.zero |= 0x10;
-		|		if (!(state->alu & (0xffULL) << 40)) output.zero |= 0x20;
-		|		if (!(state->alu & (0xffULL) << 48)) output.zero |= 0x40;
-		|		if (!(state->alu & (0xffULL) << 56)) output.zero |= 0x80;
+		|		state->zero = 0;
+		|		if (!(state->alu & (0xffULL) <<  0)) state->zero |= 0x01;
+		|		if (!(state->alu & (0xffULL) <<  8)) state->zero |= 0x02;
+		|		if (!(state->alu & (0xffULL) << 16)) state->zero |= 0x04;
+		|		if (!(state->alu & (0xffULL) << 24)) state->zero |= 0x08;
+		|		if (!(state->alu & (0xffULL) << 32)) state->zero |= 0x10;
+		|		if (!(state->alu & (0xffULL) << 40)) state->zero |= 0x20;
+		|		if (!(state->alu & (0xffULL) << 48)) state->zero |= 0x40;
+		|		if (!(state->alu & (0xffULL) << 56)) state->zero |= 0x80;
 		|		state->alu = ~state->alu;
-		|		output.cmsb = state->alu >> 63;
+		|		state->cmsb = state->alu >> 63;
 		|		output.z_adr = PIN_ADROE=>;
 		|		if (!output.z_adr) {
 		|			unsigned spc;
@@ -355,21 +495,21 @@ class XVCMUX(PartFactory):
 		|				bool fcond;
 		|				switch (csel) {
 		|				case 0x00:
-		|					fcond = output.zero == 0xff;
+		|					fcond = state->zero == 0xff;
 		|					break;
 		|				case 0x01:
-		|					fcond = output.zero != 0xff;
+		|					fcond = state->zero != 0xff;
 		|					break;
 		|				case 0x02:
-		|					if (output.amsb ^ output.bmsb) {
-		|						fcond = output.bmsb;
+		|					if (state->amsb ^ state->bmsb) {
+		|						fcond = state->bmsb;
 		|					} else {
 		|						fcond = !output.coh;
 		|					}
 		|					break;
 		|				case 0x0f:
 		|				case 0x16:		// Undocumented
-		|					fcond = PIN_LVAL=>;
+		|					fcond = state->last_cond;
 		|					break;
 		|				default:
 		|					ALWAYS_TRACE(
@@ -457,7 +597,7 @@ class XVCMUX(PartFactory):
 		|	}
 		|	if (PIN_ZSCK.posedge()) {
 		|		uint64_t count2 = 0x40 - flsll(~state->alu);
-		|		state->zero = ~count2;
+		|		state->zerocnt = ~count2;
 		|	}
 		|	if (q4pos && !PIN_LDWDR=> && sclken) {
 		|		BUS_DV_READ(state->wdr);
@@ -494,7 +634,7 @@ class XVCMUX(PartFactory):
 		|		if (count_en) {
 		|			output.cntov = true;
 		|		} else if (count_up) {
-		|			output.cntov = state->count != BUS_CNT_MASK;
+		|			output.cntov = state->count != 0x3ff;
 		|		} else {
 		|			output.cntov = state->count != 0;
 		|		}
@@ -503,10 +643,9 @@ class XVCMUX(PartFactory):
 		|		} else if (!count_en && count_up) {
 		|			state->count += 1;
 		|		} else if (!count_en) {
-		|			state->count += BUS_CNT_MASK;
+		|			state->count += 0x3ff;
 		|		}
-		|		state->count &= BUS_CNT_MASK;
-		|		output.cnt = state->count;
+		|		state->count &= 0x3ff;
 		|	}
 		|
 		|	if (uirsclk) {
@@ -530,6 +669,40 @@ class XVCMUX(PartFactory):
 		|			state->botreg = csalu0;
 		|		if (top_mux_sel)
 		|			state->topreg = csalu0;
+		|	}
+		|
+		|	if (PIN_CNCLK=>.posedge()) {
+		|		state->mbit = state->cmsb;
+		|		output.m = state->cmsb;
+		|	}
+		|
+		|	unsigned csel;
+		|	BUS_CSEL_READ(csel);
+		|	switch (csel >> 3) {
+		|	case 0x0: cond_a(csel); break;
+		|	case 0x1: cond_b(csel); break;
+		|	case 0x2: cond_c(csel); break;
+		|	case 0xb: cond_a(csel); break;
+		|	default: break;
+		|	}
+		|
+		|	if (PIN_CNCLK.posedge()) {
+		|		bool xor0c = state->output.m ^ (!state->output.coh);
+		|		bool xor0d = state->output.qbit ^ xor0c;
+		|		bool caoi0b = !(
+		|			((!state->output.div) && xor0d) ||
+		|			(state->output.div && state->output.coh)
+		|		);
+		|		output.qbit = caoi0b;
+		|	} else if (0 && output.qbit != PIN_QBI=>) {
+		|		ALWAYS_TRACE(
+		|			<< "QB " << std::hex
+		|			<< " qb " << output.qbit
+		|			<< " QB " << PIN_QBI=>
+		|			<< " m " << output.m
+		|			<< " coh " << output.coh
+		|			<< " div " << output.div
+		|		);
 		|	}
 		|
 		|''')
