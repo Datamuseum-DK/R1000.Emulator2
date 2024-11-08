@@ -71,7 +71,7 @@ class XBusMux(PartFactory):
 		|''')
         pfx = ""
         for i in range(self.width):
-            file.fmt('\t' + pfx + 'if (!PIN_OE%c) {\n' % (i + 65))
+            file.fmt('\t' + pfx + 'if (!PIN_OE%c=>) {\n' % (i + 65))
             pfx = "} else "
             file.fmt('\t\twhich = "%c";\n' % (i + 65))
             file.fmt('\t\tBUS_I%c_READ(tmp);\n' % (i + 65))
