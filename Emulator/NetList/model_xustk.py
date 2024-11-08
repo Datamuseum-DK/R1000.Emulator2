@@ -54,6 +54,27 @@ class XUSTK(PartFactory):
 		|	unsigned prev;
 		|	unsigned uei;
 		|	unsigned uev;
+		|
+		|	uint8_t prom43[512];
+		|	uint8_t prom44[512];
+		|	uint8_t bhreg;
+		|	unsigned rreg;
+		|	unsigned lreg;
+		|	unsigned treg;
+		|	bool hint_last;
+		|	bool hint_t_last;
+		|	bool last_late_cond;
+		|	bool uadr_mux, preturn, push_br, push;
+		|''')
+
+    def init(self, file):
+        file.fmt('''
+		|	load_programmable(this->name(),
+		|	    state->prom43, sizeof state->prom43,
+		|	    "PA043-02");
+		|	load_programmable(this->name(),
+		|	    state->prom44, sizeof state->prom44,
+		|	    "PA044-01");
 		|''')
 
     def sensitive(self):
@@ -66,7 +87,13 @@ class XUSTK(PartFactory):
         yield "PIN_LCLK.pos()"
         yield "PIN_ACLK.pos()"
         yield "PIN_DV_U"
-        yield "PIN_BAD_HINT"
+        # yield "PIN_BAD_HINT"
+
+        yield "PIN_TCLR"
+        yield "PIN_COND"
+        yield "BUS_BRTIM"
+        yield "BUS_BRTYP"
+        yield "PIN_MPRND"
 
     def priv_decl(self, file):
         file.fmt('''
@@ -101,7 +128,7 @@ class XUSTK(PartFactory):
 		|	case 0xe: retval = 1; break;
 		|	case 0xf: retval = 0; break;
 		|	}
-		|	if (PIN_U_MUX_SEL) {
+		|	if (state->uadr_mux) {
 		|		retval |= 4;
 		|	}
 		|	return (retval);
@@ -112,6 +139,7 @@ class XUSTK(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|{
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool stkclk = PIN_Q4.posedge() && PIN_SSTOP=> && output.macro_hic;
 		|	bool uevent = output.u_event;
@@ -130,14 +158,14 @@ class XUSTK(PartFactory):
 		|			pop = true;
 		|			stkinpsel_0 = true;
 		|			stkinpsel_1 = true;
-		|		} else if (!PIN_PUSH=>) {
+		|		} else if (!state->push) {
 		|			xwrite = true;
 		|			pop = false;
-		|			stkinpsel_0 = !PIN_PUSHBR=>;
-		|			stkinpsel_1 = PIN_BAD_HINT=>;
+		|			stkinpsel_0 = !state->push_br;
+		|			stkinpsel_1 = output.bhp;
 		|		} else {
 		|			xwrite = !PIN_PUSHRND=>;
-		|			pop = !!(PIN_RETURN=> || PIN_POPRND=>);
+		|			pop = !!(state->preturn || PIN_POPRND=>);
 		|			stkinpsel_0 = false;
 		|			stkinpsel_1 = true;
 		|		}
@@ -151,7 +179,7 @@ class XUSTK(PartFactory):
 		|			case 0:
 		|				BUS_BRN_READ(state->topu);
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
-		|				if (PIN_LATCHED) state->topu |= (1<<14);
+		|				if (output.ldc) state->topu |= (1<<14);
 		|				state->topu ^= 0xffff;;
 		|				break;
 		|			case 1:
@@ -161,14 +189,14 @@ class XUSTK(PartFactory):
 		|			case 2:
 		|				state->topu = state->curuadr;
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
-		|				if (PIN_LATCHED) state->topu |= (1<<14);
+		|				if (output.ldc) state->topu |= (1<<14);
 		|				state->topu += 1;
 		|				state->topu ^= 0xffff;;
 		|				break;
 		|			case 3:
 		|				state->topu = state->curuadr;
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
-		|				if (PIN_LATCHED) state->topu |= (1<<14);
+		|				if (output.ldc) state->topu |= (1<<14);
 		|				state->topu ^= 0xffff;;
 		|				break;
 		|			}
@@ -242,7 +270,7 @@ class XUSTK(PartFactory):
 		|
 		|	if (!PIN_DV_U) {
 		|		data = state->nxtuadr;
-		|	} else if (PIN_BAD_HINT=>) {
+		|	} else if (output.bhp) {
 		|		data = state->other;
 		|	} else if (PIN_LMAC=>) {
 		|		// Not tested by expmon_test_seq ?
@@ -304,10 +332,171 @@ class XUSTK(PartFactory):
 		|			state->curuadr = output.nu;
 		|		}
 		|	}
-		|
+		|}
 		|''')
+
+        file.fmt('''
+		|{
+		|	unsigned br_type;
+		|	BUS_BRTYP_READ(br_type);
+		|
+		|	bool bad_hint = output.bhp;
+		|
+		|	bool brtm3;
+		|	unsigned btimm;
+		|	if (bad_hint) {
+		|		btimm = 2;
+		|		brtm3 = ((state->bhreg) >> 5) & 1;
+		|	} else {
+		|		BUS_BRTIM_READ(btimm);
+		|		brtm3 = br_type & 1;
+		|	}
+		|
+		|	switch (btimm) {
+		|	case 0: state->uadr_mux = !PIN_COND=>; break;
+		|	case 1: state->uadr_mux = !output.ldc; break;
+		|	case 2: state->uadr_mux = false; break;
+		|	case 3: state->uadr_mux = true; break;
+		|	}
+		|	if (brtm3)
+		|		state->uadr_mux = !state->uadr_mux;
+		|
+		|	unsigned adr = 0;
+		|	if (bad_hint) adr |= 0x01;
+		|	adr |= (br_type << 1);
+		|	if (state->bhreg & 0x20) adr |= 0x20;
+		|	if (state->bhreg & 0x40) adr |= 0x80;
+		|	if (state->bhreg & 0x80) adr |= 0x100;
+		|	unsigned rom = state->prom43[adr];
+		|
+		|	bool wanna_dispatch = !(((rom >> 5) & 1) && !state->uadr_mux);
+		|	output.wdisp  = wanna_dispatch;
+		|	state->preturn = !(((rom >> 3) & 1) ||  state->uadr_mux);
+		|	state->push_br =    (rom >> 1) & 1;
+		|	state->push   = !(((rom >> 0) & 1) ||
+		|		        !(((rom >> 2) & 1) || !state->uadr_mux));
+		|
+		|	if (PIN_ACLK.posedge()) {
+		|		adr = 0;
+		|		if (output.u_eventnot) adr |= 0x02;
+		|		if (PIN_MEVENT=>) adr |= 0x04;
+		|		adr |= btimm << 3;
+		|		adr |= br_type << 5;
+		|		rom = state->prom44[adr];
+		|
+		|		if (PIN_SCLKE=>) {
+		|			rom |= 0x2;
+		|		} else {
+		|			rom ^= 0x2;
+		|		}
+		|		unsigned mode = 3;
+		|		if (!PIN_BHCKE=>) {
+		|			mode = 0;
+		|			state->bhreg = rom;
+		|		}
+		|
+		|		state->hint_last = (state->bhreg >> 1) & 1;
+		|		state->hint_t_last = (state->bhreg >> 0) & 1;
+		|	}
+		|	output.dtime = !(!bad_hint && (state->bhreg & 0x10));
+		|	output.dbhint = !(!bad_hint || (state->bhreg & 0x08));
+		|	bool bhint2 = (!bad_hint || (state->bhreg & 0x08));
+		|	output.dmdisp = !(!bad_hint || (state->bhreg & 0x04));
+		|	if (!bad_hint) {
+		|		output.mpcmb = PIN_MPRND=>;
+		|	} else {
+		|		output.mpcmb = !((state->bhreg >> 2) & 1);
+		|	}
+       		| 
+		|	if (!PIN_TCLR=>) {
+		|		state->treg = 0;
+		|		output.fo7 = false;
+		|	}
+		|
+		|	if (PIN_ACLK.posedge()) {
+		|		if (PIN_SSTOP=> && PIN_BHEN=> && bhint2) {
+		|			unsigned restrt_rnd;
+		|			BUS_RRND_READ(restrt_rnd);
+		|			if (!wanna_dispatch) {
+		|				state->rreg = 0xa;
+		|			} else if (restrt_rnd != 0) {
+		|				state->rreg = (restrt_rnd & 0x3) << 1;
+		|			} else {
+		|				state->rreg &= 0xa;
+		|			}
+		|			if (PIN_MEV=>) {
+		|				state->rreg &= ~0x2;
+		|			}
+		|			BUS_TIN_READ(state->treg);
+		|			state->treg ^= 0x4;
+		|		} else if (PIN_SSTOP=> && PIN_BHEN=>) {
+		|			state->rreg <<= 1;
+		|			state->rreg &= 0xe;
+		|			state->rreg |= 0x1;
+		|			state->treg <<= 1;
+		|			state->treg &= 0xe;
+		|			state->treg |= 0x1;
+		|		}
+		|		output.rq = state->rreg;
+		|		output.fo7 = state->treg >> 3;
+		|
+		|		unsigned lin;
+		|		BUS_LIN_READ(lin);
+		|		lin &= 0x7;
+		|		lin |= output.ldc << 3;
+		|
+		|		if (!PIN_SCLKE=>) {
+		|			state->lreg = lin;
+		|		}
+		|
+		|		if ((lin & 0x4) && !PIN_SCLKE=>) {
+		|			state->last_late_cond = PIN_COND=>;
+		|		}
+		|
+		|		switch(state->lreg & 0x6) {
+		|		case 0x0:
+		|		case 0x4:
+		|			output.ldc = (state->lreg >> 3) & 1;
+		|			break;
+		|		case 0x2:
+		|			output.ldc = (state->lreg >> 0) & 1;
+		|			break;
+		|		case 0x6:
+		|			output.ldc = state->last_late_cond;
+		|			break;
+		|		}
+		|	}
+		|
+		|	bool last_cond_late = (state->lreg >> 2) & 1;
+		|	if (state->hint_last) {
+		|		output.bhp = false;
+		|	} else if (!last_cond_late && !state->hint_t_last) {
+		|		bool e_or_ml_cond = state->lreg & 1;
+		|		output.bhp = e_or_ml_cond;
+		|	} else if (!last_cond_late &&  state->hint_t_last) {
+		|		bool e_or_ml_cond = state->lreg & 1;
+		|		output.bhp = !e_or_ml_cond;
+		|	} else if ( last_cond_late && !state->hint_t_last) {
+		|		output.bhp = state->last_late_cond;
+		|	} else if ( last_cond_late &&  state->hint_t_last) {
+		|		output.bhp = !state->last_late_cond;
+		|	}
+		|	output.bhn = !output.bhp;
+		|		
+		|}
+		|''')
+
 
 def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("XUSTK", PartModelDQ("XUSTK", XUSTK))
+
+class XSUDEC(PartFactory):
+    ''' SEQ uins decode '''
+
+    autopin = True
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
+

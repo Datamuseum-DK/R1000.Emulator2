@@ -58,8 +58,6 @@ class XSUDEC(PartFactory):
         yield "PIN_CLK.pos()"
         yield "PIN_TCLR"
         yield "PIN_COND"
-        yield "PIN_LCOND"
-        yield "PIN_BADH"
         yield "BUS_BRTIM"
         yield "BUS_BRTYP"
         yield "PIN_MPRND"
@@ -81,7 +79,7 @@ class XSUDEC(PartFactory):
 		|	unsigned br_type;
 		|	BUS_BRTYP_READ(br_type);
 		|
-		|	bool bad_hint = PIN_BADH=>;
+		|	bool bad_hint = output.bhp;
 		|
 		|	bool brtm3;
 		|	unsigned btimm;
@@ -95,7 +93,7 @@ class XSUDEC(PartFactory):
 		|
 		|	switch (btimm) {
 		|	case 0: output.uasel = !PIN_COND=>; break;
-		|	case 1: output.uasel = !PIN_LCOND=>; break;
+		|	case 1: output.uasel = !output.ldc; break;
 		|	case 2: output.uasel = false; break;
 		|	case 3: output.uasel = true; break;
 		|	}
@@ -183,6 +181,8 @@ class XSUDEC(PartFactory):
 		|
 		|		unsigned lin;
 		|		BUS_LIN_READ(lin);
+		|		lin &= 0x7;
+		|		lin |= output.ldc << 3;
 		|
 		|		if (!PIN_SCLKE=>) {
 		|			state->lreg = lin;

@@ -15,28 +15,18 @@ class XUSTK(FChip):
 
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
-        self.sig_left(ChipSig("-->+", "H2"))
-        self.sig_left(ChipSig("-->+", "STKEN"))
 
         self.sig_left(ChipSig("-->+", "Q3COND"))
-        self.sig_left(ChipSig("-->+", "LATCHED"))
-
 
         self.sig_left(ChipSig("-->+", "QVOE"))
         self.sig_left(ChipSig("===+", "QV", 0, 15))
         self.sig_left(ChipSig("-->+", "LCLK"))
 
-        self.sig_left(ChipSig("-->+", "PUSH"))
-        self.sig_left(ChipSig("-->+", "PUSHBR"))
-        self.sig_left(ChipSig("-->+", "BADHINT"))
         self.sig_left(ChipSig("-->+", "PUSHRND"))
-        self.sig_left(ChipSig("-->+", "RETURN"))
         self.sig_left(ChipSig("-->+", "POPRND"))
 
         self.sig_left(ChipSig("-->+", "DV_U"))
-        self.sig_left(ChipSig("-->+", "BAD_HINT"))
         self.sig_left(ChipSig("-->+", "LMAC"))
-        self.sig_left(ChipSig("-->+", "U_MUX_SEL"))
 
         self.sig_left(ChipSig("-->+", "BRN", 0, 13))
 
@@ -65,10 +55,40 @@ class XUSTK(FChip):
 
         self.sig_right(ChipSig("+<--", "DEC", 0, 12))
 
-        self.sig_right(ChipSig("o<--", "Q1~"))
         self.sig_right(ChipSig("+-->", "NU", 0, 13))
 
         self.sig_right(ChipSig("+-->", "UEVP"))
+
+        self.sig_left(ChipSig("-->+", "COND"))
+        self.sig_left(ChipSig("-->+", "BRTIM", 0, 1))
+        self.sig_left(ChipSig("-->+", "MEVENT"))
+
+        self.sig_left(ChipSig("-->+", "SCLKE"))
+
+        self.sig_left(ChipSig("-->+", "BHCKE"))
+        self.sig_left(ChipSig("-->+", "MPRND"))
+
+        self.sig_left(ChipSig("-->+", "LIN", 0, 3))
+        self.sig_left(ChipSig("-->+", "TIN", 0, 3))
+        self.sig_left(ChipSig("-->+", "TCLR"))
+        self.sig_left(ChipSig("-->+", "RRND", 0, 1))
+        self.sig_left(ChipSig("-->+", "MEV"))
+        #self.sig_left(ChipSig("-->+", "SSTOP"))
+        self.sig_left(ChipSig("-->+", "BHEN"))
+
+        self.sig_right(ChipSig("+-->", "WDISP"))
+
+        self.sig_right(ChipSig("+-->", "DTIME"))
+        self.sig_right(ChipSig("+-->", "DBHINT"))
+        self.sig_right(ChipSig("+-->", "DMDISP"))
+        self.sig_right(ChipSig("+-->", "MPCMB"))
+
+        self.sig_right(ChipSig("+-->", "RQ", 0, 3))
+        self.sig_right(ChipSig("+-->", "FO7"))
+        self.sig_right(ChipSig("+-->", "LDC"))
+
+        self.sig_right(ChipSig("+-->", "BHP"))
+        self.sig_right(ChipSig("+-->", "BHN"))
 
         self.finish()
 

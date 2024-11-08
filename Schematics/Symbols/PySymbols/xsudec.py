@@ -15,8 +15,6 @@ class XSUDEC(FChip):
 
         self.sig_left(ChipSig("-->+", "CLK"))
         self.sig_left(ChipSig("-->+", "COND"))
-        self.sig_left(ChipSig("-->+", "LCOND"))
-        self.sig_left(ChipSig("-->+", "BADH"))
         self.sig_left(ChipSig("-->+", "BRTIM", 0, 1))
         self.sig_left(ChipSig("-->+", "BRTYP", 0, 3))
         self.sig_left(ChipSig("-->+", "MEVENT"))
