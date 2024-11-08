@@ -13,7 +13,7 @@ class XTCBCMP(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "TYP", 0, 31))
+        self.sig_left(ChipSig("-->+", "TYP", 0, 63))
         self.sig_left(ChipSig("-->+", "TOP", 0, 3))
 
         self.sig_right(ChipSig("+-->", "BELOW"))
