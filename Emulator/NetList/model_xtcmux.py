@@ -117,8 +117,8 @@ class XTCMUX(PartFactory):
             #yield "PIN_LPOP"		# CCLK
             #yield "PIN_LTOP"		# CCLK
 
-            yield "BUS_CSEL"		# uir? h1
-            yield "BUS_DT"		# q2pos, q4pos
+            # yield "BUS_CSEL"		# uir? h1
+            # yield "BUS_DT"		# q2pos, q4pos
 
             yield "BUS_DSP"		# q2pos
             yield "PIN_H2.neg()"
