@@ -80,6 +80,8 @@ class XFIUWCS(PartFactory):
 		|
 		|		unsigned tivi = (wcs >> 20) & 0xf;
 		|
+		|		output.tivi = tivi;
+		|
 		|		switch(tivi & 3) {
 		|		case 0x0: tvoe |= 0x08; break;	// VAR_VI
 		|		case 0x1: tvoe |= 0x04; break;	// VAL_VI
@@ -97,6 +99,9 @@ class XFIUWCS(PartFactory):
 		|		}
 		|		if (tvoe & 0x10) {
 		|			tvoe |= 0x88;
+		|		}
+		|		if (tvoe & 0x01) {
+		|			tvoe |= 0x08;
 		|		}
 		|		output.tvoe = tvoe ^ 0xff;
 		|	}

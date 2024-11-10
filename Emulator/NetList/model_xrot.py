@@ -55,7 +55,8 @@ class XROTF(PartFactory):
 		|	uint64_t rdq;
 		|	uint64_t refresh_reg;
 		|	uint64_t marh;
-		|	unsigned lfreg;
+		|	uint64_t tibus, vibus;
+		|	unsigned tivi, lfreg;
 		|	sc_core::sc_event_or_list *idle_this;
 		|
 		|	uint32_t srn, sro, par, ctopn, ctopo;
@@ -110,44 +111,9 @@ class XROTF(PartFactory):
 		|	    state->pa028, sizeof state->pa028, "PA028-02");
 		|''')
 
-    def private(self):
-        ''' private variables '''
-        yield from self.event_or(
-            "q4_event",
-            "PIN_H1.posedge_event()",
-        )
-        yield from self.event_or(
-            "ftv_event", "PIN_Q4.posedge_event()", "BUS_DF", "BUS_DT", "BUS_DV",
-        )
-        yield from self.event_or(
-            "tv_event", "PIN_Q4.posedge_event()", "BUS_DT", "BUS_DV",
-        )
-        yield from self.event_or(
-            "f_event", "PIN_Q4.posedge_event()", "BUS_DF",
-        )
-        yield from self.event_or(
-            "t_event", "PIN_Q4.posedge_event()", "BUS_DT",
-        )
-        yield from self.event_or(
-            "v_event", "PIN_Q4.posedge_event()", "BUS_DV",
-        )
-        yield from self.event_or(
-            "ft_event", "PIN_Q4.posedge_event()", "BUS_DF", "BUS_DT",
-        )
-        yield from self.event_or(
-            "fv_event", "PIN_Q4.posedge_event()", "BUS_DF", "BUS_DV",
-        )
-        yield from self.event_or(
-            "no_event", "PIN_Q4.posedge_event()",
-        )
-
     def sensitive(self):
         yield "PIN_H1.pos()"
         yield "PIN_Q4.pos()"
-
-        #yield "PIN_QFOE"
-        #yield "PIN_QTOE"
-        #yield "PIN_QVOE"
 
         yield "BUS_DF"
         yield "BUS_DT"
@@ -180,14 +146,103 @@ class XROTF(PartFactory):
         # yield "PIN_TCLK.pos()"	# Q4
         # yield "PIN_VCLK.pos()"	# Q4
 
-        yield "BUS_MSTRT_SENSITIVE()"
+        yield "BUS_MSTRT"
         yield "PIN_LABR"
         yield "PIN_LEABR"
         yield "PIN_EABR"
-        yield "BUS_MCTL_SENSITIVE()"
+        yield "BUS_MCTL"
         yield "PIN_H2.pos()"
-        yield "BUS_CNDSL_SENSITIVE()"
-        yield "BUS_BDHIT_SENSITIVE()"
+        yield "BUS_CNDSL"
+        yield "BUS_BDHIT"
+
+        yield "BUS_TIVI"
+        yield "BUS_DFA"
+
+    def priv_decl(self, file):
+        file.fmt('''
+		|	void do_tivi(void);
+		|''')
+
+    def priv_impl(self, file):
+        file.fmt('''
+		|void
+		|SCM_«mmm» ::
+		|do_tivi(void)
+		|{
+		|	unsigned mcnd;
+		|	BUS_MCND_READ(mcnd);
+		|
+		|	BUS_TIVI_READ(state->tivi);
+		|
+		|	uint64_t vi;
+		|	switch (state->tivi) {
+		|	case 0x00:
+		|	case 0x04:
+		|	case 0x08:
+		|		vi = state->vreg;
+		|		break;
+		|	case 0x01:
+		|	case 0x05:
+		|	case 0x09:
+		|		BUS_DV_READ(vi);
+		|		vi ^= BUS_DV_MASK;
+		|		break;
+		|	case 0x02:
+		|	case 0x06:
+		|	case 0x0a:
+		|		BUS_DF_READ(vi);
+		|		vi ^= BUS_DF_MASK;
+		|		break;
+		|	case 0x03:
+		|	case 0x07:
+		|	case 0x0b:
+		|		BUS_DFA_READ(vi);
+		|		vi ^= BUS_DFA_MASK;
+		|		break;
+		|	default:
+		|		vi = (uint64_t)state->srn << 32;
+		|		vi |= state->sro & 0xffffff80;
+		|		vi |= state->oreg;
+		|		vi ^= BUS_QV_MASK;
+		|		break;
+		|	}
+		|	uint64_t ti;
+		|	switch (state->tivi) {
+		|	case 0x00:
+		|	case 0x01:
+		|	case 0x02:
+		|	case 0x03:
+		|		ti = state->treg;
+		|		break;
+		|	case 0x04:
+		|	case 0x05:
+		|	case 0x06:
+		|	case 0x07:
+		|		BUS_DF_READ(ti);
+		|		ti ^= BUS_DF_MASK;
+		|		break;
+		|	case 0x08:
+		|	case 0x09:
+		|	case 0x0a:
+		|	case 0x0b:
+		|		BUS_DT_READ(ti);
+		|		ti ^= BUS_DT_MASK;
+		|		break;
+		|	default:
+		|		uint64_t tmp;
+		|		tmp = (state->sro >> 4) & 0x7;
+		|		state->marh &= ~0x07;
+		|		state->marh |= tmp;
+		|		tmp = mcnd ^ BUS_MCND_MASK; 
+		|		state->marh &= ~(0x1efULL << 23ULL);
+		|		state->marh |= tmp << 23ULL;
+		|		ti = ~state->marh;
+		|		break;
+		|	}
+		|	state->tibus = ti;
+		|	state->vibus = vi;
+		|}
+		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -202,32 +257,15 @@ class XROTF(PartFactory):
 		|	unsigned mcnd;
 		|	BUS_MCND_READ(mcnd);
 		|
+		|	do_tivi();
+		|	uint64_t ti, vi;
 		|{
 		|	uint64_t ft, tir, vir, m;
 		|	unsigned msk, s, fs, u, sgn;
 		|	bool sgnbit;
-		|       bool need_fiu = false;
-		|       bool need_ti = false;
-		|       bool need_vi = false;
-		|       bool need_msr = false;
 		|
-		|	uint64_t ti, vi;
-		|	if (!PIN_FT=>) {				// UCODE
-		|               need_fiu = true;
-		|		BUS_DF_READ(ti);
-		|		ti ^= BUS_DF_MASK;
-		|	} else {
-		|		need_ti = true;
-		|		BUS_DT_READ(ti);
-		|	}
-		|	if (!PIN_FV=>) {				// UCODE
-		|               need_fiu = true;
-		|		BUS_DF_READ(vi);
-		|		vi ^= BUS_DF_MASK;
-		|	} else {
-		|		need_vi = true;
-		|		BUS_DV_READ(vi);
-		|	}
+		|	ti = state->tibus;
+		|	vi = state->vibus;
 		|
 		|	unsigned lfl;
 		|	BUS_LFL_READ(lfl);				// UCODE
@@ -410,11 +448,10 @@ class XROTF(PartFactory):
 		|			tii = BUS_DV_MASK;
 		|		break;
 		|	case 2:
-		|		need_vi = true;
 		|		BUS_DV_READ(tii);
+		|		tii = state->vibus;
 		|		break;
 		|	case 3:
-		|               need_fiu = true;
 		|		BUS_DF_READ(tii);
 		|		tii ^= BUS_DF_MASK;
 		|		break;
@@ -424,42 +461,13 @@ class XROTF(PartFactory):
 		|	vout = (state->rdq & vmsk);
 		|	vout |= (tii & (vmsk ^ BUS_DV_MASK));
 		|
-		|
-		|	output.z_qt = PIN_QTOE=>;			// UCODE
-		|	if (!output.z_qt and !PIN_MAROE=>) {		// UCODE
-		|		uint64_t tmp;
-		|		tmp = (state->sro >> 4) & 0x7;
-		|		state->marh &= ~0x07;
-		|		state->marh |= tmp;
-		|		tmp = mcnd ^ BUS_MCND_MASK; 
-		|		state->marh &= ~(0x1efULL << 23ULL);
-		|		state->marh |= tmp << 23ULL;
-		|		output.qt = ~state->marh;
-		|		need_msr = true;
-		|	} else if (!output.z_qt and !PIN_FT=>) {	// UCODE
-		|               need_fiu = true;
-		|		BUS_DF_READ(output.qt);
-		|		output.qt ^= BUS_DF_MASK;
-		|	} else if (!output.z_qt) {
-		|		output.qt = state->treg;
-		|	}
-		|
-		|	output.z_qv = PIN_QVOE=>;			// UCODE
-		|	if (!output.z_qv && !PIN_FV=>) {		// UCODE
-		|               need_fiu = true;
-		|		BUS_DF_READ(output.qv);
-		|		output.qv ^= BUS_DF_MASK;
-		|	} else if (!output.z_qv) {
-		|		output.qv = state->vreg;
-		|	}
-		|
 		|	output.z_qf = PIN_QFOE=>;			// (UCODE)
 		|	if (!output.z_qf) {
 		|		output.qf = vout ^ BUS_QF_MASK;
 		|	}
 		|
 		|	if (sclk && !PIN_RFCK=>) {
-		|		BUS_DT_READ(state->refresh_reg);
+		|		state->refresh_reg = state->tibus;
 		|		state->marh &= 0xffffffffULL;
 		|		state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
 		|		state->marh ^= 0xffffffff00000000ULL;
@@ -529,35 +537,6 @@ class XROTF(PartFactory):
 		|			state->lfreg |= 1<<7;
 		|
 		|	}
-		|	if (PIN_H1.posedge() && !need_msr) {
-		|		if (need_fiu && need_ti && need_vi) {
-		|			//state->idle_this = &ftv_event;
-		|		} else if (need_fiu && need_ti) {
-		|			state->idle_this = &ft_event;
-		|		} else if (need_fiu && need_vi) {
-		|			state->idle_this = &fv_event;
-		|		} else if (need_fiu) {
-		|			state->idle_this = &f_event;
-		|		} else if (need_ti && need_vi) {
-		|			state->idle_this = &tv_event;
-		|		} else if (need_ti) {
-		|			//state->idle_this = &t_event;
-		|ALWAYS_TRACE(<<"WHAT " << need_fiu << need_ti << need_vi);
-		|		} else if (need_vi) {
-		|			//state->idle_this = &v_event;
-		|ALWAYS_TRACE(<<"WHAT " << need_fiu << need_ti << need_vi);
-		|		} else {
-		|			state->idle_this = &no_event;
-		|		}
-		|	}
-		|	if (need_msr) {
-		|	} else if (q4pos) {
-		|		idle_next = &q4_event;
-		|		state->idle_this = NULL;
-		|	} else {
-		|		idle_next = state->idle_this;
-		|	}
-		|	idle_next = NULL;
 		|}
 		|''')
 
@@ -672,13 +651,6 @@ class XROTF(PartFactory):
 		|		    ((state->sro & 0xf8000070 ) != 0x10);
 		|	}
 		|
-		|	if (!output.z_qv && !PIN_MAROE=>) {
-		|		output.qv = (uint64_t)state->srn << 32;
-		|		output.qv |= state->sro & 0xffffff80;
-		|		output.qv |= state->oreg;
-		|		output.qv ^= BUS_QV_MASK;
-		|	}
-		|
 		|	output.z_qspc = PIN_QSPCOE=>;
 		|	if (!output.z_qspc) {
 		|		output.qspc = (state->sro >> 4) & 7;
@@ -706,8 +678,8 @@ class XROTF(PartFactory):
 		|		unsigned mem_start;
 		|		BUS_MSTRT_READ(mem_start);
 		|		if (mem_start == 0x18) {
-		|			uint64_t tmp;
-		|			BUS_DT_READ(tmp);
+		|			uint64_t tmp = state->tibus;
+		|			//BUS_DT_READ(tmp);
 		|			state->refresh_count = tmp >> 48;
 		|		} else if (state->refresh_count != 0xffff) {
 		|			state->refresh_count++;
@@ -815,9 +787,10 @@ class XROTF(PartFactory):
 		|		output.csaht = !PIN_ICSA=>;
 		|	}
 		|
-		|	uint64_t ti = 0;
-		|	if (rmarp)
-		|		BUS_DT_READ(ti);
+		|	ti = 0;
+		|	if (rmarp) {
+		|		ti = state->tibus;
+		|	}
 		|
 		|	bool scav_trap_next = state->scav_trap;
 		|	if (condsel == 0x69) {		// SCAVENGER_HIT
@@ -1028,6 +1001,16 @@ class XROTF(PartFactory):
 		|		)
 		|	);
 		|}
+		|
+		|	output.z_qt = PIN_QTOE=>;
+		|	output.z_qv = PIN_QVOE=>;
+		|	if (!output.z_qt || !output.z_qv) {
+		|		do_tivi();
+		|		if (!output.z_qt)
+		|			output.qt = state->tibus ^ BUS_QT_MASK;
+		|		if (!output.z_qv)
+		|			output.qv = state->vibus ^ BUS_QT_MASK;
+		|	}
 		|''')
 
 def register(part_lib):

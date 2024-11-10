@@ -125,7 +125,13 @@ class XROTF(FChip):
         self.sig_right(ChipSig("+-->", "DNEXT"))
         self.sig_right(ChipSig("+-->", "CSAWR"))
 
+        self.sig_left(ChipSig("-->+", "TIVI", 0, 3))
+        self.sig_left(ChipSig("-->+", "QFAOE"))
+        self.sig_left(ChipSig("-->+", "DFA", 0, 63))
+
         self.finish()
 
 def register():
     yield XROTF()
+
+
