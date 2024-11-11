@@ -156,15 +156,82 @@ class XROTF(PartFactory):
         yield "BUS_BDHIT"
 
         yield "BUS_TIVI"
-        yield "BUS_DFA"
+        yield "BUS_ST"
+        yield "PIN_PGX"
+        yield "PIN_MX"
 
     def priv_decl(self, file):
         file.fmt('''
 		|	void do_tivi(void);
+		|	uint64_t frame(void);
 		|''')
 
     def priv_impl(self, file):
         file.fmt('''
+		|uint64_t
+		|SCM_«mmm» ::
+		|frame(void)
+		|{
+		|	uint64_t u = 0;
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(9));
+		|	u |= (uint64_t)output.cndtru << BUS_DV_LSB(9);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(10));
+		|	u |= (uint64_t)output.memcnd << BUS_DV_LSB(10);
+		|
+		|	u &= ~(0xfffULL << BUS_DV_LSB(23));
+		|	u |= (uint64_t)output.line << BUS_DV_LSB(23);
+		|
+		|	u &= ~(0x3ULL << BUS_DV_LSB(25));
+		|	u |= (uint64_t)output.setq << BUS_DV_LSB(25);
+		|
+		|	uint64_t st;
+		|	BUS_ST_READ(st);
+		|	u &= ~(0x3ULL << BUS_DV_LSB(27));
+		|	u |= st << BUS_DV_LSB(27);
+		|
+		|	u &= ~(0x3ULL << BUS_DV_LSB(29));
+		|	u |= (uint64_t)((output.omq >> 2) & 3) << BUS_DV_LSB(29);
+		|
+		|	u |= 0x3ULL << BUS_DV_LSB(31);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(32));
+		|	u |= (uint64_t)(PIN_PGX=>) << BUS_DV_LSB(32);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(33));
+		|	u |= (uint64_t)((output.prmt >> 1) & 1) << BUS_DV_LSB(33);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(34));
+		|	u |= (uint64_t)output.rfsh << BUS_DV_LSB(34);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(35));
+		|	u |= (uint64_t)(PIN_MX=>) << BUS_DV_LSB(35);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(48));
+		|	u |= (uint64_t)((output.line >> 0) & 1) << BUS_DV_LSB(48);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(50));
+		|	u |= (uint64_t)((output.line >> 1) & 1) << BUS_DV_LSB(50);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(56));
+		|	u |= (uint64_t)output.nmatch << BUS_DV_LSB(56);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(57));
+		|	u |= (uint64_t)output.inrg << BUS_DV_LSB(57);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(58));
+		|	u |= (uint64_t)output.oor << BUS_DV_LSB(58);
+		|
+		|	u &= ~(0x1ULL << BUS_DV_LSB(59));
+		|	u |= (uint64_t)output.chit << BUS_DV_LSB(59);
+		|
+		|	u &= ~(0xfULL << BUS_DV_LSB(63));
+		|	u |= (uint64_t)output.hofs;
+		|
+		|	return (u);
+		|}
+		|
 		|void
 		|SCM_«mmm» ::
 		|do_tivi(void)
@@ -196,8 +263,7 @@ class XROTF(PartFactory):
 		|	case 0x03:
 		|	case 0x07:
 		|	case 0x0b:
-		|		BUS_DFA_READ(vi);
-		|		vi ^= BUS_DFA_MASK;
+		|		vi = frame() ^ BUS_DV_MASK;
 		|		break;
 		|	default:
 		|		vi = (uint64_t)state->srn << 32;
@@ -256,6 +322,9 @@ class XROTF(PartFactory):
 		|
 		|	unsigned mcnd;
 		|	BUS_MCND_READ(mcnd);
+		|
+		|	unsigned condsel;
+		|	BUS_CNDSL_READ(condsel);
 		|
 		|	do_tivi();
 		|	uint64_t ti, vi;
@@ -717,8 +786,6 @@ class XROTF(PartFactory):
 		|	if (pos)
 		|		state->mstat[mem_start]++;
 		|
-		|	unsigned condsel;
-		|	BUS_CNDSL_READ(condsel);
 		|
 		|	bool l_abort = PIN_LABR=>;
 		|	bool le_abort = PIN_LEABR=>;
@@ -1011,6 +1078,56 @@ class XROTF(PartFactory):
 		|		if (!output.z_qv)
 		|			output.qv = state->vibus ^ BUS_QT_MASK;
 		|	}
+		|	switch(condsel) {
+		|	case 0x60:
+		|		output.conda = !output.memexp;
+		|		break;
+		|	case 0x61:
+		|		output.conda = !((output.cond >> 3) & 1);
+		|		break;
+		|	case 0x62:
+		|		output.conda = !((output.cond >> 2) & 1);
+		|		break;
+		|	case 0x63:
+		|		output.conda = !output.chit;
+		|		break;
+		|	case 0x64:
+		|		output.conda = !output.oreg0;
+		|		break;
+		|	case 0x65:
+		|		output.conda = !output.xwrd;
+		|		break;
+		|	case 0x66:
+		|		output.conda = !output.ntop;
+		|		break;
+		|	case 0x67:
+		|		output.conda = !output.rfsh;
+		|		break;
+		|	case 0x68:
+		|		output.condb = !output.oor;
+		|		break;
+		|	case 0x69:
+		|		output.condb = !output.scvhit;
+		|		break;
+		|	case 0x6a:
+		|		output.condb = !((output.cond >> 5) & 1);
+		|		break;
+		|	case 0x6b:
+		|		output.condb = !PIN_MISS=>;
+		|		break;
+		|	case 0x6c:
+		|		output.condb = !((output.cond >> 0) & 1);
+		|		break;
+		|	case 0x6d:
+		|		output.condb = !((output.cond >> 1) & 1);
+		|		break;
+		|	case 0x6e:
+		|		output.condb = !((output.cond >> 0) & 1);
+		|		break;
+		|	case 0x6f:
+		|		output.condb = !output.wez;
+		|		break;
+		|	};
 		|''')
 
 def register(part_lib):

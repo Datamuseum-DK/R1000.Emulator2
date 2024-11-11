@@ -124,10 +124,14 @@ class XROTF(FChip):
         self.sig_right(ChipSig("+-->", "LOGRWD"))
         self.sig_right(ChipSig("+-->", "DNEXT"))
         self.sig_right(ChipSig("+-->", "CSAWR"))
+        self.sig_right(ChipSig("+-->", "CONDA"))
+        self.sig_right(ChipSig("+-->", "CONDB"))
 
         self.sig_left(ChipSig("-->+", "TIVI", 0, 3))
         self.sig_left(ChipSig("-->+", "QFAOE"))
-        self.sig_left(ChipSig("-->+", "DFA", 0, 63))
+        self.sig_left(ChipSig("-->+", "PGX"))
+        self.sig_left(ChipSig("-->+", "MX"))
+        self.sig_left(ChipSig("-->+", "ST", 0, 1))
 
         self.finish()
 
