@@ -73,13 +73,12 @@ class XDUMMY(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t typ, val;
+		|	uint64_t dummy_typ, dummy_val;
 		|	uint8_t elprom[512];
 		|	uint8_t eidrg;
 		|	unsigned cbreg1;
 		|	unsigned cbreg2;
-		|''')
-        file.fmt('''
+		|
 		|	unsigned iack;
 		|	struct ioc_sc_bus_xact *xact;
 		|	unsigned fffff400;
@@ -100,6 +99,10 @@ class XDUMMY(PartFactory):
 		|	uint16_t delay, slice;
 		|	bool slice_ev, delay_ev;
 		|	bool sen, den, ten;
+		|	uint8_t pb010[32];
+		|	uint8_t pb011[32];
+		|	uint8_t pb012[32];
+		|	uint8_t pb013[32];
 		|''');
 
 
@@ -108,14 +111,25 @@ class XDUMMY(PartFactory):
 		|	load_programmable(this->name(),
 		|	    state->elprom, sizeof state->elprom,
 		|	    "PA115-01");
-		|''')
-        file.fmt('''
+		|	load_programmable(this->name(),
+		|	    state->pb010, sizeof state->pb010,
+		|	    "PB010");
+		|	load_programmable(this->name(),
+		|	    state->pb011, sizeof state->pb011,
+		|	    "PB011");
+		|	load_programmable(this->name(),
+		|	    state->pb012, sizeof state->pb012,
+		|	    "PB012");
+		|	load_programmable(this->name(),
+		|	    state->pb013, sizeof state->pb013,
+		|	    "PB013");
+		|
 		|	struct ctx *c1 = CTX_Find("IOP.ram_space");
 		|	assert(c1 != NULL);
 		|	state->ram = (uint8_t*)(c1 + 1);
 		|''')
 
-    def private(self):
+    def xprivate(self):
         ''' private variables '''
         yield from self.event_or(
             "idle_event",
@@ -124,16 +138,16 @@ class XDUMMY(PartFactory):
             "PIN_LDDUM",
         )
 
-    def sensitive(self):
+    def xsensitive(self):
         yield "PIN_QTYPOE"
         yield "PIN_QVALOE"
         yield "PIN_Q4.pos()"
         yield "PIN_Q2.pos()"
-        yield "PIN_QTOE"
-        yield "PIN_QTHOE"
-        yield "PIN_QTMOE"
-        yield "PIN_QTLOE"
-        yield "PIN_QIOE"
+        #yield "PIN_QTOE"
+        #yield "PIN_QTHOE"
+        #yield "PIN_QTMOE"
+        #yield "PIN_QTLOE"
+        #yield "PIN_QIOE"
 
     def priv_decl(self, file):
         ''' further private decls '''
@@ -282,24 +296,19 @@ class XDUMMY(PartFactory):
 
         file.fmt('''
 		|	if (state->ctx.activations < 2) {
-		|		state->typ = -1;
-		|		state->val = -1;
+		|		state->dummy_typ = -1;
+		|		state->dummy_val = -1;
 		|	}
 		|	bool q4_pos = PIN_Q4.posedge();
+		|	unsigned rand;
+		|	BUS_RAND_READ(rand);
+		|	unsigned rrand = rand & 0x1f;
 		|{
 		|	if (q4_pos && !PIN_LDDUM=>) {
-		|		BUS_DTYP_READ(state->typ);
-		|		BUS_DVAL_READ(state->val);
+		|		BUS_DTYP_READ(state->dummy_typ);
+		|		BUS_DVAL_READ(state->dummy_val);
 		|	}
-		|	output.z_qval = PIN_QVALOE=>;
-		|	if (!output.z_qval)
-		|		output.qval = state->val;
-		|	output.z_qtyp = PIN_QTYPOE=>;
-		|	if (!output.z_qtyp)
-		|		output.qtyp = state->typ;
-		|''')
-
-        file.fmt('''
+		|
 		|	uint64_t typ, val, tmp, cbo = 0, cbi;
 		|
 		|	BUS_DTYP_READ(typ);
@@ -338,14 +347,6 @@ class XDUMMY(PartFactory):
 		|	}
 		|	output.err = cbo != 0;
 		|
-		|#if 0
-		|	if (!PIN_TVEN=> && state->eidrg != state->elprom[cbo]) {
-		|		idle_next = &write_event;
-		|	} else if (!PIN_LDCB=>) {
-		|		idle_next = &write_event;
-		|	}
-		|#endif
-		|
 		|	if (q4_pos && !PIN_TVEN=>) {
 		|		state->eidrg = state->elprom[cbo];
 		|		output.cber = (state->eidrg & 0x81) != 0x81;
@@ -353,26 +354,14 @@ class XDUMMY(PartFactory):
 		|		BUS_DC_READ(state->cbreg1);
 		|		state->cbreg1 ^= BUS_DC_MASK;
 		|	}
-		|	output.z_qt = PIN_QTOE=>;
-		|	if (!output.z_qt) {
-		|		output.qt = state->eidrg >> 1;
-		|		output.qt |= state->cbreg1 << 7;
-		|	}
 		|}
-		|''')
-        # The meat of the doit() function lives in a separate file so
-        # that fidling with it does not require a rerun of the python code.
-
-        file.fmt('''
 		|{
 		|	bool sclk_pos = q4_pos && !PIN_CSTP;
-		|	unsigned rnd;
-		|	BUS_RND_READ(rnd);
 		|
 		|	if (sclk_pos) {
-		|		if (rnd == 0x23)
+		|		if (rrand == 0x23)
 		|			state->cpu_running = true;
-		|		if (rnd == 0x24)
+		|		if (rrand == 0x24)
 		|			state->cpu_running = false;
 		|	}
 		|
@@ -388,23 +377,18 @@ class XDUMMY(PartFactory):
 		|	if (q4_pos)
 		|		do_xact();
 		|
-		|	if (sclk_pos && rnd == 0x04) {
+		|	if (sclk_pos && rrand == 0x04) {
 		|		uint64_t ityp;
 		|		BUS_DTYP_READ(ityp);
 		|		state->reqfifo[state->reqwrp++] = ityp & 0xffff;
 		|		state->reqwrp &= 0x3ff;
 		|	}
 		|
-		|	output.z_qtl = PIN_QTLOE=>;
-		|	if (!output.z_qtl) {
-		|		output.qtl = state->rspfifo[state->rsprdp];
-		|	}
-		|
 		|	output.rspemp = state->rspwrp != state->rsprdp;
 		|	output.rspemn = state->rspwrp == state->rsprdp;
 		|	output.reqemp = state->reqwrp != state->reqrdp;
 		|
-		|	if (sclk_pos && !output.z_qtl) {
+		|	if (sclk_pos && rrand == 0x05) {
 		|		state->rsprdp++;
 		|		state->rsprdp &= 0x3ff;
 		|	}
@@ -412,45 +396,37 @@ class XDUMMY(PartFactory):
 		|	if (sclk_pos) {
 		|		unsigned adr = (state->areg | state->acnt) << 2;
 		|
-		|		if ((rnd == 0x1c) || (rnd == 0x1d)) {
+		|		if ((rrand == 0x1c) || (rrand == 0x1d)) {
 		|			state->rdata = vbe32dec(state->ram + adr);
 		|		}
 		|
-		|		if ((rnd == 0x1e) || (rnd == 0x1f)) {
+		|		if ((rrand == 0x1e) || (rrand == 0x1f)) {
 		|			uint64_t typ;
 		|			BUS_DTYP_READ(typ);
 		|			uint32_t data = typ >> 32;
 		|			vbe32enc(state->ram + adr, data);
 		|		}
 		|
-		|		if (rnd == 0x01) {
+		|		if (rrand == 0x01) {
 		|			uint64_t typ;
 		|			BUS_DTYP_READ(typ);
 		|			state->acnt = (typ >> 2) & 0x00fff;
 		|			state->areg = (typ >> 2) & 0x1f000;
 		|		}
 		|
-		|		if ((rnd == 0x1c) || (rnd == 0x1e)) {
+		|		if ((rrand == 0x1c) || (rrand == 0x1e)) {
 		|			state->acnt += 1;
 		|			state->acnt &= 0xfff;
 		|		}
 		|		output.oflo = state->acnt == 0xfff;
 		|	}
-		|	output.z_qth = PIN_QTHOE=>;
-		|	if (!output.z_qth) {
-		|		output.qth = state->rdata;
-		|	}
 		|
-		|	if (sclk_pos && rnd == 0x08) {
+		|	if (sclk_pos && rrand == 0x08) {
 		|		state->rtc = 0;
 		|	}
-		|	if (q4_pos && !PIN_RTCEN=> && rnd != 0x08) {
+		|	if (q4_pos && !PIN_RTCEN=> && rrand != 0x08) {
 		|		state->rtc++;
 		|		state->rtc &= 0xffff;
-		|	}
-		|	output.z_qtm = PIN_QTMOE=>;
-		|	if (!output.z_qtm) {
-		|		output.qtm = state->rtc;
 		|	}
 		|}
 		|{
@@ -469,9 +445,7 @@ class XDUMMY(PartFactory):
 		|	    tmp == 0x80000044;
 		|
 		|}
-		|''')
-
-        file.fmt('''
+		|
 		|{
 		|	if (state->ctx.activations < 1000) {
 		|		output.sme = true;
@@ -481,49 +455,42 @@ class XDUMMY(PartFactory):
 		|	}
 		|
 		|	if (PIN_Q2.posedge()) {
-		|		unsigned rnd;
-		|		BUS_RND_READ(rnd);
 		|		if (state->slice_ev && !state->ten) {
 		|			output.sme = false;
 		|		}
-		|		if (rnd == 0x0a) {
+		|		if (rrand == 0x0a) {
 		|			output.sme = true;
 		|		}
 		|		if (state->delay_ev && !state->ten) {
 		|			output.dme = false;
 		|		}
-		|		if (rnd == 0x0b) {
+		|		if (rrand == 0x0b) {
 		|			output.dme = true;
 		|		}
 		|	}
 		|
 		|	if (PIN_Q4.posedge()) {
-		|		unsigned rnd;
-		|		BUS_RND_READ(rnd);
 		|		state->prescaler++;
 		|		state->ten = state->prescaler != 0xf;
 		|		state->prescaler &= 0xf;
 		|		if (!PIN_CSTP=>) {
-		|			if (rnd == 0x0c) {
+		|			if (rrand == 0x0c) {
 		|				state->sen = false;
 		|			}
-		|			if (rnd == 0x0d) {
-		|				assert(rnd == 0x0d);
+		|			if (rrand == 0x0d) {
 		|				state->sen = true;
 		|			}
-		|			if (rnd == 0x0e) {
-		|				assert(rnd == 0x0e);
+		|			if (rrand == 0x0e) {
 		|				state->den = false;
 		|			}
-		|			if (rnd == 0x0f) {
-		|				assert(rnd == 0x0f);
+		|			if (rrand == 0x0f) {
 		|				state->den = true;
 		|			}
 		|		}
 		|
 		|		state->slice_ev= state->slice == 0xffff;
 		|		// if (!PIN_LDSL=>) {
-		|		if (rnd == 0x06) {
+		|		if (rrand == 0x06) {
 		|			uint64_t tmp;
 		|			BUS_DTYP_READ(tmp);
 		|			tmp >>= 32;
@@ -534,8 +501,7 @@ class XDUMMY(PartFactory):
 		|		}
 		|
 		|		state->delay_ev= state->delay == 0xffff;
-		|		// if (!PIN_LDDL=>) {
-		|		if (rnd == 0x07) {
+		|		if (rrand == 0x07) {
 		|			uint64_t tmp;
 		|			BUS_DTYP_READ(tmp);
 		|			tmp >>= 32;
@@ -544,14 +510,160 @@ class XDUMMY(PartFactory):
 		|			state->delay++;
 		|		}
 		|	}
-		|	output.z_qi = PIN_QIOE=>;
-		|	if (!output.z_qi) {
-		|		output.qi = ((unsigned)(state->slice) << 16) | state->delay;
-		|	}
 		|}
+		|
+		|{
+		|	unsigned tvbs;
+		|	BUS_TVBS_READ(tvbs);
+		|
+		|	output.seqtv = true;
+		|	output.fiuv = true;
+		|	output.fiut = true;
+		|	bool rddum = true;
+		|	output.memv = true;
+		|	output.memtv = true;
+		|	bool ioctv = true;
+		|	output.valv = true;
+		|	output.typt = true;
+		|	switch (tvbs) {
+		|	case 0x0: output.valv = false; output.typt = false; break;
+		|	case 0x1: output.fiuv = false; output.typt = false; break;
+		|	case 0x2: output.valv = false; output.fiut = false; break;
+		|	case 0x3: output.fiuv = false; output.fiut = false; break;
+		|	case 0x4: ioctv = false; break;
+		|	case 0x5: output.seqtv = false; break;
+		|	case 0x8:
+		|	case 0x9:
+		|		output.memv = false; output.typt = false; break;
+		|	case 0xa:
+		|	case 0xb:
+		|		output.memv = false; output.fiut = false; break;
+		|	case 0xc:
+		|	case 0xd:
+		|	case 0xe:
+		|	case 0xf:
+		|		if (PIN_DUMEN=>) {
+		|			rddum = false;
+		|			ioctv = false;
+		|		} else if (PIN_CSAHIT=>) {
+		|			output.typt = false;
+		|			output.valv = false;
+		|		} else {
+		|			output.memtv = false;
+		|		}
+		|		break;
+		|	default:
+		|		break;
+		|	}
+		|	
+		|	bool load_wdr = rand >> 5;
+		|	output.r = 0;
+		|	output.r |= state->pb010[rrand] << 16;
+		|	output.r |= state->pb011[rrand] << 8;
+		|	output.r |= state->pb012[rrand] << 0;
+		|	output.r &= 0x003004;
+		|#if 0
+		|	if (rrand == 0x05) {
+		|		output.r |= 1 << BUS_R_LSB(0);
+		|		output.r |= 1 << BUS_R_LSB(2);
+		|		output.r |= 1 << BUS_R_LSB(11);
+		|	}
+		|	if (rrand == 0x08 || rrand == 0x09 || rrand == 0x19) {
+		|		output.r |= 1 << BUS_R_LSB(0);
+		|		output.r |= 1 << BUS_R_LSB(2);
+		|		output.r |= 1 << BUS_R_LSB(10);
+		|	}
+		|	if (rrand == 0x16 || rrand == 0x1c || rrand == 0x1d) {
+		|		output.r |= 1 << BUS_R_LSB(1);
+		|		output.r |= 1 << BUS_R_LSB(2);
+		|		output.r |= 1 << BUS_R_LSB(10);
+		|	}
+		|#endif
+		|
+		|	bool uir_load_wdr = !load_wdr;
+		|
+		|	output.ldwdr = !(uir_load_wdr && PIN_SCLKST=>);
+		|
+		|	bool rstrdr = PIN_RSTRDR=>;
+		|
+		|	output.ldum = !(rddum && !rstrdr);
+		|
+		|	bool disable_ecc = ((state->pb011[rrand] >> 0) & 1);
+		|	output.decc = !(disable_ecc || output.memtv);
+		|
+		|	bool drive_other_cb = ((state->pb011[rrand] >> 5) & 1);
+		|	output.qcdr = !(uir_load_wdr && drive_other_cb && output.memtv);
+		|	if (!(output.r & 0x2000))
+		|		output.qcdr = false;
+		|
+		|	output.qvaldr = ioctv;
+		|	output.qtypdr = ioctv;
+		|}
+		|
+		|	output.z_qval = output.qvaldr;
+		|	if (!output.z_qval)
+		|		output.qval = state->dummy_val;
+		|
+		|	output.z_qtyp = output.qtypdr;
+		|	if (!output.z_qtyp) {
+		|		switch (rrand) {
+		|		case 0x05:
+		|			output.qtyp = (uint64_t)(state->slice) << 48;
+		|			output.qtyp |= (uint64_t)(state->delay) << 32;
+		|			output.qtyp |= ((uint64_t)state->rtc) << 16;
+		|			output.qtyp |= state->rspfifo[state->rsprdp];
+		|			break;
+		|		case 0x08:
+		|		case 0x09:
+		|		case 0x19:
+		|			output.qtyp = (uint64_t)(state->slice) << 48;
+		|			output.qtyp |= (uint64_t)(state->delay) << 32;
+		|			output.qtyp |= ((uint64_t)state->rtc) << 16;
+		|			output.qtyp |= state->eidrg >> 1;
+		|			output.qtyp |= state->cbreg1 << 7;
+		|			break;
+		|		case 0x16:
+		|		case 0x1c:
+		|		case 0x1d:
+		|			output.qtyp = ((uint64_t)state->rdata) << 32;
+		|			output.qtyp |= ((uint64_t)state->rtc) << 16;
+		|			output.qtyp |= state->eidrg >> 1;
+		|			output.qtyp |= state->cbreg1 << 7;
+		|			break;
+		|		default:
+		|			output.qtyp = state->dummy_typ;
+		|			break;
+		|		}
+		|	}
 		|''')
+
 
 def register(part_lib):
     ''' Register component model '''
 
     part_lib.add_part("XDUMMY", PartModelDQ("XDUMMY", XDUMMY))
+
+'''
+   TYP A-side mux+latch
+   ====================
+
+TYP drivers
+
+IOP     CPURAM  RTC     CTR     CBBUF
+--------------------------------------------- 
+-       X       -       X       -       0-31
+-       -       X       -       -       32-47
+X       -       -       -       X       48-63
+---------------------------------------------
+0x05    -       0x05    0x05    -       XXX
+
+-       -       0x08    0x08    0x8     XXX
+-       -       0x09    0x09    0x9     XXX
+-       -       0x19    0x19    0x19    XXX
+
+-       0x16    0x16    -       0x16    XXX
+-       0x1c    0x1c    -       0x1c    XXX
+-       0x1d    0x1d    -       0x1d    XXX
+---------------------------------------------
+
+'''
