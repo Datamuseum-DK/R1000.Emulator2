@@ -38,7 +38,7 @@ from part import PartModelDQ, PartFactory
 from pin import Pin
 from node import Node
 
-class XCACHE(PartFactory):
+class XMEM(PartFactory):
 
     ''' MEM32 CACHE '''
 
@@ -209,14 +209,14 @@ class XCACHE(PartFactory):
 		|	BUS_SPC_READ(s);
 		|	BUS_ADR_READ(a);
 		|	state->mar_space = s;
-		|	state->mar_name = (a>>25) & 0xffffffffULL;
-		|	state->mar_page = (a>>12) & 0x1fff;
+		|	state->mar_name = (a>>32) & 0xffffffffULL;
+		|	state->mar_page = (a>>19) & 0x1fff;
 		|	state->mar_set = (a>>BUS_ADR_LSB(27)) & 0xf;
 		|
-		|	state->word = a & 0x3f;
+		|	state->word = (a >> 7) & 0x3f;
 		|	state->hash = 0;
-		|	state->hash ^= cache_line_tbl_h[(a >> 35) & 0x3ff];
-		|	state->hash ^= cache_line_tbl_l[(a >> 6) & 0xfff];
+		|	state->hash ^= cache_line_tbl_h[(a >> 42) & 0x3ff];
+		|	state->hash ^= cache_line_tbl_l[(a >> 13) & 0xfff];
 		|	state->hash ^= cache_line_tbl_s[state->mar_space & 0x7];
 		|}
 		|''')
@@ -414,4 +414,4 @@ class XCACHE(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XCACHE", PartModelDQ("XCACHE", XCACHE))
+    part_lib.add_part("XMEM", PartModelDQ("XMEM", XMEM))

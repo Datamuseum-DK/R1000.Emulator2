@@ -4,17 +4,17 @@
 
 from chip import Chip, FChip, ChipSig
 
-class XCACHE(FChip):
+class XMEM(FChip):
 
     ''' MEM32 Cache '''
 
-    symbol_name = "XCACHE"
+    symbol_name = "XMEM"
 
     def __init__(self):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "SPC", 0, 2))
-        self.sig_left(ChipSig("-->+", "ADR", 0, 56))
+        self.sig_left(ChipSig("-->+", "ADR", 0, 63))
 
         self.sig_left(ChipSig("-->+", "MCMD", 0, 3))
         self.sig_left(ChipSig("-->+", "CONT"))
@@ -54,10 +54,9 @@ class XCACHE(FChip):
         self.sig_right(ChipSig("+<->", "DQT", 0, 63))
         self.sig_right(ChipSig("+<->", "DQV", 0, 63))
 
-
         self.finish(21)
 
 def register():
-    yield XCACHE()
+    yield XMEM()
 
 
