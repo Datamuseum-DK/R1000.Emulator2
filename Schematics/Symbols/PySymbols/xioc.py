@@ -4,11 +4,11 @@
 
 from chip import Chip, FChip, ChipSig
 
-class XDUMMY(FChip):
+class XIOC(FChip):
 
     ''' IOC Dummy register '''
 
-    symbol_name = "XDUMMY"
+    symbol_name = "XIOC"
 
     def __init__(self):
         super().__init__()
@@ -17,15 +17,10 @@ class XDUMMY(FChip):
         self.sig_left(ChipSig("-->+", "QTYPOE"))
         self.sig_left(ChipSig("<--+", "QTYPDR"))
 
-        self.sig_left(ChipSig("<->+", "DQC", 0, 8))
-        self.sig_left(ChipSig("-->+", "QCOE"))
-        self.sig_left(ChipSig("<--+", "QCDR"))
 
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "TVEN"))
-        self.sig_left(ChipSig("-->+", "LDCB"))
-        self.sig_left(ChipSig("-->+", "DROT"))
         self.sig_left(ChipSig("-->+", "CSTP"))
 
         self.sig_left(ChipSig("-->o", "RESET"))
@@ -38,7 +33,8 @@ class XDUMMY(FChip):
         self.sig_left(ChipSig("-->+", "TVBS", 0, 3))
         self.sig_left(ChipSig("-->+", "DUMEN"))
         self.sig_left(ChipSig("-->+", "CSAHIT"))
-        self.sig_left(ChipSig("-->+", "RAND", 0, 5))
+        self.sig_left(ChipSig("-->+", "ULWDR"))
+        self.sig_left(ChipSig("-->+", "RAND", 0, 4))
         self.sig_left(ChipSig("-->+", "SCLKST"))
         self.sig_left(ChipSig("-->+", "RSTRDR"))
 
@@ -46,20 +42,21 @@ class XDUMMY(FChip):
         self.sig_left(ChipSig("-->+", "ITYP"))
         self.sig_left(ChipSig("-->+", "IVAL"))
 
+        self.sig_left(ChipSig("-->+", "CONDS", 0, 6))
+
         self.sig_right(ChipSig("+<->", "DQVAL", 0, 63))
         self.sig_right(ChipSig("+<--", "QVALOE"))
         self.sig_right(ChipSig("+-->", "QVALDR"))
 
+        self.sig_right(ChipSig("+<->", "DQC", 0, 8))
+        self.sig_right(ChipSig("+<--", "QCOE"))
+        self.sig_right(ChipSig("+-->", "QCDR"))
+
         self.sig_right(ChipSig("+-->", "ERR"))
-        self.sig_right(ChipSig("+-->", "CBER"))
-        self.sig_right(ChipSig("+-->", "MBER"))
 
         self.sig_right(ChipSig("+===", "ORST"))
 
-        self.sig_right(ChipSig("+-->", "REQEMP"))
-        self.sig_right(ChipSig("+-->", "RSPEMP"))
         self.sig_right(ChipSig("+-->", "RSPEMN"))
-        self.sig_right(ChipSig("+-->", "OFLO"))
 
         self.sig_right(ChipSig("+-->", "BELOW"))
         self.sig_right(ChipSig("+-->", "PFR"))
@@ -75,15 +72,19 @@ class XDUMMY(FChip):
         self.sig_right(ChipSig("+-->", "MEMV"))
         self.sig_right(ChipSig("+-->", "VALV"))
         self.sig_right(ChipSig("+-->", "TYPT"))
-        self.sig_right(ChipSig("+-->", "R", 0, 16))
+        self.sig_right(ChipSig("+-->", "DROTH"))
+        self.sig_right(ChipSig("+-->", "EXPRO"))
+	
         self.sig_right(ChipSig("+-->", "LDWDR"))
         self.sig_right(ChipSig("+-->", "LDUM"))
         self.sig_right(ChipSig("+-->", "DECC"))
+
+        self.sig_right(ChipSig("+-->", "COND"))
 
 
         self.finish()
 
 def register():
-    yield XDUMMY()
+    yield XIOC()
 
 

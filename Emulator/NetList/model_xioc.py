@@ -49,7 +49,7 @@ CBITS = '''
     ECCG62 ---++----+++-++--+-+++-+-+-+++++---++----+++-++--+-+++-+-+-+++++ ++++----++-+-+--++-+-------++--+++++++++-+-++---+-------+-----+- --------+
 '''
 
-class XDUMMY(PartFactory):
+class XIOC(PartFactory):
     ''' IOC Dummy register '''
 
     autopin = True
@@ -99,10 +99,8 @@ class XDUMMY(PartFactory):
 		|	uint16_t delay, slice;
 		|	bool slice_ev, delay_ev;
 		|	bool sen, den, ten;
-		|	uint8_t pb010[32];
 		|	uint8_t pb011[32];
-		|	uint8_t pb012[32];
-		|	uint8_t pb013[32];
+		|	bool multibit_error, checkbit_error;
 		|''');
 
 
@@ -112,17 +110,8 @@ class XDUMMY(PartFactory):
 		|	    state->elprom, sizeof state->elprom,
 		|	    "PA115-01");
 		|	load_programmable(this->name(),
-		|	    state->pb010, sizeof state->pb010,
-		|	    "PB010");
-		|	load_programmable(this->name(),
 		|	    state->pb011, sizeof state->pb011,
 		|	    "PB011");
-		|	load_programmable(this->name(),
-		|	    state->pb012, sizeof state->pb012,
-		|	    "PB012");
-		|	load_programmable(this->name(),
-		|	    state->pb013, sizeof state->pb013,
-		|	    "PB013");
 		|
 		|	struct ctx *c1 = CTX_Find("IOP.ram_space");
 		|	assert(c1 != NULL);
@@ -299,27 +288,36 @@ class XDUMMY(PartFactory):
 		|		state->dummy_typ = -1;
 		|		state->dummy_val = -1;
 		|	}
-		|	bool q4_pos = PIN_Q4.posedge();
-		|	unsigned rand;
-		|	BUS_RAND_READ(rand);
-		|	unsigned rrand = rand & 0x1f;
-		|{
-		|	if (q4_pos && !PIN_LDDUM=>) {
-		|		BUS_DTYP_READ(state->dummy_typ);
-		|		BUS_DVAL_READ(state->dummy_val);
+		|
+		|	if (state->ctx.activations < 1000) {
+		|		output.sme = true;
+		|		state->sen = true;
+		|		output.dme = true;
+		|		state->den = true;
 		|	}
 		|
-		|	uint64_t typ, val, tmp, cbo = 0, cbi;
+		|	bool q4_pos = PIN_Q4.posedge();
+		|	bool sclk_pos = q4_pos && !PIN_CSTP;
 		|
+		|	unsigned rand;
+		|	BUS_RAND_READ(rand);
+		|
+		|	uint64_t typ, val;
 		|	BUS_DTYP_READ(typ);
 		|	BUS_DVAL_READ(val);
 		|
-		|	if (!PIN_TVEN=>) {
-		|		BUS_DC_READ(cbi);
-		|	} else {
-		|		cbi = 0;
+		|{
+		|	if (q4_pos && !PIN_LDDUM=>) {
+		|		state->dummy_typ = typ;
+		|		state->dummy_val = val;
 		|	}
 		|
+		|	unsigned cbi = 0, cbo = 0;
+		|	if (!PIN_TVEN=>) {
+		|		BUS_DC_READ(cbi);
+		|	}
+		|
+		|	uint64_t tmp;
 		|''')
 
         for tmask, vmask, invert in self.getmasks():
@@ -333,43 +331,45 @@ class XDUMMY(PartFactory):
 
         file.fmt('''
 		|
-		|	if (q4_pos && !PIN_CSTP=> && !PIN_LDCB=>) {
+		|	if (sclk_pos && rand == 0x10) {
 		|		state->cbreg2 = (typ >> 7) & 0x1ff;
 		|	}
 		|
 		|	cbo ^= cbi;
 		|	output.z_qc = PIN_QCOE=>;
 		|	if (!output.z_qc) {
-		|		if (!PIN_DROT=>)
+		|		if ((rand & 0x1e) == 0x18) {
 		|			output.qc = state->cbreg2;
-		|		else
+		|		} else {
 		|			output.qc = cbo;
+		|		}
 		|	}
 		|	output.err = cbo != 0;
 		|
 		|	if (q4_pos && !PIN_TVEN=>) {
 		|		state->eidrg = state->elprom[cbo];
-		|		output.cber = (state->eidrg & 0x81) != 0x81;
-		|		output.mber = state->eidrg & 1;
+		|		state->checkbit_error = (state->eidrg & 0x81) != 0x81;
+		|		state->multibit_error = state->eidrg & 1;
 		|		BUS_DC_READ(state->cbreg1);
 		|		state->cbreg1 ^= BUS_DC_MASK;
 		|	}
 		|}
 		|{
-		|	bool sclk_pos = q4_pos && !PIN_CSTP;
 		|
 		|	if (sclk_pos) {
-		|		if (rrand == 0x23)
+		|		if (rand == 0x23)
 		|			state->cpu_running = true;
-		|		if (rrand == 0x24)
+		|		if (rand == 0x24)
 		|			state->cpu_running = false;
 		|	}
 		|
-		|	if (q4_pos && (state->request_int_en && state->reqrdp != state->reqwrp) && state->iack != 6) {
+		|	if (q4_pos && (state->request_int_en &&
+		|	    state->reqrdp != state->reqwrp) && state->iack != 6) {
 		|		state->iack = 6;
 		|		ioc_sc_bus_start_iack(6);
 		|	}
-		|	if (q4_pos && (!state->request_int_en || state->reqrdp == state->reqwrp) && state->iack != 7) {
+		|	if (q4_pos && (!state->request_int_en ||
+		|	    state->reqrdp == state->reqwrp) && state->iack != 7) {
 		|		state->iack = 7;
 		|		ioc_sc_bus_start_iack(7);
 		|	}
@@ -377,18 +377,14 @@ class XDUMMY(PartFactory):
 		|	if (q4_pos)
 		|		do_xact();
 		|
-		|	if (sclk_pos && rrand == 0x04) {
-		|		uint64_t ityp;
-		|		BUS_DTYP_READ(ityp);
-		|		state->reqfifo[state->reqwrp++] = ityp & 0xffff;
+		|	if (sclk_pos && rand == 0x04) {
+		|		state->reqfifo[state->reqwrp++] = typ & 0xffff;
 		|		state->reqwrp &= 0x3ff;
 		|	}
 		|
-		|	output.rspemp = state->rspwrp != state->rsprdp;
 		|	output.rspemn = state->rspwrp == state->rsprdp;
-		|	output.reqemp = state->reqwrp != state->reqrdp;
 		|
-		|	if (sclk_pos && rrand == 0x05) {
+		|	if (sclk_pos && rand == 0x05) {
 		|		state->rsprdp++;
 		|		state->rsprdp &= 0x3ff;
 		|	}
@@ -396,49 +392,44 @@ class XDUMMY(PartFactory):
 		|	if (sclk_pos) {
 		|		unsigned adr = (state->areg | state->acnt) << 2;
 		|
-		|		if ((rrand == 0x1c) || (rrand == 0x1d)) {
+		|		if ((rand == 0x1c) || (rand == 0x1d)) {
 		|			state->rdata = vbe32dec(state->ram + adr);
 		|		}
 		|
-		|		if ((rrand == 0x1e) || (rrand == 0x1f)) {
-		|			uint64_t typ;
-		|			BUS_DTYP_READ(typ);
+		|		if ((rand == 0x1e) || (rand == 0x1f)) {
 		|			uint32_t data = typ >> 32;
 		|			vbe32enc(state->ram + adr, data);
 		|		}
 		|
-		|		if (rrand == 0x01) {
-		|			uint64_t typ;
-		|			BUS_DTYP_READ(typ);
+		|		if (rand == 0x01) {
 		|			state->acnt = (typ >> 2) & 0x00fff;
 		|			state->areg = (typ >> 2) & 0x1f000;
 		|		}
 		|
-		|		if ((rrand == 0x1c) || (rrand == 0x1e)) {
+		|		if ((rand == 0x1c) || (rand == 0x1e)) {
 		|			state->acnt += 1;
 		|			state->acnt &= 0xfff;
 		|		}
-		|		output.oflo = state->acnt == 0xfff;
 		|	}
 		|
-		|	if (sclk_pos && rrand == 0x08) {
+		|	if (sclk_pos && rand == 0x08) {
 		|		state->rtc = 0;
 		|	}
-		|	if (q4_pos && !PIN_RTCEN=> && rrand != 0x08) {
+		|	if (q4_pos && !PIN_RTCEN=> && rand != 0x08) {
 		|		state->rtc++;
 		|		state->rtc &= 0xffff;
 		|	}
 		|}
 		|{
-		|	uint64_t typ, tmp;
+		|	uint64_t ttyp, tmp;
 		|
-		|	BUS_DTYP_READ(typ);
+		|	ttyp = typ;
 		|
-		|	typ &= 0xffffffff;
-		|	tmp = typ >> 7;
+		|	ttyp &= 0xffffffff;
+		|	tmp = ttyp >> 7;
 		|	tmp &= 0xfffff;
 		|	output.below = (tmp >= 0xc);
-		|	tmp = typ & 0x80000047;
+		|	tmp = ttyp & 0x80000047;
 		|	output.pfr = 
 		|	    tmp == 0x80000000 ||
 		|	    tmp == 0x80000040 ||
@@ -447,24 +438,18 @@ class XDUMMY(PartFactory):
 		|}
 		|
 		|{
-		|	if (state->ctx.activations < 1000) {
-		|		output.sme = true;
-		|		state->sen = true;
-		|		output.dme = true;
-		|		state->den = true;
-		|	}
 		|
 		|	if (PIN_Q2.posedge()) {
 		|		if (state->slice_ev && !state->ten) {
 		|			output.sme = false;
 		|		}
-		|		if (rrand == 0x0a) {
+		|		if (rand == 0x0a) {
 		|			output.sme = true;
 		|		}
 		|		if (state->delay_ev && !state->ten) {
 		|			output.dme = false;
 		|		}
-		|		if (rrand == 0x0b) {
+		|		if (rand == 0x0b) {
 		|			output.dme = true;
 		|		}
 		|	}
@@ -474,25 +459,24 @@ class XDUMMY(PartFactory):
 		|		state->ten = state->prescaler != 0xf;
 		|		state->prescaler &= 0xf;
 		|		if (!PIN_CSTP=>) {
-		|			if (rrand == 0x0c) {
+		|			if (rand == 0x0c) {
 		|				state->sen = false;
 		|			}
-		|			if (rrand == 0x0d) {
+		|			if (rand == 0x0d) {
 		|				state->sen = true;
 		|			}
-		|			if (rrand == 0x0e) {
+		|			if (rand == 0x0e) {
 		|				state->den = false;
 		|			}
-		|			if (rrand == 0x0f) {
+		|			if (rand == 0x0f) {
 		|				state->den = true;
 		|			}
 		|		}
 		|
 		|		state->slice_ev= state->slice == 0xffff;
 		|		// if (!PIN_LDSL=>) {
-		|		if (rrand == 0x06) {
-		|			uint64_t tmp;
-		|			BUS_DTYP_READ(tmp);
+		|		if (rand == 0x06) {
+		|			uint64_t tmp = typ;
 		|			tmp >>= 32;
 		|			state->slice = tmp >> 16;
 		|			TRACE(<< " LD " << std::hex << state->slice);
@@ -501,9 +485,8 @@ class XDUMMY(PartFactory):
 		|		}
 		|
 		|		state->delay_ev= state->delay == 0xffff;
-		|		if (rrand == 0x07) {
-		|			uint64_t tmp;
-		|			BUS_DTYP_READ(tmp);
+		|		if (rand == 0x07) {
+		|			uint64_t tmp = typ;
 		|			tmp >>= 32;
 		|			state->delay = tmp;
 		|		} else if (!state->den && !state->ten) {
@@ -556,29 +539,9 @@ class XDUMMY(PartFactory):
 		|		break;
 		|	}
 		|	
-		|	bool load_wdr = rand >> 5;
-		|	output.r = 0;
-		|	output.r |= state->pb010[rrand] << 16;
-		|	output.r |= state->pb011[rrand] << 8;
-		|	output.r |= state->pb012[rrand] << 0;
-		|	output.r &= 0x003004;
-		|#if 0
-		|	if (rrand == 0x05) {
-		|		output.r |= 1 << BUS_R_LSB(0);
-		|		output.r |= 1 << BUS_R_LSB(2);
-		|		output.r |= 1 << BUS_R_LSB(11);
-		|	}
-		|	if (rrand == 0x08 || rrand == 0x09 || rrand == 0x19) {
-		|		output.r |= 1 << BUS_R_LSB(0);
-		|		output.r |= 1 << BUS_R_LSB(2);
-		|		output.r |= 1 << BUS_R_LSB(10);
-		|	}
-		|	if (rrand == 0x16 || rrand == 0x1c || rrand == 0x1d) {
-		|		output.r |= 1 << BUS_R_LSB(1);
-		|		output.r |= 1 << BUS_R_LSB(2);
-		|		output.r |= 1 << BUS_R_LSB(10);
-		|	}
-		|#endif
+		|	bool load_wdr = PIN_ULWDR=>;
+		|	output.droth = (rand & 0x1e) != 0x18;
+		|	output.expro = rand != 0x12;
 		|
 		|	bool uir_load_wdr = !load_wdr;
 		|
@@ -588,12 +551,12 @@ class XDUMMY(PartFactory):
 		|
 		|	output.ldum = !(rddum && !rstrdr);
 		|
-		|	bool disable_ecc = ((state->pb011[rrand] >> 0) & 1);
+		|	bool disable_ecc = ((state->pb011[rand] >> 0) & 1);
 		|	output.decc = !(disable_ecc || output.memtv);
 		|
-		|	bool drive_other_cb = ((state->pb011[rrand] >> 5) & 1);
+		|	bool drive_other_cb = ((state->pb011[rand] >> 5) & 1);
 		|	output.qcdr = !(uir_load_wdr && drive_other_cb && output.memtv);
-		|	if (!(output.r & 0x2000))
+		|	if (!output.droth)
 		|		output.qcdr = false;
 		|
 		|	output.qvaldr = ioctv;
@@ -606,7 +569,7 @@ class XDUMMY(PartFactory):
 		|
 		|	output.z_qtyp = output.qtypdr;
 		|	if (!output.z_qtyp) {
-		|		switch (rrand) {
+		|		switch (rand) {
 		|		case 0x05:
 		|			output.qtyp = (uint64_t)(state->slice) << 48;
 		|			output.qtyp |= (uint64_t)(state->delay) << 32;
@@ -635,13 +598,42 @@ class XDUMMY(PartFactory):
 		|			break;
 		|		}
 		|	}
+		|
+		|	unsigned cond_sel;
+		|	BUS_CONDS_READ(cond_sel);
+		|	switch (cond_sel) {
+		|	case 0x78:
+		|		output.cond = state->multibit_error;
+		|		break;
+		|	case 0x79:
+		|		output.cond = output.pfr;
+		|		break;
+		|	case 0x7a:
+		|		output.cond = state->checkbit_error;
+		|		break;
+		|	case 0x7b:
+		|		output.cond = state->reqwrp != state->reqrdp;
+		|		break;
+		|	case 0x7c:
+		|		output.cond = state->acnt == 0xfff;
+		|		break;
+		|	case 0x7d:
+		|		output.cond = true;
+		|		break;
+		|	case 0x7e:
+		|		output.cond = state->rspwrp != state->rsprdp;
+		|		break;
+		|	case 0x7f:
+		|		output.cond = true;
+		|		break;
+		|	}
 		|''')
 
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XDUMMY", PartModelDQ("XDUMMY", XDUMMY))
+    part_lib.add_part("XIOC", PartModelDQ("XIOC", XIOC))
 
 '''
    TYP A-side mux+latch
