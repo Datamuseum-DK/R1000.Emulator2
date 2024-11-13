@@ -39,6 +39,8 @@ class XBusMux(PartFactory):
 
     ''' HiZ Bus Multiplexer '''
 
+    autopin = True
+
     def __init__(self, ident, length, width):
         super().__init__(ident)
         self.length = length
@@ -62,38 +64,18 @@ class XBusMux(PartFactory):
     def doit(self, file):
         ''' The meat of the doit() function '''
 
-        super().doit(file)
-
-        file.fmt('''
-		|	uint64_t tmp;
-		|	const char *which;
-		|
-		|''')
         pfx = ""
         for i in range(self.width):
             file.fmt('\t' + pfx + 'if (!PIN_OE%c=>) {\n' % (i + 65))
             pfx = "} else "
-            file.fmt('\t\twhich = "%c";\n' % (i + 65))
-            file.fmt('\t\tBUS_I%c_READ(tmp);\n' % (i + 65))
-            file.fmt('\t\tBUS_Q_WRITE(tmp);\n')
-            file.fmt('\t\tnext_trigger(%c_event);\n' % (i + 65))
+            file.fmt('\t\tBUS_I%c_READ(output.q);\n' % (i + 65))
+            file.fmt('\t\tidle_next = &%c_event;\n' % (i + 65))
 
         file.fmt('''
 		|	} else {
-		|		which = "?";
-		|		tmp = BUS_Q_MASK;
-		|		BUS_Q_WRITE(tmp);
+		|		output.q = BUS_Q_MASK;
 		|		next_trigger(no_event);
 		|	}
-		|	TRACE(
-		|''')
-
-        for i in range(self.width):
-            file.fmt('\t    << " %c " << PIN_OE%c? << " " << BUS_I%c_TRACE()\n' % (i + 97, i+65, i+65))
-
-        file.fmt('''
-		|	    << " - " << std::hex << tmp
-		|	);
 		|''')
 
 
