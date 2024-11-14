@@ -70,10 +70,10 @@ class XSEQNAM(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	uint32_t tost, vost, cur_name;
-		|	uint32_t namram[1<<BUS_RADR_WIDTH];
+		|	uint32_t namram[1<<BUS_RSAD_WIDTH];
 		|	unsigned pcseg, retseg, last;
 		|
-		|	uint64_t tosram[1<<BUS_RADR_WIDTH];
+		|	uint64_t tosram[1<<BUS_RSAD_WIDTH];
 		|	uint64_t tosof;
 		|	uint32_t savrg;
 		|	uint32_t pred;
@@ -91,10 +91,10 @@ class XSEQNAM(PartFactory):
         yield "BUS_CSA"
         yield "PIN_CSEL"
         # yield "BUS_CTL"		# STCLK, PDCLK
-        yield "BUS_DSP"
+        yield "BUS_DSPL"
         # yield "BUS_DTH"		# TOSCLK, CNCK, RAMWE
         yield "BUS_DTL"
-        # yield "BUS_DV"		# TOSCLK, MCLK
+        # yield "BUS_DVA"		# TOSCLK, MCLK
         # yield "BUS_FIU"		# STCLK PDCLK
         yield "PIN_H2"
         yield "BUS_IRDS"
@@ -107,10 +107,10 @@ class XSEQNAM(PartFactory):
         yield "PIN_PDCLK.pos()"
         yield "PIN_QTHOE"
         yield "PIN_QTLOE"
-        yield "PIN_QVOE"
-        yield "BUS_RADR"
+        yield "PIN_QVAOE"
+        yield "BUS_RSAD"
         yield "PIN_RAMWE.pos()"
-        yield "PIN_RCLK"
+        yield "PIN_RTCLK"
         yield "PIN_RESDR"
         yield "PIN_RWE.pos()"
         yield "PIN_SGEXT"
@@ -172,7 +172,7 @@ class XSEQNAM(PartFactory):
 		|
 		|	if (PIN_TOSCLK.posedge()) {
 		|		BUS_DTH_READ(state->tost);
-		|		BUS_DV_READ(state->vost);
+		|		BUS_DVA_READ(state->vost);
 		|		state->tosof = (typl >> 7) & 0xfffff;
 		|	}
 		|
@@ -182,7 +182,7 @@ class XSEQNAM(PartFactory):
 		|
 		|	if (PIN_RAMWE.posedge()) {
 		|		unsigned radr;
-		|		BUS_RADR_READ(radr);
+		|		BUS_RSAD_READ(radr);
 		|		BUS_DTH_READ(state->namram[radr]);
 		|	}
 		|
@@ -193,7 +193,7 @@ class XSEQNAM(PartFactory):
 		|		name_bus = state->vost ^ 0xffffffff;
 		|	} else if (!name_ram_cs) {
 		|		unsigned radr;
-		|		BUS_RADR_READ(radr);
+		|		BUS_RSAD_READ(radr);
 		|		name_bus = state->namram[radr] ^ 0xffffffff;
 		|	} else {
 		|		name_bus = 0xffffffff;
@@ -206,13 +206,13 @@ class XSEQNAM(PartFactory):
 		|			output.qth = state->cur_name;
 		|	}
 		|
-		|	if (PIN_RCLK.posedge()) {
+		|	if (PIN_RTCLK.posedge()) {
 		|		state->retseg = state->pcseg;
 		|	}
 		|	if (PIN_MCLK.posedge()) {
 		|		unsigned val;
-		|		BUS_DV_READ(val);
-		|		val ^= BUS_DV_MASK;
+		|		BUS_DVA_READ(val);
+		|		val ^= BUS_DVA_MASK;
 		|		state->pcseg = val;
 		|		state->pcseg &= 0xffffff;
 		|	}
@@ -234,9 +234,9 @@ class XSEQNAM(PartFactory):
 		|			}
 		|		}
 		|	
-		|		output.z_qv = PIN_QVOE=>;
-		|		if (!output.z_qv) {
-		|			output.qv = cseg ^ BUS_QV_MASK;
+		|		output.z_qva = PIN_QVAOE=>;
+		|		if (!output.z_qva) {
+		|			output.qva = cseg ^ BUS_QVA_MASK;
 		|		}
 		|	}
 		|
@@ -249,7 +249,7 @@ class XSEQNAM(PartFactory):
 		|		}
 		|	} else {
 		|		unsigned res_adr;
-		|		BUS_RADR_READ(res_adr);
+		|		BUS_RSAD_READ(res_adr);
 		|		if (PIN_RWE.posedge()) {
 		|			state->tosram[res_adr] = (typl >> 7) & 0xfffff;
 		|		}
@@ -259,7 +259,7 @@ class XSEQNAM(PartFactory):
 		|       offs &= 0xfffff;
 		|
 		|       unsigned disp;
-		|       BUS_DSP_READ(disp);
+		|       BUS_DSPL_READ(disp);
 		|       bool d7 = (disp & 0x8100) == 0;
 		|       unsigned sgdisp = disp & 0xff;
 		|       if (!d7)

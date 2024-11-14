@@ -120,21 +120,6 @@ class XSEQWCS(PartFactory):
 		|		output.ras &= ~2;
 		|	else
 		|		output.ras |= 2;
-		|
-		|	unsigned intreads = (output.uir >> 7) & 0x7;
-		|
-		|	output.tvoe = intreads != 0;
-		|	output.cinoe = intreads != 1;
-		|	output.decoe = intreads != 2;
-		|	output.tosoe = intreads != 3;
-		|	output.rnmoe = intreads != 5;
-		|	// output.pcoe = intreads < 4;
-		|	output.offoe = intreads == 0;
-		|	output.cnmoe = (intreads == 0 || intreads == 5);
-		|	if (!(intreads < 4))
-		|		output.decoe = false;
-		|	if (!output.cnmoe)
-		|		output.rnmoe = false;
 		''')
 
 def register(part_lib):

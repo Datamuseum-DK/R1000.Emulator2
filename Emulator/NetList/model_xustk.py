@@ -81,11 +81,11 @@ class XUSTK(PartFactory):
         yield "PIN_Q2.pos()"
         yield "PIN_Q4.pos()"
         yield "PIN_QFOE"
-        yield "PIN_QVOE"
+        yield "PIN_QWOE"
 
         yield "PIN_FIU_CLK.pos()"
         yield "PIN_LCLK.pos()"
-        yield "PIN_ACLK.pos()"
+        yield "PIN_ACK.pos()"
         yield "PIN_DV_U"
         # yield "PIN_BAD_HINT"
 
@@ -222,10 +222,10 @@ class XUSTK(PartFactory):
 		|		output.qf = state->topu ^ 0xffff;
 		|		output.qf ^= 0xffff;
 		|	}
-		|	output.z_qv = PIN_QVOE=>;
-		|	if (!output.z_qv) {
-		|		output.qv = state->topu ^ 0xffff;
-		|		output.qv ^= BUS_QV_MASK;
+		|	output.z_qw = PIN_QWOE=>;
+		|	if (!output.z_qw) {
+		|		output.qw = state->topu ^ 0xffff;
+		|		output.qw ^= BUS_QW_MASK;
 		|	}
 		|
 		|	unsigned data = 0, sel;
@@ -256,7 +256,7 @@ class XUSTK(PartFactory):
 		|			data += state->fiu;
 		|			break;
 		|		case 5:
-		|			BUS_DEC_READ(data);
+		|			BUS_DECC_READ(data);
 		|			data <<= 1;
 		|			break;
 		|		case 6:
@@ -291,7 +291,7 @@ class XUSTK(PartFactory):
 		|			data += state->fiu;
 		|			break;
 		|		case 1:
-		|			BUS_DEC_READ(data);
+		|			BUS_DECC_READ(data);
 		|			data <<= 1;
 		|			break;
 		|		case 2:
@@ -320,7 +320,7 @@ class XUSTK(PartFactory):
 		|	output.u_event = !u_event;
 		|	output.u_eventnot = u_event;
 		|
-		|	if (PIN_ACLK.posedge()) {
+		|	if (PIN_ACK.posedge()) {
 		|		BUS_UEI_READ(state->uei);
 		|		state->uei <<= 1;
 		|		state->uei |= 1;
@@ -370,13 +370,13 @@ class XUSTK(PartFactory):
 		|	unsigned rom = state->prom43[adr];
 		|
 		|	bool wanna_dispatch = !(((rom >> 5) & 1) && !state->uadr_mux);
-		|	output.wdisp  = wanna_dispatch;
+		|	output.vdisp  = wanna_dispatch;
 		|	state->preturn = !(((rom >> 3) & 1) ||  state->uadr_mux);
 		|	state->push_br =    (rom >> 1) & 1;
 		|	state->push   = !(((rom >> 0) & 1) ||
 		|		        !(((rom >> 2) & 1) || !state->uadr_mux));
 		|
-		|	if (PIN_ACLK.posedge()) {
+		|	if (PIN_ACK.posedge()) {
 		|		adr = 0;
 		|		if (output.u_eventnot) adr |= 0x02;
 		|		if (PIN_MEVENT=>) adr |= 0x04;
@@ -384,7 +384,7 @@ class XUSTK(PartFactory):
 		|		adr |= br_type << 5;
 		|		rom = state->prom44[adr];
 		|
-		|		if (PIN_SCLKE=>) {
+		|		if (PIN_SCKE=>) {
 		|			rom |= 0x2;
 		|		} else {
 		|			rom ^= 0x2;
@@ -413,7 +413,7 @@ class XUSTK(PartFactory):
 		|		output.fo7 = false;
 		|	}
 		|
-		|	if (PIN_ACLK.posedge()) {
+		|	if (PIN_ACK.posedge()) {
 		|		if (PIN_SSTOP=> && PIN_BHEN=> && bhint2) {
 		|			unsigned restrt_rnd;
 		|			BUS_RRND_READ(restrt_rnd);
@@ -445,11 +445,11 @@ class XUSTK(PartFactory):
 		|		lin &= 0x7;
 		|		lin |= output.ldc << 3;
 		|
-		|		if (!PIN_SCLKE=>) {
+		|		if (!PIN_SCKE=>) {
 		|			state->lreg = lin;
 		|		}
 		|
-		|		if ((lin & 0x4) && !PIN_SCLKE=>) {
+		|		if ((lin & 0x4) && !PIN_SCKE=>) {
 		|			state->last_late_cond = PIN_COND=>;
 		|		}
 		|

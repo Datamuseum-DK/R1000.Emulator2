@@ -18,8 +18,8 @@ class XUSTK(FChip):
 
         self.sig_left(ChipSig("-->+", "Q3COND"))
 
-        self.sig_left(ChipSig("-->+", "QVOE"))
-        self.sig_left(ChipSig("===+", "QV", 0, 15))
+        self.sig_left(ChipSig("-->+", "QWOE"))
+        self.sig_left(ChipSig("===+", "QW", 0, 15))
         self.sig_left(ChipSig("-->+", "LCLK"))
 
         self.sig_left(ChipSig("-->+", "PUSHRND"))
@@ -37,7 +37,7 @@ class XUSTK(FChip):
         self.sig_left(ChipSig("-->+", "LATE", 0, 2))
 
         self.sig_left(ChipSig("-->+", "UEI", 0, 14))
-        self.sig_left(ChipSig("-->+", "ACLK"))
+        self.sig_left(ChipSig("-->+", "ACK"))
         self.sig_left(ChipSig("-->+", "BRTYP", 0, 3))
         self.sig_left(ChipSig("-->+", "SSTOP"))
         self.sig_left(ChipSig("-->+", "DMODE"))
@@ -53,7 +53,7 @@ class XUSTK(FChip):
 
         self.sig_right(ChipSig("+<--", "FIU_CLK"))
 
-        self.sig_right(ChipSig("+<--", "DEC", 0, 12))
+        self.sig_right(ChipSig("+<--", "DECC", 0, 12))
 
         self.sig_right(ChipSig("+-->", "NU", 0, 13))
 
@@ -63,7 +63,7 @@ class XUSTK(FChip):
         self.sig_left(ChipSig("-->+", "BRTIM", 0, 1))
         self.sig_left(ChipSig("-->+", "MEVENT"))
 
-        self.sig_left(ChipSig("-->+", "SCLKE"))
+        self.sig_left(ChipSig("-->+", "SCKE"))
 
         self.sig_left(ChipSig("-->+", "BHCKE"))
         self.sig_left(ChipSig("-->+", "MPRND"))
@@ -76,7 +76,7 @@ class XUSTK(FChip):
         #self.sig_left(ChipSig("-->+", "SSTOP"))
         self.sig_left(ChipSig("-->+", "BHEN"))
 
-        self.sig_right(ChipSig("+-->", "WDISP"))
+        self.sig_right(ChipSig("+-->", "VDISP"))
 
         self.sig_right(ChipSig("+-->", "DTIME"))
         self.sig_right(ChipSig("+-->", "DBHINT"))

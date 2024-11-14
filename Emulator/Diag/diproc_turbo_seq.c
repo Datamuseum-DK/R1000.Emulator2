@@ -164,8 +164,8 @@ load_control_store_200_seq(const struct diagproc *dp)
 static int
 prep_run_seq(const struct diagproc *dp)
 {
-#if !defined(HAS_Z029)
-	fprintf(stderr, "NO Z029\n");
+#if !defined(HAS_Z020)
+	fprintf(stderr, "NO Z020\n");
 	(void)dp;
 	return (0);
 #else
@@ -193,9 +193,12 @@ prep_run_seq(const struct diagproc *dp)
 		0x5c,			// RET
 	};
 
-	ctx = CTX_Find(COMP_Z029);
+	ctx = CTX_Find(COMP_Z020);
 	AN(ctx);
-	nxtuadr = (uint16_t *)(void*)(ctx + 1);
+	uint8_t *ptr = (void*)(ctx + 1);
+	ptr += 4 << 10;	// uint32_t top[1<<10]
+	ptr += 4 << 10; // uint32_t bot[1<<10]
+	nxtuadr = (uint16_t *)(void*)ptr;
 
 	nxtuadr[0] = vbe16dec(dp->ram + 0x18);
 	nxtuadr[1] = vbe16dec(dp->ram + 0x18);

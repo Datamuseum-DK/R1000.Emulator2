@@ -39,46 +39,30 @@ from part import PartModel, PartFactory
 class XSCLK(PartFactory):
     ''' TYP A-side mux+latch '''
 
-    def state(self, file):
-        file.fmt('''
-		|	unsigned data;
-		|	unsigned last;
-		|''')
+    autopin = True
+
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+            "next_edge_event",
+            "PIN_Q4E",
+        )
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|
-		|	if (state->ctx.job) {
-		|		if (state->ctx.job == 2)
-		|			next_trigger(PIN_Q4E.posedge_event());
-		|		state->ctx.job = 0;
-		|		BUS_Q_WRITE(state->data);
-		|	}
 		|	if (PIN_Q4E.negedge()) {
-		|		state->data = BUS_D_MASK;
-		|		state->ctx.job = 2;
-		|		next_trigger(5, sc_core::SC_NS);
+		|		output.q = BUS_D_MASK;
 		|	} else if (PIN_Q4E=>) {
-		|		unsigned data;
 		|		if (!PIN_SCE=>) {
-		|			BUS_D_READ(data);
-		|#if 0
-		|if (data != state->last) {
-		|ALWAYS_TRACE(<< "DDD " << std::hex << data);
-		|state->last = data;
-		|}
-		|#endif
+		|			BUS_D_READ(output.q);
 		|		} else {
-		|			data = BUS_D_MASK;
+		|			output.q = BUS_D_MASK;
 		|		}
-		|		if (data != state->data) {
-		|			state->data = data;
-		|			state->ctx.job = 1;
-		|			next_trigger(5, sc_core::SC_NS);
-		|		}
-		|	}
+		|	} else {
+		|		idle_next = &next_edge_event;
+		|	}		
 		|''')
 
 def register(part_lib):

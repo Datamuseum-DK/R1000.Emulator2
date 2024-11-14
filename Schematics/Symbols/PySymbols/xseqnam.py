@@ -15,16 +15,16 @@ class XSEQNAM(FChip):
 
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "RAMWE"))
-        self.sig_left(ChipSig("-->+", "RADR", 0, 3))
+        self.sig_left(ChipSig("-->+", "RSAD", 0, 3))
         self.sig_left(ChipSig("-->+", "TOSCLK"))
         self.sig_left(ChipSig("-->+", "ADRICD"))
 
         self.sig_left(ChipSig("-->+", "ISPC", 0, 2))
-        self.sig_left(ChipSig("-->+", "QVOE"))
-        self.sig_left(ChipSig("<->+", "DQV", 0, 31))
+        self.sig_left(ChipSig("-->+", "QVAOE"))
+        self.sig_left(ChipSig("<->+", "DQVA", 0, 31))
 
         self.sig_left(ChipSig("-->+", "MCLK"))
-        self.sig_left(ChipSig("-->+", "RCLK"))
+        self.sig_left(ChipSig("-->+", "RTCLK"))
         self.sig_left(ChipSig("-->+", "CSEL"))
         self.sig_left(ChipSig("-->+", "CNCK"))
         self.sig_left(ChipSig("-->+", "CNOE"))
@@ -38,7 +38,7 @@ class XSEQNAM(FChip):
         self.sig_left(ChipSig("-->+", "RWE"))
 
         self.sig_left(ChipSig("-->+", "SGEXT"))
-        self.sig_left(ChipSig("-->+", "DSP", 0, 15))
+        self.sig_left(ChipSig("-->+", "DSPL", 0, 15))
         self.sig_left(ChipSig("-->+", "CTL", 0, 2))
         self.sig_left(ChipSig("-->+", "CMR"))
         self.sig_left(ChipSig("-->+", "FIU", 0, 31))

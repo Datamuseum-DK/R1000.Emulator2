@@ -32,14 +32,6 @@ class XSEQWCS(FChip):
         self.sig_right(ChipSig("+-->", "LEXI"))
         self.sig_right(ChipSig("+-->", "RAS", 0, 1))
 
-        self.sig_right(ChipSig("+-->", "TVOE"))
-        self.sig_right(ChipSig("+-->", "CINOE"))
-        self.sig_right(ChipSig("+-->", "DECOE"))
-        self.sig_right(ChipSig("+-->", "TOSOE"))
-        self.sig_right(ChipSig("+-->", "RNMOE"))
-        self.sig_right(ChipSig("+-->", "OFFOE"))
-        self.sig_right(ChipSig("+-->", "CNMOE"))
-
         self.finish()
 
 def register():
