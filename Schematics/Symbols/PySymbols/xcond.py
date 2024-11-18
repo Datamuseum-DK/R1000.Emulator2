@@ -19,6 +19,9 @@ class XCOND(FChip):
         self.sig_left(ChipSig("-->+", "CX2"))
         self.sig_left(ChipSig("-->+", "CX3"))
         self.sig_left(ChipSig("-->+", "CX4"))
+        self.sig_left(ChipSig("-->+", "CX5"))
+        self.sig_left(ChipSig("-->+", "CX6"))
+        self.sig_left(ChipSig("-->+", "CX7"))
         self.sig_left(ChipSig("-->+", "CX8"))
         self.sig_left(ChipSig("-->+", "CX9"))
         self.sig_left(ChipSig("-->+", "CXA"))
@@ -29,7 +32,7 @@ class XCOND(FChip):
         self.sig_left(ChipSig("-->+", "CXF"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "SCKE"))
-        self.sig_left(ChipSig("-->+", "SC", 0, 23))
+        # self.sig_left(ChipSig("-->+", "SC", 0, 23))
 
         self.sig_right(ChipSig("+-->", "E_ML"))
         self.sig_right(ChipSig("+-->", "CNDP"))

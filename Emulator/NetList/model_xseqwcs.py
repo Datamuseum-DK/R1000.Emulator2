@@ -56,18 +56,18 @@ class XSEQWCS(PartFactory):
         file.fmt('''
 		|	uint64_t ram[1<<BUS_UA_WIDTH];
 		|	uint64_t wcs;
-		|	uint8_t prom0[512];
-		|	uint8_t prom2[512];
+		|	uint8_t pa045[512];
+		|	uint8_t pa047[512];
 		|	bool ff0, ff1, ff2;
 		|''')
 
     def init(self, file):
         file.fmt('''
 		|	load_programmable(this->name(),
-		|	    state->prom0, sizeof state->prom0,
+		|	    state->pa045, sizeof state->pa045,
 		|	    "PA045-03");
 		|	load_programmable(this->name(),
-		|	    state->prom2, sizeof state->prom2,
+		|	    state->pa047, sizeof state->pa047,
 		|	    "PA047-02");
 		|''')
 
@@ -94,8 +94,8 @@ class XSEQWCS(PartFactory):
 		|			output.uir = state->wcs;
 		|			output.uir ^= 0x7fULL << 13;	// Invert condsel
 		|			rnd = state->wcs & 0x7f;
-		|			output.r = state->prom0[rnd | 0x100] << 8;
-		|			output.r |= state->prom2[rnd | 0x100];
+		|			output.r = state->pa045[rnd | 0x100] << 8;
+		|			output.r |= state->pa047[rnd | 0x100];
 		|			break;
 		|		case 0: // noop
 		|			break;

@@ -64,7 +64,7 @@ class XCOND(PartFactory):
                    "PIN_Q4.negedge_event()",
                    "BUS_ICOND",
                 )
-            elif i not in (5, 6, 7):
+            else:
                 yield from self.event_or(
                    "event_%x_a" % i,
                    "PIN_CX%X.default_event()" % i,
@@ -76,19 +76,6 @@ class XCOND(PartFactory):
                    "PIN_Q4.negedge_event()",
                    "BUS_ICOND",
                 )
-
-        for i in range(0x5 << 3, 0x8 << 3):
-            yield from self.event_or(
-               "event_%02x_a" % i,
-               "PIN_SC%d.default_event()" % (i - (0x5 << 3)),
-               "BUS_ICOND",
-            )
-            yield from self.event_or(
-               "event_%02x_b" % i,
-               "PIN_SC%d.default_event()" % (i - (0x5 << 3)),
-               "PIN_Q4.negedge_event()",
-               "BUS_ICOND",
-            )
 
     def init(self, file):
         file.fmt('''
@@ -114,13 +101,11 @@ class XCOND(PartFactory):
 		|	bool is_e_ml = (pa042 >> 7) & 1;
 		|
 		|	bool cond;
-		|	switch(condsel) {
+		|	switch(condsel >> 3) {
 		|''')
 
         for pin in range(16):
-            if pin not in (5, 6, 7):
-                for i in range(8):
-                    file.write('\tcase 0x%x:\n' % ((pin << 3) | i))
+            file.write('\tcase 0x%x:\n' % pin)
             if pin == 4:
                 file.fmt('''
 		|		cond = !(PIN_CXC=> && PIN_CXF=>);
@@ -130,30 +115,6 @@ class XCOND(PartFactory):
 		|		    idle_next = &event_%x_b;
 		|		break;
 		|''' % (pin, pin))
-            elif pin in (5,):
-                for i in range(8):
-                    j = (pin << 3) | i
-                    file.fmt('''
-		|	case 0x%x:
-		|		cond = !PIN_SC%d=>;
-		|		if (is_e_ml || cond == state->q3cond)
-		|			idle_next = &event_%02x_a;
-		|		else
-		|			idle_next = &event_%02x_b;
-		|		break;
-		|''' % (j, j - (5<<3), j, j))
-            elif pin in (6, 7):
-                for i in range(8):
-                    j = (pin << 3) | i
-                    file.fmt('''
-		|	case 0x%x:
-		|		cond = PIN_SC%d=>;
-		|		if (is_e_ml || cond == state->q3cond)
-		|			idle_next = &event_%02x_a;
-		|		else
-		|			idle_next = &event_%02x_b;
-		|		break;
-		|''' % (j, j - (5<<3), j, j))
             else:
                 file.fmt('''
 		|		cond = PIN_CX%X=>;

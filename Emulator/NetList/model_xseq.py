@@ -46,10 +46,49 @@ IR0     IR1     IR2     0-32            32-47           48-63           0-31    
 
 from part import PartModelDQ, PartFactory
 
-class XSEQIBUF(PartFactory):
+class XSEQ(PartFactory):
     ''' SEQ Instruction buffer '''
 
     autopin = True
+    def extra(self, file):
+        file.fmt('''
+		|#define RND_PUSH		(1<<31)
+		|#define RND_POP		(1<<30)
+		|#define RND_CLEAR_ST		(1<<29)
+		|#define RND_RESTRT0		(1<<28)
+		|#define RND_RESTRT1		(1<<27)
+		|#define RND_FLD_CHK		(1<<26)
+		|#define RND_TOP_LD		(1<<25)
+		|#define RND_HALT		(1<<24)
+		|
+		|#define RND_CNTL_MUX		(1<<23)
+		|#define RND_CHK_EXIT		(1<<22)
+		|#define RND_RETRN_LD		(1<<21)
+		|#define RND_M_PC_MUX		(1<<20)
+		|#define RND_M_PC_MD0		(1<<19)
+		|#define RND_M_PC_MD1		(1<<18)
+		|#define RND_M_PC_LDH		(1<<17)
+		|#define RND_ADR_SEL		(1<<16)
+		|
+		|#define RND_TOS_VLB		(1<<15)
+		|#define RND_RES_OFFS		(1<<14)
+		|#define RND_RES_NAME		(1<<13)
+		|#define RND_CUR_LEX		(1<<12)
+		|#define RND_NAME_LD		(1<<11)
+		|#define RND_SAVE_LD		(1<<10)
+		|#define RND_PRED_LD		(1<< 9)
+		|#define RND_L_ABRT		(1<< 8)
+		|
+		|#define RND_LEX_COMM0		(1<< 7)
+		|#define RND_LEX_COMM1		(1<< 6)
+		|#define RND_LEX_COMM2		(1<< 5)
+		|#define RND_CIB_PC_L		(1<< 4)
+		|#define RND_INSTR_MX		(1<< 3)
+		|#define RND_IBUFF_LD		(1<< 2)
+		|#define RND_BR_MSK_L		(1<< 1)
+		|#define RND_INSTR_LD		(1<< 0)
+		|#define RNDX(x) ((state->rndx & (x)) != 0)
+		|''')
 
     def state(self, file):
         file.fmt('''
@@ -72,10 +111,10 @@ class XSEQIBUF(PartFactory):
 		|
 		|	// XSEQNAM
 		|	uint32_t tost, vost, cur_name;
-		|	uint32_t namram[1<<BUS_RSAD_WIDTH];
+		|	uint32_t namram[1<<4];
 		|	unsigned pcseg, retseg, last;
 		|
-		|	uint64_t tosram[1<<BUS_RSAD_WIDTH];
+		|	uint64_t tosram[1<<4];
 		|	uint64_t tosof;
 		|	uint32_t savrg;
 		|	uint32_t pred;
@@ -92,8 +131,13 @@ class XSEQIBUF(PartFactory):
 		|	unsigned uei;
 		|	unsigned uev;
 		|
-		|	uint8_t prom43[512];
-		|	uint8_t prom44[512];
+		|	uint8_t pa040[512];
+		|	uint8_t pa043[512];
+		|	uint8_t pa044[512];
+		|	uint8_t pa045[512];
+		|	uint8_t pa046[512];
+		|	uint8_t pa047[512];
+		|	uint8_t pa048[512];
 		|	uint8_t bhreg;
 		|	unsigned rreg;
 		|	unsigned lreg;
@@ -108,16 +152,31 @@ class XSEQIBUF(PartFactory):
 		|	uint64_t name_bus;
 		|	unsigned coff;
 		|	unsigned uadr_decode;
+		|	unsigned display;
+		|       unsigned resolve_offset;
+		|       unsigned rndx;
+		|	bool cload;
+		|	bool ibuf_fill;
+		|	bool uses_tos;
+		|	bool l_macro_hic;
+		|	bool m_pc_mb;
+		|	unsigned n_in_csa;
+		|	unsigned decode;
+		|	unsigned lmp;
+		|	unsigned wanna_dispatch;
+		|	bool ibld;
+		|	bool field_number_error;
 		|''')
 
     def init(self, file):
         file.fmt('''
-		|	load_programmable(this->name(),
-		|	    state->prom43, sizeof state->prom43,
-		|	    "PA043-02");
-		|	load_programmable(this->name(),
-		|	    state->prom44, sizeof state->prom44,
-		|	    "PA044-01");
+		|	load_programmable(this->name(), state->pa040, sizeof state->pa040, "PA040-02");
+		|	load_programmable(this->name(), state->pa043, sizeof state->pa043, "PA043-02");
+		|	load_programmable(this->name(), state->pa044, sizeof state->pa044, "PA044-01");
+		|	load_programmable(this->name(), state->pa045, sizeof state->pa045, "PA045-03");
+		|	load_programmable(this->name(), state->pa046, sizeof state->pa046, "PA046-02");
+		|	load_programmable(this->name(), state->pa047, sizeof state->pa047, "PA047-02");
+		|	load_programmable(this->name(), state->pa048, sizeof state->pa048, "PA048-02");
 		|''')
 
     def xsensitive(self):
@@ -129,19 +188,14 @@ class XSEQIBUF(PartFactory):
         # yield "BUS_EMAC"		# ACLK
         yield "PIN_FLIP.pos()"
         yield "PIN_ICLK.pos()"
-        # yield "PIN_ILDRN"		# ACLK
         # yield "PIN_IMX"		# ACLK
         yield "BUS_IRD"
         yield "BUS_LAUIR"
         yield "PIN_LINC"
         # yield "PIN_MD0"		# BCLK
         yield "PIN_MIBMT"
-        yield "PIN_MUX"
         yield "PIN_QVOE"
         yield "BUS_RASEL"
-        yield "PIN_RTCLK.pos()"
-        # yield "PIN_RND1"		# BCLK
-        yield "PIN_SCLKE"
         # yield "BUS_TYP"		# ICLK
         yield "BUS_URAND"
         yield "BUS_DV"
@@ -149,15 +203,17 @@ class XSEQIBUF(PartFactory):
 
     def priv_decl(self, file):
         file.fmt('''
-		|	void int_reads(unsigned ir);
+		|	void int_reads(unsigned ir, unsigned urand);
 		|	unsigned group_sel(void);
+		|	unsigned late_macro_pending(void);
+		|	void seq_cond(void);
 		|''')
 
     def priv_impl(self, file):
         file.fmt('''
 		|void
 		|SCM_«mmm» ::
-		|int_reads(unsigned ir)
+		|int_reads(unsigned ir, unsigned urand)
 		|{
 		|	if (ir == 0) {
 		|		BUS_DT_READ(state->typ_bus);
@@ -167,7 +223,7 @@ class XSEQIBUF(PartFactory):
 		|		return;
 		|	}		
 		|
-		|	BUS_CSA_READ(state->typ_bus);
+		|	state->typ_bus = state->n_in_csa;
 		|	state->typ_bus |= state->output_ob << 7;
 		|	state->typ_bus ^= 0xffffffff;
 		|
@@ -179,9 +235,8 @@ class XSEQIBUF(PartFactory):
 		|		state->typ_bus |= (uint64_t)state->cur_name << 32;
 		|		break;
 		|	}
-		|
 		|	
-		|	if (!PIN_CSEL) {
+		|	if (!(urand & 0x2)) {
 		|		state->val_bus = (uint64_t)state->pcseg << 32;
 		|	} else {
 		|		state->val_bus = (uint64_t)state->retseg << 32;
@@ -194,7 +249,7 @@ class XSEQIBUF(PartFactory):
 		|		state->val_bus |= state->curins ^ 0xffff;
 		|		break;
 		|	case 2:
-		|		state->val_bus |= output.disp;
+		|		state->val_bus |= state->display;
 		|		break;
 		|	case 3:
 		|		state->val_bus |= state->topu & 0xffff;
@@ -238,6 +293,116 @@ class XSEQIBUF(PartFactory):
 		|	}
 		|	return (retval);
 		|}
+		|
+		|unsigned
+		|SCM_«mmm» ::
+		|late_macro_pending(void)
+		|{
+		|	unsigned csa;
+		|	BUS_CSA_READ(csa);
+		|	unsigned dec = state->decode >> 3;
+		|
+		|	if (csa < (dec & 7))
+		|		return (0);
+		|	if (csa > ((dec >> 3) | 12))
+		|		return (1);
+		|	if (PIN_STOP=>)
+		|		return (2);
+		|	if (!PIN_MRES=>)
+		|		return (3);
+		|	if (!output.mtinv)
+		|		return (4);
+		|	if (!output.bmcls)
+		|		return (6);
+		|	if (!output.mibuf)
+		|		return (7);
+		|	return (8);
+		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|seq_cond(void)
+		|{
+		|	unsigned condsel;
+		|	BUS_CSEL_READ(condsel);
+		|	condsel ^= BUS_CSEL_MASK;
+		|	switch (condsel) {
+		|	case 0x28: // FIELD_NUM_ERR
+		|		output.conda = !state->field_number_error;
+		|		break;
+		|	case 0x29: // LATCHED_COND
+		|		output.conda = !output.ldc;
+		|		break;
+		|	case 0x2a: // E_MACRO_PEND
+		|		output.conda = state->emac == 0x7f;
+		|		break;
+		|	case 0x2b: // E_MACRO_EVNT~6
+		|		output.conda = !((state->emac >> 0) & 1);
+		|		break;
+		|	case 0x2c: // E_MACRO_EVNT~5
+		|		output.conda = !((state->emac >> 1) & 1);
+		|		break;
+		|	case 0x2d: // E_MACRO_EVNT~3
+		|		output.conda = !((state->emac >> 3) & 1);
+		|		break;
+		|	case 0x2e: // E_MACRO_EVNT~2
+		|		output.conda = !((state->emac >> 4) & 1);
+		|		break;
+		|	case 0x2f: // E_MACRO_EVNT~0
+		|		output.conda = !((state->emac >> 6) & 1);
+		|		break;
+		|
+		|	case 0x30: // DISP_COND0
+		|		output.condb = output.sc8;
+		|		break;
+		|	case 0x31: // True
+		|		output.condb = true;
+		|		break;
+		|	case 0x32: // M_IBUFF_MT
+		|		output.condb = PIN_MIBMT=>;
+		|		break;
+		|	case 0x33: // M_BRK_CLASS
+		|		output.condb = output.bmcls;
+		|		break;
+		|	case 0x34: // M_TOS_INVLD
+		|		output.condb = output.mtinv;
+		|		break;
+		|	case 0x35: // M_RES_REF
+		|		output.condb = PIN_MRES=>;
+		|		break;
+		|	case 0x36: // M_OVERFLOW
+		|		output.condb = output.m_oflo;
+		|		break;
+		|	case 0x37: // M_UNDERFLOW
+		|		output.condb = output.m_uflo;
+		|		break;
+		|
+		|	case 0x38: // STACK_SIZE
+		|		output.condc = output.ssz;
+		|		break;
+		|	case 0x39: // LATCHED_COND
+		|		output.condc = output.ldc;
+		|		break;
+		|	case 0x3a: // SAVED_LATCHED
+		|		output.condc = output.svlat;
+		|		break;
+		|	case 0x3b: // TOS_VLD.COND
+		|		output.condc = PIN_TIN1=>;
+		|		break;
+		|	case 0x3c: // LEX_VLD.COND
+		|		output.condc = PIN_LXVAL=>;
+		|		break;
+		|	case 0x3d: // IMPORT.COND
+		|		output.condc = output.icond;
+		|		break;
+		|	case 0x3e: // REST_PC_DEC
+		|		output.condc = ((output.rq >> 1) & 1);
+		|		break;
+		|	case 0x3f: // RESTARTABLE
+		|		output.condc = ((output.rq >> 3) & 1);
+		|		break;
+		|	}
+		|}
 		|''')
 
 
@@ -245,37 +410,82 @@ class XSEQIBUF(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|	//bool q1pos = PIN_Q2.negedge();
+		|	bool q2pos = PIN_Q2.posedge();
+		|	bool q4pos = PIN_Q4.posedge();
 		|	bool aclk = PIN_ACLK.posedge();
-		|	bool sclk = aclk && !PIN_SCLKE=>;
+		|	bool sclke = PIN_SCLKE=>;
+		|	bool sclk = aclk && !sclke;
+		|	bool state_clock = q4pos && !sclke;
+		|
+		|
+		|	unsigned urand;
+		|	BUS_URAND_READ(urand);
+		|	state->rndx = state->pa048[urand | (output.bhp ? 0x100 : 0)] << 24;
+		|	state->rndx |= state->pa046[urand | (output.bhp ? 0x100 : 0)] << 16;
+		|	state->rndx |=  state->pa045[urand | 0x100] << 8;
+		|	state->rndx |= state->pa047[urand | 0x100];
+		|	output.halt = RNDX(RND_HALT);
+		|
+		|	unsigned pa040a;
+		|	unsigned pa040d;
+		|{
+		|	unsigned tmp = 0;
+		|	tmp |= (state->decode & 0x7) << 6;
+		|	if (state->wanna_dispatch) tmp |= 0x20;
+		|	if (RNDX(RND_ADR_SEL)) tmp |= 0x10;
+		|	if (output.icond) tmp |= 0x08;
+		|	if (PIN_STOP=>) tmp |= 0x04;
+		|	if (PIN_MD=>) tmp |= 0x02;
+		|	if (output.bhp) tmp |= 0x01;
+		|	pa040a = tmp;
+		|	pa040d = state->pa040[tmp];
+		|}
+		|
+		|	output.sc8 = (pa040d >> 7) & 1;
 		|
 		|	unsigned internal_reads;
 		|	BUS_IRD_READ(internal_reads);
 		|
-		|	int_reads(internal_reads);
+		|	int_reads(internal_reads, urand);
 		|
+		|	state->lmp = late_macro_pending();
+		|	bool early_macro_pending = state->emac != 0x7f;
+		|	bool macro_event = (!state->wanna_dispatch) && (early_macro_pending || (state->lmp != 8));
+		|	bool dispatch = state->wanna_dispatch || early_macro_pending || (state->lmp != 8);
+		|	bool lmac = macro_event && !early_macro_pending;
+		|
+		|	bool mbuf = !(lmac && (state->lmp >= 7));
+		|	if (macro_event) {
+		|		output.bar8 = !mbuf;
+		|	} else {
+		|		output.bar8 = !((pa040d >> 1) & 1);
+		|	}
+		|	output.meh = macro_event;
+		|	output.lmaco = macro_event && !early_macro_pending;
+		|	output.disp = dispatch;
 		|{
-		|	if (PIN_ICLK.posedge()) {
+		|	if (q4pos && !sclke && !state->ibld) {
 		|		state->typ = state->typ_bus;
 		|		state->val = state->val_bus;
 		|	}
 		|
 		|	unsigned macro_pc_ofs = state->mpc;
 		|
-		|	if (PIN_RTCLK.posedge()) {
+		|	if (q4pos && !sclke && !RNDX(RND_RETRN_LD)) {
 		|		state->retrn_pc_ofs = state->mpc;
 		|	}
 		|
-		|	bool wdisp = PIN_WDISP;
 		|	bool mibmt = PIN_MIBMT;
 		|	bool oper;
 		|	unsigned a;
-		|	if (!wdisp && !mibmt) {
+		|	if (!state->wanna_dispatch && !mibmt) {
 		|		a = 0;
 		|		oper = true;
-		|	} else if (!wdisp && mibmt) {
-		|		a = output.disp;
+		|	} else if (!state->wanna_dispatch && mibmt) {
+		|		a = state->display;
 		|		oper = false;
-		|	} else if (wdisp && !mibmt) {
+		|	} else if (state->wanna_dispatch && !mibmt) {
 		|		a = state->curins;
 		|		oper = true;
 		|	} else {
@@ -288,35 +498,34 @@ class XSEQIBUF(PartFactory):
 		|	a ^= 0x7fff;
 		|	unsigned b = macro_pc_ofs & 0x7fff;
 		|	if (oper) {
-		|		if (wdisp)
+		|		if (state->wanna_dispatch)
 		|			a += 1;
 		|		a &= 0x7fff;
 		|		state->boff = a + b;
 		|	} else {
-		|		if (!wdisp)
+		|		if (!state->wanna_dispatch)
 		|			a += 1;
 		|		state->boff = b - a;
 		|	}
 		|	state->boff &= 0x7fff;
-		|	output.bridx = state->boff & 7;
 		|
 		|	if (PIN_BCLK.posedge()) {
 		|		unsigned mode = 0;
 		|		unsigned u = 0;
-		|		if (PIN_CNDLD=>) u |= 1;
-		|		if (PIN_WDISP=>) u |= 2;
+		|		if (state->cload) u |= 1;
+		|		if (state->wanna_dispatch) u |= 2;
 		|		switch (u) {
 		|		case 0: mode = 1; break;
 		|		case 1: mode = 1; break;
 		|		case 3: mode = 0; break;
 		|		case 2:
-		|			if (PIN_MD0=>) mode |= 2;
-		|			if (PIN_RND1=>) mode |= 1;
+		|			if (state->m_pc_mb) mode |= 2;
+		|			if (RNDX(RND_M_PC_MD1)) mode |= 1;
 		|			break;
 		|		}
 		|		if (mode == 3) {
 		|			uint64_t tmp;
-		|			if (!PIN_MUX=>) {
+		|			if (!RNDX(RND_M_PC_MUX)) {
 		|				tmp = state->val_bus;
 		|				state->word = (tmp >> 4) & 7;
 		|				state->mpc = (tmp >> 4) & 0x7fff;
@@ -338,9 +547,7 @@ class XSEQIBUF(PartFactory):
 		|		}
 		|	}
 		|
-		|	unsigned rand;
-		|	BUS_URAND_READ(rand);
-		|	switch (rand & 3) {
+		|	switch (urand & 3) {
 		|	case 3:	state->coff = state->retrn_pc_ofs; break;
 		|	case 2: state->coff = state->boff; break;
 		|	case 1: state->coff = state->mpc; break;
@@ -348,36 +555,12 @@ class XSEQIBUF(PartFactory):
 		|	}
 		|	state->coff ^= 0x7fff;;
 		|
-		|	unsigned disp = output.disp;
-		|
-		|	output.empty = state->word != 0;
-		|
-		|	if (state->word == 7)
-		|		output.disp = state->typ >> 48;
-		|	else if (state->word == 6)
-		|		output.disp = state->typ >> 32;
-		|	else if (state->word == 5)
-		|		output.disp = state->typ >> 16;
-		|	else if (state->word == 4)
-		|		output.disp = state->typ >> 0;
-		|	else if (state->word == 3)
-		|		output.disp = state->val >> 48;
-		|	else if (state->word == 2)
-		|		output.disp = state->val >> 32;
-		|	else if (state->word == 1)
-		|		output.disp = state->val >> 16;
-		|	else if (state->word == 0)
-		|		output.disp = state->val >> 0;
-		|	else
-		|		output.disp = 0xffff;
-		|	output.disp &= 0xffff;
-		|
 		|	unsigned val, iclex;
 		|
 		|	val = state->val_bus;
 		|	iclex = (val & 0xf) + 1;
 		|
-		|	if (PIN_CLCLK.posedge()) {
+		|	if (q4pos && !sclke && !RNDX(RND_CUR_LEX)) {
 		|		state->curr_lex = val & 0xf;
 		|		state->curr_lex ^= 0xf;
 		|	}
@@ -391,7 +574,7 @@ class XSEQIBUF(PartFactory):
 		|			res_addr = 0xf;
 		|		break;
 		|	case 1:
-		|		res_addr = (output.disp >> 9) & 0xf;
+		|		res_addr = (state->display >> 9) & 0xf;
 		|		break;
 		|	case 2:
 		|		res_addr = iclex;
@@ -402,6 +585,7 @@ class XSEQIBUF(PartFactory):
 		|	default:
 		|		assert(sel < 4);
 		|	}
+		|	res_addr &= 0xf;
 		|	output.radr = res_addr;
 		|	if (PIN_LINC=>) {
 		|		output.icond = true;
@@ -413,11 +597,9 @@ class XSEQIBUF(PartFactory):
 		|
 		|	if (aclk) {
 		|		BUS_EMAC_READ(state->emac);
-		|		output.me = state->emac;
-		|		output.emp = state->emac != BUS_EMAC_MASK;
 		|	}
+		|	unsigned uad = 0;
 		|	if (state->emac != BUS_EMAC_MASK) {
-		|		unsigned uad = 0;
 		|		if (!(state->emac & 0x40))
 		|			uad = 0x04e0;
 		|		else if (!(state->emac & 0x20))
@@ -432,38 +614,34 @@ class XSEQIBUF(PartFactory):
 		|			uad = 0x0440;
 		|		else if (!(state->emac & 0x01))
 		|			uad = 0x0420;
-		|		// output.uad = uad;
-		|		output.ustos = (uad >> 2) & 1;
-		|		output.ibfil = (uad >> 1) & 1;
 		|		state->uadr_decode = uad;
 		|	} else {
-		|		unsigned ai = disp;
+		|		unsigned ai = state->display;
 		|		ai ^= 0xffff;
-		|		bool top = (disp >> 10) != 0x3f;
+		|		bool top = (state->display >> 10) != 0x3f;
 		|		uint32_t *ptr;
 		|		if (top)
 		|			ptr = &state->top[ai >> 6];
 		|		else
 		|			ptr = &state->bot[ai & 0x3ff];
-		|		unsigned uad = (*ptr >> 16);
-		|		//output.uad = uad;
-		|		output.ustos = (uad >> 2) & 1;
-		|		output.ibfil = (uad >> 1) & 1;
+		|		uad = (*ptr >> 16);
 		|		state->uadr_decode = (*ptr >> 16);
-		|		output.dec = (*ptr >> 8) & BUS_DEC_MASK;
+		|		state->decode = (*ptr >> 8) & 0xff;
 		|	}
+		|	state->uses_tos = (uad >> 2) & 1;
+		|	state->ibuf_fill = (uad >> 1) & 1;
 		|
 		|	if (sclk) {
 		|		unsigned dsp = 0;
-		|		if (!PIN_IMX=>) {
-		|			dsp = disp;
+		|		if (!RNDX(RND_INSTR_MX)) {
+		|			dsp = state->display;
 		|		} else {
 		|			uint64_t tval = state->val_bus;
 		|			dsp = tval & 0xffff;
 		|		}
 		|		dsp ^= 0xffff;;
 		|
-		|		bool gate = !(PIN_ILDRN=> && PIN_DISPA=>);
+		|		bool gate = !(RNDX(RND_INSTR_LD) && dispatch);
 		|		if (gate && state->topbot)
 		|			state->ctop = dsp;
 		|		if (gate && !state->topbot)
@@ -479,7 +657,7 @@ class XSEQIBUF(PartFactory):
 		|	else
 		|		state->curins = state->ctop;
 		|
-		|	if (sclk && !PIN_BMCLK=>) {
+		|	if (sclk && !RNDX(RND_BR_MSK_L)) {
 		|		uint64_t tmp = state->val_bus;
 		|		state->break_mask = (tmp >> 16) & 0xffff;
 		|	}
@@ -504,7 +682,7 @@ class XSEQIBUF(PartFactory):
 		|{
 		|	bool maybe_dispatch = PIN_MD=>;
 		|	bool uses_tos, dis;
-		|	unsigned mem_start, res_alu_s;
+		|	unsigned mem_start;
 		|	bool intreads1, intreads2;
 		|	bool sel1, sel2;
 		|
@@ -521,7 +699,7 @@ class XSEQIBUF(PartFactory):
 		|		sel2 = true;
 		|	} else {
 		|		uses_tos = (state->uadr_decode >> 2) & 1;
-		|		BUS_MSD_READ(mem_start);
+		|		mem_start = state->decode & 0x7;
 		|		dis = !PIN_H2=>;
 		|		intreads1 = !(mem_start == 0 || mem_start == 4);
 		|		intreads2 = false;
@@ -542,8 +720,11 @@ class XSEQIBUF(PartFactory):
 		|
 		|	output.z_ospc = PIN_OSPCOE=>;
 		|	if (!output.z_ospc) {
-		|		BUS_ISPC_READ(output.ospc);
-		|		output.ospc ^= BUS_OSPC_MASK;
+		|		if (macro_event) {
+		|			output.ospc = 0x6;
+		|		} else {
+		|			output.ospc = (pa040d >> 3) & 0x7;
+		|		}
 		|	}
 		|
 		|	if (PIN_TOSCLK.posedge()) {
@@ -552,14 +733,12 @@ class XSEQIBUF(PartFactory):
 		|		state->tosof = (typl >> 7) & 0xfffff;
 		|	}
 		|
-		|	if (PIN_CNCK.posedge()) {
+		|	if (q4pos && !sclke && !RNDX(RND_NAME_LD)) {
 		|		state->cur_name = state->typ_bus >> 32;
 		|	}
 		|
-		|	if (PIN_RAMWE.posedge()) {
-		|		unsigned radr;
-		|		BUS_RSAD_READ(radr);
-		|		state->namram[radr] = state->typ_bus >> 32;
+		|	if (q4pos && !sclke && !RNDX(RND_RES_NAME)) {
+		|		state->namram[output.radr] = state->typ_bus >> 32;
 		|	}
 		|
 		|	if (!type_name_oe) {
@@ -567,17 +746,15 @@ class XSEQIBUF(PartFactory):
 		|	} else if (!val_name_oe) {
 		|		state->name_bus = state->vost ^ 0xffffffff;
 		|	} else if (!name_ram_cs) {
-		|		unsigned radr;
-		|		BUS_RSAD_READ(radr);
-		|		state->name_bus = state->namram[radr] ^ 0xffffffff;
+		|		state->name_bus = state->namram[output.radr] ^ 0xffffffff;
 		|	} else {
 		|		state->name_bus = 0xffffffff;
 		|	}
 		|
-		|	if (PIN_RTCLK.posedge()) {
+		|	if (q4pos && !sclke && !RNDX(RND_RETRN_LD)) {
 		|		state->retseg = state->pcseg;
 		|	}
-		|	if (PIN_MCLK.posedge()) {
+		|	if (q4pos && !sclke && !RNDX(RND_M_PC_LDH)) {
 		|		unsigned val;
 		|		val = state->val_bus >> 32;
 		|		val ^= 0xffffffff;
@@ -585,48 +762,25 @@ class XSEQIBUF(PartFactory):
 		|		state->pcseg &= 0xffffff;
 		|	}
 		|
-		|	{
-		|		unsigned cseg;
-		|		if (!PIN_CSEL) {
-		|			cseg = state->pcseg;
-		|		} else {
-		|			cseg = state->retseg;
-		|		}
-		|
-		|		output.z_adrn = PIN_ADRNOE=>;
-		|		if (!output.z_adrn) {
-		|			if (PIN_ADRICD=>) {
-		|				output.adrn = cseg;
-		|			} else {
-		|				output.adrn = state->name_bus;
-		|			}
-		|		}
-		|
-		|	}
 		|
 		|	unsigned offs;
 		|	if (uses_tos) {
-		|		if (PIN_TOSS=>) {
+		|		if (RNDX(RND_TOS_VLB)) {
 		|			offs = (typl >> 7) & 0xfffff;
 		|		} else {
 		|			offs = state->tosof;
 		|		}
 		|	} else {
-		|		unsigned res_adr;
-		|		BUS_RSAD_READ(res_adr);
-		|		if (PIN_RWE.posedge()) {
-		|			state->tosram[res_adr] = (typl >> 7) & 0xfffff;
+		|		if (q4pos && !sclke && !RNDX(RND_RES_OFFS)) {
+		|			state->tosram[output.radr] = (typl >> 7) & 0xfffff;
 		|		}
-		|		offs = state->tosram[res_adr];
+		|		offs = state->tosram[output.radr];
 		|	}
 		|	offs ^= 0xfffff;
 		|       offs &= 0xfffff;
 		|
-		|       unsigned disp;
-		|       BUS_DSPL_READ(disp);
-		|	//disp = output.disp;
-		|       bool d7 = (disp & 0x8100) == 0;
-		|       unsigned sgdisp = disp & 0xff;
+		|       bool d7 = (state->display & 0x8100) == 0;
+		|       unsigned sgdisp = state->display & 0xff;
 		|       if (!d7)
 		|               sgdisp |= 0x100;
 		|       if (!(PIN_SGEXT && d7))
@@ -634,46 +788,42 @@ class XSEQIBUF(PartFactory):
 		|
 		|	bool acin = ((mem_start & 1) != 0);
 		|       sgdisp &= 0xfffff;
-		|       unsigned resolve_offset = 0;
+		|       state->resolve_offset = 0;
 		|       bool co = false;
 		|
 		|	switch(mem_start) {
 		|	case 0:
 		|	case 2:
-		|		res_alu_s = 0x9;
-		|               resolve_offset = offs + sgdisp + 1;
-		|               co = (resolve_offset >> 20) == 0;
+		|               state->resolve_offset = offs + sgdisp + 1;
+		|               co = (state->resolve_offset >> 20) == 0;
 		|		break;
 		|	case 1:
 		|	case 3:
-		|		res_alu_s = 0x6;
-		|               resolve_offset = (1<<20) + offs - (sgdisp + 1);
+		|               state->resolve_offset = (1<<20) + offs - (sgdisp + 1);
 		|               co = acin && (offs == 0);
 		|		break;
 		|	case 4:
 		|	case 6:
-		|		res_alu_s = 0x5;
-		|               resolve_offset = sgdisp ^ 0xfffff;
+		|               state->resolve_offset = sgdisp ^ 0xfffff;
 		|               // Carry is probably "undefined" here.
 		|		break;
 		|	case 5:
 		|	case 7:
-		|		res_alu_s = 0xf;
-		|               resolve_offset = offs;
+		|               state->resolve_offset = offs;
 		|               co = acin && (offs == 0);
 		|		break;
 		|	}
 		|
-		|	resolve_offset &= 0xfffff;
+		|	state->resolve_offset &= 0xfffff;
 		|
-		|	if (PIN_SVCLK.posedge()) {
-		|		state->savrg = resolve_offset;
+		|	if (q4pos && !sclke && !RNDX(RND_SAVE_LD)) {
+		|		state->savrg = state->resolve_offset;
 		|		output.cout = co;
 		|	}
 		|
-		|	if (PIN_PDCLK.posedge() || PIN_STCLK.posedge()) {
+		|	if ((q4pos && !sclke && !RNDX(RND_PRED_LD)) || state_clock) {
 		|		uint64_t cnb;
-		|		if (!PIN_CMR=>) {
+		|		if (!RNDX(RND_CNTL_MUX)) {
 		|			cnb = typl ^ 0xffffffffULL;
 		|		} else {
 		|			BUS_DF_READ(cnb);
@@ -682,16 +832,16 @@ class XSEQIBUF(PartFactory):
 		|		cnb >>= 7;
 		|		cnb &= 0xfffff;
 		|
-		|		if (PIN_PDCLK.posedge()) {
+		|		if (q4pos && !sclke && !RNDX(RND_PRED_LD)) {
 		|			state->pred = cnb;
 		|		}
-		|		if (PIN_STCLK.posedge()) {
+		|		if (state_clock) {
 		|			unsigned csa_cntl;
 		|			BUS_CTL_READ(csa_cntl);
 		|
 		|			bool ten = (csa_cntl != 2 && csa_cntl != 3);
 		|			bool tud = !(csa_cntl & 1);
-		|			if (!PIN_TOPLD=>) {
+		|			if (!RNDX(RND_TOP_LD)) {
 		|				state->topcnt = cnb;
 		|			} else if (ten) {
 		|				// Nothing
@@ -711,7 +861,7 @@ class XSEQIBUF(PartFactory):
 		|	} else if (intreads == 1) {
 		|		state->output_ob = state->topcnt;
 		|	} else if (intreads == 2) {
-		|		state->output_ob = resolve_offset;
+		|		state->output_ob = state->resolve_offset;
 		|	} else if (intreads == 3) {
 		|		state->output_ob = state->savrg;
 		|	} else {
@@ -719,28 +869,10 @@ class XSEQIBUF(PartFactory):
 		|	}
 		|	state->output_ob &= 0xfffff;
 		|
-		|	output.z_nam = PIN_NAMOE=>;
-		|	if (!output.z_nam) {
-		|		if (!PIN_RESDR=>) {
-		|			output.nam = resolve_offset;
-		|		} else if (PIN_ADRICD=>) {
-		|			//BUS_CODE_READ(output.nam);
-		|			output.nam = state->coff >> 3;
-		|		} else {
-		|			output.nam = state->output_ob;
-		|		}
-		|		output.nam <<= 7;
-		|
-		|		unsigned branch;
-		|		BUS_BRNC_READ(branch);
-		|		branch ^= BUS_BRNC_MASK;
-		|		output.nam |= branch << 4;
-		|	}
 		|
 		|}
 		|{
-		|	bool q2pos = PIN_Q2.posedge();
-		|	bool stkclk = PIN_Q4.posedge() && PIN_SSTOP=> && output.macro_hic;
+		|	bool stkclk = q4pos && PIN_SSTOP=> && state->l_macro_hic;
 		|	bool uevent = output.u_event;
 		|
 		|	if (q2pos) {
@@ -763,8 +895,8 @@ class XSEQIBUF(PartFactory):
 		|			stkinpsel_0 = !state->push_br;
 		|			stkinpsel_1 = output.bhp;
 		|		} else {
-		|			xwrite = !PIN_PUSHRND=>;
-		|			pop = !!(state->preturn || PIN_POPRND=>);
+		|			xwrite = !RNDX(RND_PUSH);
+		|			pop = !!(state->preturn || RNDX(RND_POP));
 		|			stkinpsel_0 = false;
 		|			stkinpsel_1 = true;
 		|		}
@@ -804,7 +936,7 @@ class XSEQIBUF(PartFactory):
 		|		}
 		|		output.svlat = !((state->topu >> 14) & 0x1);
 		|
-		|		if (PIN_CSR=> && PIN_STOP=>) {
+		|		if (RNDX(RND_CLEAR_ST) && !PIN_STOP=>) {
 		|			state->adr = xwrite;
 		|		} else if (xwrite || pop) {
 		|			if (xwrite) {
@@ -832,7 +964,13 @@ class XSEQIBUF(PartFactory):
 		|	}
 		|
 		|	if (PIN_LCLK.posedge()) {
-		|		BUS_LATE_READ(state->late_u);
+		|		if (PIN_MD=>) {
+		|			state->late_u = 7;
+		|		} else {
+		|			state->late_u = state->lmp;
+		|			if (state->late_u == 8)
+		|				state->late_u = 7;
+		|		}
 		|		sel = group_sel();
 		|		switch (sel) {
 		|		case 0:
@@ -850,7 +988,7 @@ class XSEQIBUF(PartFactory):
 		|			data += state->fiu;
 		|			break;
 		|		case 5:
-		|			data = output.dec >> 3;
+		|			data = state->decode >> 3;
 		|			data <<= 1;
 		|			break;
 		|		case 6:
@@ -910,7 +1048,7 @@ class XSEQIBUF(PartFactory):
 		|		output.nu = data;
 		|	}
 		|
-		|	output.macro_hic = macro_hic;
+		|	state->l_macro_hic = macro_hic;
 		|	output.u_event = !u_event;
 		|	output.u_eventnot = u_event;
 		|
@@ -961,10 +1099,10 @@ class XSEQIBUF(PartFactory):
 		|	if (state->bhreg & 0x20) adr |= 0x20;
 		|	if (state->bhreg & 0x40) adr |= 0x80;
 		|	if (state->bhreg & 0x80) adr |= 0x100;
-		|	unsigned rom = state->prom43[adr];
+		|	unsigned rom = state->pa043[adr];
 		|
-		|	bool wanna_dispatch = !(((rom >> 5) & 1) && !state->uadr_mux);
-		|	output.vdisp  = wanna_dispatch;
+		|
+		|	state->wanna_dispatch = !(((rom >> 5) & 1) && !state->uadr_mux);
 		|	state->preturn = !(((rom >> 3) & 1) ||  state->uadr_mux);
 		|	state->push_br =    (rom >> 1) & 1;
 		|	state->push   = !(((rom >> 0) & 1) ||
@@ -973,12 +1111,13 @@ class XSEQIBUF(PartFactory):
 		|	if (PIN_ACK.posedge()) {
 		|		adr = 0;
 		|		if (output.u_eventnot) adr |= 0x02;
-		|		if (PIN_MEVENT=>) adr |= 0x04;
+		|		if (!macro_event)
+		|			adr |= 0x04;
 		|		adr |= btimm << 3;
 		|		adr |= br_type << 5;
-		|		rom = state->prom44[adr];
+		|		rom = state->pa044[adr];
 		|
-		|		if (PIN_SCKE=>) {
+		|		if (sclke) {
 		|			rom |= 0x2;
 		|		} else {
 		|			rom ^= 0x2;
@@ -997,9 +1136,9 @@ class XSEQIBUF(PartFactory):
 		|	bool bhint2 = (!bad_hint || (state->bhreg & 0x08));
 		|	output.dmdisp = !(!bad_hint || (state->bhreg & 0x04));
 		|	if (!bad_hint) {
-		|		output.mpcmb = PIN_MPRND=>;
+		|		state->m_pc_mb = RNDX(RND_M_PC_MD0);
 		|	} else {
-		|		output.mpcmb = !((state->bhreg >> 2) & 1);
+		|		state->m_pc_mb = !((state->bhreg >> 2) & 1);
 		|	}
        		|
 		|	if (!PIN_TCLR=>) {
@@ -1009,16 +1148,17 @@ class XSEQIBUF(PartFactory):
 		|
 		|	if (PIN_ACK.posedge()) {
 		|		if (PIN_SSTOP=> && PIN_BHEN=> && bhint2) {
-		|			unsigned restrt_rnd;
-		|			BUS_RRND_READ(restrt_rnd);
-		|			if (!wanna_dispatch) {
+		|			unsigned restrt_rnd = 0;
+		|			restrt_rnd |= RNDX(RND_RESTRT0) ? 2 : 0;
+		|			restrt_rnd |= RNDX(RND_RESTRT1) ? 1 : 0;
+		|			if (!state->wanna_dispatch) {
 		|				state->rreg = 0xa;
 		|			} else if (restrt_rnd != 0) {
 		|				state->rreg = (restrt_rnd & 0x3) << 1;
 		|			} else {
 		|				state->rreg &= 0xa;
 		|			}
-		|			if (PIN_MEV=>) {
+		|			if (macro_event) {
 		|				state->rreg &= ~0x2;
 		|			}
 		|			BUS_TIN_READ(state->treg);
@@ -1039,11 +1179,11 @@ class XSEQIBUF(PartFactory):
 		|		lin &= 0x7;
 		|		lin |= output.ldc << 3;
 		|
-		|		if (!PIN_SCKE=>) {
+		|		if (!sclke) {
 		|			state->lreg = lin;
 		|		}
 		|
-		|		if ((lin & 0x4) && !PIN_SCKE=>) {
+		|		if ((lin & 0x4) && !sclke) {
 		|			state->last_late_cond = PIN_COND=>;
 		|		}
 		|
@@ -1080,7 +1220,7 @@ class XSEQIBUF(PartFactory):
 		|}
 		|	output.z_qt = PIN_QTOE=>;
 		|	if (!output.z_qt) {
-		|		int_reads(internal_reads);
+		|		int_reads(internal_reads, urand);
 		|		output.qt = state->typ_bus;
 		|		output.qt ^= BUS_QT_MASK;
 		|	}
@@ -1096,12 +1236,91 @@ class XSEQIBUF(PartFactory):
 		|
 		|	unsigned tmp = (val >> 7) ^ state->curins;
 		|	tmp &= 0x3ff;
-		|	output.fner = tmp != 0x3ff;
-		|	output.ferr = !(output.fner && !(PIN_FCHR=> || !PIN_ENFU=>));
+		|	state->field_number_error = tmp != 0x3ff;
+		|	output.ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !PIN_ENFU=>));
 		|}
+		|	if (q4pos) {
+		|		if (state->word == 7)
+		|			state->display = state->typ >> 48;
+		|		else if (state->word == 6)
+		|			state->display = state->typ >> 32;
+		|		else if (state->word == 5)
+		|			state->display = state->typ >> 16;
+		|		else if (state->word == 4)
+		|			state->display = state->typ >> 0;
+		|		else if (state->word == 3)
+		|			state->display = state->val >> 48;
+		|		else if (state->word == 2)
+		|			state->display = state->val >> 32;
+		|		else if (state->word == 1)
+		|			state->display = state->val >> 16;
+		|		else if (state->word == 0)
+		|			state->display = state->val >> 0;
+		|		else
+		|			state->display = 0xffff;
+		|		state->display &= 0xffff;
+		|		output.disp0 = state->display >> 15;
+		|	}
+		|	output.z_adr = PIN_ADROE=>;
+		|	if (!output.z_adr) {
+		|		bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
+		|		bool resolve_drive;
+		|		if (!macro_event) {
+		|			resolve_drive = !((pa040d >> 6) & 1);
+		|		} else {
+		|			resolve_drive = true;
+		|		}
+		|		if (!resolve_drive) {
+		|			output.adr = state->resolve_offset;
+		|		} else if (adr_is_code) {
+		|			output.adr = state->coff >> 3;
+		|		} else {
+		|			output.adr = state->output_ob;
+		|		}
+		|		output.adr <<= 7;
+		|
+		|		unsigned branch;
+		|		branch = state->boff & 7;
+		|		branch ^= 0x7;
+		|		output.adr |= branch << 4;
+		|		uint64_t cseg;
+		|		if (!(urand & 0x2)) {
+		|			cseg = state->pcseg;
+		|		} else {
+		|			cseg = state->retseg;
+		|		}
+		|
+		|		if (adr_is_code) {
+		|			output.adr |= cseg << 32;
+		|		} else {
+		|			output.adr |= (uint64_t)state->name_bus << 32;
+		|		}
+		|	}
+		|
+		|	state->cload = !(PIN_COND=> || !(output.bhn && RNDX(RND_CIB_PC_L)));
+		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
+		|	state->ibld = !ibuff_ld;
+		|	bool ibemp = !(ibuff_ld || (state->word != 0));
+		|	output.mibuf = !(ibemp && state->ibuf_fill);
+		|
+		|	output.mtinv = !(state->uses_tos && PIN_TIN1=>);
+		|
+		|	output.qstp7 = output.bhn && state->l_macro_hic;
+		|
+		|	if (state_clock) {
+		|		BUS_CSA_READ(state->n_in_csa);
+		|	}
+		|{
+		|	unsigned csa;
+		|	BUS_CSA_READ(csa);
+		|	unsigned dec = state->decode >> 3;
+		|	output.m_uflo = csa >= (dec & 7);
+		|	output.m_oflo = csa <= ((dec >> 3) | 12);
+		|}
+		|	seq_cond();
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XSEQIBUF", PartModelDQ("XSEQIBUF", XSEQIBUF))
+    part_lib.add_part("XSEQ", PartModelDQ("XSEQ", XSEQ))
