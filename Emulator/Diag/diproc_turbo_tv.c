@@ -295,6 +295,26 @@ load_control_store_200_val(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_typ(const struct diagproc *dp)
 {
+	if (dp->dl_hash == MF_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo MF.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == LOAD_WCS_UIR_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo LOAD_WCS_UIR.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == REG_TO_LOOP_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo READ_B_REG.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == READ_B_REG_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo READ_B_REG.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == PREP_READ_REG_TYP_HASH) {
+		sc_tracef(dp->name, "Turbo PREP_READ_REG.TYP");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 	if (dp->dl_hash == RUN_NORMAL_TYP_HASH) {
 		sc_tracef(dp->name, "Turbo RUN_NORMAL.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
