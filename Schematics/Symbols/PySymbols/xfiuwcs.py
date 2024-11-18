@@ -33,7 +33,6 @@ class XFIUWCS(FChip):
         self.sig_right(ChipSig("+-->", "LSRC"))
         self.sig_right(ChipSig("+-->", "OFSRC"))
         self.sig_right(ChipSig("+-->", "TIVI", 0, 3))
-        self.sig_right(ChipSig("+-->", "TVOE", 0, 7))
 
         self.finish()
 

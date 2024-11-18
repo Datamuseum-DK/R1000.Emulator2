@@ -36,7 +36,7 @@
 
 from part import PartModelDQ, PartFactory
 
-class XROTF(PartFactory):
+class FIU(PartFactory):
 
     ''' FIU first stage rotator '''
 
@@ -55,8 +55,8 @@ class XROTF(PartFactory):
 		|	uint64_t rdq;
 		|	uint64_t refresh_reg;
 		|	uint64_t marh;
-		|	uint64_t tibus, vibus;
-		|	unsigned tivi, lfreg;
+		|	uint64_t ti_bus, vi_bus;
+		|	unsigned lfreg;
 		|	sc_core::sc_event_or_list *idle_this;
 		|
 		|	uint32_t srn, sro, par, ctopn, ctopo;
@@ -64,9 +64,6 @@ class XROTF(PartFactory):
 		|	unsigned moff;
 		|	bool pdt;
 		|
-		|''')
-
-        file.fmt('''
 		|	uint64_t mstat[32];
 		|	bool state0, state1, labort, e_abort_dly;
 		|	uint8_t pa025[512];
@@ -96,6 +93,16 @@ class XROTF(PartFactory):
 		|	bool logrw;
 		|	bool logrw_d;
 		|	bool omf20;
+		|	unsigned line;
+		|	bool nmatch;
+		|	bool xwrd;
+		|	bool in_range;
+		|	unsigned setq;
+		|	unsigned omq;
+		|	unsigned prmt;
+		|	bool dumon;
+		|	bool memex;
+		|	bool logrwn;
 		|''')
 
 
@@ -118,7 +125,6 @@ class XROTF(PartFactory):
         yield "BUS_DF"
         yield "BUS_DT"
         yield "BUS_DV"
-        yield "BUS_MCND"
 
         yield "PIN_CLK2X.pos()"
         # yield "BUS_IREG"
@@ -151,7 +157,7 @@ class XROTF(PartFactory):
         yield "PIN_LEABR"
         yield "PIN_EABR"
         yield "BUS_MCTL"
-        yield "PIN_H2.pos()"
+        yield "PIN_H1.neg()"
         yield "BUS_CNDSL"
         yield "BUS_BDHIT"
 
@@ -181,10 +187,10 @@ class XROTF(PartFactory):
 		|	u |= (uint64_t)output.memcnd << BUS_DV_LSB(10);
 		|
 		|	u &= ~(0xfffULL << BUS_DV_LSB(23));
-		|	u |= (uint64_t)output.line << BUS_DV_LSB(23);
+		|	u |= (uint64_t)state->line << BUS_DV_LSB(23);
 		|
 		|	u &= ~(0x3ULL << BUS_DV_LSB(25));
-		|	u |= (uint64_t)output.setq << BUS_DV_LSB(25);
+		|	u |= (uint64_t)state->setq << BUS_DV_LSB(25);
 		|
 		|	uint64_t st;
 		|	BUS_ST_READ(st);
@@ -192,7 +198,7 @@ class XROTF(PartFactory):
 		|	u |= st << BUS_DV_LSB(27);
 		|
 		|	u &= ~(0x3ULL << BUS_DV_LSB(29));
-		|	u |= (uint64_t)((output.omq >> 2) & 3) << BUS_DV_LSB(29);
+		|	u |= (uint64_t)((state->omq >> 2) & 3) << BUS_DV_LSB(29);
 		|
 		|	u |= 0x3ULL << BUS_DV_LSB(31);
 		|
@@ -200,7 +206,7 @@ class XROTF(PartFactory):
 		|	u |= (uint64_t)(PIN_PGX=>) << BUS_DV_LSB(32);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(33));
-		|	u |= (uint64_t)((output.prmt >> 1) & 1) << BUS_DV_LSB(33);
+		|	u |= (uint64_t)((state->prmt >> 1) & 1) << BUS_DV_LSB(33);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(34));
 		|	u |= (uint64_t)output.rfsh << BUS_DV_LSB(34);
@@ -209,16 +215,16 @@ class XROTF(PartFactory):
 		|	u |= (uint64_t)(PIN_MX=>) << BUS_DV_LSB(35);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(48));
-		|	u |= (uint64_t)((output.line >> 0) & 1) << BUS_DV_LSB(48);
+		|	u |= (uint64_t)((state->line >> 0) & 1) << BUS_DV_LSB(48);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(50));
-		|	u |= (uint64_t)((output.line >> 1) & 1) << BUS_DV_LSB(50);
+		|	u |= (uint64_t)((state->line >> 1) & 1) << BUS_DV_LSB(50);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(56));
-		|	u |= (uint64_t)output.nmatch << BUS_DV_LSB(56);
+		|	u |= (uint64_t)state->nmatch << BUS_DV_LSB(56);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(57));
-		|	u |= (uint64_t)output.inrg << BUS_DV_LSB(57);
+		|	u |= (uint64_t)state->in_range << BUS_DV_LSB(57);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(58));
 		|	u |= (uint64_t)output.oor << BUS_DV_LSB(58);
@@ -236,13 +242,12 @@ class XROTF(PartFactory):
 		|SCM_«mmm» ::
 		|do_tivi(void)
 		|{
-		|	unsigned mcnd;
-		|	BUS_MCND_READ(mcnd);
+		|	unsigned tivi;
 		|
-		|	BUS_TIVI_READ(state->tivi);
+		|	BUS_TIVI_READ(tivi);
 		|
 		|	uint64_t vi;
-		|	switch (state->tivi) {
+		|	switch (tivi) {
 		|	case 0x00:
 		|	case 0x04:
 		|	case 0x08:
@@ -273,7 +278,7 @@ class XROTF(PartFactory):
 		|		break;
 		|	}
 		|	uint64_t ti;
-		|	switch (state->tivi) {
+		|	switch (tivi) {
 		|	case 0x00:
 		|	case 0x01:
 		|	case 0x02:
@@ -299,14 +304,20 @@ class XROTF(PartFactory):
 		|		tmp = (state->sro >> 4) & 0x7;
 		|		state->marh &= ~0x07;
 		|		state->marh |= tmp;
-		|		tmp = mcnd ^ BUS_MCND_MASK; 
 		|		state->marh &= ~(0x1efULL << 23ULL);
-		|		state->marh |= tmp << 23ULL;
+		|		state->marh |= (uint64_t)(!state->incmplt_mcyc) << 23;
+		|		state->marh |= (uint64_t)(!state->mar_modified) << 24;
+		|		state->marh |= (uint64_t)(!state->write_last) << 25;
+		|		state->marh |= (uint64_t)(!state->phys_last) << 26;
+		|		state->marh |= (uint64_t)(!state->cache_miss) << 28;
+		|		state->marh |= (uint64_t)(!state->page_xing) << 29;
+		|		state->marh |= (uint64_t)(!state->csa_oor) << 30;
+		|		state->marh |= (uint64_t)(!state->scav_trap) << 31;
 		|		ti = ~state->marh;
 		|		break;
 		|	}
-		|	state->tibus = ti;
-		|	state->vibus = vi;
+		|	state->ti_bus = ti;
+		|	state->vi_bus = vi;
 		|}
 		|''')
 
@@ -320,21 +331,15 @@ class XROTF(PartFactory):
 		|	unsigned csa;
 		|	BUS_CSA_READ(csa);
 		|
-		|	unsigned mcnd;
-		|	BUS_MCND_READ(mcnd);
-		|
 		|	unsigned condsel;
 		|	BUS_CNDSL_READ(condsel);
 		|
 		|	do_tivi();
-		|	uint64_t ti, vi;
+		|	//uint64_t ti, vi;
 		|{
 		|	uint64_t ft, tir, vir, m;
 		|	unsigned msk, s, fs, u, sgn;
 		|	bool sgnbit;
-		|
-		|	ti = state->tibus;
-		|	vi = state->vibus;
 		|
 		|	unsigned lfl;
 		|	BUS_LFL_READ(lfl);				// UCODE
@@ -367,7 +372,7 @@ class XROTF(PartFactory):
 		|
 		|	unsigned xword;
 		|	xword = state->oreg + (state->lfreg & 0x3f) + (state->lfreg & 0x80);
-		|	output.xwrd = xword > 255;
+		|	state->xwrd = xword > 255;
 		|
 		|	unsigned op, sbit, ebit;
 		|	BUS_OP_READ(op);				// UCODE
@@ -425,20 +430,20 @@ class XROTF(PartFactory):
 		|	s &= 0x3f;
 		|
 		|	fs = s & 3;
-		|	tir = ti >> fs;
-		|	vir = vi >> fs;
+		|	tir = state->ti_bus >> fs;
+		|	vir = state->vi_bus >> fs;
 		|	switch (fs) {
 		|	case 1:
-		|		tir |= (vi & 1) << 63;
-		|		vir |= (ti & 1) << 63;
+		|		tir |= (state->vi_bus & 1) << 63;
+		|		vir |= (state->ti_bus & 1) << 63;
 		|		break;
 		|	case 2:
-		|		tir |= (vi & 3) << 62;
-		|		vir |= (ti & 3) << 62;
+		|		tir |= (state->vi_bus & 3) << 62;
+		|		vir |= (state->ti_bus & 3) << 62;
 		|		break;
 		|	case 3:
-		|		tir |= (vi & 7) << 61;
-		|		vir |= (ti & 7) << 61;
+		|		tir |= (state->vi_bus & 7) << 61;
+		|		vir |= (state->ti_bus & 7) << 61;
 		|		break;
 		|	default:
 		|		break;
@@ -518,7 +523,7 @@ class XROTF(PartFactory):
 		|		break;
 		|	case 2:
 		|		BUS_DV_READ(tii);
-		|		tii = state->vibus;
+		|		tii = state->vi_bus;
 		|		break;
 		|	case 3:
 		|		BUS_DF_READ(tii);
@@ -535,8 +540,8 @@ class XROTF(PartFactory):
 		|		output.qf = vout ^ BUS_QF_MASK;
 		|	}
 		|
-		|	if (sclk && !PIN_RFCK=>) {
-		|		state->refresh_reg = state->tibus;
+		|	if (sclk && !(state->prmt & 0x40)) {
+		|		state->refresh_reg = state->ti_bus;
 		|		state->marh &= 0xffffffffULL;
 		|		state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
 		|		state->marh ^= 0xffffffff00000000ULL;
@@ -554,7 +559,7 @@ class XROTF(PartFactory):
 		|	if (sclk && !PIN_TCLK=>) {			// Q4~^
 		|		uint64_t out = 0;
 		|		out = (state->rdq & tmsk);
-		|		out |= (ti & (tmsk ^ BUS_DT_MASK));
+		|		out |= (state->ti_bus & (tmsk ^ BUS_DT_MASK));
 		|		state->treg = out;
 		|	}
 		|
@@ -569,7 +574,6 @@ class XROTF(PartFactory):
 		|			BUS_DADR_READ(state->oreg);
 		|			state->oreg &= 0x7f;
 		|		}
-		|		output.oreg0 = state->oreg >> 6;
 		|	}
 		|
 		|	if (sclk) {
@@ -578,10 +582,10 @@ class XROTF(PartFactory):
 		|
 		|		switch(lfrc) {
 		|		case 0:
-		|			state->lfreg = (((vi >> BUS_DV_LSB(31)) & 0x3f) + 1) & 0x3f;
-		|			if ((ti >> BUS_DT_LSB(36)) & 1)
+		|			state->lfreg = (((state->vi_bus >> BUS_DV_LSB(31)) & 0x3f) + 1) & 0x3f;
+		|			if ((state->ti_bus >> BUS_DT_LSB(36)) & 1)
 		|				state->lfreg |= (1 << 6);
-		|			else if (!((vi >> BUS_DV_LSB(25)) & 1))
+		|			else if (!((state->vi_bus >> BUS_DV_LSB(25)) & 1))
 		|				state->lfreg |= (1 << 6);
 		|			state->lfreg ^= 0x7f;
 		|			break;
@@ -589,8 +593,8 @@ class XROTF(PartFactory):
 		|			state->lfreg = lfl;
 		|			break;
 		|		case 2:
-		|			state->lfreg = (ti >> BUS_DT_LSB(48)) & 0x3f;
-		|			if ((ti >> BUS_DT_LSB(36)) & 1)
+		|			state->lfreg = (state->ti_bus >> BUS_DT_LSB(48)) & 0x3f;
+		|			if ((state->ti_bus >> BUS_DT_LSB(36)) & 1)
 		|				state->lfreg |= (1 << 6);
 		|			state->lfreg = state->lfreg ^ 0x7f;
 		|			break;
@@ -612,7 +616,7 @@ class XROTF(PartFactory):
         file.fmt('''
 		|{
 		|	unsigned a, b, dif;
-		|	bool co, name_match, in_range;
+		|	bool co, name_match;
 		|
 		|	if (sclk) {
 		|		// CSAFFB
@@ -643,15 +647,14 @@ class XROTF(PartFactory):
 		|		    ((state->sro & 0xf8000070 ) != 0x10);
 		|
 		|	// CNAN0B, CINV0B, CSCPR0
-		|	in_range = (!state->pdt && name_match) || (dif & 0xffff0);
-		|	output.inrg = in_range;
+		|	state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
 		|
 		|	output.hofs = 0xf + state->nve - (dif & 0xf);
 		|
 		|	output.chit = !(
 		|		co &&
 		|		!(
-		|			in_range ||
+		|			state->in_range ||
 		|			((dif & 0xf) >= state->nve)
 		|		)
 		|	);
@@ -664,7 +667,7 @@ class XROTF(PartFactory):
 		|	BUS_DADR_READ(adr);
 		|
 		|	if (q4pos) {
-		|		bool load_mar = PIN_LMAR=>;
+		|		bool load_mar = (state->prmt >> 4) & 1;
 		|		bool sclk_en = !PIN_SCLKE=>;
 		|
 		|		if (load_mar && sclk_en) {
@@ -678,21 +681,19 @@ class XROTF(PartFactory):
 		|		// output.mspc = (state->sro >> 4) & BUS_MSPC_MASK;
 		|		state->moff = (state->sro >> 7) & 0xffffff;
 		|
-		|		output.wez = (state->moff & 0x3f) == 0;
-		|		output.ntop = !	((state->moff & 0x3f) > 0x30);
 		|
 		|		state->par = odd_parity64(state->srn) << 4;
 		|		state->par |= offset_parity(state->sro) ^ 0xf;
-		|		output.nmatch =
+		|		state->nmatch =
 		|		    (state->ctopn != state->srn) ||
 		|		    ((state->sro & 0xf8000070 ) != 0x10);
 		|	}
 		|
 		|	unsigned mar_offset = state->moff;
-		|	bool inc_mar = PIN_INMAR=>;
-		|	bool page_xing = (mcnd >> 6) & 1;
-		|	bool sel_pg_xing = PIN_SELPG=>;
-		|	bool sel_incyc_px = PIN_SELIN=>;
+		|	bool inc_mar = (state->prmt >> 3) & 1;
+		|
+		|	bool sel_pg_xing = condsel != 0x6a;
+		|	bool sel_incyc_px = condsel != 0x6e;
 		|
 		|	unsigned marbot = mar_offset & 0x1f;
 		|	unsigned inco = marbot;
@@ -709,13 +710,13 @@ class XROTF(PartFactory):
 		|	}
 		|
 		|	output.pxnx = (
-		|		(page_xing && sel_pg_xing && sel_incyc_px) ||
-		|		(!page_xing && sel_pg_xing && sel_incyc_px && inc_mar && marbot == 0x1f)
+		|		(state->page_xing && sel_pg_xing && sel_incyc_px) ||
+		|		(!state->page_xing && sel_pg_xing && sel_incyc_px && inc_mar && marbot == 0x1f)
 		|	);
 		|
 		|	if (sclk && (csa == 0)) {
 		|		state->ctopn = adr >> 32;
-		|		output.nmatch =
+		|		state->nmatch =
 		|		    (state->ctopn != state->srn) ||
 		|		    ((state->sro & 0xf8000070 ) != 0x10);
 		|	}
@@ -737,17 +738,17 @@ class XROTF(PartFactory):
 		|
 		|	}
 		|
-		|	output.line = 0;
-		|	output.line ^= cache_line_tbl_h[(state->srn >> 10) & 0x3ff];
-		|	output.line ^= cache_line_tbl_l[(state->moff >> (13 - 7)) & 0xfff];
-		|	output.line ^= cache_line_tbl_s[(state->sro >> 4) & 0x7];
+		|	state->line = 0;
+		|	state->line ^= cache_line_tbl_h[(state->srn >> 10) & 0x3ff];
+		|	state->line ^= cache_line_tbl_l[(state->moff >> (13 - 7)) & 0xfff];
+		|	state->line ^= cache_line_tbl_s[(state->sro >> 4) & 0x7];
 		|}
 		|
 		|	if (q4pos) {
 		|		unsigned mem_start;
 		|		BUS_MSTRT_READ(mem_start);
 		|		if (mem_start == 0x18) {
-		|			uint64_t tmp = state->tibus;
+		|			uint64_t tmp = state->ti_bus;
 		|			//BUS_DT_READ(tmp);
 		|			state->refresh_count = tmp >> 48;
 		|		} else if (state->refresh_count != 0xffff) {
@@ -755,9 +756,7 @@ class XROTF(PartFactory):
 		|		}
 		|		output.rfsh = state->refresh_count != 0xffff;
 		|	}
-		|''')
-
-        file.fmt('''
+		|
 		|{
 		|/*
 		| logrw   phys_ref
@@ -808,7 +807,7 @@ class XROTF(PartFactory):
 		|
 		|	unsigned pa026a = 0;
 		|	pa026a |= mem_start;
-		|	if (output.omq & 0x02)	// INIT_MRU_D
+		|	if (state->omq & 0x02)	// INIT_MRU_D
 		|		pa026a |= 0x20;
 		|	if (state->phys_last)
 		|		pa026a |= 0x40;
@@ -820,17 +819,16 @@ class XROTF(PartFactory):
 		|	// INIT_MRU, ACK_REFRESH, START_IF_INCM, START_TAG_RD, PCNTL0-3
 		|	bool start_if_incw = (pa026 >> 5) & 1;
 		|
-		|	bool pgmod = (output.omq >> 1) & 1;
+		|	bool pgmod = (state->omq >> 1) & 1;
 		|	unsigned board_hit, pa027a = 0;
 		|	BUS_BDHIT_READ(board_hit);
 		|	pa027a = 0;
 		|	pa027a |= board_hit << 5;
 		|	pa027a |= state->init_mru_d << 4;
-		|	pa027a |= (output.omq & 0xc);
+		|	pa027a |= (state->omq & 0xc);
 		|	pa027a |= 1 << 1;
 		|	pa027a |= pgmod << 0;
 		|	unsigned pa027 = state->pa027[pa027a];
-		|
 		|
 		|	bool sel = !(
 		|		(PIN_UEVSTP=> && memcyc1) ||
@@ -839,31 +837,26 @@ class XROTF(PartFactory):
 		|	if (pos) {
 		|		bool idum;
 		|		if (sel) {
-		|			idum = (state->output.prmt >> 5) & 1;
-		|			output.dnext = !((state->output.prmt >> 0) & 1);
+		|			idum = (state->prmt >> 5) & 1;
+		|			output.dnext = !((state->prmt >> 0) & 1);
 		|		} else {
-		|			idum = state->output.dumon;
-		|			output.dnext = !state->output.dumon;
+		|			idum = state->dumon;
+		|			output.dnext = !state->dumon;
 		|		}
 		|		state->state0 = (pa025 >> 7) & 1;
 		|		state->state1 = (pa025 >> 6) & 1;
 		|		state->labort = !(l_abort && le_abort);
 		|		state->e_abort_dly = eabrt;
 		|		state->pcntl_d = pa026 & 0xf;
-		|		output.dumon = idum;
+		|		state->dumon = idum;
 		|		output.csaht = !PIN_ICSA=>;
-		|	}
-		|
-		|	ti = 0;
-		|	if (rmarp) {
-		|		ti = state->tibus;
 		|	}
 		|
 		|	bool scav_trap_next = state->scav_trap;
 		|	if (condsel == 0x69) {		// SCAVENGER_HIT
 		|		scav_trap_next = false;
 		|	} else if (rmarp) {
-		|		scav_trap_next = (ti >> BUS_DT_LSB(32)) & 1;
+		|		scav_trap_next = (state->ti_bus >> BUS_DT_LSB(32)) & 1;
 		|	} else if (state->log_query) {
 		|		scav_trap_next = false;
 		|	}
@@ -872,7 +865,7 @@ class XROTF(PartFactory):
 		|	if (condsel == 0x6b) {		// CACHE_MISS
 		|		cache_miss_next = false;
 		|	} else if (rmarp) {
-		|		cache_miss_next = (ti >> BUS_DT_LSB(35)) & 1;
+		|		cache_miss_next = (state->ti_bus >> BUS_DT_LSB(35)) & 1;
 		|	} else if (state->log_query) {
 		|		cache_miss_next = PIN_MISS=>;
 		|	}
@@ -881,7 +874,7 @@ class XROTF(PartFactory):
 		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
 		|		csa_oor_next = false;
 		|	} else if (rmarp) {
-		|		csa_oor_next = (ti >> BUS_DT_LSB(33)) & 1;
+		|		csa_oor_next = (state->ti_bus >> BUS_DT_LSB(33)) & 1;
 		|	} else if (state->log_query) {
 		|		csa_oor_next = PIN_CSAOOR=>;
 		|	}
@@ -893,7 +886,7 @@ class XROTF(PartFactory):
 		|		state->rtv_next_d = state->rtv_next;
 		|
 		|		if (rmarp) {
-		|			state->mar_modified = (ti >> BUS_DT_LSB(39)) & 1;
+		|			state->mar_modified = (state->ti_bus >> BUS_DT_LSB(39)) & 1;
 		|		} else if (condsel == 0x6d) {
 		|			state->mar_modified = 1;
 		|		} else if (state->omf20) {
@@ -902,25 +895,25 @@ class XROTF(PartFactory):
 		|			state->mar_modified = le_abort;
 		|		}
 		|		if (rmarp) {
-		|			state->incmplt_mcyc = (ti >> BUS_DT_LSB(40)) & 1;
+		|			state->incmplt_mcyc = (state->ti_bus >> BUS_DT_LSB(40)) & 1;
 		|		} else if (start_if_incw) {
 		|			state->incmplt_mcyc = true;
 		|		} else if (memcyc1) {
 		|			state->incmplt_mcyc = le_abort;
 		|		}
 		|		if (rmarp) {
-		|			state->phys_last = (ti >> BUS_DT_LSB(37)) & 1;
-		|			state->write_last = (ti >> BUS_DT_LSB(38)) & 1;
+		|			state->phys_last = (state->ti_bus >> BUS_DT_LSB(37)) & 1;
+		|			state->write_last = (state->ti_bus >> BUS_DT_LSB(38)) & 1;
 		|		} else if (memcyc1) {
 		|			state->phys_last = state->phys_ref;
-		|			state->write_last = output.mcntl3;
+		|			state->write_last = (state->mcntl & 1);
 		|		}
 		|
-		|		state->log_query = !(state->labort || output.logrwn);
+		|		state->log_query = !(state->labort || state->logrwn);
 		|		
 		|		state->omf20 = (
 		|			memcyc1 &&
-		|			((output.prmt >> 3) & 1) &&
+		|			((state->prmt >> 3) & 1) &&
 		|			!PIN_SCLKE=>
 		|		);
 		|		
@@ -936,30 +929,30 @@ class XROTF(PartFactory):
 		|		// PIN_MISS instead of cache_miss_next looks suspicious
 		|		// but confirmed on both /200 and /400 FIU boards.
 		|		// 20230910/phk
-		|		output.memexp = !(
+		|		state->memex = !(
 		|			!PIN_MISS=> &&
 		|			!csa_oor_next &&
 		|			!scav_trap_next
 		|		);
 		|	} else {
-		|		output.memexp = !(
+		|		state->memex = !(
 		|			!state->cache_miss &&
 		|			!state->csa_oor &&
 		|			!state->scav_trap
 		|		);
 		|	}
 		|
-		|	if (pos && !PIN_SCLKE=> && !PIN_Q4DIS=>) {
-		|		output.omq = 0;
-		|		output.omq |= (pa027 & 3) << 2;
-		|		output.omq |= ((pa027 >> 5) & 1) << 1;
+		|	if (pos && !PIN_SCLKE=>) {
+		|		state->omq = 0;
+		|		state->omq |= (pa027 & 3) << 2;
+		|		state->omq |= ((pa027 >> 5) & 1) << 1;
 		|		if (rmarp)
-		|			state->page_xing = (ti >> BUS_DT_LSB(34)) & 1;
+		|			state->page_xing = (state->ti_bus >> BUS_DT_LSB(34)) & 1;
 		|		else
 		|			state->page_xing = PIN_PXNXT=>;
 		|		state->init_mru_d = (pa026 >> 7) & 1;
 		|	}
-		|	if (PIN_H2.posedge()) {
+		|	if (PIN_H1.negedge()) {
 		|		state->lcntl = state->mcntl;
 		|		state->drive_mru = state->init_mru_d;
 		|		// output.tmp = state->drive_mru;
@@ -975,8 +968,7 @@ class XROTF(PartFactory):
 		|	}
 		|
 		|	state->phys_ref = !(state->mcntl & 0x6);
-		|	output.mcntl3 = state->mcntl & 1;
-		|	output.logrwn = !(state->logrw && memcyc1);
+		|	state->logrwn = !(state->logrw && memcyc1);
 		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
 		|
 		|	if (memcyc1) {
@@ -992,13 +984,12 @@ class XROTF(PartFactory):
 		|	pa025a |= state->labort << 6;
 		|	pa025a |= state->e_abort_dly << 5;
 		|	pa025 = state->pa025[pa025a];
-		|	// output.mcyc1 = (pa025 >> 1) & 1;
 		|	bool contin = (pa025 >> 5) & 1;
 		|	output.contin = !(contin);
 		|
 		|	pa026a = 0;
 		|	pa026a |= mem_start;
-		|	if (output.omq & 0x02)	// INIT_MRU_D
+		|	if (state->omq & 0x02)	// INIT_MRU_D
 		|		pa026a |= 0x20;
 		|	if (state->phys_last)
 		|		pa026a |= 0x40;
@@ -1008,27 +999,14 @@ class XROTF(PartFactory):
 		|		pa026a |= 0x100;
 		|	pa026 = state->pa026[pa026a];
 		|
-		|	output.cond6a = condsel != 0x6a;
-		|	output.cond6e = condsel != 0x6e;
-		|
-		|	output.cond = 0;
-		|	output.cond |= state->scav_trap << 7;
-		|	output.cond |= state->csa_oor << 6;
-		|	output.cond |= state->page_xing << 5;
-		|	output.cond |= state->cache_miss << 4;
-		|	output.cond |= state->phys_last << 3;
-		|	output.cond |= state->write_last << 2;
-		|	output.cond |= state->mar_modified << 1;
-		|	output.cond |= state->incmplt_mcyc << 0;
-		|
 		|	pa027a = 0;
 		|	pa027a |= board_hit << 5;
 		|	pa027a |= state->init_mru_d << 4;
-		|	pa027a |= (output.omq & 0xc);
+		|	pa027a |= (state->omq & 0xc);
 		|	pa027a |= 1 << 1;
 		|	pa027a |= pgmod << 0;
 		|	pa027 = state->pa027[pa027a];
-		|	output.setq = (pa027 >> 3) & 3;
+		|	state->setq = (pa027 >> 3) & 3;
 		|
 		|	output.pgstq = 0;
 		|	if (!state->drive_mru || !(pa027 & 0x40))
@@ -1041,30 +1019,31 @@ class XROTF(PartFactory):
 		|	output.nohit = board_hit != 0xf;
 		|
 		|	unsigned pa028a = mar_cntl << 5;
-		|	pa028a |= (output.cond & 1) << 4;
+		|	pa028a |= state->incmplt_mcyc << 4;
 		|	pa028a |= state->e_abort_dly << 3;
 		|	pa028a |= state->state1 << 2;
 		|	pa028a |= state->mctl_is_read << 1;
-		|	pa028a |= output.dumon;
-		|	output.prmt = state->pa028[pa028a];
-		|	output.prmt ^= 0x02;
-		|	output.prmt &= 0x7b;
+		|	pa028a |= state->dumon;
+		|	state->prmt = state->pa028[pa028a];
+		|	state->prmt ^= 0x02;
+		|	state->prmt &= 0x7b;
+		|	output.frdr = (state->prmt >> 1) & 1;
+		|	// output.prmt = state->prmt;
 		|
-		|	output.scvhit = false;
 		|	output.logrwd = state->logrw_d;
 		|
 		|	if (sel) {
-		|		output.dnext = !((state->output.prmt >> 0) & 1);
+		|		output.dnext = !((state->prmt >> 0) & 1);
 		|	} else {
-		|		output.dnext = !state->output.dumon;
+		|		output.dnext = !state->dumon;
 		|	}
 		|
 		|	output.csawr = !(
 		|		PIN_LABR=> &&
 		|		PIN_LEABR=> &&
 		|		!(
-		|			output.logrwn ||
-		|			output.mcntl3
+		|			state->logrwn ||
+		|			(state->mcntl & 1)
 		|		)
 		|	);
 		|}
@@ -1074,31 +1053,31 @@ class XROTF(PartFactory):
 		|	if (!output.z_qt || !output.z_qv) {
 		|		do_tivi();
 		|		if (!output.z_qt)
-		|			output.qt = state->tibus ^ BUS_QT_MASK;
+		|			output.qt = state->ti_bus ^ BUS_QT_MASK;
 		|		if (!output.z_qv)
-		|			output.qv = state->vibus ^ BUS_QT_MASK;
+		|			output.qv = state->vi_bus ^ BUS_QT_MASK;
 		|	}
 		|	switch(condsel) {
 		|	case 0x60:
-		|		output.conda = !output.memexp;
+		|		output.conda = !state->memex;
 		|		break;
 		|	case 0x61:
-		|		output.conda = !((output.cond >> 3) & 1);
+		|		output.conda = !state->phys_last;
 		|		break;
 		|	case 0x62:
-		|		output.conda = !((output.cond >> 2) & 1);
+		|		output.conda = !state->write_last;
 		|		break;
 		|	case 0x63:
 		|		output.conda = !output.chit;
 		|		break;
 		|	case 0x64:
-		|		output.conda = !output.oreg0;
+		|		output.conda = !((state->oreg >> 6) & 1);
 		|		break;
 		|	case 0x65:
-		|		output.conda = !output.xwrd;
+		|		output.conda = !state->xwrd;
 		|		break;
 		|	case 0x66:
-		|		output.conda = !output.ntop;
+		|		output.conda = (state->moff & 0x3f) > 0x30;
 		|		break;
 		|	case 0x67:
 		|		output.conda = !output.rfsh;
@@ -1106,31 +1085,33 @@ class XROTF(PartFactory):
 		|	case 0x68:
 		|		output.condb = !output.oor;
 		|		break;
-		|	case 0x69:
-		|		output.condb = !output.scvhit;
+		|	case 0x69: // SCAV_HIT
+		|		output.condb = !false;
 		|		break;
 		|	case 0x6a:
-		|		output.condb = !((output.cond >> 5) & 1);
+		|		output.condb = !state->page_xing;
 		|		break;
 		|	case 0x6b:
 		|		output.condb = !PIN_MISS=>;
 		|		break;
 		|	case 0x6c:
-		|		output.condb = !((output.cond >> 0) & 1);
+		|		output.condb = !state->incmplt_mcyc;
 		|		break;
 		|	case 0x6d:
-		|		output.condb = !((output.cond >> 1) & 1);
+		|		output.condb = !state->mar_modified;
 		|		break;
 		|	case 0x6e:
-		|		output.condb = !((output.cond >> 0) & 1);
+		|		output.condb = !state->incmplt_mcyc;
 		|		break;
 		|	case 0x6f:
-		|		output.condb = !output.wez;
+		|		output.condb = (state->moff & 0x3f) != 0;
 		|		break;
 		|	};
+		|	output.pgxin = !(PIN_MICEN=> && state->page_xing);
+		|	output.memex = !(PIN_MICEN=> && state->memex);
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XROTF", PartModelDQ("XROTF", XROTF))
+    part_lib.add_part("FIU", PartModelDQ("FIU", FIU))

@@ -213,7 +213,7 @@ class DIPROC(PartFactory):
 		|			// TRACE(<< "Need P3 " << std::hex << state->diagproc->p3val);
 		|		}
 		|		if (DiagProcStep(state->diagproc, &state->dctx)) {
-		|			if (++state->isidle > 3000) {
+		|			if (++state->isidle > 4000) {
 		|				ALWAYS_TRACE(<< "idle");
 		|				next_trigger(idle_event);
 		|				state->isidle = 0;

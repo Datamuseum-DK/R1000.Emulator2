@@ -66,7 +66,7 @@ class XFIUWCS(PartFactory):
 		|		output.vmsl = (wcs >> 26) & BUS_VMSL_MASK;
 		|		output.fill = (wcs >> 25) & 1;
 		|		output.osrc = (wcs >> 24) & 1;
-		|		//output.tivi = (wcs >> 20) & BUS_TIVI_MASK;
+		|		output.tivi = (wcs >> 20) & BUS_TIVI_MASK;
 		|		output.ldo = (wcs >> 19) & 1;
 		|		output.ldv = (wcs >> 18) & 1;
 		|		output.ldt = (wcs >> 17) & 1;
@@ -75,35 +75,6 @@ class XFIUWCS(PartFactory):
 		|		output.rsrc = (wcs >> 9) & 1;
 		|		output.lsrc = (wcs >> 1) & 1;
 		|		output.ofsrc = (wcs >> 0) & 1;
-		|
-		|		unsigned tvoe = 0x00;
-		|
-		|		unsigned tivi = (wcs >> 20) & 0xf;
-		|
-		|		output.tivi = tivi;
-		|
-		|		switch(tivi & 3) {
-		|		case 0x0: tvoe |= 0x08; break;	// VAR_VI
-		|		case 0x1: tvoe |= 0x04; break;	// VAL_VI
-		|		case 0x2: tvoe |= 0x0a; break;	// FIU_VI+VAR_VI
-		|		case 0x3: tvoe |= 0x01; break;	// FRAME_ADR
-		|		}
-		|
-		|		switch(tivi & 0xc) {
-		|		case 0x0: tvoe |= 0x80; break;	// TAR_TI
-		|		case 0x4: tvoe |= 0xc0; break;	// FIU_TI+TAR_TI
-		|		case 0x8: tvoe |= 0x20; break;	// TYPE_TI
-		|		case 0xc:
-		|			tvoe = 0x10;	// MAR
-		|			break;
-		|		}
-		|		if (tvoe & 0x10) {
-		|			tvoe |= 0x88;
-		|		}
-		|		if (tvoe & 0x01) {
-		|			tvoe |= 0x08;
-		|		}
-		|		output.tvoe = tvoe ^ 0xff;
 		|	}
 		|''')
 
