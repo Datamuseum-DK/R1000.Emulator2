@@ -4,11 +4,11 @@
 
 from chip import Chip, FChip, ChipSig
 
-class XIOC(FChip):
+class IOC(FChip):
 
     ''' IOC Dummy register '''
 
-    symbol_name = "XIOC"
+    symbol_name = "IOC"
 
     def __init__(self):
         super().__init__()
@@ -85,6 +85,4 @@ class XIOC(FChip):
         self.finish()
 
 def register():
-    yield XIOC()
-
-
+    yield IOC()

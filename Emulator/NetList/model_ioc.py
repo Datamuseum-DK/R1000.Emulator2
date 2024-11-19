@@ -49,7 +49,7 @@ CBITS = '''
     ECCG62 ---++----+++-++--+-+++-+-+-+++++---++----+++-++--+-+++-+-+-+++++ ++++----++-+-+--++-+-------++--+++++++++-+-++---+-------+-----+- --------+
 '''
 
-class XIOC(PartFactory):
+class IOC(PartFactory):
     ''' IOC Dummy register '''
 
     autopin = True
@@ -633,7 +633,7 @@ class XIOC(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XIOC", PartModelDQ("XIOC", XIOC))
+    part_lib.add_part("IOC", PartModelDQ("IOC", IOC))
 
 '''
    TYP A-side mux+latch
