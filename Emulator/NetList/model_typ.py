@@ -36,7 +36,7 @@
 
 from part import PartModelDQ, PartFactory
 
-class XTCMUX(PartFactory):
+class TYP(PartFactory):
     ''' TYP C-bus mux '''
 
     autopin = True
@@ -776,4 +776,4 @@ class XTCMUX(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XTCMUX", PartModelDQ("XTCMUX", XTCMUX))
+    part_lib.add_part("TYP", PartModelDQ("TYP", TYP))

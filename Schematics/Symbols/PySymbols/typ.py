@@ -4,11 +4,11 @@
 
 from chip import Chip, FChip, ChipSig
 
-class XTCMUX(FChip):
+class TYP(FChip):
 
     ''' TYP C-bus mux '''
 
-    symbol_name = "XTCMUX"
+    symbol_name = "TYP"
 
     def __init__(self):
         super().__init__()
@@ -75,6 +75,6 @@ class XTCMUX(FChip):
         self.finish()
 
 def register():
-    yield XTCMUX()
+    yield TYP()
 
 
