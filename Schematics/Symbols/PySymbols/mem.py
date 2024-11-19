@@ -4,11 +4,11 @@
 
 from chip import Chip, FChip, ChipSig
 
-class XMEM(FChip):
+class MEM(FChip):
 
     ''' MEM32 Cache '''
 
-    symbol_name = "XMEM"
+    symbol_name = "MEM"
 
     def __init__(self):
         super().__init__()
@@ -57,6 +57,6 @@ class XMEM(FChip):
         self.finish(21)
 
 def register():
-    yield XMEM()
+    yield MEM()
 
 

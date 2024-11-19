@@ -38,7 +38,7 @@ from part import PartModelDQ, PartFactory
 from pin import Pin
 from node import Node
 
-class XMEM(PartFactory):
+class MEM(PartFactory):
 
     ''' MEM32 CACHE '''
 
@@ -414,4 +414,4 @@ class XMEM(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XMEM", PartModelDQ("XMEM", XMEM))
+    part_lib.add_part("MEM", PartModelDQ("MEM", MEM))
