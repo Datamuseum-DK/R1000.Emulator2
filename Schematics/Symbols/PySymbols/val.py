@@ -4,11 +4,11 @@
 
 from chip import Chip, FChip, ChipSig
 
-class XVCMUX(FChip):
+class VAL(FChip):
 
     ''' VAL C-bus mux '''
 
-    symbol_name = "XVCMUX"
+    symbol_name = "VAL"
 
     def __init__(self):
         super().__init__()
@@ -69,6 +69,6 @@ class XVCMUX(FChip):
         self.finish()
 
 def register():
-    yield XVCMUX()
+    yield VAL()
 
 

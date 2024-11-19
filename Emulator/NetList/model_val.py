@@ -36,7 +36,7 @@
 
 from part import PartModelDQ, PartFactory
 
-class XVCMUX(PartFactory):
+class VAL(PartFactory):
     ''' VAL C-bus mux '''
 
     autopin = True
@@ -710,4 +710,4 @@ class XVCMUX(PartFactory):
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XVCMUX", PartModelDQ("XVCMUX", XVCMUX))
+    part_lib.add_part("VAL", PartModelDQ("VAL", VAL))
