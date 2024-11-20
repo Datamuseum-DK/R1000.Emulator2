@@ -64,6 +64,8 @@ class VAL(PartFactory):
 		|	bool amsb, bmsb, cmsb, mbit, last_cond;
 		|	bool isbin, sub_else_add, ovren, carry_middle;
 		|	uint8_t zero;
+		|	bool coh;
+		|	bool divide;
 		|''')
 
     def init(self, file):
@@ -129,7 +131,7 @@ class VAL(PartFactory):
 		|	case 2:
 		|		cond = !(
 		|			(state->bmsb && (state->amsb ^ state->bmsb)) ||
-		|			(!output.coh && (ovrsgn() ^ state->sub_else_add))
+		|			(!state->coh && (ovrsgn() ^ state->sub_else_add))
 		|		);
 		|		break;
 		|	case 4:
@@ -156,10 +158,10 @@ class VAL(PartFactory):
 		|	bool cond;
 		|	switch (csel & 0x7) {
 		|	case 0:
-		|		cond = !output.coh;
+		|		cond = !state->coh;
 		|		break;
 		|	case 1:
-		|		cond = state->ovren || !(ovrsgn() ^ state->sub_else_add ^ (!output.coh) ^ state->cmsb);
+		|		cond = state->ovren || !(ovrsgn() ^ state->sub_else_add ^ (!state->coh) ^ state->cmsb);
 		|		break;
 		|	case 2:
 		|		cond = state->cmsb;
@@ -201,7 +203,7 @@ class VAL(PartFactory):
 		|		cond = ((state->zero & 0x0c) != 0x0c);
 		|		break;
 		|	case 3:
-		|		cond = PIN_QBI=>;
+		|		cond = output.qbit;
 		|		break;
 		|	case 5:
 		|		cond = state->mbit;
@@ -239,6 +241,15 @@ class VAL(PartFactory):
 		|	BUS_UIRB_READ(uirb);
 		|	BUS_UIRC_READ(uirc);
 		|
+		|	if (PIN_CNCLK.posedge()) {
+		|		bool xor0c = state->mbit ^ (!state->coh);
+		|		bool xor0d = state->output.qbit ^ xor0c;
+		|		bool caoi0b = !(
+		|			((!state->divide) && xor0d) ||
+		|			(state->divide && state->coh)
+		|		);
+		|		output.qbit = caoi0b;
+		|	}
 		|	unsigned csmux3;
 		|	BUS_CSAO_READ(csmux3);
 		|	csmux3 ^= BUS_CSAO_MASK;
@@ -301,7 +312,7 @@ class VAL(PartFactory):
 		|	bool prod_16 = rand != 0xd;
 		|	bool prod_32 = rand != 0xe;
 		|	output.cntz = rand != 0x5;
-		|	output.div = rand != 0xb;
+		|	state->divide = rand != 0xb;
 		|
 		|	output.z_qf = PIN_QFOE=>;
 		|	if (q2pos || (!h2 && !output.z_qf)) {
@@ -394,8 +405,8 @@ class VAL(PartFactory):
 		|		proma |= alur << 5;
 		|		if (
 		|			!(
-		|				(state->last_cond && output.div) ||
-		|				(PIN_QBI=> && !output.div)
+		|				(state->last_cond && state->divide) ||
+		|				(output.qbit && !state->divide)
 		|			)
 		|		) {
 		|			proma |= 0x100;
@@ -423,7 +434,7 @@ class VAL(PartFactory):
 		|		f181h.a = state->a >> 32;
 		|		f181h.b = state->b >> 32;
 		|		f181_alu(&f181h);
-		|		output.coh = f181h.co;
+		|		state->coh = f181h.co;
 		|		state->alu |= ((uint64_t)f181h.o) << 32;
 		|		state->zero = 0;
 		|		if (!(state->alu & (0xffULL) <<  0)) state->zero |= 0x01;
@@ -504,7 +515,7 @@ class VAL(PartFactory):
 		|					if (state->amsb ^ state->bmsb) {
 		|						fcond = state->bmsb;
 		|					} else {
-		|						fcond = !output.coh;
+		|						fcond = !state->coh;
 		|					}
 		|					break;
 		|				case 0x0f:
@@ -624,8 +635,8 @@ class VAL(PartFactory):
 		|	if (q4pos) {
 		|		bool incl = rand != 0x1;
 		|		bool decl = rand != 0x2;
-		|		bool lnan1a = !(decl && incl && output.div);
-		|		bool count_up = !(decl && output.div);
+		|		bool lnan1a = !(decl && incl && state->divide);
+		|		bool count_up = !(decl && state->divide);
 		|		bool count_en = !(lnan1a && sclken);
 		|		bool lcmp28 = uirc != 0x28;
 		|		bool lnan3a = !(lcmp28);
@@ -673,7 +684,6 @@ class VAL(PartFactory):
 		|
 		|	if (PIN_CNCLK=>.posedge()) {
 		|		state->mbit = state->cmsb;
-		|		output.m = state->cmsb;
 		|	}
 		|
 		|	unsigned csel;
@@ -686,24 +696,6 @@ class VAL(PartFactory):
 		|	default: break;
 		|	}
 		|
-		|	if (PIN_CNCLK.posedge()) {
-		|		bool xor0c = state->output.m ^ (!state->output.coh);
-		|		bool xor0d = state->output.qbit ^ xor0c;
-		|		bool caoi0b = !(
-		|			((!state->output.div) && xor0d) ||
-		|			(state->output.div && state->output.coh)
-		|		);
-		|		output.qbit = caoi0b;
-		|	} else if (0 && output.qbit != PIN_QBI=>) {
-		|		ALWAYS_TRACE(
-		|			<< "QB " << std::hex
-		|			<< " qb " << output.qbit
-		|			<< " QB " << PIN_QBI=>
-		|			<< " m " << output.m
-		|			<< " coh " << output.coh
-		|			<< " div " << output.div
-		|		);
-		|	}
 		|
 		|''')
 
