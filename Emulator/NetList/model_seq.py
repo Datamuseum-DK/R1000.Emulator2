@@ -46,7 +46,7 @@ IR0     IR1     IR2     0-32            32-47           48-63           0-31    
 
 from part import PartModelDQ, PartFactory
 
-class XSEQ(PartFactory):
+class SEQ(PartFactory):
     ''' SEQ Instruction buffer '''
 
     autopin = True
@@ -109,7 +109,7 @@ class XSEQ(PartFactory):
 		|	unsigned boff;
 		|	unsigned break_mask;
 		|
-		|	// XSEQNAM
+		|	// SEQNAM
 		|	uint32_t tost, vost, cur_name;
 		|	uint32_t namram[1<<4];
 		|	unsigned pcseg, retseg, last;
@@ -166,6 +166,22 @@ class XSEQ(PartFactory):
 		|	unsigned wanna_dispatch;
 		|	bool ibld;
 		|	bool field_number_error;
+		|	bool import_condition;
+		|	bool m_break_class;
+		|	bool latched_cond;
+		|	bool saved_latched;
+		|	bool stack_size_zero;
+		|	unsigned rq;
+		|	bool m_tos_invld;
+		|	bool m_underflow;
+		|	bool m_overflow;
+		|	bool disp_cond0;
+		|	bool tos_vld_cond;
+		|	bool foo7;
+		|	bool check_exit_ue;
+		|	bool carry_out;
+		|	bool bad_hint;
+		|	bool m_res_ref;
 		|''')
 
     def init(self, file):
@@ -308,11 +324,11 @@ class XSEQ(PartFactory):
 		|		return (1);
 		|	if (PIN_STOP=>)
 		|		return (2);
-		|	if (!PIN_MRES=>)
+		|	if (!state->m_res_ref)
 		|		return (3);
-		|	if (!output.mtinv)
+		|	if (!state->m_tos_invld)
 		|		return (4);
-		|	if (!output.bmcls)
+		|	if (!state->m_break_class)
 		|		return (6);
 		|	if (!output.mibuf)
 		|		return (7);
@@ -331,7 +347,7 @@ class XSEQ(PartFactory):
 		|		output.conda = !state->field_number_error;
 		|		break;
 		|	case 0x29: // LATCHED_COND
-		|		output.conda = !output.ldc;
+		|		output.conda = !state->latched_cond;
 		|		break;
 		|	case 0x2a: // E_MACRO_PEND
 		|		output.conda = state->emac == 0x7f;
@@ -353,7 +369,7 @@ class XSEQ(PartFactory):
 		|		break;
 		|
 		|	case 0x30: // DISP_COND0
-		|		output.condb = output.sc8;
+		|		output.condb = state->disp_cond0;
 		|		break;
 		|	case 0x31: // True
 		|		output.condb = true;
@@ -362,44 +378,44 @@ class XSEQ(PartFactory):
 		|		output.condb = PIN_MIBMT=>;
 		|		break;
 		|	case 0x33: // M_BRK_CLASS
-		|		output.condb = output.bmcls;
+		|		output.condb = state->m_break_class;
 		|		break;
 		|	case 0x34: // M_TOS_INVLD
-		|		output.condb = output.mtinv;
+		|		output.condb = state->m_tos_invld;
 		|		break;
 		|	case 0x35: // M_RES_REF
-		|		output.condb = PIN_MRES=>;
+		|		output.condb = state->m_res_ref;
 		|		break;
 		|	case 0x36: // M_OVERFLOW
-		|		output.condb = output.m_oflo;
+		|		output.condb = state->m_overflow;
 		|		break;
 		|	case 0x37: // M_UNDERFLOW
-		|		output.condb = output.m_uflo;
+		|		output.condb = state->m_underflow;
 		|		break;
 		|
 		|	case 0x38: // STACK_SIZE
-		|		output.condc = output.ssz;
+		|		output.condc = state->stack_size_zero;
 		|		break;
 		|	case 0x39: // LATCHED_COND
-		|		output.condc = output.ldc;
+		|		output.condc = state->latched_cond;
 		|		break;
 		|	case 0x3a: // SAVED_LATCHED
-		|		output.condc = output.svlat;
+		|		output.condc = state->saved_latched;
 		|		break;
 		|	case 0x3b: // TOS_VLD.COND
-		|		output.condc = PIN_TIN1=>;
+		|		output.condc = state->tos_vld_cond;
 		|		break;
 		|	case 0x3c: // LEX_VLD.COND
 		|		output.condc = PIN_LXVAL=>;
 		|		break;
 		|	case 0x3d: // IMPORT.COND
-		|		output.condc = output.icond;
+		|		output.condc = state->import_condition;
 		|		break;
 		|	case 0x3e: // REST_PC_DEC
-		|		output.condc = ((output.rq >> 1) & 1);
+		|		output.condc = ((state->rq >> 1) & 1);
 		|		break;
 		|	case 0x3f: // RESTARTABLE
-		|		output.condc = ((output.rq >> 3) & 1);
+		|		output.condc = ((state->rq >> 3) & 1);
 		|		break;
 		|	}
 		|}
@@ -421,8 +437,8 @@ class XSEQ(PartFactory):
 		|
 		|	unsigned urand;
 		|	BUS_URAND_READ(urand);
-		|	state->rndx = state->pa048[urand | (output.bhp ? 0x100 : 0)] << 24;
-		|	state->rndx |= state->pa046[urand | (output.bhp ? 0x100 : 0)] << 16;
+		|	state->rndx = state->pa048[urand | (state->bad_hint ? 0x100 : 0)] << 24;
+		|	state->rndx |= state->pa046[urand | (state->bad_hint ? 0x100 : 0)] << 16;
 		|	state->rndx |=  state->pa045[urand | 0x100] << 8;
 		|	state->rndx |= state->pa047[urand | 0x100];
 		|	output.halt = RNDX(RND_HALT);
@@ -434,15 +450,15 @@ class XSEQ(PartFactory):
 		|	tmp |= (state->decode & 0x7) << 6;
 		|	if (state->wanna_dispatch) tmp |= 0x20;
 		|	if (RNDX(RND_ADR_SEL)) tmp |= 0x10;
-		|	if (output.icond) tmp |= 0x08;
+		|	if (state->import_condition) tmp |= 0x08;
 		|	if (PIN_STOP=>) tmp |= 0x04;
 		|	if (PIN_MD=>) tmp |= 0x02;
-		|	if (output.bhp) tmp |= 0x01;
+		|	if (state->bad_hint) tmp |= 0x01;
 		|	pa040a = tmp;
 		|	pa040d = state->pa040[tmp];
 		|}
 		|
-		|	output.sc8 = (pa040d >> 7) & 1;
+		|	state->disp_cond0 = (pa040d >> 7) & 1;
 		|
 		|	unsigned internal_reads;
 		|	BUS_IRD_READ(internal_reads);
@@ -588,10 +604,10 @@ class XSEQ(PartFactory):
 		|	res_addr &= 0xf;
 		|	output.radr = res_addr;
 		|	if (PIN_LINC=>) {
-		|		output.icond = true;
+		|		state->import_condition = true;
 		|		output.sext = true;
 		|	} else {
-		|		output.icond = !(res_addr == 0xf);
+		|		state->import_condition = !(res_addr == 0xf);
 		|		output.sext = !((res_addr > 0xd));
 		|	}
 		|
@@ -672,11 +688,11 @@ class XSEQ(PartFactory):
 		|	unsigned ccl = (*ciptr >> 4) & 0xf;
 		|
 		|	if (ccl == 0) {
-		|		output.bmcls = false;
+		|		state->m_break_class = false;
 		|	} else {
-		|		output.bmcls = (state->break_mask >> (15 - ccl)) & 1;
+		|		state->m_break_class = (state->break_mask >> (15 - ccl)) & 1;
 		|	}
-		|	output.bmcls = !output.bmcls;
+		|	state->m_break_class = !state->m_break_class;
 		|
 		|}
 		|{
@@ -818,7 +834,7 @@ class XSEQ(PartFactory):
 		|
 		|	if (q4pos && !sclke && !RNDX(RND_SAVE_LD)) {
 		|		state->savrg = state->resolve_offset;
-		|		output.cout = co;
+		|		state->carry_out = co;
 		|	}
 		|
 		|	if ((q4pos && !sclke && !RNDX(RND_PRED_LD)) || state_clock) {
@@ -893,7 +909,7 @@ class XSEQ(PartFactory):
 		|			xwrite = true;
 		|			pop = false;
 		|			stkinpsel_0 = !state->push_br;
-		|			stkinpsel_1 = output.bhp;
+		|			stkinpsel_1 = state->bad_hint;
 		|		} else {
 		|			xwrite = !RNDX(RND_PUSH);
 		|			pop = !!(state->preturn || RNDX(RND_POP));
@@ -910,7 +926,7 @@ class XSEQ(PartFactory):
 		|			case 0:
 		|				BUS_BRN_READ(state->topu);
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
-		|				if (output.ldc) state->topu |= (1<<14);
+		|				if (state->latched_cond) state->topu |= (1<<14);
 		|				state->topu ^= 0xffff;;
 		|				break;
 		|			case 1:
@@ -920,21 +936,21 @@ class XSEQ(PartFactory):
 		|			case 2:
 		|				state->topu = state->curuadr;
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
-		|				if (output.ldc) state->topu |= (1<<14);
+		|				if (state->latched_cond) state->topu |= (1<<14);
 		|				state->topu += 1;
 		|				state->topu ^= 0xffff;;
 		|				break;
 		|			case 3:
 		|				state->topu = state->curuadr;
 		|				if (PIN_Q3COND)	state->topu |= (1<<15);
-		|				if (output.ldc) state->topu |= (1<<14);
+		|				if (state->latched_cond) state->topu |= (1<<14);
 		|				state->topu ^= 0xffff;;
 		|				break;
 		|			}
 		|		} else if (pop) {
 		|			state->topu = state->ram[state->adr];
 		|		}
-		|		output.svlat = !((state->topu >> 14) & 0x1);
+		|		state->saved_latched = !((state->topu >> 14) & 0x1);
 		|
 		|		if (RNDX(RND_CLEAR_ST) && !PIN_STOP=>) {
 		|			state->adr = xwrite;
@@ -945,7 +961,7 @@ class XSEQ(PartFactory):
 		|				state->adr = (state->adr + 0xf) & 0xf;
 		|			}
 		|		}
-		|		output.ssz = state->adr == 0;
+		|		state->stack_size_zero = state->adr == 0;
 		|	}
 		|
 		|	output.z_qf = PIN_QFOE=>;
@@ -1002,7 +1018,7 @@ class XSEQ(PartFactory):
 		|
 		|	if (!PIN_DV_U) {
 		|		data = state->nxtuadr;
-		|	} else if (output.bhp) {
+		|	} else if (state->bad_hint) {
 		|		data = state->other;
 		|	} else if (PIN_LMAC=>) {
 		|		// Not tested by expmon_test_seq ?
@@ -1054,6 +1070,10 @@ class XSEQ(PartFactory):
 		|
 		|	if (PIN_ACK.posedge()) {
 		|		BUS_UEI_READ(state->uei);
+		|		if (state->check_exit_ue)
+		|			state->uei |= (1<<BUS_UEI_LSB(3));
+		|		else
+		|			state->uei &= ~(1<<BUS_UEI_LSB(3));
 		|		state->uei <<= 1;
 		|		state->uei |= 1;
 		|		state->uei ^= 0xffff;
@@ -1072,7 +1092,7 @@ class XSEQ(PartFactory):
 		|	unsigned br_type;
 		|	BUS_BRTYP_READ(br_type);
 		|
-		|	bool bad_hint = output.bhp;
+		|	bool bad_hint = state->bad_hint;
 		|
 		|	bool brtm3;
 		|	unsigned btimm;
@@ -1086,7 +1106,7 @@ class XSEQ(PartFactory):
 		|
 		|	switch (btimm) {
 		|	case 0: state->uadr_mux = !PIN_COND=>; break;
-		|	case 1: state->uadr_mux = !output.ldc; break;
+		|	case 1: state->uadr_mux = !state->latched_cond; break;
 		|	case 2: state->uadr_mux = false; break;
 		|	case 3: state->uadr_mux = true; break;
 		|	}
@@ -1143,7 +1163,7 @@ class XSEQ(PartFactory):
        		|
 		|	if (!PIN_TCLR=>) {
 		|		state->treg = 0;
-		|		output.fo7 = false;
+		|		state->foo7 = false;
 		|	}
 		|
 		|	if (PIN_ACK.posedge()) {
@@ -1161,8 +1181,13 @@ class XSEQ(PartFactory):
 		|			if (macro_event) {
 		|				state->rreg &= ~0x2;
 		|			}
-		|			BUS_TIN_READ(state->treg);
-		|			state->treg ^= 0x4;
+		|			state->treg = 0x3;
+		|			bool dnan0d = !(output.disp && RNDX(RND_PRED_LD));
+		|			bool tsnor0b = !(dnan0d || state->tos_vld_cond);
+		|			if (tsnor0b)
+		|				state->treg |= 0x8;
+		|			if (!state->tos_vld_cond)
+		|				state->treg |= 0x4;
 		|		} else if (PIN_SSTOP=> && PIN_BHEN=>) {
 		|			state->rreg <<= 1;
 		|			state->rreg &= 0xe;
@@ -1171,13 +1196,13 @@ class XSEQ(PartFactory):
 		|			state->treg &= 0xe;
 		|			state->treg |= 0x1;
 		|		}
-		|		output.rq = state->rreg;
-		|		output.fo7 = state->treg >> 3;
+		|		state->rq = state->rreg;
+		|		state->foo7 = state->treg >> 3;
 		|
 		|		unsigned lin;
 		|		BUS_LIN_READ(lin);
 		|		lin &= 0x7;
-		|		lin |= output.ldc << 3;
+		|		lin |= state->latched_cond << 3;
 		|
 		|		if (!sclke) {
 		|			state->lreg = lin;
@@ -1190,32 +1215,32 @@ class XSEQ(PartFactory):
 		|		switch(state->lreg & 0x6) {
 		|		case 0x0:
 		|		case 0x4:
-		|			output.ldc = (state->lreg >> 3) & 1;
+		|			state->latched_cond = (state->lreg >> 3) & 1;
 		|			break;
 		|		case 0x2:
-		|			output.ldc = (state->lreg >> 0) & 1;
+		|			state->latched_cond = (state->lreg >> 0) & 1;
 		|			break;
 		|		case 0x6:
-		|			output.ldc = state->last_late_cond;
+		|			state->latched_cond = state->last_late_cond;
 		|			break;
 		|		}
 		|	}
 		|
 		|	bool last_cond_late = (state->lreg >> 2) & 1;
 		|	if (state->hint_last) {
-		|		output.bhp = false;
+		|		state->bad_hint = false;
 		|	} else if (!last_cond_late && !state->hint_t_last) {
 		|		bool e_or_ml_cond = state->lreg & 1;
-		|		output.bhp = e_or_ml_cond;
+		|		state->bad_hint = e_or_ml_cond;
 		|	} else if (!last_cond_late &&  state->hint_t_last) {
 		|		bool e_or_ml_cond = state->lreg & 1;
-		|		output.bhp = !e_or_ml_cond;
+		|		state->bad_hint = !e_or_ml_cond;
 		|	} else if ( last_cond_late && !state->hint_t_last) {
-		|		output.bhp = state->last_late_cond;
+		|		state->bad_hint = state->last_late_cond;
 		|	} else if ( last_cond_late &&  state->hint_t_last) {
-		|		output.bhp = !state->last_late_cond;
+		|		state->bad_hint = !state->last_late_cond;
 		|	}
-		|	output.bhn = !output.bhp;
+		|	output.bhn = !state->bad_hint;
 		|
 		|}
 		|	output.z_qt = PIN_QTOE=>;
@@ -1303,7 +1328,7 @@ class XSEQ(PartFactory):
 		|	bool ibemp = !(ibuff_ld || (state->word != 0));
 		|	output.mibuf = !(ibemp && state->ibuf_fill);
 		|
-		|	output.mtinv = !(state->uses_tos && PIN_TIN1=>);
+		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);
 		|
 		|	output.qstp7 = output.bhn && state->l_macro_hic;
 		|
@@ -1314,13 +1339,21 @@ class XSEQ(PartFactory):
 		|	unsigned csa;
 		|	BUS_CSA_READ(csa);
 		|	unsigned dec = state->decode >> 3;
-		|	output.m_uflo = csa >= (dec & 7);
-		|	output.m_oflo = csa <= ((dec >> 3) | 12);
+		|	state->m_underflow = csa >= (dec & 7);
+		|	state->m_overflow = csa <= ((dec >> 3) | 12);
 		|}
 		|	seq_cond();
+		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));
+		|	state->check_exit_ue = !(
+		|		PIN_ENFU=> &&
+		|		RNDX(RND_CHK_EXIT) &&
+		|		state->carry_out
+		|	);
+		|	output.sfive = (state->check_exit_ue && output.ferr);
+		|	state->m_res_ref = !(PIN_LXVAL=> && !output.disp0);
 		|''')
 
 def register(part_lib):
     ''' Register component model '''
 
-    part_lib.add_part("XSEQ", PartModelDQ("XSEQ", XSEQ))
+    part_lib.add_part("SEQ", PartModelDQ("SEQ", SEQ))

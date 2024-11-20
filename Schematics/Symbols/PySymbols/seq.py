@@ -4,17 +4,20 @@
 
 from chip import Chip, FChip, ChipSig
 
-class XSEQ(FChip):
+class SEQ(FChip):
 
     ''' SEQ Instruction Buffer '''
 
-    symbol_name = "XSEQ"
+    symbol_name = "SEQ"
 
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "DQT", 0, 63))
+        self.sig_left(ChipSig("<->+", "DQT", 0, 63))
         self.sig_left(ChipSig("-->+", "QTOE"))
+
+        self.sig_left(ChipSig("<->+", "DQF", 0, 63))
+        self.sig_left(ChipSig("-->+", "QFOE"))
 
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
@@ -27,7 +30,6 @@ class XSEQ(FChip):
         self.sig_left(ChipSig("-->+", "MIBMT"))
         self.sig_left(ChipSig("-->+", "URAND", 0, 6))
         self.sig_left(ChipSig("-->+", "IRD", 0, 2))
-        self.sig_left(ChipSig("-->+", "EMAC", 0, 6))
         self.sig_left(ChipSig("-->+", "ACLK"))
         self.sig_left(ChipSig("-->+", "SCLKE"))
         self.sig_left(ChipSig("-->+", "FLIP"))
@@ -49,11 +51,8 @@ class XSEQ(FChip):
 
         self.sig_left(ChipSig("-->+", "BRN", 0, 13))
 
-        self.sig_left(ChipSig("<--+", "U_EVENT"))
-        self.sig_left(ChipSig("<--o", "U_EVENT~"))
 
 
-        self.sig_left(ChipSig("-->+", "UEI", 0, 14))
         self.sig_left(ChipSig("-->+", "ACK"))
         self.sig_left(ChipSig("-->+", "BRTYP", 0, 3))
         self.sig_left(ChipSig("-->+", "SSTOP"))
@@ -64,13 +63,11 @@ class XSEQ(FChip):
         self.sig_left(ChipSig("-->+", "BHCKE"))
 
         self.sig_left(ChipSig("-->+", "LIN", 0, 3))
-        self.sig_left(ChipSig("-->+", "TIN", 0, 3))
         self.sig_left(ChipSig("-->+", "TCLR"))
 
         self.sig_left(ChipSig("-->+", "BHEN"))
 
         self.sig_left(ChipSig("-->+", "ENFU"))
-        self.sig_left(ChipSig("-->+", "MRES"))
         self.sig_left(ChipSig("-->+", "STOP"))
         self.sig_left(ChipSig("-->+", "FIU_CLK"))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
@@ -78,26 +75,20 @@ class XSEQ(FChip):
 
         self.sig_right(ChipSig("+<->", "DQV", 0, 63))
         self.sig_right(ChipSig("+<--", "QVOE"))
-        self.sig_right(ChipSig("+-->", "DISP0"))
-        self.sig_right(ChipSig("+-->", "RADR", 0, 3))
-        self.sig_right(ChipSig("+-->", "ICOND"))
-        self.sig_right(ChipSig("+-->", "SEXT"))
-        self.sig_right(ChipSig("+-->", "BMCLS"))
-
-        self.sig_right(ChipSig("+<--", "OSPCOE"))
-        self.sig_right(ChipSig("+===", "OSPC", 0, 2))
-        self.sig_right(ChipSig("+<--", "ADROE"))
         self.sig_right(ChipSig("+===", "ADR", 0, 63))
-
-        self.sig_right(ChipSig("+-->", "COUT"))
-
-        self.sig_right(ChipSig("+-->", "SVLAT"))
-        self.sig_right(ChipSig("+-->", "SSZ"))
-
-        self.sig_right(ChipSig("+<--", "QFOE"))
-        self.sig_right(ChipSig("+===", "DQF", 0, 63))
+        self.sig_right(ChipSig("+<--", "ADROE"))
+        self.sig_right(ChipSig("+===", "OSPC", 0, 2))
+        self.sig_right(ChipSig("+<--", "OSPCOE"))
 
         self.sig_right(ChipSig("+-->", "NU", 0, 13))
+
+        self.sig_right(ChipSig("+<--", "EMAC", 0, 6))
+        self.sig_right(ChipSig("+<--", "UEI", 0, 14))
+
+        self.sig_right(ChipSig("+-->", "DISP0"))
+        self.sig_right(ChipSig("+-->", "RADR", 0, 3))
+        self.sig_right(ChipSig("+-->", "SEXT"))
+
 
         self.sig_right(ChipSig("+-->", "UEVP"))
 
@@ -105,21 +96,12 @@ class XSEQ(FChip):
         self.sig_right(ChipSig("+-->", "DBHINT"))
         self.sig_right(ChipSig("+-->", "DMDISP"))
 
-        self.sig_right(ChipSig("+-->", "RQ", 0, 3))
-        self.sig_right(ChipSig("+-->", "FO7"))
-        self.sig_right(ChipSig("+-->", "LDC"))
-
-        self.sig_right(ChipSig("+-->", "BHP"))
         self.sig_right(ChipSig("+-->", "BHN"))
 
         self.sig_right(ChipSig("+-->", "FERR"))
         self.sig_right(ChipSig("+-->", "MIBUF"))
-        self.sig_right(ChipSig("+-->", "MTINV"))
         self.sig_right(ChipSig("+-->", "QSTP7"))
-        self.sig_right(ChipSig("+-->", "M_UFLO"))
-        self.sig_right(ChipSig("+-->", "M_OFLO"))
         self.sig_right(ChipSig("+-->", "HALT"))
-        self.sig_right(ChipSig("+-->", "SC8"))
         self.sig_right(ChipSig("+-->", "BAR8"))
         self.sig_right(ChipSig("+-->", "MEH"))
         self.sig_right(ChipSig("+-->", "LMACO"))
@@ -128,8 +110,11 @@ class XSEQ(FChip):
         self.sig_right(ChipSig("+-->", "CONDB"))
         self.sig_right(ChipSig("+-->", "CONDC"))
 
+        self.sig_right(ChipSig("+-->", "U_EVENT"))
+        self.sig_right(ChipSig("o-->", "U_EVENT~"))
+        self.sig_right(ChipSig("o-->", "SFIVE"))
         self.finish()
 
 def register():
-    yield XSEQ()
+    yield SEQ()
 
