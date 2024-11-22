@@ -18,3 +18,7 @@ cli 'console << "n"'
 cli 'console match expect "CLI>"'
 
 run
+
+if ! fgrep -a 'the Confidence test (uDIAG) passed' ${R1K_PFX}/_.console ; then
+	exit 2
+fi

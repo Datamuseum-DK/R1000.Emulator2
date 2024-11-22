@@ -14,3 +14,7 @@ cli 'sc quota exit'
 fru_prompt 3 4 29 1
 
 run
+
+if ! fgrep -a 'P3UCODE passed' ${R1K_PFX}/_.console ; then
+	exit 2
+fi
