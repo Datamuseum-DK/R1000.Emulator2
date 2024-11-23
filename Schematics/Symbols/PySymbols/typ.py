@@ -45,7 +45,6 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "ALOOP"))
         self.sig_left(ChipSig("-->+", "BLOOP"))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
-        self.sig_left(ChipSig("-->+", "CNCLK"))
         self.sig_left(ChipSig("-->+", "OFC"))
         self.sig_left(ChipSig("-->+", "CLIT", 0, 6))
         self.sig_left(ChipSig("-->+", "UPVC", 0, 2))

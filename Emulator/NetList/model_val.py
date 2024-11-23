@@ -145,7 +145,7 @@ class VAL(PartFactory):
 		|		break;
 		|	}
 		|	output.vcnda = !cond;
-		|	if (PIN_CNCLK.posedge()) {
+		|	if (PIN_CCLK.posedge()) {
 		|		state->last_cond = cond;
 		|	}
 		|	return (cond);
@@ -180,7 +180,7 @@ class VAL(PartFactory):
 		|		break;
 		|	}
 		|	output.vcndb = !cond;
-		|	if (PIN_CNCLK.posedge()) {
+		|	if (PIN_CCLK.posedge()) {
 		|		state->last_cond = cond;
 		|	}
 		|	return (cond);
@@ -216,7 +216,7 @@ class VAL(PartFactory):
 		|		break;
 		|	}
 		|	output.vcndc = !cond;
-		|	if (PIN_CNCLK.posedge()) {
+		|	if (PIN_CCLK.posedge()) {
 		|		state->last_cond = cond;
 		|	}
 		|	return (cond);
@@ -241,7 +241,7 @@ class VAL(PartFactory):
 		|	BUS_UIRB_READ(uirb);
 		|	BUS_UIRC_READ(uirc);
 		|
-		|	if (PIN_CNCLK.posedge()) {
+		|	if (PIN_CCLK.posedge()) {
 		|		bool xor0c = state->mbit ^ (!state->coh);
 		|		bool xor0d = state->output.qbit ^ xor0c;
 		|		bool caoi0b = !(
@@ -682,7 +682,7 @@ class VAL(PartFactory):
 		|			state->topreg = csalu0;
 		|	}
 		|
-		|	if (PIN_CNCLK=>.posedge()) {
+		|	if (PIN_CCLK=>.posedge()) {
 		|		state->mbit = state->cmsb;
 		|	}
 		|

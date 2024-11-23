@@ -16,7 +16,6 @@ class XTVSCLK(FChip):
         self.sig_left(ChipSig("-->+", "Q4E"))
         self.sig_left(ChipSig("-->+", "SCE"))
         self.sig_left(ChipSig("-->+", "ZCE"))
-        self.sig_left(ChipSig("-->+", "CCE"))
         self.sig_left(ChipSig("-->+", "ACE"))
         self.sig_left(ChipSig("-->+", "UON"))
         self.sig_left(ChipSig("-->+", "UOF"))
@@ -29,7 +28,6 @@ class XTVSCLK(FChip):
         self.sig_left(ChipSig("-->+", "ARFWR"))
 
         self.sig_right(ChipSig("+-->", "ZCLK"))
-        self.sig_right(ChipSig("+-->", "CCLK"))
         self.sig_right(ChipSig("+-->", "ACLK"))
         self.sig_right(ChipSig("+-->", "UCLK"))
         self.sig_right(ChipSig("+-->", "ARFWE"))

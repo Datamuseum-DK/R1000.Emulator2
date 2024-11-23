@@ -50,7 +50,6 @@ class XTVSCLK(PartFactory):
         file.fmt('''
 		|	if (PIN_Q4E.negedge()) {
 		|		output.zclk = true;
-		|		output.cclk = true;
 		|		output.aclk = true;
 		|		output.uclk = true;
 		|		output.arfwe = true;
@@ -65,7 +64,6 @@ class XTVSCLK(PartFactory):
 		|		output.uclk = !uena;
 		|
 		|		output.zclk = sce || PIN_ZCE=>;
-		|		output.cclk = sce || PIN_CCE=>;
 		|		output.aclk = sce || PIN_ACE=>;
 		|
 		|		bool ween = PIN_DSTOP=>;

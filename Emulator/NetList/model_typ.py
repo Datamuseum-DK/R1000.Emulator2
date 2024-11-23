@@ -83,7 +83,6 @@ class TYP(PartFactory):
 
     def sensitive(self):
             #yield "PIN_CCLK"		# q4pos,prev
-            #yield "PIN_CNCLK"		# q4pos,prev
             #yield "BUS_MCTL"		# uir q4pos,prev
             #yield "PIN_OFC.pos()"	# prev
             #yield "PIN_QFOE"		# prev
@@ -675,7 +674,7 @@ class TYP(PartFactory):
 		|		output.tcnd |= condmask;
 		|	}
 		|	output.tcnd &= BUS_TCND_MASK;
-		|	if (PIN_CNCLK.posedge()) {
+		|	if (PIN_CCLK.posedge()) {
 		|		state->last_cond = state->cond;
 		|	}
 		|	if (PIN_OFC.posedge()) {
