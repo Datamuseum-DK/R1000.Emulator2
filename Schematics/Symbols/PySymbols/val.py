@@ -53,14 +53,11 @@ class VAL(FChip):
         self.sig_right(ChipSig("+<--", "ADROE"))
 
         self.sig_right(ChipSig("+-->", "CNTZ"))
-        self.sig_right(ChipSig("+-->", "DIV"))
         self.sig_right(ChipSig("+-->", "CNTOV"))
         self.sig_right(ChipSig("+-->", "CWE"))
-        self.sig_right(ChipSig("+-->", "COH"))
         self.sig_right(ChipSig("+-->", "VCNDA"))
         self.sig_right(ChipSig("+-->", "VCNDB"))
         self.sig_right(ChipSig("+-->", "VCNDC"))
-        self.sig_right(ChipSig("+-->", "M"))
         self.sig_right(ChipSig("+-->", "QBIT"))
 
         self.finish()

@@ -314,7 +314,8 @@ class VAL(PartFactory):
 		|	bool start_mult = rand != 0xc;
 		|	bool prod_16 = rand != 0xd;
 		|	bool prod_32 = rand != 0xe;
-		|	output.cntz = rand != 0x5;
+		|	if (q2pos)
+		|		output.cntz = rand != 0x5;
 		|	state->divide = rand != 0xb;
 		|
 		|	output.z_qf = PIN_QFOE=>;
