@@ -206,9 +206,11 @@ class TYP(PartFactory):
 		|
 		|	unsigned frm;
 		|	BUS_FRM_READ(frm);
-		|	output.wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
-		|	if (output.cwe && uirc != 0x28)
-		|		output.wen = !output.wen;
+		|	if (q2pos) {
+		|		state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
+		|		if (output.cwe && uirc != 0x28)
+		|		state->wen = !state->wen;
+		|	}
 		|
 		|	if (q1pos) {
 		|		state->aadr = 0;
@@ -573,8 +575,6 @@ class TYP(PartFactory):
 		|		}
 		|	}
 		|
-		|	if (q2pos)
-		|		state->wen = output.wen;
 		|	if (h2 || PIN_WE.posedge()) {
 		|		bool c_source = PIN_CSRC=>;
 		|		fiu0 = c_source;

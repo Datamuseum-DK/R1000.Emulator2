@@ -271,9 +271,11 @@ class VAL(PartFactory):
 		|
 		|	unsigned frm;
 		|	BUS_FRM_READ(frm);
-		|	output.wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
-		|	if (output.cwe && uirc != 0x28)
-		|		output.wen = !output.wen;
+		|	if (q2pos) {
+		|		state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
+		|		if (output.cwe && uirc != 0x28)
+		|			state->wen = !state->wen;
+		|	}
 		|
 		|	if (q1pos) {
 		|		state->aadr = 0;
@@ -604,8 +606,6 @@ class VAL(PartFactory):
 		|			assert(uirc <= 0x3f);
 		|		}
 		|	}
-		|	if (q2pos)
-		|		state->wen = output.wen;
 		|	if (PIN_AWE.posedge() && !state->wen) {
 		|		state->rfram[state->cadr] = state->c;
 		|	}

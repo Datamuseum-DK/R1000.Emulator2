@@ -60,7 +60,6 @@ class TYP(FChip):
 
         self.sig_right(ChipSig("+-->", "LOVF"))
         self.sig_right(ChipSig("+-->", "CWE"))
-        self.sig_right(ChipSig("+-->", "WEN"))
         self.sig_right(ChipSig("+-->", "TCND", 0, 4))
         self.sig_right(ChipSig("+-->", "UE", 0, 5))
         self.sig_right(ChipSig("+-->", "T0STP"))

@@ -60,7 +60,7 @@ class XTVSCLK(PartFactory):
 		|		output.zclk = sce || PIN_ZCE=>;
 		|		output.aclk = sce || PIN_ACE=>;
 		|
-		|		output.arfwe = !(!(PIN_DSTOP=> || PIN_ARFWR=>) && PIN_RMS=>);
+		|		output.arfwe = !(!(PIN_DSTOP=>) && PIN_RMS=>);
 		|	}
 		|''')
 
