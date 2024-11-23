@@ -66,6 +66,7 @@ class VAL(PartFactory):
 		|	uint8_t zero;
 		|	bool coh;
 		|	bool divide;
+		|	bool wen;
 		|''')
 
     def init(self, file):
@@ -603,7 +604,9 @@ class VAL(PartFactory):
 		|			assert(uirc <= 0x3f);
 		|		}
 		|	}
-		|	if (PIN_AWE.posedge()) {
+		|	if (q2pos)
+		|		state->wen = output.wen;
+		|	if (PIN_AWE.posedge() && !state->wen) {
 		|		state->rfram[state->cadr] = state->c;
 		|	}
 		|	if (PIN_ZSCK.posedge()) {

@@ -54,20 +54,13 @@ class XTVSCLK(PartFactory):
 		|		output.uclk = true;
 		|		output.arfwe = true;
 		|	} else if (PIN_Q4E.posedge()) {
-		|		bool uon = PIN_UON=>;
-		|		bool ram_stop = PIN_RMS=>;
-		|		bool sce = !(PIN_STS=> && ram_stop && PIN_WEL=>);
-		|		bool uena = !(
-		|			(uon && PIN_UOF=>) ||
-		|			(uon && PIN_SFS=>)
-		|		);
-		|		output.uclk = !uena;
+		|		output.uclk = PIN_UON=> && (PIN_UOF=> || PIN_SFS=>);
 		|
+		|		bool sce = !(PIN_STS=> && PIN_RMS=> && PIN_WEL=>);
 		|		output.zclk = sce || PIN_ZCE=>;
 		|		output.aclk = sce || PIN_ACE=>;
 		|
-		|		bool ween = PIN_DSTOP=>;
-		|		output.arfwe = !(!(ween || PIN_ARFWR=>) && ram_stop);
+		|		output.arfwe = !(!(PIN_DSTOP=> || PIN_ARFWR=>) && PIN_RMS=>);
 		|	}
 		|''')
 

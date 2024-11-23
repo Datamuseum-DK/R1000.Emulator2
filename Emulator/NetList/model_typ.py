@@ -65,6 +65,7 @@ class TYP(PartFactory):
 		|	uint32_t ofreg;
 		|	bool ppriv;
 		|	bool last_cond;
+		|	bool wen;
 		|''')
 
     def init(self, file):
@@ -572,6 +573,8 @@ class TYP(PartFactory):
 		|		}
 		|	}
 		|
+		|	if (q2pos)
+		|		state->wen = output.wen;
 		|	if (h2 || PIN_WE.posedge()) {
 		|		bool c_source = PIN_CSRC=>;
 		|		fiu0 = c_source;
@@ -613,7 +616,7 @@ class TYP(PartFactory):
 		|		if (!chi && clo)
 		|			c |= 0xffffffffULL << 32;
 		|
-		|		if (PIN_WE.posedge()) {
+		|		if (PIN_WE.posedge() && !state->wen) {
 		|			state->rfram[state->cadr] = c;
 		|		}
 		|	}
