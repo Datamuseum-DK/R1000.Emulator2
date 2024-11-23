@@ -89,7 +89,6 @@ class SEQ(FChip):
 
         self.sig_right(ChipSig("+-->", "UEVP"))
 
-        self.sig_right(ChipSig("+-->", "DTIME"))
         self.sig_right(ChipSig("+-->", "DBHINT"))
         self.sig_right(ChipSig("+-->", "DMDISP"))
 

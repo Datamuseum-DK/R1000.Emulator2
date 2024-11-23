@@ -1188,7 +1188,6 @@ class SEQ(PartFactory):
 		|		state->hint_last = (state->bhreg >> 1) & 1;
 		|		state->hint_t_last = (state->bhreg >> 0) & 1;
 		|	}
-		|	output.dtime = !(!bad_hint && (state->bhreg & 0x10));
 		|	output.dbhint = !(!bad_hint || (state->bhreg & 0x08));
 		|	bool bhint2 = (!bad_hint || (state->bhreg & 0x08));
 		|	output.dmdisp = !(!bad_hint || (state->bhreg & 0x04));

@@ -126,7 +126,7 @@ def main():
         if delta:
             i -= delta
         if ucycles is None and "CLKGEN" in ctx.ident:
-            ucycles = i / 14
+            ucycles = i / 10
         nact += i
         lines.append((i, ctx.wastage, str(ctx)))
         j = "page " + ctx.ident.split(".")[1]

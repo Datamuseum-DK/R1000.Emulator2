@@ -63,81 +63,68 @@ class XClkGen(PartFactory):
 		|	now = state->when;
 		|	switch (now) {
 		|	case 0:
+		|		state->when = 5;
+		|		break;
+		|	case 5:
 		|		if (++state->pit == 256) {
 		|			pit_clock();
 		|			state->pit = 0;
 		|		}
-		|		PIN_BP_2X<=(1); PIN_BP_2Xnot<=(0);
-		|		PIN_BP_PHASE<=(0);
-		|		state->when = 5;
-		|		break;
-		|	case 5:
-		|		PIN_2XE<=(1); PIN_2XEnot<=(0);
+		|		PIN_2XEnot<=(0);
 		|		state->when = 10;
 		|		PIN_Q4E<=(0);
 		|		break;
 		|	case 10:
 		|		PIN_2X<=(1); PIN_2Xnot<=(0);
-		|		PIN_H1E<=(1); PIN_H2E<=(0);
-		|		PIN_Q4<=(1); PIN_Q1<=(0);
+		|		PIN_H1E<=(1);
+		|		PIN_H2E<=(0);
+		|		PIN_Q4<=(1);
 		|		state->when = 20;
 		|		break;
 		|	case 20:
-		|		PIN_H1<=(1); PIN_H2<=(0);
-		|		state->when = 50;
-		|		break;
-		|	case 50:
-		|		PIN_BP_2X<=(0); PIN_BP_2Xnot<=(1);
+		|		PIN_H1<=(1);
+		|		PIN_H2<=(0);
 		|		state->when = 55;
+		|		break;
+		|	case 55:
 		|		if (diagbus_out_count() > state->diag_out) {
 		|			PIN_CLK_DIS<=(1);
 		|			state->diag_out += 2;
 		|		}
-		|		break;
-		|	case 55:
-		|		PIN_2XE<=(0); PIN_2XEnot<=(1);
+		|		PIN_2XEnot<=(1);
 		|		state->when = 60;
 		|		break;
 		|	case 60:
 		|		PIN_2X<=(0); PIN_2Xnot<=(1);
-		|		PIN_H1PHD<=(1); PIN_H2PHD<=(0);
-		|		PIN_Q1<=(1); PIN_Q2<=(0);
-		|		state->when = 100;
-		|		break;
-		|	case 100:
-		|		PIN_BP_2X<=(1); PIN_BP_2Xnot<=(0);
-		|		PIN_BP_PHASE<=(1);
+		|		PIN_Q2<=(0);
 		|		state->when = 105;
 		|		break;
 		|	case 105:
-		|		PIN_2XE<=(1); PIN_2XEnot<=(0);
+		|		PIN_2XEnot<=(0);
 		|		state->when = 110;
 		|		break;
 		|	case 110:
 		|		PIN_2X<=(1); PIN_2Xnot<=(0);
-		|		PIN_H1E<=(0); PIN_H2E<=(1);
+		|		PIN_H1E<=(0);
+		|		PIN_H2E<=(1);
 		|		PIN_Q2<=(1); PIN_Q3<=(0);
 		|		state->when = 120;
 		|		break;
 		|	case 120:
-		|		PIN_H1<=(0); PIN_H2<=(1);
-		|		state->when = 150;
-		|		break;
-		|	case 150:
-		|		PIN_BP_2X<=(0); PIN_BP_2Xnot<=(1);
+		|		PIN_H1<=(0);
+		|		PIN_H2<=(1);
 		|		state->when = 155;
-		|		PIN_CLK_DIS<=(0);
 		|		break;
 		|	case 155:
-		|		PIN_2XE<=(0); PIN_2XEnot<=(1);
+		|		PIN_CLK_DIS<=(0);
+		|		PIN_2XEnot<=(1);
 		|		state->when = 160;
 		|		break;
 		|	case 160:
 		|		PIN_2X<=(0); PIN_2Xnot<=(1);
-		|		PIN_H1PHD<=(0); PIN_H2PHD<=(1);
 		|		PIN_Q3<=(1); PIN_Q4<=(0);
 		|		PIN_Q4E<=(1);
-		|		state->when = 200;
+		|		state->when = 205;
 		|	}
 		|	next_trigger((state->when - now) % 200, sc_core::SC_NS);
 		|	state->when = state->when % 200;
