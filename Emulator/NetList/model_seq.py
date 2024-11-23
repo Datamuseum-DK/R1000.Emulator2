@@ -183,6 +183,7 @@ class SEQ(PartFactory):
 		|	bool bad_hint;
 		|	bool m_res_ref;
 		|	bool bad_hint_enable;
+		|	bool ferr;
 		|''')
 
     def init(self, file):
@@ -1107,6 +1108,8 @@ class SEQ(PartFactory):
 		|
 		|	if (aclk) {
 		|		BUS_UEI_READ(state->uei);
+		|		state->uei &= ~(1 << BUS_UEI_LSB(4));
+		|		state->uei |= state->ferr << BUS_UEI_LSB(4);
 		|		if (state->check_exit_ue)
 		|			state->uei |= (1<<BUS_UEI_LSB(3));
 		|		else
@@ -1299,7 +1302,9 @@ class SEQ(PartFactory):
 		|	unsigned tmp = (val >> 7) ^ state->curins;
 		|	tmp &= 0x3ff;
 		|	state->field_number_error = tmp != 0x3ff;
-		|	output.ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !PIN_ENFU=>));
+		|	state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !PIN_ENFU=>));
+		|	// XXX: Necesary for re-triggering :-(
+		|	output.ferr = state->ferr;
 		|}
 		|	if (q4pos) {
 		|		if (state->word == 7)
