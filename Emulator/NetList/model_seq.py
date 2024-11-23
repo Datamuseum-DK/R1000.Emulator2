@@ -182,6 +182,7 @@ class SEQ(PartFactory):
 		|	bool carry_out;
 		|	bool bad_hint;
 		|	bool m_res_ref;
+		|	bool bad_hint_enable;
 		|''')
 
     def init(self, file):
@@ -195,27 +196,59 @@ class SEQ(PartFactory):
 		|	load_programmable(this->name(), state->pa048, sizeof state->pa048, "PA048-02");
 		|''')
 
-    def xsensitive(self):
-        yield "PIN_ACLK.pos()"
-        yield "PIN_BCLK.pos()"
-        yield "PIN_CLCLK.pos()"
-        # yield "PIN_CNDLD"		# BCLK
-        # yield "PIN_DISPA"		# ACLK
-        # yield "BUS_EMAC"		# ACLK
-        yield "PIN_FLIP.pos()"
-        yield "PIN_ICLK.pos()"
-        # yield "PIN_IMX"		# ACLK
-        yield "BUS_IRD"
-        yield "BUS_LAUIR"
-        yield "PIN_LINC"
-        # yield "PIN_MD0"		# BCLK
+    def sensitive(self):
+        yield "PIN_Q2"
+        yield "PIN_Q4"
+        yield "PIN_H2"
+
+        yield "PIN_ACLK"
+        yield "PIN_BCLK"
+        yield "PIN_LCLK"
+        yield "PIN_TOSCLK"
+
+        yield "PIN_SCLKE"
+        #yield "PIN_BHCKE"	# aclk
+
+        yield "PIN_BHEN"
+        yield "PIN_COND"
+        yield "BUS_CSA"
+        #yield "BUS_CTL"		# q4pos
+        #yield "BUS_DF"		# FIU_CLK, stkclk, q4pos
+        yield "PIN_DMODE"
+        #yield "BUS_DT"
+        #yield "BUS_DV"
+        yield "PIN_DV_U"
+        #yield "BUS_EMAC"	# aclk
+        yield "PIN_ENFU"
+        yield "PIN_FIU_CLK"
+        yield "PIN_FLIP"
+        #yield "BUS_LIN"		# aclk
+        yield "PIN_LXVAL"
         yield "PIN_MIBMT"
-        yield "PIN_QVOE"
-        yield "BUS_RASEL"
-        # yield "BUS_TYP"		# ICLK
-        yield "BUS_URAND"
-        yield "BUS_DV"
-        yield "PIN_WDISP"
+        yield "PIN_Q3COND"
+        yield "PIN_SGEXT"
+        #yield "PIN_SSTOP"	# q4pos, aclk
+        yield "PIN_STOP"
+        yield "PIN_TCLR"
+        #yield "BUS_UEI"		# aclk
+
+        yield "PIN_ADROE"
+        #yield "PIN_OSPCOE"
+        #yield "PIN_QFOE"
+        #yield "PIN_QTOE"
+        #yield "PIN_QVOE"
+
+        #yield "BUS_BRN"		# ucode
+        #yield "BUS_BRTIM"	# ucode
+        #yield "BUS_BRTYP"	# ucode
+        #yield "BUS_CSEL"	# ucode
+        #yield "BUS_IRD"		# ucode
+        #yield "BUS_LAUIR"	# ucode
+        #yield "PIN_LINC"	# ucode
+        #yield "PIN_LMAC"	# ucode
+        #yield "PIN_MD"		# ucode
+        #yield "BUS_RASEL"	# ucode
+        #yield "BUS_URAND"	# ucode
 
     def priv_decl(self, file):
         file.fmt('''
@@ -428,12 +461,19 @@ class SEQ(PartFactory):
         file.fmt('''
 		|	//bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
+		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool aclk = PIN_ACLK.posedge();
 		|	bool sclke = PIN_SCLKE=>;
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = q4pos && !sclke;
 		|
+		|	if (q3pos) {
+		|		state->bad_hint_enable = !(
+		|			output.u_event ||
+		|			(PIN_LMAC=> && output.bhn)
+		|		);
+		|	}
 		|
 		|	unsigned urand;
 		|	BUS_URAND_READ(urand);
@@ -571,13 +611,12 @@ class SEQ(PartFactory):
 		|	}
 		|	state->coff ^= 0x7fff;;
 		|
-		|	unsigned val, iclex;
+		|	unsigned iclex;
 		|
-		|	val = state->val_bus;
-		|	iclex = (val & 0xf) + 1;
+		|	iclex = (state->val_bus & 0xf) + 1;
 		|
 		|	if (q4pos && !sclke && !RNDX(RND_CUR_LEX)) {
-		|		state->curr_lex = val & 0xf;
+		|		state->curr_lex = state->val_bus & 0xf;
 		|		state->curr_lex ^= 0xf;
 		|	}
 		|	unsigned sel, res_addr = 0;
@@ -614,23 +653,21 @@ class SEQ(PartFactory):
 		|	if (aclk) {
 		|		BUS_EMAC_READ(state->emac);
 		|	}
-		|	unsigned uad = 0;
-		|	if (state->emac != BUS_EMAC_MASK) {
-		|		if (!(state->emac & 0x40))
-		|			uad = 0x04e0;
-		|		else if (!(state->emac & 0x20))
-		|			uad = 0x04c0;
-		|		else if (!(state->emac & 0x10))
-		|			uad = 0x04a0;
-		|		else if (!(state->emac & 0x08))
-		|			uad = 0x0480;
-		|		else if (!(state->emac & 0x04))
-		|			uad = 0x0460;
-		|		else if (!(state->emac & 0x02))
-		|			uad = 0x0440;
-		|		else if (!(state->emac & 0x01))
-		|			uad = 0x0420;
-		|		state->uadr_decode = uad;
+		|{
+		|	if (!(state->emac & 0x40)) {
+		|		state->uadr_decode = 0x04e0;
+		|	} else if (!(state->emac & 0x20)) {
+		|		state->uadr_decode = 0x04c0;
+		|	} else if (!(state->emac & 0x10)) {
+		|		state->uadr_decode = 0x04a0;
+		|	} else if (!(state->emac & 0x08)) {
+		|		state->uadr_decode = 0x0480;
+		|	} else if (!(state->emac & 0x04)) {
+		|		state->uadr_decode = 0x0460;
+		|	} else if (!(state->emac & 0x02)) {
+		|		state->uadr_decode = 0x0440;
+		|	} else if (!(state->emac & 0x01)) {
+		|		state->uadr_decode = 0x0420;
 		|	} else {
 		|		unsigned ai = state->display;
 		|		ai ^= 0xffff;
@@ -640,12 +677,12 @@ class SEQ(PartFactory):
 		|			ptr = &state->top[ai >> 6];
 		|		else
 		|			ptr = &state->bot[ai & 0x3ff];
-		|		uad = (*ptr >> 16);
 		|		state->uadr_decode = (*ptr >> 16);
 		|		state->decode = (*ptr >> 8) & 0xff;
 		|	}
-		|	state->uses_tos = (uad >> 2) & 1;
-		|	state->ibuf_fill = (uad >> 1) & 1;
+		|	state->uses_tos = (state->uadr_decode >> 2) & 1;
+		|	state->ibuf_fill = (state->uadr_decode >> 1) & 1;
+		|}
 		|
 		|	if (sclk) {
 		|		unsigned dsp = 0;
@@ -1068,7 +1105,7 @@ class SEQ(PartFactory):
 		|	output.u_event = !u_event;
 		|	output.u_eventnot = u_event;
 		|
-		|	if (PIN_ACK.posedge()) {
+		|	if (aclk) {
 		|		BUS_UEI_READ(state->uei);
 		|		if (state->check_exit_ue)
 		|			state->uei |= (1<<BUS_UEI_LSB(3));
@@ -1128,7 +1165,7 @@ class SEQ(PartFactory):
 		|	state->push   = !(((rom >> 0) & 1) ||
 		|		        !(((rom >> 2) & 1) || !state->uadr_mux));
 		|
-		|	if (PIN_ACK.posedge()) {
+		|	if (aclk) {
 		|		adr = 0;
 		|		if (output.u_eventnot) adr |= 0x02;
 		|		if (!macro_event)
@@ -1166,8 +1203,9 @@ class SEQ(PartFactory):
 		|		state->foo7 = false;
 		|	}
 		|
-		|	if (PIN_ACK.posedge()) {
-		|		if (PIN_SSTOP=> && PIN_BHEN=> && bhint2) {
+		|	if (aclk) {
+		|		//state->bad_hint_enable = PIN_BHEN=>;
+		|		if (PIN_SSTOP=> && state->bad_hint_enable && bhint2) {
 		|			unsigned restrt_rnd = 0;
 		|			restrt_rnd |= RNDX(RND_RESTRT0) ? 2 : 0;
 		|			restrt_rnd |= RNDX(RND_RESTRT1) ? 1 : 0;
@@ -1188,7 +1226,7 @@ class SEQ(PartFactory):
 		|				state->treg |= 0x8;
 		|			if (!state->tos_vld_cond)
 		|				state->treg |= 0x4;
-		|		} else if (PIN_SSTOP=> && PIN_BHEN=>) {
+		|		} else if (PIN_SSTOP=> && state->bad_hint_enable) {
 		|			state->rreg <<= 1;
 		|			state->rreg &= 0xe;
 		|			state->rreg |= 0x1;

@@ -73,7 +73,6 @@ class XSEQWCS(PartFactory):
 
     def sensitive(self):
         yield "PIN_CLK.pos()"
-        yield "PIN_PDCK.pos()"
         yield "PIN_DSP0"
 
     def doit(self, file):
@@ -100,8 +99,7 @@ class XSEQWCS(PartFactory):
 		|		case 0: // noop
 		|			break;
 		|		}
-		|	}
-		|	if (PIN_PDCK.posedge()) {
+		|
 		|		BUS_UA_READ(ua);
 		|		tmp = state->ram[ua];
 		|		unsigned br_type = (tmp >> 22) & 0xf;

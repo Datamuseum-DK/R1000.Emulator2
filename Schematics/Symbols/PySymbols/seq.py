@@ -51,9 +51,6 @@ class SEQ(FChip):
 
         self.sig_left(ChipSig("-->+", "BRN", 0, 13))
 
-
-
-        self.sig_left(ChipSig("-->+", "ACK"))
         self.sig_left(ChipSig("-->+", "BRTYP", 0, 3))
         self.sig_left(ChipSig("-->+", "SSTOP"))
         self.sig_left(ChipSig("-->+", "DMODE"))
