@@ -93,7 +93,6 @@ class FIU(PartFactory):
 		|	bool logrw;
 		|	bool logrw_d;
 		|	bool omf20;
-		|	unsigned line;
 		|	bool nmatch;
 		|	bool xwrd;
 		|	bool in_range;
@@ -103,6 +102,11 @@ class FIU(PartFactory):
 		|	bool dumon;
 		|	bool memex;
 		|	bool logrwn;
+		|	bool page_crossing_next;
+		|	bool miss;
+		|	bool pgstq;
+		|	bool nohit;
+		|	bool csaht;
 		|''')
 
 
@@ -161,10 +165,10 @@ class FIU(PartFactory):
         yield "BUS_CNDSL"
         yield "BUS_BDHIT"
 
-        yield "BUS_TIVI"
+        # yield "BUS_TIVI"		# UCODE
         yield "BUS_ST"
-        yield "PIN_PGX"
-        yield "PIN_MX"
+        # yield "PIN_PGX"
+        # yield "PIN_MX"
 
     def priv_decl(self, file):
         file.fmt('''
@@ -179,6 +183,10 @@ class FIU(PartFactory):
 		|frame(void)
 		|{
 		|	uint64_t u = 0;
+		|	uint64_t line = 0;
+		|	line ^= cache_line_tbl_h[(state->srn >> 10) & 0x3ff];
+		|	line ^= cache_line_tbl_l[(state->moff >> (13 - 7)) & 0xfff];
+		|	line ^= cache_line_tbl_s[(state->sro >> 4) & 0x7];
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(9));
 		|	u |= (uint64_t)output.cndtru << BUS_DV_LSB(9);
@@ -187,7 +195,7 @@ class FIU(PartFactory):
 		|	u |= (uint64_t)output.memcnd << BUS_DV_LSB(10);
 		|
 		|	u &= ~(0xfffULL << BUS_DV_LSB(23));
-		|	u |= (uint64_t)state->line << BUS_DV_LSB(23);
+		|	u |= line << BUS_DV_LSB(23);
 		|
 		|	u &= ~(0x3ULL << BUS_DV_LSB(25));
 		|	u |= (uint64_t)state->setq << BUS_DV_LSB(25);
@@ -203,7 +211,7 @@ class FIU(PartFactory):
 		|	u |= 0x3ULL << BUS_DV_LSB(31);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(32));
-		|	u |= (uint64_t)(PIN_PGX=>) << BUS_DV_LSB(32);
+		|	u |= (uint64_t)(output.pgxin) << BUS_DV_LSB(32);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(33));
 		|	u |= (uint64_t)((state->prmt >> 1) & 1) << BUS_DV_LSB(33);
@@ -212,13 +220,13 @@ class FIU(PartFactory):
 		|	u |= (uint64_t)output.rfsh << BUS_DV_LSB(34);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(35));
-		|	u |= (uint64_t)(PIN_MX=>) << BUS_DV_LSB(35);
+		|	u |= (uint64_t)(output.memex) << BUS_DV_LSB(35);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(48));
-		|	u |= (uint64_t)((state->line >> 0) & 1) << BUS_DV_LSB(48);
+		|	u |= ((line >> 0) & 1) << BUS_DV_LSB(48);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(50));
-		|	u |= (uint64_t)((state->line >> 1) & 1) << BUS_DV_LSB(50);
+		|	u |= ((line >> 1) & 1) << BUS_DV_LSB(50);
 		|
 		|	u &= ~(0x1ULL << BUS_DV_LSB(56));
 		|	u |= (uint64_t)state->nmatch << BUS_DV_LSB(56);
@@ -274,7 +282,7 @@ class FIU(PartFactory):
 		|		vi = (uint64_t)state->srn << 32;
 		|		vi |= state->sro & 0xffffff80;
 		|		vi |= state->oreg;
-		|		vi ^= BUS_QV_MASK;
+		|		vi ^= BUS_DV_MASK;
 		|		break;
 		|	}
 		|	uint64_t ti;
@@ -338,7 +346,7 @@ class FIU(PartFactory):
 		|	//uint64_t ti, vi;
 		|{
 		|	uint64_t ft, tir, vir, m;
-		|	unsigned msk, s, fs, u, sgn;
+		|	unsigned s, fs, u, sgn;
 		|	bool sgnbit;
 		|
 		|	unsigned lfl;
@@ -397,26 +405,12 @@ class FIU(PartFactory):
 		|	sbit &= 0x7f;
 		|	ebit &= 0x7f;
 		|
+		|	unsigned msk;
 		|	if (op != 0) {
-		|		msk = 0x7fff;
-		|		switch (offset & 3) {
-		|		case 0:
-		|			if ((lenone & 3) == 3)
-		|				msk |= 0x8000;
-		|			break;
-		|		case 1:
-		|			if ((lenone & 3) == 2)
-		|				msk |= 0x8000;
-		|			break;
-		|		case 2:
-		|			if ((lenone & 3) == 1)
-		|				msk |= 0x8000;
-		|			break;
-		|		case 3:
-		|			if ((lenone & 3) == 0)
-		|				msk |= 0x8000;
-		|			break;
-		|		}
+		|		if (((offset + lenone) & 3) == 3)
+		|			msk = 0xffff;
+		|		else
+		|			msk = 0x7fff;
 		|	} else {
 		|		msk = 0xffff0000 >> ((offset + (lenone & 3)) >> 2);
 		|	}
@@ -547,7 +541,7 @@ class FIU(PartFactory):
 		|		state->marh ^= 0xffffffff00000000ULL;
 		|	}
 		|
-		|	if (sclk && PIN_LDMDR=>) {	// (UCODE)
+		|	if (sclk && PIN_LDMDR=>) {			// (UCODE)
 		|		uint64_t yl = 0, yh = 0, q;
 		|		fs = s & ~3;
 		|		yl = ft >> fs;
@@ -611,9 +605,6 @@ class FIU(PartFactory):
 		|
 		|	}
 		|}
-		|''')
-
-        file.fmt('''
 		|{
 		|	unsigned a, b, dif;
 		|	bool co, name_match;
@@ -692,10 +683,8 @@ class FIU(PartFactory):
 		|	unsigned mar_offset = state->moff;
 		|	bool inc_mar = (state->prmt >> 3) & 1;
 		|
-		|	bool sel_pg_xing = condsel != 0x6a;
-		|	bool sel_incyc_px = condsel != 0x6e;
 		|
-		|	unsigned marbot = mar_offset & 0x1f;
+		|	unsigned marbot = state->moff & 0x1f;
 		|	unsigned inco = marbot;
 		|	if (inc_mar && inco != 0x1f)
 		|		inco += 1;
@@ -709,10 +698,6 @@ class FIU(PartFactory):
 		|		output.qadr |= state->oreg;
 		|	}
 		|
-		|	output.pxnx = (
-		|		(state->page_xing && sel_pg_xing && sel_incyc_px) ||
-		|		(!state->page_xing && sel_pg_xing && sel_incyc_px && inc_mar && marbot == 0x1f)
-		|	);
 		|
 		|	if (sclk && (csa == 0)) {
 		|		state->ctopn = adr >> 32;
@@ -738,10 +723,6 @@ class FIU(PartFactory):
 		|
 		|	}
 		|
-		|	state->line = 0;
-		|	state->line ^= cache_line_tbl_h[(state->srn >> 10) & 0x3ff];
-		|	state->line ^= cache_line_tbl_l[(state->moff >> (13 - 7)) & 0xfff];
-		|	state->line ^= cache_line_tbl_s[(state->sro >> 4) & 0x7];
 		|}
 		|
 		|	if (q4pos) {
@@ -849,7 +830,7 @@ class FIU(PartFactory):
 		|		state->e_abort_dly = eabrt;
 		|		state->pcntl_d = pa026 & 0xf;
 		|		state->dumon = idum;
-		|		output.csaht = !PIN_ICSA=>;
+		|		state->csaht = !PIN_ICSA=>;
 		|	}
 		|
 		|	bool scav_trap_next = state->scav_trap;
@@ -867,7 +848,8 @@ class FIU(PartFactory):
 		|	} else if (rmarp) {
 		|		cache_miss_next = (state->ti_bus >> BUS_DT_LSB(35)) & 1;
 		|	} else if (state->log_query) {
-		|		cache_miss_next = PIN_MISS=>;
+		|		//cache_miss_next = PIN_MISS=>;
+		|		cache_miss_next = state->miss;
 		|	}
 		|
 		|	bool csa_oor_next = state->csa_oor;
@@ -930,7 +912,8 @@ class FIU(PartFactory):
 		|		// but confirmed on both /200 and /400 FIU boards.
 		|		// 20230910/phk
 		|		state->memex = !(
-		|			!PIN_MISS=> &&
+		|			//!PIN_MISS=> &&
+		|			!state->miss &&
 		|			!csa_oor_next &&
 		|			!scav_trap_next
 		|		);
@@ -949,7 +932,7 @@ class FIU(PartFactory):
 		|		if (rmarp)
 		|			state->page_xing = (state->ti_bus >> BUS_DT_LSB(34)) & 1;
 		|		else
-		|			state->page_xing = PIN_PXNXT=>;
+		|			state->page_xing = (state->page_crossing_next);
 		|		state->init_mru_d = (pa026 >> 7) & 1;
 		|	}
 		|	if (PIN_H1.negedge()) {
@@ -1008,15 +991,15 @@ class FIU(PartFactory):
 		|	pa027 = state->pa027[pa027a];
 		|	state->setq = (pa027 >> 3) & 3;
 		|
-		|	output.pgstq = 0;
+		|	state->pgstq = 0;
 		|	if (!state->drive_mru || !(pa027 & 0x40))
-		|		output.pgstq |= 1;
+		|		state->pgstq |= 1;
 		|	if (!state->drive_mru || !(pa027 & 0x80))
-		|		output.pgstq |= 2;
+		|		state->pgstq |= 2;
 		|	output.rtvnxt = !(state->rtv_next);
 		|	output.memcnd = !(state->memcnd);
 		|	output.cndtru = !(state->cndtru);
-		|	output.nohit = board_hit != 0xf;
+		|	state->nohit = board_hit != 0xf;
 		|
 		|	unsigned pa028a = mar_cntl << 5;
 		|	pa028a |= state->incmplt_mcyc << 4;
@@ -1029,8 +1012,6 @@ class FIU(PartFactory):
 		|	state->prmt &= 0x7b;
 		|	output.frdr = (state->prmt >> 1) & 1;
 		|	// output.prmt = state->prmt;
-		|
-		|	output.logrwd = state->logrw_d;
 		|
 		|	if (sel) {
 		|		output.dnext = !((state->prmt >> 0) & 1);
@@ -1092,7 +1073,8 @@ class FIU(PartFactory):
 		|		output.condb = !state->page_xing;
 		|		break;
 		|	case 0x6b:
-		|		output.condb = !PIN_MISS=>;
+		|		//output.condb = !PIN_MISS=>;
+		|		output.condb = !state->miss;
 		|		break;
 		|	case 0x6c:
 		|		output.condb = !state->incmplt_mcyc;
@@ -1109,6 +1091,29 @@ class FIU(PartFactory):
 		|	};
 		|	output.pgxin = !(PIN_MICEN=> && state->page_xing);
 		|	output.memex = !(PIN_MICEN=> && state->memex);
+		|
+		|	//output.nopck = !(PIN_MISS=> && !(PIN_FRDRDR=> && PIN_FRDTYP));
+		|	output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
+		|{
+		|	bool inc_mar = (state->prmt >> 3) & 1;
+		|	unsigned marbot = state->moff & 0x1f;
+		|	state->page_crossing_next = (
+		|		condsel != 0x6a) && (// sel_pg_xing
+		|		condsel != 0x6e) && (// sel_incyc_px
+		|		(
+		|			(state->page_xing) ||
+		|			(!state->page_xing && inc_mar && marbot == 0x1f)
+		|		)
+		|	);
+		|}
+		|{
+		|	bool mnor0b = state->pgstq == 0;
+		|	bool mnan2a = !(mnor0b && state->logrw_d);
+		|	state->miss = !(
+		|		(state->nohit && mnan2a) ||
+		|		(state->logrw_d && state->csaht)
+		|	);
+		|}
 		|''')
 
 def register(part_lib):
