@@ -68,7 +68,8 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "STOP"))
         self.sig_left(ChipSig("-->+", "FIU_CLK"))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
-        self.sig_left(ChipSig("-->+", "LXVAL"))
+
+        self.sig_left(ChipSig("-->+", "LRN", 0, 2))
 
         self.sig_right(ChipSig("+<->", "DQV", 0, 63))
         self.sig_right(ChipSig("+<--", "QVOE"))
@@ -83,7 +84,6 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+<--", "UEI", 0, 14))
 
         self.sig_right(ChipSig("+-->", "DISP0"))
-        self.sig_right(ChipSig("+-->", "RADR", 0, 3))
         self.sig_right(ChipSig("+-->", "SEXT"))
 
 

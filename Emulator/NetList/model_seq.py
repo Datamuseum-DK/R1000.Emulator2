@@ -184,6 +184,14 @@ class SEQ(PartFactory):
 		|	bool m_res_ref;
 		|	bool bad_hint_enable;
 		|	bool ferr;
+		|
+		|	uint8_t pa041[512];
+		|	uint16_t lex_valid;
+		|	uint16_t dns;
+		|	uint16_t dra;
+		|	uint16_t dlr;
+		|	bool lxval;
+		|	unsigned resolve_address;
 		|''')
 
     def init(self, file):
@@ -195,6 +203,11 @@ class SEQ(PartFactory):
 		|	load_programmable(this->name(), state->pa046, sizeof state->pa046, "PA046-02");
 		|	load_programmable(this->name(), state->pa047, sizeof state->pa047, "PA047-02");
 		|	load_programmable(this->name(), state->pa048, sizeof state->pa048, "PA048-02");
+		|''')
+        file.fmt('''
+		|	load_programmable(this->name(),
+		|	    state->pa041, sizeof state->pa041,
+		|	    "PA041-01");
 		|''')
 
     def sensitive(self):
@@ -224,7 +237,7 @@ class SEQ(PartFactory):
         yield "PIN_FIU_CLK"
         yield "PIN_FLIP"
         #yield "BUS_LIN"		# aclk
-        yield "PIN_LXVAL"
+        #yield "PIN_LXVAL"
         yield "PIN_MIBMT"
         yield "PIN_Q3COND"
         yield "PIN_SGEXT"
@@ -257,6 +270,9 @@ class SEQ(PartFactory):
 		|	unsigned group_sel(void);
 		|	unsigned late_macro_pending(void);
 		|	void seq_cond(void);
+		|''')
+        file.fmt('''
+		|       unsigned nxt_lex_valid(void);
 		|''')
 
     def priv_impl(self, file):
@@ -440,7 +456,7 @@ class SEQ(PartFactory):
 		|		output.condc = state->tos_vld_cond;
 		|		break;
 		|	case 0x3c: // LEX_VLD.COND
-		|		output.condc = PIN_LXVAL=>;
+		|		output.condc = state->lxval;
 		|		break;
 		|	case 0x3d: // IMPORT.COND
 		|		output.condc = state->import_condition;
@@ -452,6 +468,47 @@ class SEQ(PartFactory):
 		|		output.condc = ((state->rq >> 3) & 1);
 		|		break;
 		|	}
+		|}
+		|''')
+        file.fmt('''
+		|unsigned
+		|SCM_«mmm» ::
+		|nxt_lex_valid(void)
+		|{
+		|	unsigned adr;
+		|	uint16_t nv = 0;
+		|	adr = ((state->lex_valid >> 12) & 0xf) << 5;
+		|	adr |= state->dra << 3;
+		|	adr |= ((state->dlr >> 2) & 1) << 2;
+		|	adr |= ((state->dns >> 3) & 1) << 1;
+		|	bool pm3 = !((state->dns & 0x7) && !(state->dlr & 1));
+		|	adr |= pm3;
+		|	nv |= (state->pa041[adr] >> 4) << 12;
+		|
+		|	adr = ((state->lex_valid >> 8) & 0xf) << 5;
+		|	adr |= state->dra << 3;
+		|	adr |= ((state->dlr >> 2) & 1) << 2;
+		|	adr |= ((state->dns >> 2) & 1) << 1;
+		|	bool pm2 = !((state->dns & 0x3) && !(state->dlr & 1));
+		|	adr |= pm2;
+		|	nv |= (state->pa041[adr] >> 4) << 8;
+		|
+		|	adr = ((state->lex_valid >> 4) & 0xf) << 5;
+		|	adr |= state->dra << 3;
+		|	adr |= ((state->dlr >> 2) & 1) << 2;
+		|	adr |= ((state->dns >> 1) & 1) << 1;
+		|	bool pm1 = !((state->dns & 0x1) && !(state->dlr & 1));
+		|	adr |= pm1;
+		|	nv |= (state->pa041[adr] >> 4) << 4;
+		|
+		|	adr = ((state->lex_valid >> 0) & 0xf) << 5;
+		|	adr |= state->dra << 3;
+		|	adr |= ((state->dlr >> 2) & 1) << 2;
+		|	adr |= ((state->dns >> 0) & 1) << 1;
+		|	adr |= (state->dlr >> 0) & 1;
+		|	nv |= (state->pa041[adr] >> 4) << 0;
+		|
+		|	return(nv);
 		|}
 		|''')
 
@@ -483,6 +540,27 @@ class SEQ(PartFactory):
 		|	state->rndx |=  state->pa045[urand | 0x100] << 8;
 		|	state->rndx |= state->pa047[urand | 0x100];
 		|	output.halt = RNDX(RND_HALT);
+		|
+		|{
+		|
+		|	if (state_clock) {
+		|		unsigned lex_random;
+		|		BUS_LRN_READ(lex_random);
+		|		state->dra = state->resolve_address & 3;
+		|		state->dlr = lex_random;
+		|		if (lex_random & 0x2) {
+		|			state->dns = 0xf;
+		|		} else {
+		|			state->dns = 0xf ^ (0x8 >> (state->resolve_address >> 2));
+		|		}
+		|	}
+		|
+		|	if (PIN_Q4.posedge()) {
+		|		state->lex_valid = nxt_lex_valid();
+		|	}
+		|
+		|	state->lxval = !((nxt_lex_valid() >> (15 - state->resolve_address)) & 1);
+		|}
 		|
 		|	unsigned pa040a;
 		|	unsigned pa040d;
@@ -642,7 +720,7 @@ class SEQ(PartFactory):
 		|		assert(sel < 4);
 		|	}
 		|	res_addr &= 0xf;
-		|	output.radr = res_addr;
+		|	state->resolve_address = res_addr;
 		|	if (PIN_LINC=>) {
 		|		state->import_condition = true;
 		|		output.sext = true;
@@ -792,7 +870,7 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|	if (q4pos && !sclke && !RNDX(RND_RES_NAME)) {
-		|		state->namram[output.radr] = state->typ_bus >> 32;
+		|		state->namram[state->resolve_address] = state->typ_bus >> 32;
 		|	}
 		|
 		|	if (!type_name_oe) {
@@ -800,7 +878,7 @@ class SEQ(PartFactory):
 		|	} else if (!val_name_oe) {
 		|		state->name_bus = state->vost ^ 0xffffffff;
 		|	} else if (!name_ram_cs) {
-		|		state->name_bus = state->namram[output.radr] ^ 0xffffffff;
+		|		state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
 		|	} else {
 		|		state->name_bus = 0xffffffff;
 		|	}
@@ -826,9 +904,9 @@ class SEQ(PartFactory):
 		|		}
 		|	} else {
 		|		if (q4pos && !sclke && !RNDX(RND_RES_OFFS)) {
-		|			state->tosram[output.radr] = (typl >> 7) & 0xfffff;
+		|			state->tosram[state->resolve_address] = (typl >> 7) & 0xfffff;
 		|		}
-		|		offs = state->tosram[output.radr];
+		|		offs = state->tosram[state->resolve_address];
 		|	}
 		|	offs ^= 0xfffff;
 		|       offs &= 0xfffff;
@@ -1392,8 +1470,9 @@ class SEQ(PartFactory):
 		|		state->carry_out
 		|	);
 		|	output.sfive = (state->check_exit_ue && output.ferr);
-		|	state->m_res_ref = !(PIN_LXVAL=> && !output.disp0);
+		|	state->m_res_ref = !(state->lxval && !output.disp0);
 		|''')
+
 
 def register(part_lib):
     ''' Register component model '''
