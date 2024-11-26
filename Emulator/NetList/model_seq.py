@@ -234,7 +234,7 @@ class SEQ(PartFactory):
         yield "PIN_DV_U"
         #yield "BUS_EMAC"	# aclk
         yield "PIN_ENFU"
-        yield "PIN_FIU_CLK"
+        #yield "PIN_FIU_CLK"
         yield "PIN_FLIP"
         #yield "BUS_LIN"		# aclk
         #yield "PIN_LXVAL"
@@ -1090,7 +1090,7 @@ class SEQ(PartFactory):
 		|	bool macro_hic = true;
 		|	bool u_event = true;
 		|
-		|	if (PIN_FIU_CLK.posedge()) {
+		|	if (sclk && aclk) {
 		|		BUS_DF_READ(state->fiu);
 		|		state->fiu &= 0x3fff;
 		|	}
