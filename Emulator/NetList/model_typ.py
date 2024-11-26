@@ -41,6 +41,19 @@ class TYP(PartFactory):
 
     autopin = True
 
+    def extra(self, file):
+        file.fmt('''
+		|
+		|#define A_LSB BUS_DT_LSB
+		|#define B_LSB BUS_DT_LSB
+		|#define A_BITS(n) (state->a >> A_LSB(n))
+		|#define B_BITS(n) (state->b >> B_LSB(n))
+		|#define A_BIT(n) (A_BITS(n) & 1)
+		|#define B_BIT(n) (B_BITS(n) & 1)
+		|#define A_LIT() (state->a & 0x7f)
+		|#define B_LIT() (state->b & 0x7f)
+		|''')
+
     def state(self, file):
  
         file.fmt('''
@@ -80,7 +93,6 @@ class TYP(PartFactory):
 		|	    state->pa059, sizeof state->pa059,
 		|	    "PA059-01");
 		|''')
-        super().init(file)
 
     def sensitive(self):
             #yield "PIN_CCLK"		# q4pos,prev
@@ -126,6 +138,80 @@ class TYP(PartFactory):
             yield "PIN_Q4"
             yield "PIN_UEN"
             #yield "PIN_WE.pos()"	# q4?
+
+    def priv_decl(self, file):
+        file.fmt('''
+		|	unsigned clit(void);
+		|	bool bin_op_pass(void);
+		|	bool priv_path_eq(void);
+		|	bool a_op_pass(void);
+		|	bool b_op_pass(void);
+		|	bool clev(unsigned);
+		|''')
+
+    def priv_impl(self, file):
+        file.fmt('''
+		|unsigned
+		|SCM_«mmm» ::
+		|clit(void)
+		|{
+		|	unsigned tmp;
+		|	BUS_CLIT_READ(tmp);
+		|	return (tmp);
+		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|bin_op_pass(void)
+		|{
+		|	bool dp = !(A_BIT(35) && B_BIT(35));
+		|	bool abim = !(!(A_BITS(31) == state->ofreg) | dp);
+		|	bool bbim = !(!(B_BITS(31) == state->ofreg) | dp);
+		|
+		|	return (!(
+		|		(abim && bbim) ||
+		|		(bbim && A_BIT(34)) ||
+		|		(abim && B_BIT(34)) ||
+		|		(A_BIT(34) && A_BIT(35) && B_BIT(34) && B_BIT(35))
+		|	));
+		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|priv_path_eq(void)
+		|{
+		|	return (!(
+		|		(A_BITS(31) == B_BITS(31)) &&
+		|		((A_BITS(56) & 0xfffff) == (B_BITS(56) & 0xfffff))
+		|	));
+		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|a_op_pass(void)
+		|{
+		|	return (!(A_BIT(35) && ((A_BITS(31) == state->ofreg) || A_BIT(34))));
+		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|b_op_pass(void)
+		|{
+		|	return (!(B_BIT(35) && ((B_BITS(31) == state->ofreg) || B_BIT(34))));
+		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|clev(unsigned rand)
+		|{
+		|	return (!(
+		|		(!(rand != 0x4) && !(A_LIT() != clit())) ||
+		|		(!(rand != 0x6) && !(A_LIT() != B_LIT())) ||
+		|		(!(rand != 0x5) && !(B_LIT() != clit())) ||
+		|		(!(rand != 0x7) && !(A_LIT() != B_LIT()) && !(B_LIT() != clit()))
+		|	));
+		|}
+		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -450,38 +536,6 @@ class TYP(PartFactory):
 		|		}
 		|	}
 		|
-		|	unsigned clit;
-		|	BUS_CLIT_READ(clit);
-		|
-		|	bool aeql = (state->a & 0x7f) != clit;
-		|	bool beql = (state->b & 0x7f) != clit;
-		|	bool aeqb = (state->a & 0x7f) != (state->b & 0x7f);
-		|	bool a34 = (state->a >> (63 - 34)) & 1;
-		|	bool a35 = (state->a >> (63 - 35)) & 1;
-		|	bool b34 = (state->b >> (63 - 34)) & 1;
-		|	bool b35 = (state->b >> (63 - 35)) & 1;
-		|	bool dp = !(a35 && b35);
-		|	bool aopm = (state->a >> 32) == state->ofreg;
-		|	bool bopm = (state->b >> 32) == state->ofreg;
-		|	bool abim = !(!aopm | dp);
-		|	bool bbim = !(!bopm | dp);
-		|	bool aop = !(a35 && (aopm || a34));
-		|	bool bop = !(b35 && (bopm || b34));
-		|
-		|	bool priv_names_eq = (state->a >> 32) == (state->b >> 32);
-		|
-		|	bool priv_path_eq = !(
-		|		priv_names_eq &&
-		|		(((state->a >> 7) & 0xfffff) == ((state->b >> 7) & 0xfffff))
-		|	);
-		|				
-		|	bool bin_op_pass = !(
-		|		(abim && bbim) ||
-		|		(bbim && a34) ||
-		|		(abim && b34) ||
-		|		(a34 && a35 && b34 && b35)
-		|	);
-		|
 		|	if (q2pos && (condgrp == 5 || condgrp == 6 || condgrp == 7)) {
 		|
 		|		if (condgrp == 5) {
@@ -489,38 +543,38 @@ class TYP(PartFactory):
 		|			switch (condsel & 0x7) {
 		|			case 0:	// ML - OF_KIND_MATCH
 		|				{
-		|				unsigned mask_a = state->pa059[clit] >> 1;
-		|				unsigned okpat_a = state->pa059[clit + 256] >> 1;
-		|				bool oka = (0x7f ^ (mask_a & (state->b & 0x7f))) != okpat_a; // XXX state->b ??
+		|				unsigned mask_a = state->pa059[clit()] >> 1;
+		|				unsigned okpat_a = state->pa059[clit() + 256] >> 1;
+		|				bool oka = (0x7f ^ (mask_a & B_LIT())) != okpat_a; // XXX state->b ??
 		|
-		|				unsigned mask_b = state->pa059[clit + 128] >> 1;
-		|				unsigned okpat_b = state->pa059[clit + 384] >> 1;
-		|				bool okb = (0x7f ^ (mask_b & (state->b & 0x7f))) != okpat_b;
+		|				unsigned mask_b = state->pa059[clit() + 128] >> 1;
+		|				unsigned okpat_b = state->pa059[clit() + 384] >> 1;
+		|				bool okb = (0x7f ^ (mask_b & B_LIT())) != okpat_b;
 		|
 		|				bool okm = !(oka & okb);
 		|				state->cond = okm;
 		|				}
 		|				break;
 		|			case 1:	// ML - CLASS_A_EQ_LIT
-		|				state->cond = (state->a & 0x7f) != clit;
+		|				state->cond = A_LIT() != clit();
 		|				break;
 		|			case 2:	// ML - CLASS_B_EQ_LIT
-		|				state->cond = (state->b & 0x7f) != clit;
+		|				state->cond = B_LIT() != clit();
 		|				break;
 		|			case 3:	// ML - CLASS_A_EQ_B
-		|				state->cond = (state->a & 0x7f) != (state->b & 0x7f);
+		|				state->cond = A_LIT() != B_LIT();
 		|				break;
 		|			case 4:	// ML - CLASS_A_B_EQ_LIT
-		|				state->cond = !((state->a & 0x7f) != clit) || ((state->b & 0x7f) != clit);
+		|				state->cond = !(A_LIT() != clit()) || (B_LIT() != clit());
 		|				break;
 		|			case 5:	// E - PRIVACY_A_OP_PASS
-		|				state->cond = !(a35 && (aopm || a34));
+		|				state->cond = a_op_pass();
 		|				break;
 		|			case 6:	// ML - PRIVACY_B_OP_PASS
-		|				state->cond = !(b35 && (bopm || b34));
+		|				state->cond = b_op_pass();
 		|				break;
 		|			case 7:	// ML - PRIVACY_BIN_EQ_PASS
-		|				state->cond = priv_path_eq && bin_op_pass;
+		|				state->cond = priv_path_eq() && bin_op_pass();
 		|				break;
 		|			}
 		|		}
@@ -528,28 +582,28 @@ class TYP(PartFactory):
 		|			condmask = 0x02;
 		|			switch (condsel & 0x7) {
 		|			case 0:	// ML - PRIVACY_BIN_OP_PASS
-		|				state->cond = bin_op_pass;
+		|				state->cond = bin_op_pass();
 		|				break;
 		|			case 1:	// ML - PRIVACY_NAMES_EQ
-		|				state->cond = priv_names_eq;
+		|				state->cond = A_BITS(31) == B_BITS(31);
 		|				break;
 		|			case 2:	// ML - PRIVACY_PATHS_EQ
-		|				state->cond = priv_path_eq;
+		|				state->cond = priv_path_eq();
 		|				break;
 		|			case 3:	// ML - PRIVACY_STRUCTURE
-		|				state->cond = !(bin_op_pass || priv_path_eq);
+		|				state->cond = !(bin_op_pass() || priv_path_eq());
 		|				break;
 		|			case 4:	// E - PASS_PRIVACY_BIT
 		|				state->cond = state->ppriv;
 		|				break;
 		|			case 5:	// ML - B_BUS_BIT_32
-		|				state->cond = (state->b >> (63-32)) & 1;
+		|				state->cond = B_BIT(32);
 		|				break;
 		|			case 6:	// ML - B_BUS_BIT_33
-		|				state->cond = (state->b >> (63-33)) & 1;
+		|				state->cond = B_BIT(33);
 		|				break;
 		|			case 7:	// ML - B_BUS_BIT_34
-		|				state->cond = (state->b >> (63-34)) & 1;
+		|				state->cond = B_BIT(34);
 		|				break;
 		|			}
 		|		}
@@ -557,16 +611,16 @@ class TYP(PartFactory):
 		|			condmask = 0x01;
 		|			switch (condsel & 0x7) {
 		|			case 0:	// ML - B_BUS_BIT_35
-		|				state->cond = (state->b >> (63-35)) & 1;
+		|				state->cond = B_BIT(35);
 		|				break;
 		|			case 1:	// ML - B_BUS_BIT_36
-		|				state->cond = (state->b >> (63-36)) & 1;
+		|				state->cond = B_BIT(36);
 		|				break;
 		|			case 2:	// ML - B_BUS_BIT_33_34_OR_36
-		|				state->cond = ((state->b >> (63-36)) & 0xd) != 0xd;
+		|				state->cond = (B_BITS(36) & 0xd) != 0xd;
 		|				break;
 		|			case 7:	// ML - B_BUS_BIT_21
-		|				state->cond = (state->b >> (63-21)) & 1;
+		|				state->cond = B_BIT(21);
 		|				break;
 		|			default:
 		|				state->cond = true;
@@ -700,63 +754,48 @@ class TYP(PartFactory):
 		|		selcond ^= 0xff;
 		|	}
 		|
-		|	bool ucatol = rand != 0x4;
-		|	bool ucbtol = rand != 0x5;
-		|	bool ucatob = rand != 0x6;
-		|	bool ucabl = rand != 0x7;
-		|	bool uclsysb = rand != 0xe;
-		|
-		|	bool clce = 0x3 < rand && rand < 0x8;
-		|
-		|	bool clev = !(
-		|		(!ucatol && !aeql) ||
-		|		(!ucatob && !aeqb) ||
-		|		(!ucbtol && !beql) ||
-		|		(!ucabl && !aeqb && !beql)
-		|	);
-		|
-		|	bool sysu = !(uclsysb || !beql);
-		|
 		|	if (q3pos) {
 		|		output.ue = BUS_UE_MASK;
-		|		if (micros_en && selcond == 0xbf && bin_op_pass)
+		|		if (micros_en && selcond == 0xbf && bin_op_pass())
 		|			output.ue &= ~0x20;	// T.BIN_OP.UE~
 		|
-		|		if (micros_en && selcond == 0x7f && priv_path_eq && bin_op_pass)
+		|		if (micros_en && selcond == 0x7f && priv_path_eq() && bin_op_pass())
 		|			output.ue &= ~0x10;	// T.BIN_EQ.UE~
 		|
-		|		if (micros_en && clev && clce)
+		|		if (micros_en && (0x3 < rand && rand < 0x8) && clev(rand))
 		|			output.ue &= ~0x08;	// T.CLASS.UE~
 		|
-		|		if (micros_en && selcond == 0xef && aop)
+		|		if (micros_en && selcond == 0xef && a_op_pass())
 		|			output.ue &= ~0x04;	// T.TOS1_OP.UE~
-		|		if (micros_en && selcond == 0xfb && bop)
+		|		if (micros_en && selcond == 0xfb && b_op_pass())
 		|			output.ue &= ~0x04;	// T.TOS1_OP.UE~
 		|
-		|		if (micros_en && selcond == 0xdf && aop)
+		|		if (micros_en && selcond == 0xdf && a_op_pass())
 		|			output.ue &= ~0x02;	// T.TOS_OP.UE~
-		|		if (micros_en && selcond == 0xf7 && bop)
+		|		if (micros_en && selcond == 0xf7 && b_op_pass())
 		|			output.ue &= ~0x02;	// T.TOS_OP.UE~
 		|
-		|		if (micros_en && sysu)
+		|		if (micros_en && (!((rand != 0xe) || !(B_LIT() != clit()))))
 		|			output.ue &= ~0x01;	// T.CHK_SYS.UE~
 		|	}
 		|
-		|	output.t0stp = true;
-		|	if (micros_en && sysu)
-		|		output.t0stp = false;
-		|	if (micros_en && clce && clev)
-		|		output.t0stp = false;
-		|	if (micros_en && priv_path_eq && bin_op_pass && selcond == 0x7f)
-		|		output.t0stp = false;
+		|	if (1 || q3pos) {	// Stops after VM-start
+		|		output.t0stp = true;
+		|		if (micros_en && (!((rand != 0xe) || !(B_LIT() != clit()))))
+		|			output.t0stp = false;
+		|		if (micros_en && (0x3 < rand && rand < 0x8) && clev(rand))
+		|			output.t0stp = false;
+		|		if (micros_en && priv_path_eq() && bin_op_pass() && selcond == 0x7f)
+		|			output.t0stp = false;
 		|
-		|	output.t1stp = true;
-		|	if (selcond == 0xbf && bin_op_pass)
-		|		output.t1stp = false;
-		|	if ((selcond == 0xef || selcond == 0xdf) && aop)
-		|		output.t1stp = false;
-		|	if ((selcond == 0xf7 || selcond == 0xfb) && bop)
-		|		output.t1stp = false;
+		|		output.t1stp = true;
+		|		if (selcond == 0xbf && bin_op_pass())
+		|			output.t1stp = false;
+		|		if ((selcond == 0xef || selcond == 0xdf) && a_op_pass())
+		|			output.t1stp = false;
+		|		if ((selcond == 0xf7 || selcond == 0xfb) && b_op_pass())
+		|			output.t1stp = false;
+		|	}
 		|
 		|	output.spdr = true;
 		|
