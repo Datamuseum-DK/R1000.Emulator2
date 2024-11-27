@@ -70,6 +70,9 @@ class SEQ(FChip):
 
         self.sig_left(ChipSig("-->+", "LRN", 0, 2))
 
+        self.sig_left(ChipSig("-->+", "MCOND"))
+        self.sig_left(ChipSig("-->+", "MCPOL"))
+
         self.sig_right(ChipSig("+<->", "DQV", 0, 63))
         self.sig_right(ChipSig("+<--", "QVOE"))
         self.sig_right(ChipSig("+===", "ADR", 0, 63))
@@ -108,6 +111,9 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+-->", "U_EVENT"))
         self.sig_right(ChipSig("o-->", "U_EVENT~"))
         self.sig_right(ChipSig("o-->", "SFIVE"))
+        self.sig_right(ChipSig("o-->", "ABORT"))
+
+
         self.finish()
 
 def register():

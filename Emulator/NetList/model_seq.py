@@ -1203,9 +1203,7 @@ class SEQ(PartFactory):
 		|		}
 		|	}
 		|}
-		|''')
-
-        file.fmt('''
+		|
 		|{
 		|	unsigned br_type;
 		|	BUS_BRTYP_READ(br_type);
@@ -1277,7 +1275,7 @@ class SEQ(PartFactory):
 		|	} else {
 		|		state->m_pc_mb = !((state->bhreg >> 2) & 1);
 		|	}
-       		|
+		|
 		|	if (!PIN_TCLR=>) {
 		|		state->treg = 0;
 		|		state->foo7 = false;
@@ -1471,6 +1469,18 @@ class SEQ(PartFactory):
 		|	);
 		|	output.sfive = (state->check_exit_ue && output.ferr);
 		|	state->m_res_ref = !(state->lxval && !output.disp0);
+		|
+		|	if (PIN_H2=>) {
+		|		if (!output.bar8) {
+		|			output.abort = false;
+		|		} else if (PIN_MCOND=>) {
+		|			output.abort = true;
+		|		} else if (PIN_MCPOL=> ^ PIN_Q3COND) {
+		|			output.abort = true;
+		|		} else {
+		|			output.abort = false;
+		|		}
+		|	}
 		|''')
 
 
