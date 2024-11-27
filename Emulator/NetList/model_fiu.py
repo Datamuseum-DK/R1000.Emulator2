@@ -123,126 +123,93 @@ class FIU(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_H1.pos()"
+        yield "PIN_H1"
+        yield "PIN_Q2.pos()"
         yield "PIN_Q4.pos()"
 
         yield "BUS_DF"
         yield "BUS_DT"
         yield "BUS_DV"
 
-        yield "PIN_CLK2X.pos()"
-        # yield "BUS_IREG"
-        # yield "PIN_QVIOE"
-        yield "PIN_QSPCOE"
         yield "PIN_QADROE"
-        # yield "PIN_Q4.pos()"
 
-        # yield "PIN_FSRC"		# UCODE, H1
-        # yield "PIN_FT"		# UCODE, H1
-        # yield "PIN_FV"		# UCODE, H1
-        # yield "PIN_LCLK.pos()"	# Q4
-        # yield "PIN_LDMDR"		# Q4
-        # yield "BUS_LFL"		# UCODE, H1
-        # yield "BUS_LFRC"		# LCLK
-        # yield "PIN_LSRC"		# UCODE, H1
-        # yield "PIN_OCLK.pos()"	# Q4
-        # yield "BUS_OL"		# UCODE, H1
-        # yield "BUS_OP"		# UCODE, H1
-        # yield "PIN_ORSR"		# OCLK
-        # yield "PIN_OSRC"		# UCODE, H1
-        # yield "PIN_RDSRC"		# UCODE, H1
-        # yield "PIN_SCLKE"		# Q4
-        # yield "BUS_SEL"		# UCODE, H1
-        # yield "PIN_TCLK.pos()"	# Q4
-        # yield "PIN_VCLK.pos()"	# Q4
-
-        yield "BUS_MSTRT"
+        #yield "BUS_MSTRT"
         yield "PIN_LABR"
         yield "PIN_LEABR"
         yield "PIN_EABR"
-        yield "BUS_MCTL"
-        yield "PIN_H1.neg()"
-        yield "BUS_CNDSL"
+        #yield "BUS_MCTL"
+        #yield "BUS_CNDSL"
         yield "BUS_BDHIT"
 
-        # yield "BUS_TIVI"		# UCODE
         yield "BUS_ST"
-        # yield "PIN_PGX"
-        # yield "PIN_MX"
 
     def priv_decl(self, file):
         file.fmt('''
 		|	void do_tivi(void);
+		|	void fiu_conditions(unsigned condsel);
 		|	uint64_t frame(void);
 		|''')
 
     def priv_impl(self, file):
         file.fmt('''
+		|
+		|void
+		|SCM_«mmm» ::
+		|fiu_conditions(unsigned condsel)
+		|{
+		|
+		|	switch(condsel) {
+		|	case 0x60: output.conda = !state->memex; 		break;
+		|	case 0x61: output.conda = !state->phys_last; 		break;
+		|	case 0x62: output.conda = !state->write_last; 		break;
+		|	case 0x63: output.conda = !output.chit; 		break;
+		|	case 0x64: output.conda = !((state->oreg >> 6) & 1); 	break;
+		|	case 0x65: output.conda = !state->xwrd; 		break;
+		|	case 0x66: output.conda = (state->moff & 0x3f) > 0x30; 	break;
+		|	case 0x67: output.conda = !output.rfsh; 		break;
+		|	case 0x68: output.condb = !output.oor; 			break;
+		|	case 0x69: output.condb = !false; 			break; // SCAV_HIT
+		|	case 0x6a: output.condb = !state->page_xing; 		break;
+		|	case 0x6b: output.condb = !state->miss; 		break;
+		|	case 0x6c: output.condb = !state->incmplt_mcyc; 	break;
+		|	case 0x6d: output.condb = !state->mar_modified; 	break;
+		|	case 0x6e: output.condb = !state->incmplt_mcyc; 	break;
+		|	case 0x6f: output.condb = (state->moff & 0x3f) != 0; 	break;
+		|	};
+		|}
+		|
 		|uint64_t
 		|SCM_«mmm» ::
 		|frame(void)
 		|{
 		|	uint64_t u = 0;
+		|
 		|	uint64_t line = 0;
 		|	line ^= cache_line_tbl_h[(state->srn >> 10) & 0x3ff];
 		|	line ^= cache_line_tbl_l[(state->moff >> (13 - 7)) & 0xfff];
 		|	line ^= cache_line_tbl_s[(state->sro >> 4) & 0x7];
 		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(9));
-		|	u |= (uint64_t)output.cndtru << BUS_DV_LSB(9);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(10));
-		|	u |= (uint64_t)output.memcnd << BUS_DV_LSB(10);
-		|
-		|	u &= ~(0xfffULL << BUS_DV_LSB(23));
-		|	u |= line << BUS_DV_LSB(23);
-		|
-		|	u &= ~(0x3ULL << BUS_DV_LSB(25));
-		|	u |= (uint64_t)state->setq << BUS_DV_LSB(25);
-		|
 		|	uint64_t st;
 		|	BUS_ST_READ(st);
-		|	u &= ~(0x3ULL << BUS_DV_LSB(27));
+		|
+		|	u |= (uint64_t)output.cndtru << BUS_DV_LSB(9);
+		|	u |= (uint64_t)output.memcnd << BUS_DV_LSB(10);
+		|	u |= line << BUS_DV_LSB(23);
+		|	u |= (uint64_t)state->setq << BUS_DV_LSB(25);
 		|	u |= st << BUS_DV_LSB(27);
-		|
-		|	u &= ~(0x3ULL << BUS_DV_LSB(29));
-		|	u |= (uint64_t)((state->omq >> 2) & 3) << BUS_DV_LSB(29);
-		|
+		|	u |= (uint64_t)((state->omq >> 2) & 0x3) << BUS_DV_LSB(29);
 		|	u |= 0x3ULL << BUS_DV_LSB(31);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(32));
 		|	u |= (uint64_t)(output.pgxin) << BUS_DV_LSB(32);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(33));
 		|	u |= (uint64_t)((state->prmt >> 1) & 1) << BUS_DV_LSB(33);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(34));
 		|	u |= (uint64_t)output.rfsh << BUS_DV_LSB(34);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(35));
 		|	u |= (uint64_t)(output.memex) << BUS_DV_LSB(35);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(48));
 		|	u |= ((line >> 0) & 1) << BUS_DV_LSB(48);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(50));
 		|	u |= ((line >> 1) & 1) << BUS_DV_LSB(50);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(56));
 		|	u |= (uint64_t)state->nmatch << BUS_DV_LSB(56);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(57));
 		|	u |= (uint64_t)state->in_range << BUS_DV_LSB(57);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(58));
 		|	u |= (uint64_t)output.oor << BUS_DV_LSB(58);
-		|
-		|	u &= ~(0x1ULL << BUS_DV_LSB(59));
 		|	u |= (uint64_t)output.chit << BUS_DV_LSB(59);
-		|
-		|	u &= ~(0xfULL << BUS_DV_LSB(63));
 		|	u |= (uint64_t)output.hofs;
-		|
 		|	return (u);
 		|}
 		|
@@ -256,26 +223,18 @@ class FIU(PartFactory):
 		|
 		|	uint64_t vi;
 		|	switch (tivi) {
-		|	case 0x00:
-		|	case 0x04:
-		|	case 0x08:
+		|	case 0x00: case 0x04: case 0x08:
 		|		vi = state->vreg;
 		|		break;
-		|	case 0x01:
-		|	case 0x05:
-		|	case 0x09:
+		|	case 0x01: case 0x05: case 0x09:
 		|		BUS_DV_READ(vi);
 		|		vi ^= BUS_DV_MASK;
 		|		break;
-		|	case 0x02:
-		|	case 0x06:
-		|	case 0x0a:
+		|	case 0x02: case 0x06: case 0x0a:
 		|		BUS_DF_READ(vi);
 		|		vi ^= BUS_DF_MASK;
 		|		break;
-		|	case 0x03:
-		|	case 0x07:
-		|	case 0x0b:
+		|	case 0x03: case 0x07: case 0x0b:
 		|		vi = frame() ^ BUS_DV_MASK;
 		|		break;
 		|	default:
@@ -287,23 +246,14 @@ class FIU(PartFactory):
 		|	}
 		|	uint64_t ti;
 		|	switch (tivi) {
-		|	case 0x00:
-		|	case 0x01:
-		|	case 0x02:
-		|	case 0x03:
+		|	case 0x00: case 0x01: case 0x02: case 0x03:
 		|		ti = state->treg;
 		|		break;
-		|	case 0x04:
-		|	case 0x05:
-		|	case 0x06:
-		|	case 0x07:
+		|	case 0x04: case 0x05: case 0x06: case 0x07:
 		|		BUS_DF_READ(ti);
 		|		ti ^= BUS_DF_MASK;
 		|		break;
-		|	case 0x08:
-		|	case 0x09:
-		|	case 0x0a:
-		|	case 0x0b:
+		|	case 0x08: case 0x09: case 0x0a: case 0x0b:
 		|		BUS_DT_READ(ti);
 		|		ti ^= BUS_DT_MASK;
 		|		break;
@@ -333,7 +283,10 @@ class FIU(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|	//bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
+		|	bool h1pos = PIN_H1.posedge();
+		|	bool h2pos = PIN_H1.negedge();
 		|	bool sclk = q4pos && !PIN_SCLKE=>;
 		|
 		|	unsigned csa;
@@ -530,7 +483,7 @@ class FIU(PartFactory):
 		|	vout |= (tii & (vmsk ^ BUS_DV_MASK));
 		|
 		|	output.z_qf = PIN_QFOE=>;			// (UCODE)
-		|	if (!output.z_qf) {
+		|	if (!output.z_qf && PIN_H1=>) { 
 		|		output.qf = vout ^ BUS_QF_MASK;
 		|	}
 		|
@@ -642,13 +595,15 @@ class FIU(PartFactory):
 		|
 		|	output.hofs = 0xf + state->nve - (dif & 0xf);
 		|
-		|	output.chit = !(
-		|		co &&
-		|		!(
-		|			state->in_range ||
-		|			((dif & 0xf) >= state->nve)
-		|		)
-		|	);
+		|	if (1) {
+		|		output.chit = !(
+		|			co &&
+		|			!(
+		|				state->in_range ||
+		|				((dif & 0xf) >= state->nve)
+		|			)
+		|		);
+		|	}
 		|
 		|	if (q4pos) {
 		|		output.oor = !(co || name_match);
@@ -669,7 +624,6 @@ class FIU(PartFactory):
 		|			state->sro |= tmp << 4;
 		|			state->sro |= 0xf;
 		|		}
-		|		// output.mspc = (state->sro >> 4) & BUS_MSPC_MASK;
 		|		state->moff = (state->sro >> 7) & 0xffffff;
 		|
 		|
@@ -691,11 +645,13 @@ class FIU(PartFactory):
 		|	inco |= mar_offset & 0x20;
 		|
 		|	output.z_qadr = PIN_QADROE=>;
-		|	if (!output.z_qadr) {
+		|	output.z_qspc = PIN_QSPCOE=>;
+		|	if (!output.z_qadr && PIN_H1=>) {
 		|		output.qadr = (uint64_t)state->srn << 32;
 		|		output.qadr |= state->sro & 0xfffff000;
 		|		output.qadr |= (inco & 0x1f) << 7;
 		|		output.qadr |= state->oreg;
+		|		output.qspc = (state->sro >> 4) & 7;
 		|	}
 		|
 		|
@@ -704,11 +660,6 @@ class FIU(PartFactory):
 		|		state->nmatch =
 		|		    (state->ctopn != state->srn) ||
 		|		    ((state->sro & 0xf8000070 ) != 0x10);
-		|	}
-		|
-		|	output.z_qspc = PIN_QSPCOE=>;
-		|	if (!output.z_qspc) {
-		|		output.qspc = (state->sro >> 4) & 7;
 		|	}
 		|
 		|	if (sclk && !(csa >> 2)) {
@@ -735,6 +686,8 @@ class FIU(PartFactory):
 		|		} else if (state->refresh_count != 0xffff) {
 		|			state->refresh_count++;
 		|		}
+		|	}
+		|	if (0 || h1pos) {
 		|		output.rfsh = state->refresh_count != 0xffff;
 		|	}
 		|
@@ -758,12 +711,11 @@ class FIU(PartFactory):
 		| 0       0       1110  AVAILABLE QUERY
 		| 0       0       1111  IDLE
 		|*/
-		|	bool pos = PIN_Q4.posedge();
 		|
 		|	unsigned mem_start;
 		|	BUS_MSTRT_READ(mem_start);
 		|	mem_start ^= 0x1e;
-		|	if (pos)
+		|	if (q4pos)
 		|		state->mstat[mem_start]++;
 		|
 		|
@@ -815,7 +767,7 @@ class FIU(PartFactory):
 		|		(PIN_UEVSTP=> && memcyc1) ||
 		|		(PIN_SCLKE=> && !memcyc1)
 		|	);
-		|	if (pos) {
+		|	if (q4pos) {
 		|		bool idum;
 		|		if (sel) {
 		|			idum = (state->prmt >> 5) & 1;
@@ -830,7 +782,7 @@ class FIU(PartFactory):
 		|		state->e_abort_dly = eabrt;
 		|		state->pcntl_d = pa026 & 0xf;
 		|		state->dumon = idum;
-		|		state->csaht = !PIN_ICSA=>;
+		|		state->csaht = !output.chit;
 		|	}
 		|
 		|	bool scav_trap_next = state->scav_trap;
@@ -861,7 +813,7 @@ class FIU(PartFactory):
 		|		csa_oor_next = PIN_CSAOOR=>;
 		|	}
 		|
-		|	if (pos && !PIN_SFSTP=>) {
+		|	if (q4pos && !PIN_SFSTP=>) {
 		|		state->scav_trap = scav_trap_next;
 		|		state->cache_miss = cache_miss_next;
 		|		state->csa_oor = csa_oor_next;
@@ -925,7 +877,7 @@ class FIU(PartFactory):
 		|		);
 		|	}
 		|
-		|	if (pos && !PIN_SCLKE=>) {
+		|	if (q4pos && !PIN_SCLKE=>) {
 		|		state->omq = 0;
 		|		state->omq |= (pa027 & 3) << 2;
 		|		state->omq |= ((pa027 >> 5) & 1) << 1;
@@ -954,10 +906,12 @@ class FIU(PartFactory):
 		|	state->logrwn = !(state->logrw && memcyc1);
 		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
 		|
-		|	if (memcyc1) {
-		|		output.memct = state->lcntl;
-		|	} else {
-		|		output.memct = pa026 & 0xf;
+		|	if (h2pos) {	// SEQ needs it by q4pos
+		|		if (memcyc1) {
+		|			output.memct = state->lcntl;
+		|		} else {
+		|			output.memct = pa026 & 0xf;
+		|		}
 		|	}
 		|
 		|	pa025a = 0;
@@ -968,7 +922,9 @@ class FIU(PartFactory):
 		|	pa025a |= state->e_abort_dly << 5;
 		|	pa025 = state->pa025[pa025a];
 		|	bool contin = (pa025 >> 5) & 1;
-		|	output.contin = !(contin);
+		|	if (1 || h1pos) {
+		|		output.contin = !(contin);
+		|	}
 		|
 		|	pa026a = 0;
 		|	pa026a |= mem_start;
@@ -1013,87 +969,40 @@ class FIU(PartFactory):
 		|	output.frdr = (state->prmt >> 1) & 1;
 		|	// output.prmt = state->prmt;
 		|
-		|	if (sel) {
-		|		output.dnext = !((state->prmt >> 0) & 1);
-		|	} else {
-		|		output.dnext = !state->dumon;
+		|	if (1 || h1pos) {
+		|		if (sel) {
+		|			output.dnext = !((state->prmt >> 0) & 1);
+		|		} else {
+		|			output.dnext = !state->dumon;
+		|		}
 		|	}
 		|
-		|	output.csawr = !(
-		|		PIN_LABR=> &&
-		|		PIN_LEABR=> &&
-		|		!(
-		|			state->logrwn ||
-		|			(state->mcntl & 1)
-		|		)
-		|	);
+		|	if (PIN_H1=>) {
+		|		output.csawr = !(
+		|			PIN_LABR=> &&
+		|			PIN_LEABR=> &&
+		|			!(
+		|				state->logrwn ||
+		|				(state->mcntl & 1)
+		|			)
+		|		);
+		|	}
 		|}
 		|
 		|	output.z_qt = PIN_QTOE=>;
 		|	output.z_qv = PIN_QVOE=>;
-		|	if (!output.z_qt || !output.z_qv) {
+		|	if ((!output.z_qt || !output.z_qv) && PIN_H1=>) {
 		|		do_tivi();
 		|		if (!output.z_qt)
 		|			output.qt = state->ti_bus ^ BUS_QT_MASK;
 		|		if (!output.z_qv)
 		|			output.qv = state->vi_bus ^ BUS_QT_MASK;
 		|	}
-		|	switch(condsel) {
-		|	case 0x60:
-		|		output.conda = !state->memex;
-		|		break;
-		|	case 0x61:
-		|		output.conda = !state->phys_last;
-		|		break;
-		|	case 0x62:
-		|		output.conda = !state->write_last;
-		|		break;
-		|	case 0x63:
-		|		output.conda = !output.chit;
-		|		break;
-		|	case 0x64:
-		|		output.conda = !((state->oreg >> 6) & 1);
-		|		break;
-		|	case 0x65:
-		|		output.conda = !state->xwrd;
-		|		break;
-		|	case 0x66:
-		|		output.conda = (state->moff & 0x3f) > 0x30;
-		|		break;
-		|	case 0x67:
-		|		output.conda = !output.rfsh;
-		|		break;
-		|	case 0x68:
-		|		output.condb = !output.oor;
-		|		break;
-		|	case 0x69: // SCAV_HIT
-		|		output.condb = !false;
-		|		break;
-		|	case 0x6a:
-		|		output.condb = !state->page_xing;
-		|		break;
-		|	case 0x6b:
-		|		//output.condb = !PIN_MISS=>;
-		|		output.condb = !state->miss;
-		|		break;
-		|	case 0x6c:
-		|		output.condb = !state->incmplt_mcyc;
-		|		break;
-		|	case 0x6d:
-		|		output.condb = !state->mar_modified;
-		|		break;
-		|	case 0x6e:
-		|		output.condb = !state->incmplt_mcyc;
-		|		break;
-		|	case 0x6f:
-		|		output.condb = (state->moff & 0x3f) != 0;
-		|		break;
-		|	};
 		|	output.pgxin = !(PIN_MICEN=> && state->page_xing);
-		|	output.memex = !(PIN_MICEN=> && state->memex);
-		|
-		|	//output.nopck = !(PIN_MISS=> && !(PIN_FRDRDR=> && PIN_FRDTYP));
-		|	output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
+		|	if (h2pos) {
+		|		output.memex = !(PIN_MICEN=> && state->memex);
+		|		output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
+		|	}
 		|{
 		|	bool inc_mar = (state->prmt >> 3) & 1;
 		|	unsigned marbot = state->moff & 0x1f;
@@ -1114,6 +1023,8 @@ class FIU(PartFactory):
 		|		(state->logrw_d && state->csaht)
 		|	);
 		|}
+		|	if (PIN_H1=> && 60 <= condsel && condsel <= 0x6f)
+		|		fiu_conditions(condsel);
 		|''')
 
 def register(part_lib):

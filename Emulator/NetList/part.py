@@ -461,22 +461,22 @@ class PartFactory(Part):
             if not self.is_autopin(node):
                 continue
             if not node.pin.type.hiz and not node.pin.pinbus:
-                file.fmt('\t\tPIN_%s<=(output.%s);\n' % (node.pin.name, node.pin.name.lower()))
+                file.fmt('\t\tPIN_%s<=(output.%s); // AP\n' % (node.pin.name, node.pin.name.lower()))
             elif node.pin.pinbus:
                 nm = node.pin.pinbus.name
                 file.fmt('''
 		|		if (output.z_%s)
-		|			BUS_%s_Z();
+		|			BUS_%s_Z(); // AP
 		|		else
-		|			BUS_%s_WRITE(output.%s);
+		|			BUS_%s_WRITE(output.%s); // AP
 		|''' % (nm.lower(), nm.upper(), nm.upper(), nm.lower()))
             else:
                 nm = node.pin.name
                 file.fmt('''
 		|		if (output.z_%s)
-		|			PIN_%s = sc_dt::sc_logic_Z;
+		|			PIN_%s = sc_dt::sc_logic_Z; // AP
 		|		else
-		|			PIN_%s<=(output.%s);
+		|			PIN_%s<=(output.%s); // AP
 		|''' % (nm.lower(), nm, nm, nm.lower()))
 
         file.write('\t\tstate->ctx.job &= ~1;\n')
