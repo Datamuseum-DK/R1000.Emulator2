@@ -216,7 +216,7 @@ class SEQ(PartFactory):
         yield "PIN_H2"
 
         yield "PIN_ACLK"
-        yield "PIN_BCLK"
+        # yield "PIN_BCLK"
         yield "PIN_LCLK"
         yield "PIN_TOSCLK"
 
@@ -235,7 +235,7 @@ class SEQ(PartFactory):
         #yield "BUS_EMAC"	# aclk
         yield "PIN_ENFU"
         #yield "PIN_FIU_CLK"
-        yield "PIN_FLIP"
+        # yield "PIN_FLIP"
         #yield "BUS_LIN"		# aclk
         #yield "PIN_LXVAL"
         yield "PIN_MIBMT"
@@ -270,8 +270,6 @@ class SEQ(PartFactory):
 		|	unsigned group_sel(void);
 		|	unsigned late_macro_pending(void);
 		|	void seq_cond(void);
-		|''')
-        file.fmt('''
 		|       unsigned nxt_lex_valid(void);
 		|''')
 
@@ -469,8 +467,7 @@ class SEQ(PartFactory):
 		|		break;
 		|	}
 		|}
-		|''')
-        file.fmt('''
+		|
 		|unsigned
 		|SCM_«mmm» ::
 		|nxt_lex_valid(void)
@@ -644,7 +641,8 @@ class SEQ(PartFactory):
 		|	}
 		|	state->boff &= 0x7fff;
 		|
-		|	if (PIN_BCLK.posedge()) {
+		|	//if (PIN_BCLK.posedge()) {
+		|	if (q4pos && !PIN_BHCKE=> && !output.meh) {
 		|		unsigned mode = 0;
 		|		unsigned u = 0;
 		|		if (state->cload) u |= 1;
@@ -780,8 +778,12 @@ class SEQ(PartFactory):
 		|			state->cbot = dsp;
 		|	}
 		|
-		|	if (PIN_FLIP.posedge()) {
-		|		state->topbot = !state->topbot;
+		|	//if (PIN_FLIP.posedge()) {
+		|	if (q4pos && !PIN_BHCKE=>) {
+		|		bool crnana = !(RNDX(RND_INSTR_LD) && output.disp);
+		|		bool crnor0a = !(crnana || output.dmdisp);
+		|		if (!crnor0a)
+		|			state->topbot = !state->topbot;
 		|	}
 		|
 		|	if (state->topbot)

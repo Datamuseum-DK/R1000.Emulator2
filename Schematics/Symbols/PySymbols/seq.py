@@ -23,7 +23,6 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
 
-        self.sig_left(ChipSig("-->+", "BCLK"))
         self.sig_left(ChipSig("-->+", "RASEL", 0, 1))
         self.sig_left(ChipSig("-->+", "LAUIR", 0, 1))
         self.sig_left(ChipSig("-->+", "LINC"))
@@ -32,7 +31,6 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "IRD", 0, 2))
         self.sig_left(ChipSig("-->+", "ACLK"))
         self.sig_left(ChipSig("-->+", "SCLKE"))
-        self.sig_left(ChipSig("-->+", "FLIP"))
         self.sig_left(ChipSig("-->+", "TOSCLK"))
 
         self.sig_left(ChipSig("-->+", "MD"))
