@@ -70,6 +70,12 @@ class TYP(FChip):
 
         self.sig_right(ChipSig("+-->", "OCKEN"))
 
+        self.sig_right(ChipSig("+-->", "CONDA"))
+        self.sig_right(ChipSig("+-->", "CONDB"))
+        self.sig_right(ChipSig("+-->", "CONDC"))
+        self.sig_right(ChipSig("+-->", "CONDD"))
+        self.sig_right(ChipSig("+-->", "CONDE"))
+
         self.finish()
 
 def register():

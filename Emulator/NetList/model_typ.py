@@ -79,6 +79,9 @@ class TYP(PartFactory):
 		|	bool ppriv;
 		|	bool last_cond;
 		|	bool wen;
+		|	bool is_binary;
+		|	bool sub_else_add;
+		|	bool ovr_en;
 		|''')
 
     def init(self, file):
@@ -147,6 +150,12 @@ class TYP(PartFactory):
 		|	bool a_op_pass(void);
 		|	bool b_op_pass(void);
 		|	bool clev(unsigned);
+		|	void typ_cond(unsigned condsel, unsigned when);
+		|	void cond_a(bool val);
+		|	void cond_b(bool val);
+		|	void cond_c(bool val);
+		|	void cond_d(bool val);
+		|	void cond_e(bool val);
 		|''')
 
     def priv_impl(self, file):
@@ -211,6 +220,169 @@ class TYP(PartFactory):
 		|		(!(rand != 0x7) && !(A_LIT() != B_LIT()) && !(B_LIT() != clit()))
 		|	));
 		|}
+		|
+		|void SCM_«mmm» :: cond_a(bool val) { state->cond = val; output.conda = !val; };
+		|void SCM_«mmm» :: cond_b(bool val) { state->cond = val; output.condb = !val; };
+		|void SCM_«mmm» :: cond_c(bool val) { state->cond = val; output.condc = !val; };
+		|void SCM_«mmm» :: cond_d(bool val) { state->cond = val; output.condd = !val; };
+		|void SCM_«mmm» :: cond_e(bool val) { state->cond = val; output.conde = !val; };
+		|
+		|void
+		|SCM_«mmm» ::
+		|typ_cond(unsigned condsel, unsigned when)
+		|{
+		|
+		|#if 1
+		|	if ((condsel >> 3) == 0xb)
+		|		condsel &= ~0x40;
+		|#endif
+		|	switch(condsel) {
+		|#if 1
+		|	case 0x18:	// L - TYP_ALU_ZERO
+		|		cond_a(state->zero != 0xff);
+		|		break;
+		|	case 0x19:	// L - TYP_ALU_NONZERO
+		|		cond_a(state->zero == 0xff);
+		|		break;
+		|	case 0x1a:	// L - TYP_ALU_A_GT_OR_GE_B
+		|		{
+		|		bool ovrsign = (!(((A_BIT(0) != B_BIT(0)) && state->is_binary) || (!state->is_binary && !A_BIT(0))));
+		|		cond_a(!(
+		|		    ((A_BIT(0) != B_BIT(0)) && A_BIT(0)) ||
+		|		    (state->coh && (ovrsign ^ state->sub_else_add))
+		|		));
+		|		}
+		|		break;
+		|	case 0x1b:	// SPARE
+		|		cond_a(true);
+		|		break;
+		|	case 0x1c:	// E - TYP_LOOP_COUNTER_ZERO
+		|		cond_a(state->count != 0x3ff);
+		|		break;
+		|	case 0x1d:	// SPARE
+		|		cond_a(true);
+		|		break;
+		|	case 0x1e:	// L - TYP_ALU_ZERO - COMBO with VAL_ALU_NONZERO
+		|		cond_a(state->zero != 0xff);
+		|		break;
+		|	case 0x1f:	// L - TYP_ALU_32_CO - ALU 32 BIT CARRY OUT
+		|		cond_a(state->com);
+		|		break;
+		|	case 0x20:	// L - TYP_ALU_CARRY
+		|		cond_b(!state->coh);
+		|		break;
+		|	case 0x21:	// L - TYP_ALU_OVERFLOW
+		|		{
+		|		bool ovrsign = (!(((A_BIT(0) != B_BIT(0)) && state->is_binary) || (!state->is_binary && !A_BIT(0))));
+		|		cond_b(state->ovr_en || (
+		|		    state->coh ^ state->almsb ^ state->sub_else_add ^ ovrsign
+		|		));
+		|		}
+		|		break;
+		|	case 0x22:	// L - TYP_ALU_LT_ZERO
+		|		cond_b(state->almsb);
+		|		break;
+		|	case 0x23:	// L - TYP_ALU_LE_ZERO
+		|		cond_b(!(state->almsb && (state->zero != 0xff)));
+		|		break;
+		|	case 0x24:	// ML - TYP_SIGN_BITS_EQUAL
+		|		cond_b((A_BIT(0) != B_BIT(0)));
+		|		break;
+		|	case 0x25:	// E - TYP_FALSE
+		|		cond_b(true);
+		|		break;
+		|	case 0x26:	// E - TYP_TRUE
+		|		cond_b(false);
+		|		break;
+		|	case 0x27:	// E - TYP_PREVIOUS
+		|		cond_b(state->last_cond);
+		|		break;
+		|#endif
+		|	case 0x28:	// ML - OF_KIND_MATCH
+		|		{
+		|		unsigned mask_a = state->pa059[clit()] >> 1;
+		|		unsigned okpat_a = state->pa059[clit() + 256] >> 1;
+		|		bool oka = (0x7f ^ (mask_a & B_LIT())) != okpat_a; // XXX state->b ??
+		|
+		|		unsigned mask_b = state->pa059[clit() + 128] >> 1;
+		|		unsigned okpat_b = state->pa059[clit() + 384] >> 1;
+		|		bool okb = (0x7f ^ (mask_b & B_LIT())) != okpat_b;
+		|
+		|		bool okm = !(oka & okb);
+		|		cond_c(okm);
+		|		}
+		|		break;
+		|	case 0x29:	// ML - CLASS_A_EQ_LIT
+		|		cond_c(A_LIT() != clit());
+		|		break;
+		|	case 0x2a:	// ML - CLASS_B_EQ_LIT
+		|		cond_c(B_LIT() != clit());
+		|		break;
+		|	case 0x2b:	// ML - CLASS_A_EQ_B
+		|		cond_c(A_LIT() != B_LIT());
+		|		break;
+		|	case 0x2c:	// ML - CLASS_A_B_EQ_LIT
+		|		cond_c(!(A_LIT() != clit()) || (B_LIT() != clit()));
+		|		break;
+		|	case 0x2d:	// E - PRIVACY_A_OP_PASS
+		|		cond_c(a_op_pass());
+		|		break;
+		|	case 0x2e:	// ML - PRIVACY_B_OP_PASS
+		|		cond_c(b_op_pass());
+		|		break;
+		|	case 0x2f:	// ML - PRIVACY_BIN_EQ_PASS
+		|		cond_c(priv_path_eq() && bin_op_pass());
+		|		break;
+		|	case 0x30:	// ML - PRIVACY_BIN_OP_PASS
+		|		cond_d(bin_op_pass());
+		|		break;
+		|	case 0x31:	// ML - PRIVACY_NAMES_EQ
+		|		cond_d(A_BITS(31) == B_BITS(31));
+		|		break;
+		|	case 0x32:	// ML - PRIVACY_PATHS_EQ
+		|		cond_d(priv_path_eq());
+		|		break;
+		|	case 0x33:	// ML - PRIVACY_STRUCTURE
+		|		cond_d(!(bin_op_pass() || priv_path_eq()));
+		|		break;
+		|	case 0x34:	// E - PASS_PRIVACY_BIT
+		|		cond_d(state->ppriv);
+		|		break;
+		|	case 0x35:	// ML - B_BUS_BIT_32
+		|		cond_d(B_BIT(32));
+		|		break;
+		|	case 0x36:	// ML - B_BUS_BIT_33
+		|		cond_d(B_BIT(33));
+		|		break;
+		|	case 0x37:	// ML - B_BUS_BIT_34
+		|		cond_d(B_BIT(34));
+		|		break;
+		|	case 0x38:	// ML - B_BUS_BIT_35
+		|		cond_e(B_BIT(35));
+		|		break;
+		|	case 0x39:	// ML - B_BUS_BIT_36
+		|		cond_e(B_BIT(36));
+		|		break;
+		|	case 0x3a:	// ML - B_BUS_BIT_33_34_OR_36
+		|		cond_e((B_BITS(36) & 0xd) != 0xd);
+		|		break;
+		|	case 0x3b:	// SPARE
+		|		cond_e(true);
+		|		break;
+		|	case 0x3c:	// SPARE
+		|		cond_e(true);
+		|		break;
+		|	case 0x3d:	// SPARE
+		|		cond_e(true);
+		|		break;
+		|	case 0x3e:	// SPARE
+		|		cond_e(true);
+		|		break;
+		|	case 0x3f:	// ML - B_BUS_BIT_21
+		|		cond_e(B_BIT(21));
+		|		break;
+		|	}
+		|}
 		|''')
 
     def doit(self, file):
@@ -248,23 +420,17 @@ class TYP(PartFactory):
 		|	case COND(0x3, 4): // E - TYPE_COUNTER_ZERO	 
 		|	case COND(0xb, 4): // E - TYPE_COUNTER_ZERO	 
 		|		condmask = 0x10;
-		|		state->cond = state->count != 0x3ff;
+		|		typ_cond(condsel, 0);
 		|		break;
 		|	case COND(0x4, 5): // E - TYP_FALSE
-		|		condmask = 0x08;
-		|		state->cond = true;
-		|		break;
 		|	case COND(0x4, 6): // E - TYP_TRUE
-		|		condmask = 0x08;
-		|		state->cond = false;
-		|		break;
 		|	case COND(0x4, 7): // E - TYP_PREVIOUS
 		|		condmask = 0x08;
-		|		state->cond = state->last_cond;
+		|		typ_cond(condsel, 0);
 		|		break;
 		|	case COND(0x6, 4): // E - PASS_PRIVACY_BIT
 		|		condmask = 0x02;
-		|		state->cond = state->ppriv;
+		|		typ_cond(condsel, 0);
 		|		break;
 		|	}
 		|
@@ -420,7 +586,7 @@ class TYP(PartFactory):
 		|		idx |= alufunc;
 		|		
 		|		tmp = state->pa068[idx];
-		|		bool is_binary = (tmp >> 1) & 1;
+		|		state->is_binary = (tmp >> 1) & 1;
 		|		tmp >>= 3;
 		|
 		|		f181l.ctl = tmp >> 1;
@@ -434,8 +600,8 @@ class TYP(PartFactory):
 		|		state->alu = f181l.o;
 		|
 		|		tmp = state->pa010[idx];
-		|		bool sub_else_add = (tmp >> 2) & 1;
-		|		bool ovr_en = (tmp >> 1) & 1;
+		|		state->sub_else_add = (tmp >> 2) & 1;
+		|		state->ovr_en = (tmp >> 1) & 1;
 		|		tmp >>= 3;
 		|
 		|		f181h.ctl = tmp >> 1;
@@ -472,12 +638,11 @@ class TYP(PartFactory):
 		|			output.adr = alu ^ BUS_ADR_MASK;
 		|		}
 		|
-		|		bool asign = (state->a >> 63);
-		|		bool bsign = (state->b >> 63);
-		|		bool signseq = asign ^ bsign;
-		|		bool ovrsign = (!((signseq && is_binary) || (!is_binary && !asign)));
 		|		if (condgrp == 3) {
 		|			condmask = 0x10;
+		|			typ_cond(condsel, 2);
+		|#if 0	
+		|			bool ovrsign = (!(((A_BIT(0) != B_BIT(0)) && state->is_binary) || (!state->is_binary && !A_BIT(0))));
 		|			switch (condsel & 0x7) {
 		|			case 0:	// L - TYP_ALU_ZERO
 		|			case 6: // L - TYP_ALU_ZERO - COMBO with VAL_ALU_NONZERO
@@ -488,8 +653,8 @@ class TYP(PartFactory):
 		|				break;
 		|			case 2:	// L - TYP_ALU_A_GT_OR_GE_B
 		|				state->cond = !(
-		|				    (signseq && asign) ||
-		|				    (state->coh && (ovrsign ^ sub_else_add))
+		|				    ((A_BIT(0) != B_BIT(0)) && A_BIT(0)) ||
+		|				    (state->coh && (ovrsign ^ state->sub_else_add))
 		|				);
 		|				break;
 		|			case 4: // E - TYP_LOOP_COUNTER_ZERO
@@ -502,16 +667,20 @@ class TYP(PartFactory):
 		|				state->cond = true;
 		|				break;
 		|			}
+		|#endif
 		|		}
 		|		if (condgrp == 4) {
 		|			condmask = 0x08;
+		|			typ_cond(condsel, 2);
+		|#if 0
+		|			bool ovrsign = (!(((A_BIT(0) != B_BIT(0)) && state->is_binary) || (!state->is_binary && !A_BIT(0))));
 		|			switch (condsel & 0x7) {
 		|			case 0:	// L - TYP_ALU_CARRY
 		|				state->cond = !state->coh;
 		|				break;
 		|			case 1: // L - TYP_ALU_OVERFLOW
-		|				state->cond = ovr_en || (
-		|				    state->coh ^ state->almsb ^ sub_else_add ^ ovrsign
+		|				state->cond = state->ovr_en || (
+		|				    state->coh ^ state->almsb ^ state->sub_else_add ^ ovrsign
 		|				);
 		|				break;
 		|			case 2: // L - TYP_ALU_LT_ZERO
@@ -521,7 +690,7 @@ class TYP(PartFactory):
 		|				state->cond = !(state->almsb && (state->zero != 0xff));
 		|				break;
 		|			case 4: // ML - TYP_SIGN_BITS_EQUAL
-		|				state->cond = signseq;
+		|				state->cond = (A_BIT(0) != B_BIT(0));
 		|				break;
 		|			case 5: // E - TYP_FALSE
 		|				state->cond = true;
@@ -533,99 +702,23 @@ class TYP(PartFactory):
 		|				state->cond = state->last_cond;
 		|				break;
 		|			}
+		|#endif
 		|		}
 		|	}
 		|
 		|	if (q2pos && (condgrp == 5 || condgrp == 6 || condgrp == 7)) {
 		|
 		|		if (condgrp == 5) {
+		|			typ_cond(condsel, 2);
 		|			condmask = 0x04;
-		|			switch (condsel & 0x7) {
-		|			case 0:	// ML - OF_KIND_MATCH
-		|				{
-		|				unsigned mask_a = state->pa059[clit()] >> 1;
-		|				unsigned okpat_a = state->pa059[clit() + 256] >> 1;
-		|				bool oka = (0x7f ^ (mask_a & B_LIT())) != okpat_a; // XXX state->b ??
-		|
-		|				unsigned mask_b = state->pa059[clit() + 128] >> 1;
-		|				unsigned okpat_b = state->pa059[clit() + 384] >> 1;
-		|				bool okb = (0x7f ^ (mask_b & B_LIT())) != okpat_b;
-		|
-		|				bool okm = !(oka & okb);
-		|				state->cond = okm;
-		|				}
-		|				break;
-		|			case 1:	// ML - CLASS_A_EQ_LIT
-		|				state->cond = A_LIT() != clit();
-		|				break;
-		|			case 2:	// ML - CLASS_B_EQ_LIT
-		|				state->cond = B_LIT() != clit();
-		|				break;
-		|			case 3:	// ML - CLASS_A_EQ_B
-		|				state->cond = A_LIT() != B_LIT();
-		|				break;
-		|			case 4:	// ML - CLASS_A_B_EQ_LIT
-		|				state->cond = !(A_LIT() != clit()) || (B_LIT() != clit());
-		|				break;
-		|			case 5:	// E - PRIVACY_A_OP_PASS
-		|				state->cond = a_op_pass();
-		|				break;
-		|			case 6:	// ML - PRIVACY_B_OP_PASS
-		|				state->cond = b_op_pass();
-		|				break;
-		|			case 7:	// ML - PRIVACY_BIN_EQ_PASS
-		|				state->cond = priv_path_eq() && bin_op_pass();
-		|				break;
-		|			}
 		|		}
 		|		if (condgrp == 6) {
 		|			condmask = 0x02;
-		|			switch (condsel & 0x7) {
-		|			case 0:	// ML - PRIVACY_BIN_OP_PASS
-		|				state->cond = bin_op_pass();
-		|				break;
-		|			case 1:	// ML - PRIVACY_NAMES_EQ
-		|				state->cond = A_BITS(31) == B_BITS(31);
-		|				break;
-		|			case 2:	// ML - PRIVACY_PATHS_EQ
-		|				state->cond = priv_path_eq();
-		|				break;
-		|			case 3:	// ML - PRIVACY_STRUCTURE
-		|				state->cond = !(bin_op_pass() || priv_path_eq());
-		|				break;
-		|			case 4:	// E - PASS_PRIVACY_BIT
-		|				state->cond = state->ppriv;
-		|				break;
-		|			case 5:	// ML - B_BUS_BIT_32
-		|				state->cond = B_BIT(32);
-		|				break;
-		|			case 6:	// ML - B_BUS_BIT_33
-		|				state->cond = B_BIT(33);
-		|				break;
-		|			case 7:	// ML - B_BUS_BIT_34
-		|				state->cond = B_BIT(34);
-		|				break;
-		|			}
+		|			typ_cond(condsel, 2);
 		|		}
 		|		if (condgrp == 7) {
 		|			condmask = 0x01;
-		|			switch (condsel & 0x7) {
-		|			case 0:	// ML - B_BUS_BIT_35
-		|				state->cond = B_BIT(35);
-		|				break;
-		|			case 1:	// ML - B_BUS_BIT_36
-		|				state->cond = B_BIT(36);
-		|				break;
-		|			case 2:	// ML - B_BUS_BIT_33_34_OR_36
-		|				state->cond = (B_BITS(36) & 0xd) != 0xd;
-		|				break;
-		|			case 7:	// ML - B_BUS_BIT_21
-		|				state->cond = B_BIT(21);
-		|				break;
-		|			default:
-		|				state->cond = true;
-		|				break;
-		|			}
+		|			typ_cond(condsel, 2);
 		|		}
 		|	}
 		|
@@ -725,12 +818,14 @@ class TYP(PartFactory):
 		|		if (top_mux_sel)
 		|			state->topreg = csalu0;
 		|	}
+		|#if 0
 		|	if (state->cond) {
 		|		output.tcnd &= ~condmask;
 		|	} else {
 		|		output.tcnd |= condmask;
 		|	}
 		|	output.tcnd &= BUS_TCND_MASK;
+		|#endif
 		|	if (PIN_CCLK.posedge()) {
 		|		state->last_cond = state->cond;
 		|	}
