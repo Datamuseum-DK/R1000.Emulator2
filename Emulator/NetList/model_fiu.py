@@ -52,7 +52,6 @@ class FIU(PartFactory):
 		|       uint64_t mdreg;
 		|	uint64_t treg;
 		|	uint64_t vreg;
-		|	uint64_t rdq;
 		|	uint64_t refresh_reg;
 		|	uint64_t marh;
 		|	uint64_t ti_bus, vi_bus;
@@ -94,7 +93,6 @@ class FIU(PartFactory):
 		|	bool logrw_d;
 		|	bool omf20;
 		|	bool nmatch;
-		|	bool xwrd;
 		|	bool in_range;
 		|	unsigned setq;
 		|	unsigned omq;
@@ -146,6 +144,7 @@ class FIU(PartFactory):
     def priv_decl(self, file):
         file.fmt('''
 		|	void do_tivi(void);
+		|	void rotator(bool sclk);
 		|	void fiu_conditions(unsigned condsel);
 		|	uint64_t frame(void);
 		|''')
@@ -164,7 +163,9 @@ class FIU(PartFactory):
 		|	case 0x62: output.conda = !state->write_last; 		break;
 		|	case 0x63: output.conda = !output.chit; 		break;
 		|	case 0x64: output.conda = !((state->oreg >> 6) & 1); 	break;
-		|	case 0x65: output.conda = !state->xwrd; 		break;
+		|	case 0x65: // Cross word shift
+		|		output.conda = (state->oreg + (state->lfreg & 0x3f) + (state->lfreg & 0x80)) <= 255;
+		|		break;
 		|	case 0x66: output.conda = (state->moff & 0x3f) > 0x30; 	break;
 		|	case 0x67: output.conda = !output.rfsh; 		break;
 		|	case 0x68: output.condb = !output.oor; 			break;
@@ -277,30 +278,17 @@ class FIU(PartFactory):
 		|	state->ti_bus = ti;
 		|	state->vi_bus = vi;
 		|}
-		|''')
-
-    def doit(self, file):
-        ''' The meat of the doit() function '''
-
-        file.fmt('''
-		|	//bool q2pos = PIN_Q2.posedge();
-		|	bool q4pos = PIN_Q4.posedge();
-		|	bool h1pos = PIN_H1.posedge();
-		|	bool h2pos = PIN_H1.negedge();
-		|	bool sclk = q4pos && !PIN_SCLKE=>;
 		|
-		|	unsigned csa;
-		|	BUS_CSA_READ(csa);
-		|
-		|	unsigned condsel;
-		|	BUS_CNDSL_READ(condsel);
-		|
-		|	do_tivi();
-		|	//uint64_t ti, vi;
+		|void
+		|SCM_«mmm» ::
+		|rotator(bool sclk)
 		|{
+		|	uint64_t rot = 0;
+		|	uint64_t vmsk = 0, tmsk = 0;
+		|	bool sgnbit = 0;
 		|	uint64_t ft, tir, vir, m;
 		|	unsigned s, fs, u, sgn;
-		|	bool sgnbit;
+		|	bool zero_length;
 		|
 		|	unsigned lfl;
 		|	BUS_LFL_READ(lfl);				// UCODE
@@ -319,21 +307,15 @@ class FIU(PartFactory):
 		|		lenone = state->lfreg & 0x3f;
 		|	}
 		|
-		|	bool zero_length = !(fill_mode & (lenone == 0x3f));
-		|
-		|	unsigned off_lit;
-		|	BUS_OL_READ(off_lit);				// UCODE
+		|	zero_length = !(fill_mode & (lenone == 0x3f));
 		|
 		|	unsigned offset;
 		|	if (PIN_OSRC=>) {				// UCODE
-		|		offset = off_lit;
+		|		BUS_OL_READ(offset);
 		|	} else {
 		|		offset = state->oreg;
 		|	}
 		|
-		|	unsigned xword;
-		|	xword = state->oreg + (state->lfreg & 0x3f) + (state->lfreg & 0x80);
-		|	state->xwrd = xword > 255;
 		|
 		|	unsigned op, sbit, ebit;
 		|	BUS_OP_READ(op);				// UCODE
@@ -416,18 +398,14 @@ class FIU(PartFactory):
 		|		sgnbit = (ft >> (63 - sgn)) & 1;
 		|	}
 		|
-		|	if (PIN_RDSRC=>) {				// UCODE
-		|		state->rdq = state->mdreg;
-		|	} else {
-		|		uint64_t yl = 0, yh = 0, q;
+		|	{
+		|		uint64_t yl = 0, yh = 0;
 		|		fs = s & ~3;
 		|		yl = ft >> fs;
 		|		yh = ft << (64 - fs);
-		|		q = yh | yl;
-		|		state->rdq = q;
+		|		rot = yh | yl;
 		|	}
 		|
-		|	uint64_t vmsk = 0, tmsk = 0;
 		|	if (zero_length) {
 		|		if (ebit == sbit) {
 		|			if (ebit < 64) {
@@ -478,8 +456,15 @@ class FIU(PartFactory):
 		|		break;
 		|	}
 		|
+		|	uint64_t rdq;
+		|	if (PIN_RDSRC=>) {				// UCODE
+		|		rdq = state->mdreg;
+		|	} else {
+		|		rdq = rot;
+		|	}
+		|
 		|	uint64_t vout = 0;
-		|	vout = (state->rdq & vmsk);
+		|	vout = (rdq & vmsk);
 		|	vout |= (tii & (vmsk ^ BUS_DV_MASK));
 		|
 		|	output.z_qf = PIN_QFOE=>;			// (UCODE)
@@ -487,27 +472,13 @@ class FIU(PartFactory):
 		|		output.qf = vout ^ BUS_QF_MASK;
 		|	}
 		|
-		|	if (sclk && !(state->prmt & 0x40)) {
-		|		state->refresh_reg = state->ti_bus;
-		|		state->marh &= 0xffffffffULL;
-		|		state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
-		|		state->marh ^= 0xffffffff00000000ULL;
-		|	}
-		|
 		|	if (sclk && PIN_LDMDR=>) {			// (UCODE)
-		|		uint64_t yl = 0, yh = 0, q;
-		|		fs = s & ~3;
-		|		yl = ft >> fs;
-		|		yh = ft << (64 - fs);
-		|		q = yh | yl;
-		|		state->mdreg = q;
+		|		state->mdreg = rot;
 		|	}
 		|
 		|	if (sclk && !PIN_TCLK=>) {			// Q4~^
-		|		uint64_t out = 0;
-		|		out = (state->rdq & tmsk);
-		|		out |= (state->ti_bus & (tmsk ^ BUS_DT_MASK));
-		|		state->treg = out;
+		|		state->treg = (rdq & tmsk);
+		|		state->treg |= (state->ti_bus & (tmsk ^ BUS_DT_MASK));
 		|	}
 		|
 		|	if (sclk && !PIN_VCLK=>) {			// Q4~^
@@ -516,11 +487,44 @@ class FIU(PartFactory):
 		|
 		|	if (sclk && !PIN_OCLK=>) {			// Q4~^
 		|		if (PIN_ORSR=>) {			// UCODE
-		|			state->oreg = off_lit;
+		|			BUS_OL_READ(state->oreg);
 		|		} else {
 		|			BUS_DADR_READ(state->oreg);
 		|			state->oreg &= 0x7f;
 		|		}
+		|	}
+		|
+		|}
+		|''')
+
+    def doit(self, file):
+        ''' The meat of the doit() function '''
+
+        file.fmt('''
+		|	//bool q2pos = PIN_Q2.posedge();
+		|	bool q4pos = PIN_Q4.posedge();
+		|	bool h1pos = PIN_H1.posedge();
+		|	bool h2pos = PIN_H1.negedge();
+		|	bool sclk = q4pos && !PIN_SCLKE=>;
+		|
+		|	unsigned csa;
+		|	BUS_CSA_READ(csa);
+		|
+		|	unsigned condsel;
+		|	BUS_CNDSL_READ(condsel);
+		|
+		|	do_tivi();
+		|	if ((sclk && (PIN_LDMDR=> || !PIN_TCLK=> || !PIN_VCLK=> || !PIN_OCLK=>)) ||
+		|	    (PIN_H1=> && !PIN_QFOE=>)) {
+		|		rotator(sclk);
+		|	}
+		|
+		|{
+		|	if (sclk && !(state->prmt & 0x40)) {
+		|		state->refresh_reg = state->ti_bus;
+		|		state->marh &= 0xffffffffULL;
+		|		state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
+		|		state->marh ^= 0xffffffff00000000ULL;
 		|	}
 		|
 		|	if (sclk) {
@@ -537,7 +541,7 @@ class FIU(PartFactory):
 		|			state->lfreg ^= 0x7f;
 		|			break;
 		|		case 1:
-		|			state->lfreg = lfl;
+		|			BUS_LFL_READ(state->lfreg);
 		|			break;
 		|		case 2:
 		|			state->lfreg = (state->ti_bus >> BUS_DT_LSB(48)) & 0x3f;
@@ -895,7 +899,6 @@ class FIU(PartFactory):
 		|		state->memcnd = (pa025 >> 4) & 1;	// CM_CTL0
 		|		state->cndtru = (pa025 >> 3) & 1;	// CM_CTL1
 		|	}
-		|
 		|	if (memstart) {
 		|		state->mcntl = state->lcntl;
 		|	} else {
