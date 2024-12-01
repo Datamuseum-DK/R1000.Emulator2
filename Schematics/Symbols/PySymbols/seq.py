@@ -90,18 +90,13 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+-->", "UEVP"))
 
         self.sig_right(ChipSig("+-->", "DBHINT"))
-        self.sig_right(ChipSig("+-->", "DMDISP"))
 
         self.sig_right(ChipSig("+-->", "BHN"))
 
-        self.sig_right(ChipSig("+-->", "FERR"))
         self.sig_right(ChipSig("+-->", "MIBUF"))
         self.sig_right(ChipSig("+-->", "QSTP7"))
         self.sig_right(ChipSig("+-->", "HALT"))
-        self.sig_right(ChipSig("+-->", "BAR8"))
-        self.sig_right(ChipSig("+-->", "MEH"))
         self.sig_right(ChipSig("+-->", "LMACO"))
-        self.sig_right(ChipSig("+-->", "DISP"))
         self.sig_right(ChipSig("+-->", "CONDA"))
         self.sig_right(ChipSig("+-->", "CONDB"))
         self.sig_right(ChipSig("+-->", "CONDC"))

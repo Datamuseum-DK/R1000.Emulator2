@@ -192,6 +192,7 @@ class SEQ(PartFactory):
 		|	uint16_t dlr;
 		|	bool lxval;
 		|	unsigned resolve_address;
+		|	bool bar8;
 		|''')
 
     def init(self, file):
@@ -514,7 +515,6 @@ class SEQ(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	//bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
@@ -589,13 +589,11 @@ class SEQ(PartFactory):
 		|
 		|	bool mbuf = !(lmac && (state->lmp >= 7));
 		|	if (macro_event) {
-		|		output.bar8 = !mbuf;
+		|		state->bar8 = !mbuf;
 		|	} else {
-		|		output.bar8 = !((pa040d >> 1) & 1);
+		|		state->bar8 = !((pa040d >> 1) & 1);
 		|	}
-		|	output.meh = macro_event;
 		|	output.lmaco = macro_event && !early_macro_pending;
-		|	output.disp = dispatch;
 		|{
 		|	if (q4pos && !sclke && !state->ibld) {
 		|		state->typ = state->typ_bus;
@@ -642,7 +640,7 @@ class SEQ(PartFactory):
 		|	state->boff &= 0x7fff;
 		|
 		|	//if (PIN_BCLK.posedge()) {
-		|	if (q4pos && !PIN_BHCKE=> && !output.meh) {
+		|	if (q4pos && !PIN_BHCKE=> && !macro_event) {
 		|		unsigned mode = 0;
 		|		unsigned u = 0;
 		|		if (state->cload) u |= 1;
@@ -780,8 +778,9 @@ class SEQ(PartFactory):
 		|
 		|	//if (PIN_FLIP.posedge()) {
 		|	if (q4pos && !PIN_BHCKE=>) {
-		|		bool crnana = !(RNDX(RND_INSTR_LD) && output.disp);
-		|		bool crnor0a = !(crnana || output.dmdisp);
+		|		bool crnana = !(RNDX(RND_INSTR_LD) && dispatch);
+		|		bool dmdisp = !(!state->bad_hint || (state->bhreg & 0x04));
+		|		bool crnor0a = !(crnana || dmdisp);
 		|		if (!crnor0a)
 		|			state->topbot = !state->topbot;
 		|	}
@@ -1210,11 +1209,9 @@ class SEQ(PartFactory):
 		|	unsigned br_type;
 		|	BUS_BRTYP_READ(br_type);
 		|
-		|	bool bad_hint = state->bad_hint;
-		|
 		|	bool brtm3;
 		|	unsigned btimm;
-		|	if (bad_hint) {
+		|	if (state->bad_hint) {
 		|		btimm = 2;
 		|		brtm3 = ((state->bhreg) >> 5) & 1;
 		|	} else {
@@ -1232,7 +1229,7 @@ class SEQ(PartFactory):
 		|		state->uadr_mux = !state->uadr_mux;
 		|
 		|	unsigned adr = 0;
-		|	if (bad_hint) adr |= 0x01;
+		|	if (state->bad_hint) adr |= 0x01;
 		|	adr |= (br_type << 1);
 		|	if (state->bhreg & 0x20) adr |= 0x20;
 		|	if (state->bhreg & 0x40) adr |= 0x80;
@@ -1269,10 +1266,9 @@ class SEQ(PartFactory):
 		|		state->hint_last = (state->bhreg >> 1) & 1;
 		|		state->hint_t_last = (state->bhreg >> 0) & 1;
 		|	}
-		|	output.dbhint = !(!bad_hint || (state->bhreg & 0x08));
-		|	bool bhint2 = (!bad_hint || (state->bhreg & 0x08));
-		|	output.dmdisp = !(!bad_hint || (state->bhreg & 0x04));
-		|	if (!bad_hint) {
+		|	output.dbhint = !(!state->bad_hint || (state->bhreg & 0x08));
+		|	bool bhint2 = (!state->bad_hint || (state->bhreg & 0x08));
+		|	if (!state->bad_hint) {
 		|		state->m_pc_mb = RNDX(RND_M_PC_MD0);
 		|	} else {
 		|		state->m_pc_mb = !((state->bhreg >> 2) & 1);
@@ -1300,7 +1296,7 @@ class SEQ(PartFactory):
 		|				state->rreg &= ~0x2;
 		|			}
 		|			state->treg = 0x3;
-		|			bool dnan0d = !(output.disp && RNDX(RND_PRED_LD));
+		|			bool dnan0d = !(dispatch && RNDX(RND_PRED_LD));
 		|			bool tsnor0b = !(dnan0d || state->tos_vld_cond);
 		|			if (tsnor0b)
 		|				state->treg |= 0x8;
@@ -1381,8 +1377,6 @@ class SEQ(PartFactory):
 		|	tmp &= 0x3ff;
 		|	state->field_number_error = tmp != 0x3ff;
 		|	state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !PIN_ENFU=>));
-		|	// XXX: Necesary for re-triggering :-(
-		|	output.ferr = state->ferr;
 		|}
 		|	if (q4pos) {
 		|		if (state->word == 7)
@@ -1469,11 +1463,11 @@ class SEQ(PartFactory):
 		|		RNDX(RND_CHK_EXIT) &&
 		|		state->carry_out
 		|	);
-		|	output.sfive = (state->check_exit_ue && output.ferr);
+		|	output.sfive = (state->check_exit_ue && state->ferr);
 		|	state->m_res_ref = !(state->lxval && !output.disp0);
 		|
 		|	if (PIN_H2=>) {
-		|		if (!output.bar8) {
+		|		if (!state->bar8) {
 		|			output.abort = false;
 		|		} else if (PIN_MCOND=>) {
 		|			output.abort = true;
