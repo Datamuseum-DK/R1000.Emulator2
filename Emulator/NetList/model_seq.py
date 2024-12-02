@@ -101,7 +101,7 @@ class SEQ(PartFactory):
 		|	unsigned curins;
 		|	bool topbot;
 		|
-		|	uint64_t typ, val;
+		|	uint64_t macro_ins_typ, macro_ins_val;
 		|	unsigned word;
 		|	unsigned mpc;
 		|	unsigned curr_lex;
@@ -110,9 +110,9 @@ class SEQ(PartFactory):
 		|	unsigned break_mask;
 		|
 		|	// SEQNAM
-		|	uint32_t tost, vost, cur_name;
-		|	uint32_t namram[1<<4];
-		|	unsigned pcseg, retseg, last;
+		|	uint64_t tost, vost, cur_name;
+		|	uint64_t namram[1<<4];
+		|	uint64_t pcseg, retseg;
 		|
 		|	uint64_t tosram[1<<4];
 		|	uint64_t tosof;
@@ -150,10 +150,10 @@ class SEQ(PartFactory):
 		|	uint64_t val_bus;
 		|	uint64_t output_ob;
 		|	uint64_t name_bus;
-		|	unsigned coff;
+		|	uint64_t coff;
 		|	unsigned uadr_decode;
 		|	unsigned display;
-		|       unsigned resolve_offset;
+		|       uint64_t resolve_offset;
 		|       unsigned rndx;
 		|	bool cload;
 		|	bool ibuf_fill;
@@ -294,7 +294,7 @@ class SEQ(PartFactory):
 		|
 		|	switch (ir) {
 		|	case 5:
-		|		state->typ_bus |= (uint64_t)(state->name_bus ^ 0xffffffff) << 32;
+		|		state->typ_bus |= (state->name_bus ^ 0xffffffff) << 32;
 		|		break;
 		|	default:
 		|		state->typ_bus |= (uint64_t)state->cur_name << 32;
@@ -302,12 +302,12 @@ class SEQ(PartFactory):
 		|	}
 		|	
 		|	if (!(urand & 0x2)) {
-		|		state->val_bus = (uint64_t)state->pcseg << 32;
+		|		state->val_bus = state->pcseg << 32;
 		|	} else {
-		|		state->val_bus = (uint64_t)state->retseg << 32;
+		|		state->val_bus = state->retseg << 32;
 		|	}
 		|	state->val_bus ^= 0xffffffffULL << 32; 
-		|	state->val_bus ^= (uint64_t)(state->coff >> 12) << 16;
+		|	state->val_bus ^= (state->coff >> 12) << 16;
 		|	state->val_bus ^= 0xffffULL << 16; 
 		|	switch (ir) {
 		|	case 1:
@@ -596,8 +596,8 @@ class SEQ(PartFactory):
 		|	output.lmaco = macro_event && !early_macro_pending;
 		|{
 		|	if (q4pos && !sclke && !state->ibld) {
-		|		state->typ = state->typ_bus;
-		|		state->val = state->val_bus;
+		|		state->macro_ins_typ = state->typ_bus;
+		|		state->macro_ins_val = state->val_bus;
 		|	}
 		|
 		|	unsigned macro_pc_ofs = state->mpc;
@@ -658,24 +658,20 @@ class SEQ(PartFactory):
 		|			uint64_t tmp;
 		|			if (!RNDX(RND_M_PC_MUX)) {
 		|				tmp = state->val_bus;
-		|				state->word = (tmp >> 4) & 7;
+		|				state->word = tmp >> 4;
 		|				state->mpc = (tmp >> 4) & 0x7fff;
 		|			} else {
 		|				state->mpc = state->boff;
-		|				state->word = state->boff & 7;
+		|				state->word = state->boff;
 		|			}
 		|		} else if (mode == 2) {
 		|			state->mpc += 1;
 		|			state->word += 1;
-		|			if (state->word == 0x8)
-		|				state->word = 0;
 		|		} else if (mode == 1) {
 		|			state->mpc -= 1;
-		|			if (state->word == 0x0)
-		|				state->word = 7;
-		|			else
-		|				state->word -= 1;
+		|			state->word += 7;
 		|		}
+		|		state->word &= 7;
 		|	}
 		|
 		|	switch (urand & 3) {
@@ -849,7 +845,6 @@ class SEQ(PartFactory):
 		|		val_name_oe = (!(sel1 && sel2));
 		|	}
 		|
-		|	unsigned typl = state->typ_bus & 0xffffffff;
 		|
 		|	output.z_ospc = PIN_OSPCOE=>;
 		|	if (!output.z_ospc) {
@@ -863,7 +858,7 @@ class SEQ(PartFactory):
 		|	if (PIN_TOSCLK.posedge()) {
 		|		state->tost = state->typ_bus >> 32;
 		|		state->vost = state->val_bus >> 32;
-		|		state->tosof = (typl >> 7) & 0xfffff;
+		|		state->tosof = (state->typ_bus >> 7) & 0xfffff;
 		|	}
 		|
 		|	if (q4pos && !sclke && !RNDX(RND_NAME_LD)) {
@@ -899,13 +894,13 @@ class SEQ(PartFactory):
 		|	unsigned offs;
 		|	if (uses_tos) {
 		|		if (RNDX(RND_TOS_VLB)) {
-		|			offs = (typl >> 7) & 0xfffff;
+		|			offs = (state->typ_bus >> 7) & 0xfffff;
 		|		} else {
 		|			offs = state->tosof;
 		|		}
 		|	} else {
 		|		if (q4pos && !sclke && !RNDX(RND_RES_OFFS)) {
-		|			state->tosram[state->resolve_address] = (typl >> 7) & 0xfffff;
+		|			state->tosram[state->resolve_address] = (state->typ_bus >> 7) & 0xfffff;
 		|		}
 		|		offs = state->tosram[state->resolve_address];
 		|	}
@@ -949,42 +944,40 @@ class SEQ(PartFactory):
 		|
 		|	state->resolve_offset &= 0xfffff;
 		|
-		|	if (q4pos && !sclke && !RNDX(RND_SAVE_LD)) {
+		|	if (state_clock && !RNDX(RND_SAVE_LD)) {
 		|		state->savrg = state->resolve_offset;
 		|		state->carry_out = co;
 		|	}
 		|
-		|	if ((q4pos && !sclke && !RNDX(RND_PRED_LD)) || state_clock) {
+		|	if (state_clock) {
 		|		uint64_t cnb;
 		|		if (!RNDX(RND_CNTL_MUX)) {
-		|			cnb = typl ^ 0xffffffffULL;
+		|			cnb = state->typ_bus ^ 0xffffffffULL;
 		|		} else {
 		|			BUS_DF_READ(cnb);
-		|			cnb &= 0xffffffffULL;
 		|		}
+		|		cnb &= 0xffffffffULL;
 		|		cnb >>= 7;
 		|		cnb &= 0xfffff;
 		|
-		|		if (q4pos && !sclke && !RNDX(RND_PRED_LD)) {
+		|		if (!RNDX(RND_PRED_LD)) {
 		|			state->pred = cnb;
 		|		}
-		|		if (state_clock) {
-		|			unsigned csa_cntl;
-		|			BUS_CTL_READ(csa_cntl);
+		|		unsigned csa_cntl;
+		|		BUS_CTL_READ(csa_cntl);
 		|
-		|			bool ten = (csa_cntl != 2 && csa_cntl != 3);
-		|			bool tud = !(csa_cntl & 1);
-		|			if (!RNDX(RND_TOP_LD)) {
-		|				state->topcnt = cnb;
-		|			} else if (ten) {
-		|				// Nothing
-		|			} else if (tud) {
-		|				state->topcnt += 1;
-		|			} else {
-		|				state->topcnt += 0xfffff;
-		|			}
-		|			state->topcnt &= 0xfffff;
+		|		bool ten = (csa_cntl != 2 && csa_cntl != 3);
+		|		bool tud = !(csa_cntl & 1);
+		|		if (!RNDX(RND_TOP_LD)) {
+		|			state->topcnt = cnb;
+		|		} else if (ten) {
+		|			// Nothing
+		|		} else if (tud) {
+		|			state->topcnt += 1;
+		|		} else {
+		|			state->topcnt += 0xfffff;
 		|		}
+		|		state->topcnt &= 0xfffff;
 		|	}
 		|
 		|	if (dis) {
@@ -1379,24 +1372,16 @@ class SEQ(PartFactory):
 		|	state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !PIN_ENFU=>));
 		|}
 		|	if (q4pos) {
-		|		if (state->word == 7)
-		|			state->display = state->typ >> 48;
-		|		else if (state->word == 6)
-		|			state->display = state->typ >> 32;
-		|		else if (state->word == 5)
-		|			state->display = state->typ >> 16;
-		|		else if (state->word == 4)
-		|			state->display = state->typ >> 0;
-		|		else if (state->word == 3)
-		|			state->display = state->val >> 48;
-		|		else if (state->word == 2)
-		|			state->display = state->val >> 32;
-		|		else if (state->word == 1)
-		|			state->display = state->val >> 16;
-		|		else if (state->word == 0)
-		|			state->display = state->val >> 0;
-		|		else
-		|			state->display = 0xffff;
+		|		switch(state->word) {
+		|		case 0x0: state->display = state->macro_ins_val >>  0; break;
+		|		case 0x1: state->display = state->macro_ins_val >> 16; break;
+		|		case 0x2: state->display = state->macro_ins_val >> 32; break;
+		|		case 0x3: state->display = state->macro_ins_val >> 48; break;
+		|		case 0x4: state->display = state->macro_ins_typ >>  0; break;
+		|		case 0x5: state->display = state->macro_ins_typ >> 16; break;
+		|		case 0x6: state->display = state->macro_ins_typ >> 32; break;
+		|		case 0x7: state->display = state->macro_ins_typ >> 48; break;
+		|		}
 		|		state->display &= 0xffff;
 		|		output.disp0 = state->display >> 15;
 		|	}
@@ -1410,29 +1395,23 @@ class SEQ(PartFactory):
 		|			resolve_drive = true;
 		|		}
 		|		if (!resolve_drive) {
-		|			output.adr = state->resolve_offset;
+		|			output.adr = state->resolve_offset << 7;
 		|		} else if (adr_is_code) {
-		|			output.adr = state->coff >> 3;
+		|			output.adr = (state->coff >> 3) << 7;
 		|		} else {
-		|			output.adr = state->output_ob;
+		|			output.adr = state->output_ob << 7;
 		|		}
-		|		output.adr <<= 7;
 		|
-		|		unsigned branch;
+		|		uint64_t branch;
 		|		branch = state->boff & 7;
 		|		branch ^= 0x7;
 		|		output.adr |= branch << 4;
-		|		uint64_t cseg;
-		|		if (!(urand & 0x2)) {
-		|			cseg = state->pcseg;
+		|		if (!adr_is_code) {
+		|			output.adr |= state->name_bus << 32;
+		|		} else if (!(urand & 0x2)) {
+		|			output.adr |= state->pcseg << 32; 
 		|		} else {
-		|			cseg = state->retseg;
-		|		}
-		|
-		|		if (adr_is_code) {
-		|			output.adr |= cseg << 32;
-		|		} else {
-		|			output.adr |= (uint64_t)state->name_bus << 32;
+		|			output.adr |= state->retseg << 32;
 		|		}
 		|	}
 		|
