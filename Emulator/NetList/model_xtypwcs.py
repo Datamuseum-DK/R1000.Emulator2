@@ -56,63 +56,12 @@ class XTYPWCS(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|#define PERMUTE(MX) \\
-		|	MX( 0, state->ff1, 0, 1) \\
-		|	MX( 1, state->ff1, 1, 1) \\
-		|	MX( 2, state->ff1, 2, 1) \\
-		|	MX( 3, state->ff1, 3, 1) \\
-		|	MX( 4, state->ff1, 4, 1) \\
-		|	MX( 5, state->ff1, 5, 1) \\
-		|	MX( 6, state->ff1, 6, 1) \\
-		|	MX( 7, state->ff1, 7, 1) \\
-		|	MX( 8, state->ff2, 0, 1) \\
-		|	MX( 9, state->ff2, 1, 1) \\
-		|	MX(10, state->ff2, 2, 1) \\
-		|	MX(11, state->ff2, 3, 1) \\
-		|	MX(12, state->ff2, 4, 1) \\
-		|	MX(13, state->ff2, 5, 1) \\
-		|	MX(14, state->ff2, 6, 1) \\
-		|	MX(15, state->ff2, 7, 1) \\
-		|	MX(16, state->ff3, 7, 1) \\
-		|	MX(17, state->sr0, 1, 0) \\
-		|	MX(18, state->sr0, 2, 0) \\
-		|	MX(46, state->sr0, 3, 0) \\
-		|	MX(19, state->sr0, 4, 0) \\
-		|	MX(20, state->sr0, 5, 0) \\
-		|	MX(21, state->sr0, 6, 0) \\
-		|	MX(22, state->sr0, 7, 0) \\
-		|	MX(23, state->sr1, 0, 0) \\
-		|	MX(24, state->sr1, 1, 0) \\
-		|	MX(25, state->sr1, 2, 0) \\
-		|	MX(26, state->sr1, 3, 0) \\
-		|	MX(27, state->sr1, 4, 0) \\
-		|	MX(28, state->sr1, 5, 0) \\
-		|	MX(29, state->sr1, 6, 0) \\
-		|	MX(30, state->sr1, 7, 0) \\
-		|	MX(31, state->sr2, 0, 0) \\
-		|	MX(32, state->sr2, 1, 0) \\
-		|	MX(33, state->sr2, 2, 0) \\
-		|	MX(34, state->sr2, 3, 0) \\
-		|	MX(35, state->sr2, 4, 0) \\
-		|	MX(36, state->sr2, 5, 0) \\
-		|	MX(37, state->sr2, 6, 0) \\
-		|	MX(38, state->sr2, 7, 0) \\
-		|	MX(39, state->sr3, 0, 0) \\
-		|	MX(40, state->sr3, 1, 0) \\
-		|	MX(41, state->sr3, 2, 0) \\
-		|	MX(42, state->sr3, 3, 0) \\
-		|	MX(43, state->sr3, 4, 0) \\
-		|	MX(44, state->sr3, 5, 0) \\
-		|	MX(45, state->sr3, 6, 0) \\
-		|
-		|#define INVM(wcsbit, srnam, srbit, inv) state->wcs ^= (uint64_t)inv << BUS_UIR_LSB(wcsbit);
-		|
 		|	BUS_UAD_READ(state->addr);
 		|
 		|	if (PIN_UCLK.posedge()) {
 		|		state->wcs = state->ram[state->addr];
 		|		state->wcs |= (1ULL << 63);
-		|		PERMUTE(INVM);
+		|		state->wcs ^= 0x7fffc0000000ULL;
 		|		output.uir = state->wcs;
 		|	}
 		|
