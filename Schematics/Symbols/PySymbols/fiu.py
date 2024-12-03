@@ -48,7 +48,6 @@ class FIU(FChip):
         self.sig_left(ChipSig("-->+", "LEABR"))
         self.sig_left(ChipSig("-->+", "EABR"))
         self.sig_left(ChipSig("-->+", "SFSTP"))
-        self.sig_left(ChipSig("-->+", "CSAOOR"))
         self.sig_left(ChipSig("-->+", "FRDRDR"))
         self.sig_left(ChipSig("-->+", "FRDTYP"))
         self.sig_left(ChipSig("-->+", "UEVSTP"))
@@ -75,7 +74,6 @@ class FIU(FChip):
         self.sig_right(ChipSig("+-->", "MEMCT", 0, 3))
 
 
-        self.sig_right(ChipSig("+-->", "OOR"))
         self.sig_right(ChipSig("+-->", "CHIT"))
         self.sig_right(ChipSig("+-->", "RFSH"))
         self.sig_right(ChipSig("+-->", "FRDR"))

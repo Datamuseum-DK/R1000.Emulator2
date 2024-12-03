@@ -105,6 +105,7 @@ class FIU(PartFactory):
 		|	bool pgstq;
 		|	bool nohit;
 		|	bool csaht;
+		|	bool csa_oor_next;
 		|''')
 
 
@@ -129,7 +130,7 @@ class FIU(PartFactory):
         yield "BUS_DT"
         yield "BUS_DV"
 
-        yield "PIN_QADROE"
+        #yield "PIN_QADROE"
 
         #yield "BUS_MSTRT"
         yield "PIN_LABR"
@@ -168,7 +169,7 @@ class FIU(PartFactory):
 		|		break;
 		|	case 0x66: output.conda = (state->moff & 0x3f) > 0x30; 	break;
 		|	case 0x67: output.conda = !output.rfsh; 		break;
-		|	case 0x68: output.condb = !output.oor; 			break;
+		|	case 0x68: output.condb = !state->csa_oor_next;		break;
 		|	case 0x69: output.condb = !false; 			break; // SCAV_HIT
 		|	case 0x6a: output.condb = !state->page_xing; 		break;
 		|	case 0x6b: output.condb = !state->miss; 		break;
@@ -208,7 +209,7 @@ class FIU(PartFactory):
 		|	u |= ((line >> 1) & 1) << BUS_DV_LSB(50);
 		|	u |= (uint64_t)state->nmatch << BUS_DV_LSB(56);
 		|	u |= (uint64_t)state->in_range << BUS_DV_LSB(57);
-		|	u |= (uint64_t)output.oor << BUS_DV_LSB(58);
+		|	u |= (uint64_t)state->csa_oor_next << BUS_DV_LSB(58);
 		|	u |= (uint64_t)output.chit << BUS_DV_LSB(59);
 		|	u |= (uint64_t)output.hofs;
 		|	return (u);
@@ -562,9 +563,9 @@ class FIU(PartFactory):
 		|
 		|	}
 		|}
+		|	bool co, name_match;
 		|{
 		|	unsigned a, b, dif;
-		|	bool co, name_match;
 		|
 		|	if (sclk) {
 		|		// CSAFFB
@@ -607,10 +608,6 @@ class FIU(PartFactory):
 		|				((dif & 0xf) >= state->nve)
 		|			)
 		|		);
-		|	}
-		|
-		|	if (q4pos) {
-		|		output.oor = !(co || name_match);
 		|	}
 		|
 		|	uint64_t adr = 0;
@@ -801,7 +798,7 @@ class FIU(PartFactory):
 		|	} else if (rmarp) {
 		|		csa_oor_next = (state->ti_bus >> BUS_DT_LSB(33)) & 1;
 		|	} else if (state->log_query) {
-		|		csa_oor_next = PIN_CSAOOR=>;
+		|		csa_oor_next = state->csa_oor_next;
 		|	}
 		|
 		|	if (q4pos && !PIN_SFSTP=>) {
@@ -1025,6 +1022,10 @@ class FIU(PartFactory):
 		|		(state->logrw_d && state->csaht)
 		|	);
 		|}
+		|	if (q4pos) {
+		|		state->csa_oor_next = !(co || name_match);
+		|	}
+		|
 		|	if (PIN_H1=> && 60 <= condsel && condsel <= 0x6f)
 		|		fiu_conditions(condsel);
 		|''')
