@@ -241,13 +241,13 @@ class SEQ(PartFactory):
         #yield "PIN_LXVAL"
         yield "PIN_MIBMT"
         yield "PIN_Q3COND"
-        yield "PIN_SGEXT"
+        #yield "PIN_SGEXT"
         #yield "PIN_SSTOP"	# q4pos, aclk
-        yield "PIN_STOP"
+        #yield "PIN_STOP"
         yield "PIN_TCLR"
         #yield "BUS_UEI"		# aclk
 
-        yield "PIN_ADROE"
+        # yield "PIN_ADROE"
         #yield "PIN_OSPCOE"
         #yield "PIN_QFOE"
         #yield "PIN_QTOE"
@@ -911,7 +911,7 @@ class SEQ(PartFactory):
 		|       unsigned sgdisp = state->display & 0xff;
 		|       if (!d7)
 		|               sgdisp |= 0x100;
-		|       if (!(PIN_SGEXT && d7))
+		|       if (!(output.sext && d7))
 		|               sgdisp |= 0xffe00;
 		|
 		|	bool acin = ((mem_start & 1) != 0);
@@ -1080,8 +1080,7 @@ class SEQ(PartFactory):
 		|		output.qf ^= 0xffff;
 		|	}
 		|
-		|	unsigned data = 0, sel;
-		|	bool macro_hic = true;
+		|	unsigned sel;
 		|	bool u_event = true;
 		|
 		|	if (sclk && aclk) {
@@ -1101,80 +1100,81 @@ class SEQ(PartFactory):
 		|		switch (sel) {
 		|		case 0:
 		|		case 7:
-		|			data = state->curuadr;
-		|			data += 1;
+		|			state->other = state->curuadr + 1;
 		|			break;
 		|		case 1:
 		|		case 2:
 		|		case 3:
-		|			BUS_BRN_READ(data);
+		|			BUS_BRN_READ(state->other);
 		|			break;
 		|		case 4:
-		|			BUS_BRN_READ(data);
-		|			data += state->fiu;
+		|			BUS_BRN_READ(state->other);
+		|			state->other += state->fiu;
 		|			break;
 		|		case 5:
-		|			data = state->decode >> 3;
-		|			data <<= 1;
+		|			state->other = state->decode >> 3;
+		|			state->other <<= 1;
 		|			break;
 		|		case 6:
-		|			data = (state->topu ^ 0xffff) & 0x3fff;
+		|			state->other = (state->topu ^ 0xffff) & 0x3fff;
 		|			break;
 		|		default:
 		|			abort();
 		|		}
-		|		state->other = data;
 		|	}
 		|
+		|	state->l_macro_hic = true;
+		|{
+		|	unsigned nua;
 		|	if (!PIN_DV_U) {
-		|		data = state->nxtuadr;
+		|		nua = state->nxtuadr;
 		|	} else if (state->bad_hint) {
-		|		data = state->other;
+		|		nua = state->other;
 		|	} else if (PIN_LMAC=>) {
 		|		// Not tested by expmon_test_seq ?
-		|		data = state->late_u << 3;
-		|		data ^= (7 << 3);
-		|		data |= 0x0140;
-		|		macro_hic = false;
+		|		nua = state->late_u << 3;
+		|		nua ^= (7 << 3);
+		|		nua |= 0x0140;
+		|		state->l_macro_hic = false;
 		|	} else if (state->uei != 0) {
-		|		data = state->uev;
-		|		data <<= 3;
-		|		data |= 0x0180;
+		|		nua = state->uev;
+		|		nua <<= 3;
+		|		nua |= 0x0180;
 		|		u_event = false;
 		|	} else {
 		|		sel = group_sel();
 		|		switch (sel) {
 		|		case 0:
-		|			BUS_BRN_READ(data);
-		|			data += state->fiu;
+		|			BUS_BRN_READ(nua);
+		|			nua += state->fiu;
 		|			break;
 		|		case 1:
-		|			data = state->uadr_decode >> 3;
-		|			data <<= 1;
+		|			nua = state->uadr_decode >> 3;
+		|			nua <<= 1;
 		|			break;
 		|		case 2:
-		|			data = (state->topu ^ 0xffff) & 0x3fff;
+		|			nua = (state->topu ^ 0xffff) & 0x3fff;
 		|			break;
 		|		case 3:
 		|		case 4:
-		|			data = state->curuadr;
-		|			data += 1;
+		|			nua = state->curuadr;
+		|			nua += 1;
 		|			break;
 		|		case 5:
 		|		case 6:
 		|		case 7:
-		|			BUS_BRN_READ(data);
+		|			BUS_BRN_READ(nua);
 		|			break;
 		|		default:
 		|			abort();
 		|		}
 		|	}
+		|
 		|	if (q2pos) {
-		|
-		|		output.nu = data;
+		|		output.nu = nua;
 		|	}
+		|}
 		|
-		|	state->l_macro_hic = macro_hic;
 		|	output.u_event = !u_event;
 		|	output.u_eventnot = u_event;
 		|
