@@ -26,7 +26,6 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "RASEL", 0, 1))
         self.sig_left(ChipSig("-->+", "LAUIR", 0, 1))
         self.sig_left(ChipSig("-->+", "LINC"))
-        self.sig_left(ChipSig("-->+", "MIBMT"))
         self.sig_left(ChipSig("-->+", "URAND", 0, 6))
         self.sig_left(ChipSig("-->+", "IRD", 0, 2))
         self.sig_left(ChipSig("-->+", "ACLK"))
@@ -35,7 +34,6 @@ class SEQ(FChip):
 
         self.sig_left(ChipSig("-->+", "MD"))
 
-        self.sig_left(ChipSig("-->+", "SGEXT"))
         self.sig_left(ChipSig("-->+", "CTL", 0, 2))
 
         self.sig_left(ChipSig("-->+", "CSA", 0, 3))
@@ -84,8 +82,6 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+<--", "UEI", 0, 14))
 
         self.sig_right(ChipSig("+-->", "DISP0"))
-        self.sig_right(ChipSig("+-->", "SEXT"))
-
 
         self.sig_right(ChipSig("+-->", "UEVP"))
 
@@ -93,7 +89,6 @@ class SEQ(FChip):
 
         self.sig_right(ChipSig("+-->", "BHN"))
 
-        self.sig_right(ChipSig("+-->", "MIBUF"))
         self.sig_right(ChipSig("+-->", "QSTP7"))
         self.sig_right(ChipSig("+-->", "HALT"))
         self.sig_right(ChipSig("+-->", "LMACO"))

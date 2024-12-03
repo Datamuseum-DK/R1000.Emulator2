@@ -103,10 +103,10 @@ class SEQ(PartFactory):
 		|
 		|	uint64_t macro_ins_typ, macro_ins_val;
 		|	unsigned word;
-		|	unsigned mpc;
+		|	unsigned macro_pc_offset;
 		|	unsigned curr_lex;
 		|	unsigned retrn_pc_ofs;
-		|	unsigned boff;
+		|	unsigned branch_offset;
 		|	unsigned break_mask;
 		|
 		|	// SEQNAM
@@ -193,6 +193,7 @@ class SEQ(PartFactory):
 		|	bool lxval;
 		|	unsigned resolve_address;
 		|	bool bar8;
+		|	bool m_ibuff_mt;
 		|''')
 
     def init(self, file):
@@ -239,7 +240,6 @@ class SEQ(PartFactory):
         # yield "PIN_FLIP"
         #yield "BUS_LIN"		# aclk
         #yield "PIN_LXVAL"
-        yield "PIN_MIBMT"
         yield "PIN_Q3COND"
         #yield "PIN_SGEXT"
         #yield "PIN_SSTOP"	# q4pos, aclk
@@ -379,7 +379,7 @@ class SEQ(PartFactory):
 		|		return (4);
 		|	if (!state->m_break_class)
 		|		return (6);
-		|	if (!output.mibuf)
+		|	if (!state->m_ibuff_mt)
 		|		return (7);
 		|	return (8);
 		|}
@@ -418,13 +418,13 @@ class SEQ(PartFactory):
 		|		break;
 		|
 		|	case 0x30: // DISP_COND0
-		|		output.condb = state->disp_cond0;
+		|		output.condb = (state->decode & 0x7) == 0;
 		|		break;
 		|	case 0x31: // True
 		|		output.condb = true;
 		|		break;
 		|	case 0x32: // M_IBUFF_MT
-		|		output.condb = PIN_MIBMT=>;
+		|		output.condb = state->m_ibuff_mt;
 		|		break;
 		|	case 0x33: // M_BRK_CLASS
 		|		output.condb = state->m_break_class;
@@ -522,6 +522,7 @@ class SEQ(PartFactory):
 		|	bool sclke = PIN_SCLKE=>;
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = q4pos && !sclke;
+		|	bool sign_extend;
 		|
 		|	if (q3pos) {
 		|		state->bad_hint_enable = !(
@@ -559,22 +560,18 @@ class SEQ(PartFactory):
 		|	state->lxval = !((nxt_lex_valid() >> (15 - state->resolve_address)) & 1);
 		|}
 		|
-		|	unsigned pa040a;
 		|	unsigned pa040d;
 		|{
-		|	unsigned tmp = 0;
-		|	tmp |= (state->decode & 0x7) << 6;
-		|	if (state->wanna_dispatch) tmp |= 0x20;
-		|	if (RNDX(RND_ADR_SEL)) tmp |= 0x10;
-		|	if (state->import_condition) tmp |= 0x08;
-		|	if (PIN_STOP=>) tmp |= 0x04;
-		|	if (PIN_MD=>) tmp |= 0x02;
-		|	if (state->bad_hint) tmp |= 0x01;
-		|	pa040a = tmp;
-		|	pa040d = state->pa040[tmp];
+		|	unsigned pa040a = 0;
+		|	pa040a |= (state->decode & 0x7) << 6;
+		|	if (state->wanna_dispatch) pa040a |= 0x20;
+		|	if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
+		|	if (state->import_condition) pa040a |= 0x08;
+		|	if (PIN_STOP=>) pa040a |= 0x04;
+		|	if (PIN_MD=>) pa040a |= 0x02;
+		|	if (state->bad_hint) pa040a |= 0x01;
+		|	pa040d = state->pa040[pa040a];
 		|}
-		|
-		|	state->disp_cond0 = (pa040d >> 7) & 1;
 		|
 		|	unsigned internal_reads;
 		|	BUS_IRD_READ(internal_reads);
@@ -600,22 +597,20 @@ class SEQ(PartFactory):
 		|		state->macro_ins_val = state->val_bus;
 		|	}
 		|
-		|	unsigned macro_pc_ofs = state->mpc;
-		|
 		|	if (q4pos && !sclke && !RNDX(RND_RETRN_LD)) {
-		|		state->retrn_pc_ofs = state->mpc;
+		|		state->retrn_pc_ofs = state->macro_pc_offset;
 		|	}
 		|
-		|	bool mibmt = PIN_MIBMT;
+		|{
 		|	bool oper;
 		|	unsigned a;
-		|	if (!state->wanna_dispatch && !mibmt) {
+		|	if (!state->wanna_dispatch && !state->m_ibuff_mt) {
 		|		a = 0;
 		|		oper = true;
-		|	} else if (!state->wanna_dispatch && mibmt) {
+		|	} else if (!state->wanna_dispatch && state->m_ibuff_mt) {
 		|		a = state->display;
 		|		oper = false;
-		|	} else if (state->wanna_dispatch && !mibmt) {
+		|	} else if (state->wanna_dispatch && !state->m_ibuff_mt) {
 		|		a = state->curins;
 		|		oper = true;
 		|	} else {
@@ -626,20 +621,20 @@ class SEQ(PartFactory):
 		|	if (a & 0x400)
 		|		a |= 0x7800;
 		|	a ^= 0x7fff;
-		|	unsigned b = macro_pc_ofs & 0x7fff;
+		|	unsigned b = state->macro_pc_offset & 0x7fff;
 		|	if (oper) {
 		|		if (state->wanna_dispatch)
 		|			a += 1;
 		|		a &= 0x7fff;
-		|		state->boff = a + b;
+		|		state->branch_offset = a + b;
 		|	} else {
 		|		if (!state->wanna_dispatch)
 		|			a += 1;
-		|		state->boff = b - a;
+		|		state->branch_offset = b - a;
 		|	}
-		|	state->boff &= 0x7fff;
+		|	state->branch_offset &= 0x7fff;
+		|}
 		|
-		|	//if (PIN_BCLK.posedge()) {
 		|	if (q4pos && !PIN_BHCKE=> && !macro_event) {
 		|		unsigned mode = 0;
 		|		unsigned u = 0;
@@ -648,27 +643,33 @@ class SEQ(PartFactory):
 		|		switch (u) {
 		|		case 0: mode = 1; break;
 		|		case 1: mode = 1; break;
-		|		case 3: mode = 0; break;
 		|		case 2:
+		|			if (!state->bad_hint) {
+		|				state->m_pc_mb = RNDX(RND_M_PC_MD0);
+		|			} else {
+		|				state->m_pc_mb = !((state->bhreg >> 2) & 1);
+		|			}
+		|
 		|			if (state->m_pc_mb) mode |= 2;
 		|			if (RNDX(RND_M_PC_MD1)) mode |= 1;
 		|			break;
+		|		case 3: mode = 0; break;
 		|		}
 		|		if (mode == 3) {
 		|			uint64_t tmp;
 		|			if (!RNDX(RND_M_PC_MUX)) {
 		|				tmp = state->val_bus;
 		|				state->word = tmp >> 4;
-		|				state->mpc = (tmp >> 4) & 0x7fff;
+		|				state->macro_pc_offset = (tmp >> 4) & 0x7fff;
 		|			} else {
-		|				state->mpc = state->boff;
-		|				state->word = state->boff;
+		|				state->macro_pc_offset = state->branch_offset;
+		|				state->word = state->branch_offset;
 		|			}
 		|		} else if (mode == 2) {
-		|			state->mpc += 1;
+		|			state->macro_pc_offset += 1;
 		|			state->word += 1;
 		|		} else if (mode == 1) {
-		|			state->mpc -= 1;
+		|			state->macro_pc_offset -= 1;
 		|			state->word += 7;
 		|		}
 		|		state->word &= 7;
@@ -676,49 +677,46 @@ class SEQ(PartFactory):
 		|
 		|	switch (urand & 3) {
 		|	case 3:	state->coff = state->retrn_pc_ofs; break;
-		|	case 2: state->coff = state->boff; break;
-		|	case 1: state->coff = state->mpc; break;
-		|	case 0: state->coff = state->boff; break;
+		|	case 2: state->coff = state->branch_offset; break;
+		|	case 1: state->coff = state->macro_pc_offset; break;
+		|	case 0: state->coff = state->branch_offset; break;
 		|	}
-		|	state->coff ^= 0x7fff;;
-		|
-		|	unsigned iclex;
-		|
-		|	iclex = (state->val_bus & 0xf) + 1;
+		|	state->coff ^= 0x7fff;
 		|
 		|	if (q4pos && !sclke && !RNDX(RND_CUR_LEX)) {
 		|		state->curr_lex = state->val_bus & 0xf;
 		|		state->curr_lex ^= 0xf;
 		|	}
-		|	unsigned sel, res_addr = 0;
+		|{
+		|	unsigned sel;
 		|	BUS_RASEL_READ(sel);
 		|	switch (sel) {
 		|	case 0:
 		|		if (PIN_LAUIR0=> && PIN_LAUIR1=>)
-		|			res_addr = 0xe;
+		|			state->resolve_address = 0xe;
 		|		else
-		|			res_addr = 0xf;
+		|			state->resolve_address = 0xf;
 		|		break;
 		|	case 1:
-		|		res_addr = (state->display >> 9) & 0xf;
+		|		state->resolve_address = (state->display >> 9) & 0xf;
 		|		break;
 		|	case 2:
-		|		res_addr = iclex;
+		|		state->resolve_address = (state->val_bus & 0xf) + 1;
 		|		break;
 		|	case 3:
-		|		res_addr = state->curr_lex ^ 0xf;
+		|		state->resolve_address = state->curr_lex ^ 0xf;
 		|		break;
 		|	default:
 		|		assert(sel < 4);
 		|	}
-		|	res_addr &= 0xf;
-		|	state->resolve_address = res_addr;
+		|	state->resolve_address &= 0xf;
+		|}
 		|	if (PIN_LINC=>) {
 		|		state->import_condition = true;
-		|		output.sext = true;
+		|		sign_extend = true;
 		|	} else {
-		|		state->import_condition = !(res_addr == 0xf);
-		|		output.sext = !((res_addr > 0xd));
+		|		state->import_condition = !(state->resolve_address == 0xf);
+		|		sign_extend = !((state->resolve_address > 0xd));
 		|	}
 		|
 		|	if (aclk) {
@@ -827,7 +825,7 @@ class SEQ(PartFactory):
 		|		sel1 = false;
 		|		sel2 = true;
 		|	} else {
-		|		uses_tos = (state->uadr_decode >> 2) & 1;
+		|		uses_tos = state->uses_tos;
 		|		mem_start = state->decode & 0x7;
 		|		dis = !PIN_H2=>;
 		|		intreads1 = !(mem_start == 0 || mem_start == 4);
@@ -911,7 +909,7 @@ class SEQ(PartFactory):
 		|       unsigned sgdisp = state->display & 0xff;
 		|       if (!d7)
 		|               sgdisp |= 0x100;
-		|       if (!(output.sext && d7))
+		|       if (!(sign_extend && d7))
 		|               sgdisp |= 0xffe00;
 		|
 		|	bool acin = ((mem_start & 1) != 0);
@@ -999,7 +997,6 @@ class SEQ(PartFactory):
 		|}
 		|{
 		|	bool stkclk = q4pos && PIN_SSTOP=> && state->l_macro_hic;
-		|	bool uevent = output.u_event;
 		|
 		|	if (q2pos) {
 		|		state->ram[(state->adr + 1) & 0xf] = state->topu;
@@ -1010,7 +1007,7 @@ class SEQ(PartFactory):
 		|		bool pop;
 		|		bool stkinpsel_0;
 		|		bool stkinpsel_1;
-		|		if (uevent) {
+		|		if (output.u_event) {
 		|			xwrite = true;
 		|			pop = true;
 		|			stkinpsel_0 = true;
@@ -1080,9 +1077,6 @@ class SEQ(PartFactory):
 		|		output.qf ^= 0xffff;
 		|	}
 		|
-		|	unsigned sel;
-		|	bool u_event = true;
-		|
 		|	if (sclk && aclk) {
 		|		BUS_DF_READ(state->fiu);
 		|		state->fiu &= 0x3fff;
@@ -1096,7 +1090,7 @@ class SEQ(PartFactory):
 		|			if (state->late_u == 8)
 		|				state->late_u = 7;
 		|		}
-		|		sel = group_sel();
+		|		unsigned sel = group_sel();
 		|		switch (sel) {
 		|		case 0:
 		|		case 7:
@@ -1124,6 +1118,8 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|	state->l_macro_hic = true;
+		|	output.u_event = false;
+		|	output.u_eventnot = true;
 		|{
 		|	unsigned nua;
 		|	if (!PIN_DV_U) {
@@ -1140,9 +1136,10 @@ class SEQ(PartFactory):
 		|		nua = state->uev;
 		|		nua <<= 3;
 		|		nua |= 0x0180;
-		|		u_event = false;
+		|		output.u_event = true;
+		|		output.u_eventnot = false;
 		|	} else {
-		|		sel = group_sel();
+		|		unsigned sel = group_sel();
 		|		switch (sel) {
 		|		case 0:
 		|			BUS_BRN_READ(nua);
@@ -1174,9 +1171,6 @@ class SEQ(PartFactory):
 		|		output.nu = nua;
 		|	}
 		|}
-		|
-		|	output.u_event = !u_event;
-		|	output.u_eventnot = u_event;
 		|
 		|	if (aclk) {
 		|		BUS_UEI_READ(state->uei);
@@ -1261,12 +1255,6 @@ class SEQ(PartFactory):
 		|	}
 		|	output.dbhint = !(!state->bad_hint || (state->bhreg & 0x08));
 		|	bool bhint2 = (!state->bad_hint || (state->bhreg & 0x08));
-		|	if (!state->bad_hint) {
-		|		state->m_pc_mb = RNDX(RND_M_PC_MD0);
-		|	} else {
-		|		state->m_pc_mb = !((state->bhreg >> 2) & 1);
-		|	}
-		|
 		|	if (!PIN_TCLR=>) {
 		|		state->treg = 0;
 		|		state->foo7 = false;
@@ -1403,7 +1391,7 @@ class SEQ(PartFactory):
 		|		}
 		|
 		|		uint64_t branch;
-		|		branch = state->boff & 7;
+		|		branch = state->branch_offset & 7;
 		|		branch ^= 0x7;
 		|		output.adr |= branch << 4;
 		|		if (!adr_is_code) {
@@ -1419,7 +1407,7 @@ class SEQ(PartFactory):
 		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
 		|	state->ibld = !ibuff_ld;
 		|	bool ibemp = !(ibuff_ld || (state->word != 0));
-		|	output.mibuf = !(ibemp && state->ibuf_fill);
+		|	state->m_ibuff_mt = !(ibemp && state->ibuf_fill);
 		|
 		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);
 		|
