@@ -43,7 +43,7 @@ class XTCSA(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint8_t elprom[512];
+		|	uint8_t pa060[512];
 		|	uint8_t sr;
 		|	bool inval_csa;
 		|	bool tf_pred;
@@ -51,33 +51,25 @@ class XTCSA(PartFactory):
 
     def init(self, file):
         file.fmt('''
-		|	load_programmable(this->name(),
-		|	    state->elprom, sizeof state->elprom,
-		|	    "PA060");
+		|	load_programmable(this->name(), state->pa060, sizeof state->pa060, "PA060");
 		|''')
-        super().init(file)
 
-    def xxsensitive(self):
-        yield "PIN_FIU_CLK.pos()"
-        yield "PIN_LOCAL_CLK.pos()"
-        yield "PIN_Q1not.pos()"
-        yield "PIN_DV_U"
-        yield "PIN_BAD_HINT"
-        yield "PIN_U_PEND"
+    def sensitive(self):
+        yield "BUS_HITOF"
+        yield "BUS_CSACT"
+        yield "PIN_CSACLK.pos()"
+        yield "PIN_CSAHIT"
 
     def doit(self, file):
-        ''' The meat of the doit() function '''
 
         file.fmt('''
 		|
-		|	bool invlast = state->inval_csa;
-		|	bool pdc1 = state->tf_pred;
-		|	bool invalidate_csa = !(PIN_CSAHIT=> && !pdc1);
+		|	bool invalidate_csa = !(PIN_CSAHIT=> && !state->tf_pred);
 		|	unsigned hit_offs;
 		|	BUS_HITOF_READ(hit_offs);
 		|
 		|	unsigned adr;
-		|	if (pdc1) {
+		|	if (state->tf_pred) {
 		|		adr = state->sr;
 		|		adr |= 0x100;
 		|	} else {
@@ -88,10 +80,10 @@ class XTCSA(PartFactory):
 		|	BUS_CSACT_READ(csacntl);
 		|	adr |= csacntl << 4;
 		|
-		|	if (invlast)
+		|	if (state->inval_csa)
 		|		adr |= (1<<7);
 		|
-		|	unsigned q = state->elprom[adr];
+		|	unsigned q = state->pa060[adr];
 		|	bool load_ctl_top = (q >> 3) & 0x1;
 		|	bool load_top_bot = (q >> 2) & 0x1;
 		|	bool sel_constant = (q >> 1) & 0x1;
@@ -99,7 +91,7 @@ class XTCSA(PartFactory):
 		|
 		|	output.ldtop = !(load_top_bot && ((csacntl >> 1) & 1));
 		|	output.ldbot = !(load_top_bot && ((csacntl >> 2) & 1));
-		|	output.popdn = load_ctl_top && pdc1;
+		|	output.popdn = load_ctl_top && state->tf_pred;
 		|
 		|	if (!invalidate_csa) {
 		|		output.csaof = 0xf;

@@ -87,10 +87,10 @@ class VAL(PartFactory):
         yield "PIN_ADROE.neg()"
         yield "BUS_UIRA"
         yield "BUS_UIRB"
-        yield "PIN_ZSCK.pos()"
+        #yield "PIN_ZSCK.pos()"
         yield "PIN_AWE.pos()"
-        yield "PIN_UCLK.pos()"
-        yield "PIN_CCLK.pos()"
+        #yield "PIN_UCLK.pos()"
+        #yield "PIN_CCLK.pos()"
         yield "PIN_H2"
 
     def priv_decl(self, file):
@@ -234,6 +234,7 @@ class VAL(PartFactory):
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool h2 = PIN_H2=>;
 		|	bool sclken = !PIN_SCLKE=>;
+		|	bool aclk = PIN_CCLK.posedge();
 		|
 		|	bool uirsclk = PIN_UCLK.posedge();
 		|
@@ -242,7 +243,7 @@ class VAL(PartFactory):
 		|	BUS_UIRB_READ(uirb);
 		|	BUS_UIRC_READ(uirc);
 		|
-		|	if (PIN_CCLK.posedge()) {
+		|	if (aclk) {
 		|		bool xor0c = state->mbit ^ (!state->coh);
 		|		bool xor0d = state->output.qbit ^ xor0c;
 		|		bool caoi0b = !(
@@ -314,8 +315,6 @@ class VAL(PartFactory):
 		|	bool start_mult = rand != 0xc;
 		|	bool prod_16 = rand != 0xd;
 		|	bool prod_32 = rand != 0xe;
-		|	if (q2pos)
-		|		output.cntz = rand != 0x5;
 		|	state->divide = rand != 0xb;
 		|
 		|	output.z_qf = PIN_QFOE=>;
@@ -610,7 +609,7 @@ class VAL(PartFactory):
 		|	if (PIN_AWE.posedge() && !state->wen) {
 		|		state->rfram[state->cadr] = state->c;
 		|	}
-		|	if (PIN_ZSCK.posedge()) {
+		|	if (aclk && rand == 0x5) {
 		|		uint64_t count2 = 0x40 - flsll(~state->alu);
 		|		state->zerocnt = ~count2;
 		|	}
@@ -666,7 +665,7 @@ class VAL(PartFactory):
 		|	if (uirsclk) {
 		|		state->csa_offset = csmux3;
 		|	}
-		|	if (PIN_CCLK.posedge()) {
+		|	if (aclk) {
 		|		bool bot_mux_sel, top_mux_sel, add_mux_sel;
 		|		bot_mux_sel = PIN_LBOT=>;
 		|		add_mux_sel = PIN_LTOP=>;

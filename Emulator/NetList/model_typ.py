@@ -82,6 +82,7 @@ class TYP(PartFactory):
 		|	bool is_binary;
 		|	bool sub_else_add;
 		|	bool ovr_en;
+		|	bool foo1;
 		|''')
 
     def init(self, file):
@@ -141,6 +142,7 @@ class TYP(PartFactory):
             yield "PIN_Q4"
             yield "PIN_UEN"
             #yield "PIN_WE.pos()"	# q4?
+            yield "PIN_BHSTP"
 
     def priv_decl(self, file):
         file.fmt('''
@@ -232,12 +234,10 @@ class TYP(PartFactory):
 		|typ_cond(unsigned condsel, unsigned when)
 		|{
 		|
-		|#if 1
 		|	if ((condsel >> 3) == 0xb)
 		|		condsel &= ~0x40;
-		|#endif
+		|
 		|	switch(condsel) {
-		|#if 1
 		|	case 0x18:	// L - TYP_ALU_ZERO
 		|		cond_a(state->zero != 0xff);
 		|		break;
@@ -297,7 +297,6 @@ class TYP(PartFactory):
 		|	case 0x27:	// E - TYP_PREVIOUS
 		|		cond_b(state->last_cond);
 		|		break;
-		|#endif
 		|	case 0x28:	// ML - OF_KIND_MATCH
 		|		{
 		|		unsigned mask_a = state->pa059[clit()] >> 1;
@@ -400,6 +399,7 @@ class TYP(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
+		|	bool aclk = PIN_CCLK.posedge();
 		|
 		|	bool uirsclk = PIN_UCLK.posedge();
 		|	bool sclke = !PIN_SCLKE=>;
@@ -411,25 +411,20 @@ class TYP(PartFactory):
 		|	BUS_RAND_READ(rand);
 		|	BUS_CSEL_READ(condsel);
 		|
-		|	unsigned condmask = 0;
-		|
 		|#define COND(g, c) (((g) << 3)| (c))
 		|	// Early conditions
 		|	assert (state->count <= 0x3ff);
 		|	switch (condsel) {
 		|	case COND(0x3, 4): // E - TYPE_COUNTER_ZERO	 
 		|	case COND(0xb, 4): // E - TYPE_COUNTER_ZERO	 
-		|		condmask = 0x10;
 		|		typ_cond(condsel, 0);
 		|		break;
 		|	case COND(0x4, 5): // E - TYP_FALSE
 		|	case COND(0x4, 6): // E - TYP_TRUE
 		|	case COND(0x4, 7): // E - TYP_PREVIOUS
-		|		condmask = 0x08;
 		|		typ_cond(condsel, 0);
 		|		break;
 		|	case COND(0x6, 4): // E - PASS_PRIVACY_BIT
-		|		condmask = 0x02;
 		|		typ_cond(condsel, 0);
 		|		break;
 		|	}
@@ -492,6 +487,9 @@ class TYP(PartFactory):
 		|		} else {
 		|			state->badr |= uirb & 0x1f;
 		|		}
+		|		unsigned marctl;
+		|		BUS_MCTL_READ(marctl);
+		|		state->foo1 = marctl >= 4;
 		|	}
 		|
 		|	output.z_qf = PIN_QFOE=>;
@@ -553,6 +551,9 @@ class TYP(PartFactory):
 		|		} else {
 		|			assert(uirc <= 0x3f);
 		|		}
+		|		unsigned marctl;
+		|		BUS_MCTL_READ(marctl);
+		|		state->foo1 = marctl >= 4;
 		|	}
 		|	output.z_qt = PIN_QTOE=>;
 		|	if (!h2) {
@@ -564,7 +565,6 @@ class TYP(PartFactory):
 		|		}
 		|	}
 		|	if (q2pos) {
-		|		output.ocken = rand != 0xc;
 		|
 		|		bool divide = rand != 0xb;
 		|		bool acond = true;
@@ -639,70 +639,10 @@ class TYP(PartFactory):
 		|		}
 		|
 		|		if (condgrp == 3) {
-		|			condmask = 0x10;
 		|			typ_cond(condsel, 2);
-		|#if 0	
-		|			bool ovrsign = (!(((A_BIT(0) != B_BIT(0)) && state->is_binary) || (!state->is_binary && !A_BIT(0))));
-		|			switch (condsel & 0x7) {
-		|			case 0:	// L - TYP_ALU_ZERO
-		|			case 6: // L - TYP_ALU_ZERO - COMBO with VAL_ALU_NONZERO
-		|				state->cond = state->zero != 0xff;
-		|				break;
-		|			case 1:	// L - TYP_ALU_NONZERO
-		|				state->cond = state->zero == 0xff;
-		|				break;
-		|			case 2:	// L - TYP_ALU_A_GT_OR_GE_B
-		|				state->cond = !(
-		|				    ((A_BIT(0) != B_BIT(0)) && A_BIT(0)) ||
-		|				    (state->coh && (ovrsign ^ state->sub_else_add))
-		|				);
-		|				break;
-		|			case 4: // E - TYP_LOOP_COUNTER_ZERO
-		|				state->cond = state->count != 0x3ff;
-		|				break;
-		|			case 7: // L - TYP_ALU_32_CO - ALU 32 BIT CARRY OUT
-		|				state->cond = state->com;
-		|				break;
-		|			default:
-		|				state->cond = true;
-		|				break;
-		|			}
-		|#endif
 		|		}
 		|		if (condgrp == 4) {
-		|			condmask = 0x08;
 		|			typ_cond(condsel, 2);
-		|#if 0
-		|			bool ovrsign = (!(((A_BIT(0) != B_BIT(0)) && state->is_binary) || (!state->is_binary && !A_BIT(0))));
-		|			switch (condsel & 0x7) {
-		|			case 0:	// L - TYP_ALU_CARRY
-		|				state->cond = !state->coh;
-		|				break;
-		|			case 1: // L - TYP_ALU_OVERFLOW
-		|				state->cond = state->ovr_en || (
-		|				    state->coh ^ state->almsb ^ state->sub_else_add ^ ovrsign
-		|				);
-		|				break;
-		|			case 2: // L - TYP_ALU_LT_ZERO
-		|				state->cond = state->almsb;
-		|				break;
-		|			case 3: // L - TYP_ALU_LE_ZERO
-		|				state->cond = !(state->almsb && (state->zero != 0xff));
-		|				break;
-		|			case 4: // ML - TYP_SIGN_BITS_EQUAL
-		|				state->cond = (A_BIT(0) != B_BIT(0));
-		|				break;
-		|			case 5: // E - TYP_FALSE
-		|				state->cond = true;
-		|				break;
-		|			case 6: // E - TYP_TRUE
-		|				state->cond = false;
-		|				break;
-		|			case 7:	// E - TYP_PREVIOUS
-		|				state->cond = state->last_cond;
-		|				break;
-		|			}
-		|#endif
 		|		}
 		|	}
 		|
@@ -710,14 +650,11 @@ class TYP(PartFactory):
 		|
 		|		if (condgrp == 5) {
 		|			typ_cond(condsel, 2);
-		|			condmask = 0x04;
 		|		}
 		|		if (condgrp == 6) {
-		|			condmask = 0x02;
 		|			typ_cond(condsel, 2);
 		|		}
 		|		if (condgrp == 7) {
-		|			condmask = 0x01;
 		|			typ_cond(condsel, 2);
 		|		}
 		|	}
@@ -783,6 +720,7 @@ class TYP(PartFactory):
 		|			}
 		|			state->count &= 0x3ff;
 		|		}
+		|#if 0
 		|		if (rand == 0x2) {
 		|			output.lovf = state->count != 0x3ff;
 		|		} else if (rand == 0x1) {
@@ -790,6 +728,7 @@ class TYP(PartFactory):
 		|		} else {
 		|			output.lovf = true;
 		|		}
+		|#endif
 		|	}
 		|
 		|	if (!output.z_qt) {
@@ -799,7 +738,7 @@ class TYP(PartFactory):
 		|	if (uirsclk) {
 		|		state->csa_offset = csmux3;
 		|	}
-		|	if (PIN_CCLK.posedge()) {
+		|	if (aclk) {
 		|		bool bot_mux_sel, top_mux_sel, add_mux_sel;
 		|		bot_mux_sel = PIN_LBOT=>;
 		|		add_mux_sel = PIN_LTOP=>;
@@ -818,18 +757,10 @@ class TYP(PartFactory):
 		|		if (top_mux_sel)
 		|			state->topreg = csalu0;
 		|	}
-		|#if 0
-		|	if (state->cond) {
-		|		output.tcnd &= ~condmask;
-		|	} else {
-		|		output.tcnd |= condmask;
-		|	}
-		|	output.tcnd &= BUS_TCND_MASK;
-		|#endif
-		|	if (PIN_CCLK.posedge()) {
+		|	if (aclk) {
 		|		state->last_cond = state->cond;
 		|	}
-		|	if (PIN_OFC.posedge()) {
+		|	if (aclk && rand == 0xc) {
 		|		state->ofreg = state->b >> 32;
 		|	}
 		|
@@ -907,6 +838,7 @@ class TYP(PartFactory):
 		|			output.qsp = state->b ^ 0x7;
 		|		}
 		|	}
+		|	output.ldmar = !(state->foo1 && PIN_BHSTP=>);
 		|''')
 
 def register(part_lib):

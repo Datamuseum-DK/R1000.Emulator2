@@ -25,7 +25,6 @@ class VAL(FChip):
         self.sig_left(ChipSig("-->+", "UCLK"))
         self.sig_left(ChipSig("-->+", "CCLK"))
         self.sig_left(ChipSig("-->+", "LDWDR"))
-        self.sig_left(ChipSig("-->+", "ZSCK"))
         self.sig_left(ChipSig("-->+", "UIRA", 0, 5))
         self.sig_left(ChipSig("-->+", "UIRB", 0, 5))
         self.sig_left(ChipSig("-->+", "FRM", 0, 4))
@@ -52,7 +51,6 @@ class VAL(FChip):
         self.sig_right(ChipSig("+===", "ADR", 0, 63))
         self.sig_right(ChipSig("+<--", "ADROE"))
 
-        self.sig_right(ChipSig("+-->", "CNTZ"))
         self.sig_right(ChipSig("+-->", "CNTOV"))
         self.sig_right(ChipSig("+-->", "CWE"))
         self.sig_right(ChipSig("+-->", "VCNDA"))
