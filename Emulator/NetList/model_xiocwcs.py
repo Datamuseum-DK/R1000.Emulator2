@@ -52,8 +52,6 @@ class XIOCWCS(PartFactory):
 		|	unsigned tracnt;	// Z023
 		|	unsigned sr0, sr1;
 		|	unsigned aen;
-		|	bool csa_hit;
-		|	bool dummy_en;
 		|''')
 
     def sensitive(self):
@@ -72,15 +70,14 @@ class XIOCWCS(PartFactory):
 		|	bool uir_clk = false;
 		|
 		|	if (q4_pos) {
-		|		state->dummy_en = !PIN_DUMNXT=>;
-		|		output.dumen = state->dummy_en;
-		|		state->csa_hit = !PIN_ICSAH=>;
-		|		output.csahit = state->csa_hit;
+		|		output.dumen = !PIN_DUMNXT=>;
+		|		bool csa_hit = !PIN_ICSAH=>;
+		|		output.csahit = csa_hit;
 		|
 		|		unsigned tmp = 0;
 		|		if (PIN_CLKSTP=>)
 		|			tmp |= 0x8000;
-		|		if (state->csa_hit)
+		|		if (csa_hit)
 		|			tmp |= 0x4000;
 		|		tmp |= uadr & 0x3fff;
 		|		state->tram[state->tracnt] = tmp;

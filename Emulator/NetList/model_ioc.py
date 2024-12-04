@@ -101,6 +101,7 @@ class IOC(PartFactory):
 		|	bool sen, den, ten;
 		|	uint8_t pb011[32];
 		|	bool multibit_error, checkbit_error;
+		|	bool pfr;
 		|''');
 
 
@@ -118,25 +119,11 @@ class IOC(PartFactory):
 		|	state->ram = (uint8_t*)(c1 + 1);
 		|''')
 
-    def xprivate(self):
-        ''' private variables '''
-        yield from self.event_or(
-            "idle_event",
-            "PIN_QTYPOE",
-            "PIN_QVALOE",
-            "PIN_LDDUM",
-        )
-
     def xsensitive(self):
         yield "PIN_QTYPOE"
         yield "PIN_QVALOE"
         yield "PIN_Q4.pos()"
         yield "PIN_Q2.pos()"
-        #yield "PIN_QTOE"
-        #yield "PIN_QTHOE"
-        #yield "PIN_QTMOE"
-        #yield "PIN_QTLOE"
-        #yield "PIN_QIOE"
 
     def priv_decl(self, file):
         ''' further private decls '''
@@ -307,10 +294,6 @@ class IOC(PartFactory):
 		|	BUS_DVAL_READ(val);
 		|
 		|{
-		|	if (q4_pos && !PIN_LDDUM=>) {
-		|		state->dummy_typ = typ;
-		|		state->dummy_val = val;
-		|	}
 		|
 		|	unsigned cbi = 0, cbo = 0;
 		|	if (!PIN_TVEN=>) {
@@ -420,22 +403,6 @@ class IOC(PartFactory):
 		|		state->rtc &= 0xffff;
 		|	}
 		|}
-		|{
-		|	uint64_t ttyp, tmp;
-		|
-		|	ttyp = typ;
-		|
-		|	ttyp &= 0xffffffff;
-		|	tmp = ttyp >> 7;
-		|	tmp &= 0xfffff;
-		|	output.below = (tmp >= 0xc);
-		|	tmp = ttyp & 0x80000047;
-		|	output.pfr = 
-		|	    tmp == 0x80000000 ||
-		|	    tmp == 0x80000040 ||
-		|	    tmp == 0x80000044;
-		|
-		|}
 		|
 		|{
 		|
@@ -540,27 +507,40 @@ class IOC(PartFactory):
 		|	}
 		|	
 		|	bool load_wdr = PIN_ULWDR=>;
-		|	output.droth = (rand & 0x1e) != 0x18;
-		|	output.expro = rand != 0x12;
 		|
 		|	bool uir_load_wdr = !load_wdr;
 		|
 		|	output.ldwdr = !(uir_load_wdr && PIN_SCLKST=>);
 		|
-		|	bool rstrdr = PIN_RSTRDR=>;
-		|
-		|	output.ldum = !(rddum && !rstrdr);
+		|	if (q4_pos && rddum && !PIN_RSTRDR=>) {
+		|		state->dummy_typ = typ;
+		|		state->dummy_val = val;
+		|	}
 		|
 		|	bool disable_ecc = ((state->pb011[rand] >> 0) & 1);
 		|	output.decc = !(disable_ecc || output.memtv);
 		|
 		|	bool drive_other_cb = ((state->pb011[rand] >> 5) & 1);
 		|	output.qcdr = !(uir_load_wdr && drive_other_cb && output.memtv);
-		|	if (!output.droth)
+		|	if ((rand & 0x1e) == 0x18)
 		|		output.qcdr = false;
 		|
 		|	output.qvaldr = ioctv;
 		|	output.qtypdr = ioctv;
+		|}
+		|{
+		|	uint64_t tmp;
+		|
+		|	tmp = (typ >> 7) & 0xfffff;
+		|	bool below = (tmp >= 0xc);
+		|	bool exit_proc = rand != 0x12;
+		|	output.bltcp = !(below || exit_proc);
+		|	tmp = typ & 0x80000047;
+		|	state->pfr = 
+		|	    tmp == 0x80000000 ||
+		|	    tmp == 0x80000040 ||
+		|	    tmp == 0x80000044;
+		|
 		|}
 		|
 		|	output.z_qval = output.qvaldr;
@@ -606,7 +586,7 @@ class IOC(PartFactory):
 		|		output.cond = state->multibit_error;
 		|		break;
 		|	case 0x79:
-		|		output.cond = output.pfr;
+		|		output.cond = state->pfr;
 		|		break;
 		|	case 0x7a:
 		|		output.cond = state->checkbit_error;

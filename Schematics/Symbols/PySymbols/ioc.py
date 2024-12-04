@@ -38,10 +38,6 @@ class IOC(FChip):
         self.sig_left(ChipSig("-->+", "SCLKST"))
         self.sig_left(ChipSig("-->+", "RSTRDR"))
 
-        self.sig_left(ChipSig("-->+", "LDDUM"))
-        self.sig_left(ChipSig("-->+", "ITYP"))
-        self.sig_left(ChipSig("-->+", "IVAL"))
-
         self.sig_left(ChipSig("-->+", "CONDS", 0, 6))
 
         self.sig_right(ChipSig("+<->", "DQVAL", 0, 63))
@@ -58,8 +54,6 @@ class IOC(FChip):
 
         self.sig_right(ChipSig("+-->", "RSPEMN"))
 
-        self.sig_right(ChipSig("+-->", "BELOW"))
-        self.sig_right(ChipSig("+-->", "PFR"))
 
         self.sig_right(ChipSig("+-->", "SME"))
         self.sig_right(ChipSig("+-->", "DME"))
@@ -72,14 +66,12 @@ class IOC(FChip):
         self.sig_right(ChipSig("+-->", "MEMV"))
         self.sig_right(ChipSig("+-->", "VALV"))
         self.sig_right(ChipSig("+-->", "TYPT"))
-        self.sig_right(ChipSig("+-->", "DROTH"))
-        self.sig_right(ChipSig("+-->", "EXPRO"))
 	
         self.sig_right(ChipSig("+-->", "LDWDR"))
-        self.sig_right(ChipSig("+-->", "LDUM"))
         self.sig_right(ChipSig("+-->", "DECC"))
 
         self.sig_right(ChipSig("+-->", "COND"))
+        self.sig_right(ChipSig("+-->", "BLTCP"))
 
 
         self.finish()
