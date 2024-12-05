@@ -132,6 +132,7 @@ class SEQ(PartFactory):
 		|	unsigned uev;
 		|
 		|	uint8_t pa040[512];
+		|	uint8_t pa041[512];
 		|	uint8_t pa043[512];
 		|	uint8_t pa044[512];
 		|	uint8_t pa045[512];
@@ -162,7 +163,6 @@ class SEQ(PartFactory):
 		|	bool m_pc_mb;
 		|	unsigned n_in_csa;
 		|	unsigned decode;
-		|	unsigned lmp;
 		|	unsigned wanna_dispatch;
 		|	bool ibld;
 		|	bool field_number_error;
@@ -185,7 +185,6 @@ class SEQ(PartFactory):
 		|	bool bad_hint_enable;
 		|	bool ferr;
 		|
-		|	uint8_t pa041[512];
 		|	uint16_t lex_valid;
 		|	uint16_t dns;
 		|	uint16_t dra;
@@ -199,17 +198,13 @@ class SEQ(PartFactory):
     def init(self, file):
         file.fmt('''
 		|	load_programmable(this->name(), state->pa040, sizeof state->pa040, "PA040-02");
+		|	load_programmable(this->name(), state->pa041, sizeof state->pa041, "PA041-01");
 		|	load_programmable(this->name(), state->pa043, sizeof state->pa043, "PA043-02");
 		|	load_programmable(this->name(), state->pa044, sizeof state->pa044, "PA044-01");
 		|	load_programmable(this->name(), state->pa045, sizeof state->pa045, "PA045-03");
 		|	load_programmable(this->name(), state->pa046, sizeof state->pa046, "PA046-02");
 		|	load_programmable(this->name(), state->pa047, sizeof state->pa047, "PA047-02");
 		|	load_programmable(this->name(), state->pa048, sizeof state->pa048, "PA048-02");
-		|''')
-        file.fmt('''
-		|	load_programmable(this->name(),
-		|	    state->pa041, sizeof state->pa041,
-		|	    "PA041-01");
 		|''')
 
     def sensitive(self):
@@ -218,52 +213,19 @@ class SEQ(PartFactory):
         yield "PIN_H2"
 
         yield "PIN_ACLK"
-        # yield "PIN_BCLK"
         yield "PIN_LCLK"
-        yield "PIN_TOSCLK"
+        #yield "PIN_TOSCLK"
 
         yield "PIN_SCLKE"
-        #yield "PIN_BHCKE"	# aclk
 
         yield "PIN_BHEN"
         yield "PIN_COND"
         yield "BUS_CSA"
-        #yield "BUS_CTL"		# q4pos
-        #yield "BUS_DF"		# FIU_CLK, stkclk, q4pos
         yield "PIN_DMODE"
-        #yield "BUS_DT"
-        #yield "BUS_DV"
         yield "PIN_DV_U"
-        #yield "BUS_EMAC"	# aclk
         yield "PIN_ENFU"
-        #yield "PIN_FIU_CLK"
-        # yield "PIN_FLIP"
-        #yield "BUS_LIN"		# aclk
-        #yield "PIN_LXVAL"
         yield "PIN_Q3COND"
-        #yield "PIN_SGEXT"
-        #yield "PIN_SSTOP"	# q4pos, aclk
-        #yield "PIN_STOP"
         yield "PIN_TCLR"
-        #yield "BUS_UEI"		# aclk
-
-        # yield "PIN_ADROE"
-        #yield "PIN_OSPCOE"
-        #yield "PIN_QFOE"
-        #yield "PIN_QTOE"
-        #yield "PIN_QVOE"
-
-        #yield "BUS_BRN"		# ucode
-        #yield "BUS_BRTIM"	# ucode
-        #yield "BUS_BRTYP"	# ucode
-        #yield "BUS_CSEL"	# ucode
-        #yield "BUS_IRD"		# ucode
-        #yield "BUS_LAUIR"	# ucode
-        #yield "PIN_LINC"	# ucode
-        #yield "PIN_LMAC"	# ucode
-        #yield "PIN_MD"		# ucode
-        #yield "BUS_RASEL"	# ucode
-        #yield "BUS_URAND"	# ucode
 
     def priv_decl(self, file):
         file.fmt('''
@@ -578,13 +540,13 @@ class SEQ(PartFactory):
 		|
 		|	int_reads(internal_reads, urand);
 		|
-		|	state->lmp = late_macro_pending();
+		|	unsigned lmp = late_macro_pending();
 		|	bool early_macro_pending = state->emac != 0x7f;
-		|	bool macro_event = (!state->wanna_dispatch) && (early_macro_pending || (state->lmp != 8));
-		|	bool dispatch = state->wanna_dispatch || early_macro_pending || (state->lmp != 8);
+		|	bool macro_event = (!state->wanna_dispatch) && (early_macro_pending || (lmp != 8));
+		|	bool dispatch = state->wanna_dispatch || early_macro_pending || (lmp != 8);
 		|	bool lmac = macro_event && !early_macro_pending;
 		|
-		|	bool mbuf = !(lmac && (state->lmp >= 7));
+		|	bool mbuf = !(lmac && (lmp >= 7));
 		|	if (macro_event) {
 		|		state->bar8 = !mbuf;
 		|	} else {
@@ -853,7 +815,8 @@ class SEQ(PartFactory):
 		|		}
 		|	}
 		|
-		|	if (PIN_TOSCLK.posedge()) {
+		|	//if (PIN_TOSCLK.posedge()) {
+		|	if (q3pos && RNDX(RND_TOS_VLB) && !PIN_STOP=>) {
 		|		state->tost = state->typ_bus >> 32;
 		|		state->vost = state->val_bus >> 32;
 		|		state->tosof = (state->typ_bus >> 7) & 0xfffff;
@@ -1086,7 +1049,7 @@ class SEQ(PartFactory):
 		|		if (PIN_MD=>) {
 		|			state->late_u = 7;
 		|		} else {
-		|			state->late_u = state->lmp;
+		|			state->late_u = late_macro_pending();
 		|			if (state->late_u == 8)
 		|				state->late_u = 7;
 		|		}
