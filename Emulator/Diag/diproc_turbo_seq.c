@@ -253,6 +253,11 @@ diagproc_turbo_seq(const struct diagproc *dp)
 		sc_tracef(dp->name, "Turbo CLR_BREAK_MASK.SEQ");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
+	if (dp->dl_hash == GET_MISC_ERRORS_SEQ_HASH) {
+		sc_tracef(dp->name, "Turbo GET_MISC_ERRORS.SEQ");
+		dp->ram[0x18] = 0x1f;
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 
 	return (0);
 }
