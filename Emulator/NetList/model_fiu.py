@@ -63,7 +63,6 @@ class FIU(PartFactory):
 		|	unsigned moff;
 		|	bool pdt;
 		|
-		|	uint64_t mstat[32];
 		|	bool state0, state1, labort, e_abort_dly;
 		|	uint8_t pa025[512];
 		|	uint8_t pa026[512];
@@ -111,14 +110,10 @@ class FIU(PartFactory):
 
     def init(self, file):
         file.fmt('''
-		|	load_programmable(this->name(),
-		|	    state->pa025, sizeof state->pa025, "PA025-03");
-		|	load_programmable(this->name(),
-		|	    state->pa026, sizeof state->pa026, "PA026-02");
-		|	load_programmable(this->name(),
-		|	    state->pa027, sizeof state->pa027, "PA027-01");
-		|	load_programmable(this->name(),
-		|	    state->pa028, sizeof state->pa028, "PA028-02");
+		|	load_programmable(this->name(), state->pa025, sizeof state->pa025, "PA025-03");
+		|	load_programmable(this->name(), state->pa026, sizeof state->pa026, "PA026-02");
+		|	load_programmable(this->name(), state->pa027, sizeof state->pa027, "PA027-01");
+		|	load_programmable(this->name(), state->pa028, sizeof state->pa028, "PA028-02");
 		|''')
 
     def sensitive(self):
@@ -692,8 +687,6 @@ class FIU(PartFactory):
 		|	unsigned mem_start;
 		|	BUS_MSTRT_READ(mem_start);
 		|	mem_start ^= 0x1e;
-		|	if (q4pos)
-		|		state->mstat[mem_start]++;
 		|
 		|	bool l_abort = PIN_LABR=>;
 		|	bool le_abort = PIN_LEABR=>;
@@ -713,6 +706,16 @@ class FIU(PartFactory):
 		|	unsigned pa025 = state->pa025[pa025a];
 		|	bool memcyc1 = (pa025 >> 1) & 1;
 		|	bool memstart = (pa025 >> 0) & 1;
+		|#if 1
+		|	if (memstart) {
+		|		state->mcntl = state->lcntl;
+		|	} else {
+		|		state->mcntl = state->pcntl_d;
+		|	}
+		|	state->phys_ref = !(state->mcntl & 0x6);
+		|	state->logrwn = !(state->logrw && memcyc1);
+		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
+		|#endif
 		|
 		|	unsigned pa026a = 0;
 		|	pa026a |= mem_start;
@@ -821,11 +824,7 @@ class FIU(PartFactory):
 		|
 		|		state->log_query = !(state->labort || state->logrwn);
 		|		
-		|		state->omf20 = (
-		|			memcyc1 &&
-		|			((state->prmt >> 3) & 1) &&
-		|			!PIN_SCLKE=>
-		|		);
+		|		state->omf20 = (memcyc1 && ((state->prmt >> 3) & 1) && !PIN_SCLKE=>);
 		|		
 		|		if (memcyc1)
 		|			state->mctl_is_read = !(state->lcntl & 1);
@@ -839,18 +838,9 @@ class FIU(PartFactory):
 		|		// PIN_MISS instead of cache_miss_next looks suspicious
 		|		// but confirmed on both /200 and /400 FIU boards.
 		|		// 20230910/phk
-		|		state->memex = !(
-		|			//!PIN_MISS=> &&
-		|			!state->miss &&
-		|			!csa_oor_next &&
-		|			!scav_trap_next
-		|		);
+		|		state->memex = !(!state->miss && !csa_oor_next && !scav_trap_next);
 		|	} else {
-		|		state->memex = !(
-		|			!state->cache_miss &&
-		|			!state->csa_oor &&
-		|			!state->scav_trap
-		|		);
+		|		state->memex = !(!state->cache_miss && !state->csa_oor && !state->scav_trap);
 		|	}
 		|
 		|	if (q4pos && !PIN_SCLKE=>) {
@@ -870,16 +860,21 @@ class FIU(PartFactory):
 		|		state->rtv_next = (pa026 >> 4) & 1; // START_TAG_RD
 		|		state->memcnd = (pa025 >> 4) & 1;	// CM_CTL0
 		|		state->cndtru = (pa025 >> 3) & 1;	// CM_CTL1
+		|		output.rtvnxt = !(state->rtv_next);
+		|		output.memcnd = !(state->memcnd);
+		|		output.cndtru = !(state->cndtru);
 		|	}
+		|#if 0
 		|	if (memstart) {
 		|		state->mcntl = state->lcntl;
 		|	} else {
 		|		state->mcntl = state->pcntl_d;
 		|	}
-		|
 		|	state->phys_ref = !(state->mcntl & 0x6);
 		|	state->logrwn = !(state->logrw && memcyc1);
 		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
+		|#endif
+		|
 		|
 		|	if (h2pos) {	// SEQ needs it by q4pos
 		|		if (memcyc1) {
@@ -896,9 +891,8 @@ class FIU(PartFactory):
 		|	pa025a |= state->labort << 6;
 		|	pa025a |= state->e_abort_dly << 5;
 		|	pa025 = state->pa025[pa025a];
-		|	bool contin = (pa025 >> 5) & 1;
-		|	if (q2pos) {
-		|		output.contin = !(contin);
+		|	if (h2pos) {
+		|		output.contin = !((pa025 >> 5) & 1);
 		|	}
 		|
 		|	pa026a = 0;
@@ -927,9 +921,6 @@ class FIU(PartFactory):
 		|		state->pgstq |= 1;
 		|	if (!state->drive_mru || !(pa027 & 0x80))
 		|		state->pgstq |= 2;
-		|	output.rtvnxt = !(state->rtv_next);
-		|	output.memcnd = !(state->memcnd);
-		|	output.cndtru = !(state->cndtru);
 		|	state->nohit = board_hit != 0xf;
 		|
 		|	unsigned pa028a = mar_cntl << 5;
@@ -941,17 +932,15 @@ class FIU(PartFactory):
 		|	state->prmt = state->pa028[pa028a];
 		|	state->prmt ^= 0x02;
 		|	state->prmt &= 0x7b;
-		|	output.frdr = (state->prmt >> 1) & 1;
 		|
 		|	if (q2pos) {
+		|		output.frdr = (state->prmt >> 1) & 1;
 		|		if (sel) {
 		|			output.dnext = !((state->prmt >> 0) & 1);
 		|		} else {
 		|			output.dnext = !state->dumon;
 		|		}
-		|	}
 		|
-		|	if (q2pos) {
 		|		output.csawr = !(
 		|			PIN_LABR=> &&
 		|			PIN_LEABR=> &&
