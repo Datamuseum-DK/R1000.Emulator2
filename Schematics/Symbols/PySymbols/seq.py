@@ -100,6 +100,7 @@ class SEQ(FChip):
         self.sig_right(ChipSig("o-->", "U_EVENT~"))
         self.sig_right(ChipSig("o-->", "SFIVE"))
         self.sig_right(ChipSig("o-->", "ABORT"))
+        self.sig_right(ChipSig("o-->", "FOO9"))
 
 
         self.finish()

@@ -193,6 +193,7 @@ class SEQ(PartFactory):
 		|	unsigned resolve_address;
 		|	bool bar8;
 		|	bool m_ibuff_mt;
+		|	bool foo9;
 		|''')
 
     def init(self, file):
@@ -225,7 +226,6 @@ class SEQ(PartFactory):
         yield "PIN_DV_U"
         yield "PIN_ENFU"
         yield "PIN_Q3COND"
-        yield "PIN_TCLR"
 
     def priv_decl(self, file):
         file.fmt('''
@@ -1082,7 +1082,7 @@ class SEQ(PartFactory):
 		|
 		|	state->l_macro_hic = true;
 		|	output.u_event = false;
-		|	output.u_eventnot = true;
+		|	// output.u_eventnot = true;
 		|{
 		|	unsigned nua;
 		|	if (!PIN_DV_U) {
@@ -1100,7 +1100,7 @@ class SEQ(PartFactory):
 		|		nua <<= 3;
 		|		nua |= 0x0180;
 		|		output.u_event = true;
-		|		output.u_eventnot = false;
+		|		//output.u_eventnot = false;
 		|	} else {
 		|		unsigned sel = group_sel();
 		|		switch (sel) {
@@ -1195,7 +1195,8 @@ class SEQ(PartFactory):
 		|
 		|	if (aclk) {
 		|		adr = 0;
-		|		if (output.u_eventnot) adr |= 0x02;
+		|		if (!output.u_event)
+		|			adr |= 0x02;
 		|		if (!macro_event)
 		|			adr |= 0x04;
 		|		adr |= btimm << 3;
@@ -1218,7 +1219,9 @@ class SEQ(PartFactory):
 		|	}
 		|	output.dbhint = !(!state->bad_hint || (state->bhreg & 0x08));
 		|	bool bhint2 = (!state->bad_hint || (state->bhreg & 0x08));
-		|	if (!PIN_TCLR=>) {
+		|	//if (!PIN_TCLR=>) {
+		|	bool foo9a = !(state->foo9 || !output.u_event);
+		|	if (q3pos && foo9a) {
 		|		state->treg = 0;
 		|		state->foo7 = false;
 		|	}
@@ -1406,6 +1409,9 @@ class SEQ(PartFactory):
 		|		} else {
 		|			output.abort = false;
 		|		}
+		|	}
+		|	if (PIN_LCLK.posedge()) {
+		|		state->foo9 = !RNDX(RND_TOS_VLB);
 		|	}
 		|''')
 
