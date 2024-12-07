@@ -99,6 +99,7 @@ class VAL(PartFactory):
 		|	bool cond_a(unsigned csel);
 		|	bool cond_b(unsigned csel);
 		|	bool cond_c(unsigned csel);
+		|	bool fiu_cond(void);
 		|''')
 
     def priv_impl(self, file):
@@ -222,6 +223,43 @@ class VAL(PartFactory):
 		|	}
 		|	return (cond);
 		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|fiu_cond(void)
+		|{
+		|	unsigned csel;
+		|	BUS_CSEL_READ(csel);
+		|	bool fcond;
+		|	switch (csel) {
+		|	case 0x00:
+		|		fcond = state->zero == 0xff;
+		|		break;
+		|	case 0x01:
+		|		fcond = state->zero != 0xff;
+		|		break;
+		|	case 0x02:
+		|		if (state->amsb ^ state->bmsb) {
+		|			fcond = state->bmsb;
+		|		} else {
+		|			fcond = !state->coh;
+		|		}
+		|		break;
+		|	case 0x0f:
+		|	case 0x16:		// Undocumented
+		|		fcond = state->last_cond;
+		|		break;
+		|	default:
+		|		ALWAYS_TRACE(
+		|			<< std::hex << "BAD FIUCOND"
+		|			<< " csel " << csel
+		|		);
+		|		fcond = true;
+		|		// assert(false);
+		|		break;
+		|	}
+		|	return (!fcond);
+		|}
 		|''')
 
     def doit(self, file):
@@ -310,7 +348,6 @@ class VAL(PartFactory):
 		|
 		|	unsigned rand;
 		|	BUS_RAND_READ(rand);
-		|	bool split_c_src = rand != 0x4;
 		|	bool get_literal = rand != 0x6;
 		|	bool start_mult = rand != 0xc;
 		|	bool prod_16 = rand != 0xd;
@@ -464,103 +501,47 @@ class VAL(PartFactory):
 		|		}
 		|	}
 		|
-		|	if (h2) {
-		|		uint64_t c = 0;
-		|		uint64_t fiu = 0, wdr = 0;
-		|		bool sel0 = PIN_SEL0=>;
-		|		bool sel1 = PIN_SEL1=>;
+		|	if (q2pos) {
+		|		uint64_t c2;
+		|		uint64_t fiu = 0, mux = 0;
 		|		bool c_source = PIN_CSRC=>;
-		|		bool efiu0 = !c_source;
-		|		bool efiu1 = (c_source != split_c_src);
-		|		bool chi = false;
-		|		bool clo = false;
-		|
-		|		if (efiu0 || efiu1) {
+		|		bool split_c_src = rand == 0x4;
+		|		if (split_c_src || !c_source) {
 		|			BUS_DF_READ(fiu);
 		|			fiu ^= BUS_DF_MASK;
-		|		}
-		|		if (efiu0) {
-		|			c |= fiu & 0xffffffff00000000ULL;
-		|			chi = true;
-		|		} else if (!sel0) {
-		|			if (sel1) {
-		|				c |= (state->alu >> 16) & 0xffffffff00000000ULL;
-		|				c |= 0xffff000000000000ULL;
-		|			} else {
-		|				c |= (state->alu << 1) & 0xffffffff00000000ULL;
+		|			if ((c_source == split_c_src) && (rand == 3 || rand == 6)) {
+		|				fiu &= ~1ULL;
+		|				fiu |= fiu_cond();
 		|			}
-		|			chi = true;
+		|		}
+		|		if (c_source || split_c_src) {
+		|			unsigned sel;
+		|			BUS_SEL_READ(sel);
+		|			switch (sel) {
+		|			case 0x0:
+		|				mux = state->alu << 1;
+		|				mux |= 1;
+		|				break;
+		|			case 0x1:
+		|				mux = state->alu >> 16;
+		|				mux |= 0xffffULL << 48;
+		|				break;
+		|			case 0x2: mux = state->alu; break;
+		|			case 0x3: mux = state->wdr; break;
+		|			}
+		|		}
+		|		if (!split_c_src && !c_source) {
+		|			c2 = fiu;
+		|		} else if (!split_c_src) {
+		|			c2 = mux;
+		|		} else if (c_source) {
+		|			c2 = fiu & 0xffffffffULL;
+		|			c2 |= mux & 0xffffffffULL << 32;
 		|		} else {
-		|			if (sel1) {
-		|				wdr = state->wdr;
-		|				c |= wdr & 0xffffffff00000000ULL;
-		|			} else {
-		|				c |= state->alu & 0xffffffff00000000ULL;
-		|			}
-		|			chi = true;
+		|			c2 = mux & 0xffffffffULL;
+		|			c2 |= fiu & 0xffffffffULL << 32;
 		|		}
-		|		if (efiu1) {
-		|			c |= fiu & 0xfffffffeULL;
-		|			if ((rand != 0x3) && (rand != 0x6)) {
-		|				c |= fiu & 0x1ULL;
-		|			} else {
-		|				unsigned csel;
-		|				BUS_CSEL_READ(csel);
-		|				bool fcond;
-		|				switch (csel) {
-		|				case 0x00:
-		|					fcond = state->zero == 0xff;
-		|					break;
-		|				case 0x01:
-		|					fcond = state->zero != 0xff;
-		|					break;
-		|				case 0x02:
-		|					if (state->amsb ^ state->bmsb) {
-		|						fcond = state->bmsb;
-		|					} else {
-		|						fcond = !state->coh;
-		|					}
-		|					break;
-		|				case 0x0f:
-		|				case 0x16:		// Undocumented
-		|					fcond = state->last_cond;
-		|					break;
-		|				default:
-		|					ALWAYS_TRACE(
-		|						<< std::hex << "BAD FIUCOND"
-		|						<< " rand " << rand
-		|						<< " csel " << csel
-		|					);
-		|					fcond = true;
-		|					// assert(false);
-		|					break;
-		|				}
-		|				fcond = !fcond;
-		|				c |= fcond & 1;
-		|			}
-		|			clo = true;
-		|		} else if (!sel0) {
-		|			if (sel1) {
-		|				c |= (state->alu >> 16) & 0xffffffffULL;
-		|			} else {
-		|				c |= (state->alu << 1) & 0xffffffffULL;
-		|				c |= 1;
-		|			}
-		|			clo = true;
-		|		} else {
-		|			if (sel1) {
-		|				wdr = state->wdr;
-		|				c |= wdr & 0xffffffffULL;
-		|			} else {
-		|				c |= state->alu & 0xffffffffULL;
-		|			}
-		|			clo = true;
-		|		}
-		|		if (chi && !clo)
-		|			c |= 0xffffffff;
-		|		if (!chi && clo)
-		|			c |= 0xffffffffULL << 32;
-		|		state->c = c;
+		|		state->c = c2;
 		|	}
 		|
 		|	if (q3pos) {
