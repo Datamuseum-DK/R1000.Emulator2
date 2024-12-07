@@ -706,7 +706,7 @@ class FIU(PartFactory):
 		|	unsigned pa025 = state->pa025[pa025a];
 		|	bool memcyc1 = (pa025 >> 1) & 1;
 		|	bool memstart = (pa025 >> 0) & 1;
-		|#if 1
+		|
 		|	if (memstart) {
 		|		state->mcntl = state->lcntl;
 		|	} else {
@@ -715,7 +715,6 @@ class FIU(PartFactory):
 		|	state->phys_ref = !(state->mcntl & 0x6);
 		|	state->logrwn = !(state->logrw && memcyc1);
 		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
-		|#endif
 		|
 		|	unsigned pa026a = 0;
 		|	pa026a |= mem_start;
@@ -773,15 +772,6 @@ class FIU(PartFactory):
 		|		scav_trap_next = false;
 		|	}
 		|
-		|	bool cache_miss_next = state->cache_miss;
-		|	if (condsel == 0x6b) {		// CACHE_MISS
-		|		cache_miss_next = false;
-		|	} else if (rmarp) {
-		|		cache_miss_next = (state->ti_bus >> BUS_DT_LSB(35)) & 1;
-		|	} else if (state->log_query) {
-		|		//cache_miss_next = PIN_MISS=>;
-		|		cache_miss_next = state->miss;
-		|	}
 		|
 		|	bool csa_oor_next = state->csa_oor;
 		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
@@ -793,6 +783,14 @@ class FIU(PartFactory):
 		|	}
 		|
 		|	if (q4pos && !PIN_SFSTP=>) {
+		|		bool cache_miss_next = state->cache_miss;
+		|		if (condsel == 0x6b) {		// CACHE_MISS
+		|			cache_miss_next = false;
+		|		} else if (rmarp) {
+		|			cache_miss_next = (state->ti_bus >> BUS_DT_LSB(35)) & 1;
+		|		} else if (state->log_query) {
+		|			cache_miss_next = state->miss;
+		|		}
 		|		state->scav_trap = scav_trap_next;
 		|		state->cache_miss = cache_miss_next;
 		|		state->csa_oor = csa_oor_next;
@@ -834,6 +832,7 @@ class FIU(PartFactory):
 		|		state->logrw_d = state->logrw;
 		|	}
 		|
+		|	if (1 || h2pos) {
 		|	if (state->log_query) {
 		|		// PIN_MISS instead of cache_miss_next looks suspicious
 		|		// but confirmed on both /200 and /400 FIU boards.
@@ -841,6 +840,7 @@ class FIU(PartFactory):
 		|		state->memex = !(!state->miss && !csa_oor_next && !scav_trap_next);
 		|	} else {
 		|		state->memex = !(!state->cache_miss && !state->csa_oor && !state->scav_trap);
+		|	}
 		|	}
 		|
 		|	if (q4pos && !PIN_SCLKE=>) {
@@ -854,7 +854,7 @@ class FIU(PartFactory):
 		|		}
 		|		state->init_mru_d = (pa026 >> 7) & 1;
 		|	}
-		|	if (PIN_H1.negedge()) {
+		|	if (h2pos) {
 		|		state->lcntl = state->mcntl;
 		|		state->drive_mru = state->init_mru_d;
 		|		state->rtv_next = (pa026 >> 4) & 1; // START_TAG_RD
@@ -863,20 +863,7 @@ class FIU(PartFactory):
 		|		output.rtvnxt = !(state->rtv_next);
 		|		output.memcnd = !(state->memcnd);
 		|		output.cndtru = !(state->cndtru);
-		|	}
-		|#if 0
-		|	if (memstart) {
-		|		state->mcntl = state->lcntl;
-		|	} else {
-		|		state->mcntl = state->pcntl_d;
-		|	}
-		|	state->phys_ref = !(state->mcntl & 0x6);
-		|	state->logrwn = !(state->logrw && memcyc1);
-		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
-		|#endif
 		|
-		|
-		|	if (h2pos) {	// SEQ needs it by q4pos
 		|		if (memcyc1) {
 		|			output.memct = state->lcntl;
 		|		} else {
