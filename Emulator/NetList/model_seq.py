@@ -215,7 +215,7 @@ class SEQ(PartFactory):
         yield "PIN_LCLK"
         #yield "PIN_TOSCLK"
 
-        yield "PIN_SCLKE"
+        # yield "PIN_SCLKE"
 
         yield "PIN_BHEN"
         yield "PIN_COND"
@@ -491,6 +491,7 @@ class SEQ(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
+		|	//bool h1pos = PIN_H2.negedge();
 		|	bool h2pos = PIN_H2.posedge();
 		|	bool aclk = PIN_ACLK.posedge();
 		|	bool sclke = PIN_SCLKE=>;
@@ -556,11 +557,9 @@ class SEQ(PartFactory):
 		|	bool early_macro_pending = state->emac != 0x7f;
 		|	bool macro_event = (!state->wanna_dispatch) && (early_macro_pending || (lmp != 8));
 		|	bool dispatch = state->wanna_dispatch || early_macro_pending || (lmp != 8);
-		|	bool lmac = macro_event && !early_macro_pending;
 		|
-		|	bool mbuf = !(lmac && (lmp >= 7));
 		|	if (macro_event) {
-		|		state->bar8 = !mbuf;
+		|		state->bar8 = (macro_event && !early_macro_pending) && (lmp >= 7);
 		|	} else {
 		|		state->bar8 = !((pa040d >> 1) & 1);
 		|	}
@@ -818,14 +817,6 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|
-		|	output.z_ospc = PIN_OSPCOE=>;
-		|	if (!output.z_ospc) {
-		|		if (macro_event) {
-		|			output.ospc = 0x6;
-		|		} else {
-		|			output.ospc = (pa040d >> 3) & 0x7;
-		|		}
-		|	}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																							if (q3pos && RNDX(RND_TOS_VLB) && !PIN_STOP=>) {
@@ -971,14 +962,61 @@ class SEQ(PartFactory):
 		|
 		|}
 		|{
-		|	bool stkclk = q4pos && PIN_SSTOP=> && state->l_macro_hic;
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
 		|																state->ram[(state->adr + 1) & 0xf] = state->topu;
+		|
+		|																state->l_macro_hic = true;
+		|																unsigned nua;
+		|																if (!PIN_DV_U=>) {
+		|																	nua = state->nxtuadr;
+		|																} else if (state->bad_hint) {
+		|																	nua = state->other;
+		|																} else if (PIN_LMAC=>) {
+		|																	// Not tested by expmon_test_seq ?
+		|																	nua = state->late_u << 3;
+		|																	nua ^= (7 << 3);
+		|																	nua |= 0x0140;
+		|																	state->l_macro_hic = false;
+		|																} else if (state->uei != 0) {
+		|																	nua = state->uev;
+		|																	nua <<= 3;
+		|																	nua |= 0x0180;
+		|																} else {
+		|																	unsigned sel = group_sel();
+		|																	switch (sel) {
+		|																	case 0:
+		|																		BUS_BRN_READ(nua);
+		|																		nua += state->fiu;
+		|																		break;
+		|																	case 1:
+		|																		nua = state->uadr_decode >> 3;
+		|																		nua <<= 1;
+		|																		break;
+		|																	case 2:
+		|																		nua = (state->topu ^ 0xffff) & 0x3fff;
+		|																		break;
+		|																	case 3:
+		|																	case 4:
+		|																		nua = state->curuadr;
+		|																		nua += 1;
+		|																		break;
+		|																	case 5:
+		|																	case 6:
+		|																	case 7:
+		|																		BUS_BRN_READ(nua);
+		|																		break;
+		|																	default:
+		|																		abort();
+		|																	}
+		|																}
+		|																output.nu = nua;
 		|															}
 		|
-		|																											if (stkclk) {
+		|
+		|
+		|																											if (q4pos && PIN_SSTOP=> && state->l_macro_hic) {
 		|																												bool xwrite;
 		|																												bool pop;
 		|																												bool stkinpsel_0;
@@ -1047,11 +1085,6 @@ class SEQ(PartFactory):
 		|																												state->stack_size_zero = state->adr == 0;
 		|																											}
 		|
-		|	output.z_qf = PIN_QFOE=>;
-		|	if (!output.z_qf) {
-		|		output.qf = state->topu ^ 0xffff;
-		|		output.qf ^= 0xffff;
-		|	}
 		|
 		|																											if (sclk && aclk) {
 		|																												BUS_DF_READ(state->fiu);
@@ -1094,56 +1127,6 @@ class SEQ(PartFactory):
 		|																											}
 		|
 		|	output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|															if (q2pos) {
-		|																state->l_macro_hic = true;
-		|																unsigned nua;
-		|																if (!PIN_DV_U=>) {
-		|																	nua = state->nxtuadr;
-		|																} else if (state->bad_hint) {
-		|																	nua = state->other;
-		|																} else if (PIN_LMAC=>) {
-		|																	// Not tested by expmon_test_seq ?
-		|																	nua = state->late_u << 3;
-		|																	nua ^= (7 << 3);
-		|																	nua |= 0x0140;
-		|																	state->l_macro_hic = false;
-		|																} else if (state->uei != 0) {
-		|																	nua = state->uev;
-		|																	nua <<= 3;
-		|																	nua |= 0x0180;
-		|																} else {
-		|																	unsigned sel = group_sel();
-		|																	switch (sel) {
-		|																	case 0:
-		|																		BUS_BRN_READ(nua);
-		|																		nua += state->fiu;
-		|																		break;
-		|																	case 1:
-		|																		nua = state->uadr_decode >> 3;
-		|																		nua <<= 1;
-		|																		break;
-		|																	case 2:
-		|																		nua = (state->topu ^ 0xffff) & 0x3fff;
-		|																		break;
-		|																	case 3:
-		|																	case 4:
-		|																		nua = state->curuadr;
-		|																		nua += 1;
-		|																		break;
-		|																	case 5:
-		|																	case 6:
-		|																	case 7:
-		|																		BUS_BRN_READ(nua);
-		|																		break;
-		|																	default:
-		|																		abort();
-		|																	}
-		|																}
-		|																output.nu = nua;
-		|															}
-		|
-		|
 		|																											if (aclk) {
 		|																												BUS_UEI_READ(state->uei);
 		|																												state->uei &= ~(1 << BUS_UEI_LSB(4));
@@ -1226,10 +1209,9 @@ class SEQ(PartFactory):
 		|																												state->hint_last = (state->bhreg >> 1) & 1;
 		|																												state->hint_t_last = (state->bhreg >> 0) & 1;
 		|																											}
-		|	output.dbhint = !(!state->bad_hint || (state->bhreg & 0x08));
 		|	bool bhint2 = (!state->bad_hint || (state->bhreg & 0x08));
-		|																							bool foo9a = !(state->foo9 || !output.u_event);
-		|																							if (q3pos && foo9a) {
+		|	output.dbhint = bhint2;
+		|																							if (q3pos && !(state->foo9 || !output.u_event)) {
 		|																								state->treg = 0;
 		|																								state->foo7 = false;
 		|																							}
@@ -1312,17 +1294,6 @@ class SEQ(PartFactory):
 		|	output.bhn = !state->bad_hint;
 		|
 		|}
-		|	output.z_qt = PIN_QTOE=>;
-		|	if (!output.z_qt) {
-		|		int_reads(internal_reads, urand);
-		|		output.qt = state->typ_bus;
-		|		output.qt ^= BUS_QT_MASK;
-		|	}
-		|	output.z_qv = PIN_QVOE=>;
-		|	if (!output.z_qt) {
-		|		output.qv = state->val_bus;
-		|		output.qv ^= BUS_QV_MASK;
-		|	}
 		|
 		|{
 		|	uint64_t val = state->val_bus >> 32;
@@ -1347,35 +1318,6 @@ class SEQ(PartFactory):
 		|																												state->display &= 0xffff;
 		|																												output.disp0 = state->display >> 15;
 		|																											}
-		|	output.z_adr = PIN_ADROE=>;
-		|	if (!output.z_adr) {
-		|		bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
-		|		bool resolve_drive;
-		|		if (!macro_event) {
-		|			resolve_drive = !((pa040d >> 6) & 1);
-		|		} else {
-		|			resolve_drive = true;
-		|		}
-		|		if (!resolve_drive) {
-		|			output.adr = state->resolve_offset << 7;
-		|		} else if (adr_is_code) {
-		|			output.adr = (state->coff >> 3) << 7;
-		|		} else {
-		|			output.adr = state->output_ob << 7;
-		|		}
-		|
-		|		uint64_t branch;
-		|		branch = state->branch_offset & 7;
-		|		branch ^= 0x7;
-		|		output.adr |= branch << 4;
-		|		if (!adr_is_code) {
-		|			output.adr |= state->name_bus << 32;
-		|		} else if (!(urand & 0x2)) {
-		|			output.adr |= state->pcseg << 32; 
-		|		} else {
-		|			output.adr |= state->retseg << 32;
-		|		}
-		|	}
 		|
 		|	state->cload = !(PIN_COND=> || !(output.bhn && RNDX(RND_CIB_PC_L)));
 		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
@@ -1392,12 +1334,6 @@ class SEQ(PartFactory):
 		|																											}
 		|																										
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|											if (q1pos) {
-		|												seq_cond();
-		|											}
-		|																			if (h2pos) {
-		|																				seq_cond();
-		|																			}
 		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));
 		|	state->check_exit_ue = !(
 		|		PIN_ENFU=> &&
@@ -1421,6 +1357,66 @@ class SEQ(PartFactory):
 		|																											if (PIN_LCLK.posedge()) {
 		|																												state->foo9 = !RNDX(RND_TOS_VLB);
 		|																											}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|											if (q1pos) {
+		|												seq_cond();
+		|											}
+		|																			if (h2pos) {
+		|																				seq_cond();
+		|																			}
+		|	output.z_qf = PIN_QFOE=>;
+		|	if (!output.z_qf) {
+		|		output.qf = state->topu ^ 0xffff;
+		|		output.qf ^= 0xffff;
+		|	}
+		|	output.z_qt = PIN_QTOE=>;
+		|	if (!output.z_qt) {
+		|		int_reads(internal_reads, urand);
+		|		output.qt = state->typ_bus;
+		|		output.qt ^= BUS_QT_MASK;
+		|	}
+		|	output.z_qv = PIN_QVOE=>;
+		|	if (!output.z_qt) {
+		|		output.qv = state->val_bus;
+		|		output.qv ^= BUS_QV_MASK;
+		|	}
+		|	output.z_adr = PIN_ADROE=>;
+		|	output.z_ospc = PIN_OSPCOE=>;
+		|																							if (q3pos && !output.z_ospc) {
+		|																								if (macro_event) {
+		|																									output.ospc = 0x6;
+		|																								} else {
+		|																									output.ospc = (pa040d >> 3) & 0x7;
+		|																								}
+		|																							}
+		|																							if (q3pos && !output.z_adr) {
+		|																								bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
+		|																								bool resolve_drive;
+		|																								if (!macro_event) {
+		|																									resolve_drive = !((pa040d >> 6) & 1);
+		|																								} else {
+		|																									resolve_drive = true;
+		|																								}
+		|																								if (!resolve_drive) {
+		|																									output.adr = state->resolve_offset << 7;
+		|																								} else if (adr_is_code) {
+		|																									output.adr = (state->coff >> 3) << 7;
+		|																								} else {
+		|																									output.adr = state->output_ob << 7;
+		|																								}
+		|															
+		|																								uint64_t branch;
+		|																								branch = state->branch_offset & 7;
+		|																								branch ^= 0x7;
+		|																								output.adr |= branch << 4;
+		|																								if (!adr_is_code) {
+		|																									output.adr |= state->name_bus << 32;
+		|																								} else if (!(urand & 0x2)) {
+		|																									output.adr |= state->pcseg << 32; 
+		|																								} else {
+		|																									output.adr |= state->retseg << 32;
+		|																								}
+		|																							}
 		|''')
 
 
