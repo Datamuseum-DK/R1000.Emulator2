@@ -41,10 +41,10 @@ class XCOND(PartFactory):
 
     autopin = True
 
-    def state(self, file):
+    def xstate(self, file):
         file.fmt('''
-		|	uint8_t elprom[512];
-		|	bool q3cond;
+		|	uint8_t pa042[512];
+		|	//bool q3cond;
 		|''')
 
     def private(self):
@@ -57,36 +57,23 @@ class XCOND(PartFactory):
                    "PIN_CXF.default_event()",
                    "BUS_ICOND",
                 )
-                yield from self.event_or(
-                   "event_%x_b" % i,
-                   "PIN_CXC.default_event()",
-                   "PIN_CXF.default_event()",
-                   "PIN_Q4.negedge_event()",
-                   "BUS_ICOND",
-                )
             else:
                 yield from self.event_or(
                    "event_%x_a" % i,
                    "PIN_CX%X.default_event()" % i,
                    "BUS_ICOND",
                 )
-                yield from self.event_or(
-                   "event_%x_b" % i,
-                   "PIN_CX%X.default_event()" % i,
-                   "PIN_Q4.negedge_event()",
-                   "BUS_ICOND",
-                )
 
-    def init(self, file):
+    def xinit(self, file):
         file.fmt('''
 		|	load_programmable(this->name(),
-		|	    state->elprom, sizeof state->elprom,
+		|	    state->pa042, sizeof state->pa042,
 		|	    "PA042-02");
 		|''')
 
     def sensitive(self):
         yield "BUS_ICOND_SENSITIVE()"
-        yield "PIN_Q4.neg()"
+        #yield "PIN_Q4.neg()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -97,9 +84,6 @@ class XCOND(PartFactory):
 		|	BUS_ICOND_READ(condsel);
 		|	condsel ^= BUS_ICOND_MASK;
 		|
-		|	uint8_t pa042 = state->elprom[condsel << 2];
-		|	bool is_e_ml = (pa042 >> 7) & 1;
-		|
 		|	bool cond;
 		|	switch(condsel >> 3) {
 		|''')
@@ -109,33 +93,27 @@ class XCOND(PartFactory):
             if pin == 4:
                 file.fmt('''
 		|		cond = !(PIN_CXC=> && PIN_CXF=>);
-		|		if (is_e_ml || cond == state->q3cond)
-		|		    idle_next = &event_%x_a;
-		|		else
-		|		    idle_next = &event_%x_b;
+		|		idle_next = &event_%x_a;
 		|		break;
-		|''' % (pin, pin))
+		|''' % (pin))
             else:
                 file.fmt('''
 		|		cond = PIN_CX%X=>;
-		|		if (is_e_ml || cond == state->q3cond)
-		|			idle_next = &event_%x_a;
-		|		else
-		|			idle_next = &event_%x_b;
+		|		idle_next = &event_%x_a;
 		|		break;
-		|''' % (pin, pin, pin))
+		|''' % (pin, pin))
 
         file.fmt('''
 		|	}
 		|
-		|	if (!is_e_ml && PIN_Q4.negedge()) {
-		|		state->q3cond = cond;
-		|	}
+		|	//if (!is_e_ml && PIN_Q4.negedge()) {
+		|	//	state->q3cond = cond;
+		|	//}
 		|
-		|	output.e_ml = is_e_ml;
+		|	//output.e_ml = is_e_ml;
 		|	output.cndp = cond;
-		|	output.cq3p = state->q3cond;
-		|	output.cq3n = !state->q3cond;
+		|	//output.cq3p = state->q3cond;
+		|	//output.cq3n = !state->q3cond;
 		|''')
 
 def register(part_lib):

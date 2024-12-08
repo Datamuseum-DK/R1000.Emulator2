@@ -133,6 +133,7 @@ class SEQ(PartFactory):
 		|
 		|	uint8_t pa040[512];
 		|	uint8_t pa041[512];
+		|	uint8_t pa042[512];
 		|	uint8_t pa043[512];
 		|	uint8_t pa044[512];
 		|	uint8_t pa045[512];
@@ -192,12 +193,14 @@ class SEQ(PartFactory):
 		|	bool bar8;
 		|	bool m_ibuff_mt;
 		|	bool foo9;
+		|	bool q3cond;
 		|''')
 
     def init(self, file):
         file.fmt('''
 		|	load_programmable(this->name(), state->pa040, sizeof state->pa040, "PA040-02");
 		|	load_programmable(this->name(), state->pa041, sizeof state->pa041, "PA041-01");
+		|	load_programmable(this->name(), state->pa042, sizeof state->pa041, "PA042-02");
 		|	load_programmable(this->name(), state->pa043, sizeof state->pa043, "PA043-02");
 		|	load_programmable(this->name(), state->pa044, sizeof state->pa044, "PA044-01");
 		|	load_programmable(this->name(), state->pa045, sizeof state->pa045, "PA045-03");
@@ -223,7 +226,7 @@ class SEQ(PartFactory):
         yield "PIN_DMODE"
         yield "PIN_DV_U"
         yield "PIN_ENFU"
-        yield "PIN_Q3COND"
+        # yield "PIN_Q3COND"
 
     def priv_decl(self, file):
         file.fmt('''
@@ -500,6 +503,7 @@ class SEQ(PartFactory):
 		|	bool sign_extend;
 		|
 		|																							if (q3pos) {
+		|																								state->q3cond = PIN_COND=>;
 		|																								state->bad_hint_enable = !(
 		|																									output.u_event ||
 		|																									(PIN_LMAC=> && output.bhn)
@@ -1046,9 +1050,9 @@ class SEQ(PartFactory):
 		|																													switch(stkinpsel) {
 		|																													case 0:
 		|																														BUS_BRN_READ(state->topu);
-		|																														if (PIN_Q3COND)	state->topu |= (1<<15);
+		|																														if (state->q3cond)	 state->topu |= (1<<15);
 		|																														if (state->latched_cond) state->topu |= (1<<14);
-		|																														state->topu ^= 0xffff;;
+		|																														state->topu ^= 0xffff;
 		|																														break;
 		|																													case 1:
 		|																														BUS_DF_READ(state->topu);
@@ -1056,14 +1060,14 @@ class SEQ(PartFactory):
 		|																														break;
 		|																													case 2:
 		|																														state->topu = state->curuadr;
-		|																														if (PIN_Q3COND)	state->topu |= (1<<15);
+		|																														if (state->q3cond)	 state->topu |= (1<<15);
 		|																														if (state->latched_cond) state->topu |= (1<<14);
 		|																														state->topu += 1;
-		|																														state->topu ^= 0xffff;;
+		|																														state->topu ^= 0xffff;
 		|																														break;
 		|																													case 3:
 		|																														state->topu = state->curuadr;
-		|																														if (PIN_Q3COND)	state->topu |= (1<<15);
+		|																														if (state->q3cond)	 state->topu |= (1<<15);
 		|																														if (state->latched_cond) state->topu |= (1<<14);
 		|																														state->topu ^= 0xffff;;
 		|																														break;
@@ -1252,8 +1256,14 @@ class SEQ(PartFactory):
 		|																										
 		|																												unsigned lin;
 		|																												BUS_LIN_READ(lin);
-		|																												lin &= 0x7;
+		|																												lin &= 0x2;
 		|																												lin |= state->latched_cond << 3;
+		|																												unsigned condsel;
+		|																												BUS_CSEL_READ(condsel);
+		|																												uint8_t pa042 = state->pa042[condsel << 2];
+		|																												bool is_e_ml = (pa042 >> 7) & 1;
+		|																												lin |= is_e_ml << 2;
+		|																												lin |= state->q3cond << 0;
 		|																										
 		|																												if (!sclke) {
 		|																													state->lreg = lin;
@@ -1343,12 +1353,12 @@ class SEQ(PartFactory):
 		|	output.sfive = (state->check_exit_ue && state->ferr);
 		|	state->m_res_ref = !(state->lxval && !output.disp0);
 		|
-		|																			if (PIN_H2=>) {
+		|																			if (q3pos) {
 		|																				if (!state->bar8) {
 		|																					output.abort = false;
 		|																				} else if (PIN_MCOND=>) {
 		|																					output.abort = true;
-		|																				} else if (PIN_MCPOL=> ^ PIN_Q3COND) {
+		|																				} else if (PIN_MCPOL=> ^ state->q3cond) {
 		|																					output.abort = true;
 		|																				} else {
 		|																					output.abort = false;
