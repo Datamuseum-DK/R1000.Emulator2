@@ -30,15 +30,12 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "IRD", 0, 2))
         self.sig_left(ChipSig("-->+", "ACLK"))
         self.sig_left(ChipSig("-->+", "SCLKE"))
-        self.sig_left(ChipSig("-->+", "TOSCLK"))
 
         self.sig_left(ChipSig("-->+", "MD"))
 
         self.sig_left(ChipSig("-->+", "CTL", 0, 2))
 
         self.sig_left(ChipSig("-->+", "CSA", 0, 3))
-
-        self.sig_left(ChipSig("-->+", "Q3COND"))
 
         self.sig_left(ChipSig("-->+", "LCLK"))
 
@@ -55,8 +52,7 @@ class SEQ(FChip):
 
         self.sig_left(ChipSig("-->+", "BHCKE"))
 
-        self.sig_left(ChipSig("-->+", "LIN", 0, 3))
-        self.sig_left(ChipSig("-->+", "TCLR"))
+        self.sig_left(ChipSig("-->+", "LUIR"))
 
         self.sig_left(ChipSig("-->+", "BHEN"))
 
@@ -97,10 +93,8 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+-->", "CONDC"))
 
         self.sig_right(ChipSig("+-->", "U_EVENT"))
-        self.sig_right(ChipSig("o-->", "U_EVENT~"))
         self.sig_right(ChipSig("o-->", "SFIVE"))
         self.sig_right(ChipSig("o-->", "ABORT"))
-        self.sig_right(ChipSig("o-->", "FOO9"))
 
 
         self.finish()

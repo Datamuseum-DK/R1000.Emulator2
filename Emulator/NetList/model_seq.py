@@ -1254,15 +1254,14 @@ class SEQ(PartFactory):
 		|																												state->rq = state->rreg;
 		|																												state->foo7 = state->treg >> 3;
 		|																										
-		|																												unsigned lin;
-		|																												BUS_LIN_READ(lin);
-		|																												lin &= 0x2;
+		|																												unsigned lin = 0;
 		|																												lin |= state->latched_cond << 3;
 		|																												unsigned condsel;
 		|																												BUS_CSEL_READ(condsel);
 		|																												uint8_t pa042 = state->pa042[condsel << 2];
 		|																												bool is_e_ml = (pa042 >> 7) & 1;
 		|																												lin |= is_e_ml << 2;
+		|																												lin |= PIN_LUIR=> << 1;
 		|																												lin |= state->q3cond << 0;
 		|																										
 		|																												if (!sclke) {
