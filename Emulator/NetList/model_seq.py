@@ -221,7 +221,6 @@ class SEQ(PartFactory):
         # yield "PIN_SCLKE"
 
         yield "PIN_BHEN"
-        yield "PIN_COND"
         yield "BUS_CSA"
         yield "PIN_DMODE"
         yield "PIN_DV_U"
@@ -233,8 +232,11 @@ class SEQ(PartFactory):
 		|	void int_reads(unsigned ir, unsigned urand);
 		|	unsigned group_sel(void);
 		|	unsigned late_macro_pending(void);
-		|	void seq_cond(void);
+		|	bool seq_cond5(unsigned condsel);
+		|	bool seq_cond6(unsigned condsel);
+		|	bool seq_cond7(unsigned condsel);
 		|       unsigned nxt_lex_valid(void);
+		|       bool condition(void);
 		|''')
 
     def priv_impl(self, file):
@@ -347,64 +349,63 @@ class SEQ(PartFactory):
 		|	return (8);
 		|}
 		|
-		|void
+		|bool
 		|SCM_«mmm» ::
-		|seq_cond(void)
+		|seq_cond5(unsigned condsel)
 		|{
-		|	unsigned condsel;
-		|	BUS_CSEL_READ(condsel);
-		|	condsel ^= BUS_CSEL_MASK;
 		|
 		|	switch (condsel) {
 		|	case 0x28: // FIELD_NUM_ERR
-		|		output.conda = !state->field_number_error;
-		|		break;
+		|		return ( !state->field_number_error);
 		|	case 0x29: // LATCHED_COND
-		|		output.conda = !state->latched_cond;
-		|		break;
+		|		return ( !state->latched_cond);
 		|	case 0x2a: // E_MACRO_PEND
-		|		output.conda = state->emac == 0x7f;
-		|		break;
+		|		return ( state->emac == 0x7f);
 		|	case 0x2b: // E_MACRO_EVNT~6
-		|		output.conda = !((state->emac >> 0) & 1);
-		|		break;
+		|		return ( !((state->emac >> 0) & 1));
 		|	case 0x2c: // E_MACRO_EVNT~5
-		|		output.conda = !((state->emac >> 1) & 1);
-		|		break;
+		|		return ( !((state->emac >> 1) & 1));
 		|	case 0x2d: // E_MACRO_EVNT~3
-		|		output.conda = !((state->emac >> 3) & 1);
-		|		break;
+		|		return ( !((state->emac >> 3) & 1));
 		|	case 0x2e: // E_MACRO_EVNT~2
-		|		output.conda = !((state->emac >> 4) & 1);
-		|		break;
+		|		return ( !((state->emac >> 4) & 1));
 		|	case 0x2f: // E_MACRO_EVNT~0
-		|		output.conda = !((state->emac >> 6) & 1);
-		|		break;
+		|		return ( !((state->emac >> 6) & 1));
+		|	default:
+		|		return (false);
+		|	}
+		|}
 		|
+		|bool
+		|SCM_«mmm» ::
+		|seq_cond6(unsigned condsel)
+		|{
+		|
+		|	switch (condsel) {
 		|	case 0x30: // DISP_COND0
-		|		output.condb = (state->decode & 0x7) == 0;
+		|		return ( (state->decode & 0x7) == 0);
 		|		break;
 		|	case 0x31: // True
-		|		output.condb = true;
+		|		return ( true);
 		|		break;
 		|	case 0x32: // M_IBUFF_MT
-		|		output.condb = state->m_ibuff_mt;
+		|		return ( state->m_ibuff_mt);
 		|		break;
 		|	case 0x33: // M_BRK_CLASS
-		|		output.condb = state->m_break_class;
+		|		return ( state->m_break_class);
 		|		break;
 		|	case 0x34: // M_TOS_INVLD
-		|		output.condb = state->m_tos_invld;
+		|		return ( state->m_tos_invld);
 		|		break;
 		|	case 0x35: // M_RES_REF
-		|		output.condb = state->m_res_ref;
+		|		return ( state->m_res_ref);
 		|		break;
 		|	case 0x36: // M_OVERFLOW
 		|		{
 		|		unsigned csa;
 		|		BUS_CSA_READ(csa);
 		|		unsigned dec = state->decode >> 3;
-		|		output.condb = csa <= ((dec >> 3) | 12);
+		|		return ( csa <= ((dec >> 3) | 12));
 		|		}
 		|		break;
 		|	case 0x37: // M_UNDERFLOW
@@ -412,34 +413,46 @@ class SEQ(PartFactory):
 		|		unsigned csa;
 		|		BUS_CSA_READ(csa);
 		|		unsigned dec = state->decode >> 3;
-		|		output.condb = csa >= (dec & 7);
+		|		return ( csa >= (dec & 7));
 		|		}
 		|		break;
+		|	default:
+		|		return (false);
+		|	}
+		|}
 		|
+		|bool
+		|SCM_«mmm» ::
+		|seq_cond7(unsigned condsel)
+		|{
+		|
+		|	switch (condsel) {
 		|	case 0x38: // STACK_SIZE
-		|		output.condc = state->stack_size_zero;
+		|		return ( state->stack_size_zero);
 		|		break;
 		|	case 0x39: // LATCHED_COND
-		|		output.condc = state->latched_cond;
+		|		return ( state->latched_cond);
 		|		break;
 		|	case 0x3a: // SAVED_LATCHED
-		|		output.condc = state->saved_latched;
+		|		return ( state->saved_latched);
 		|		break;
 		|	case 0x3b: // TOS_VLD.COND
-		|		output.condc = state->tos_vld_cond;
+		|		return ( state->tos_vld_cond);
 		|		break;
 		|	case 0x3c: // LEX_VLD.COND
-		|		output.condc = state->lxval;
+		|		return ( state->lxval);
 		|		break;
 		|	case 0x3d: // IMPORT.COND
-		|		output.condc = state->import_condition;
+		|		return ( state->import_condition);
 		|		break;
 		|	case 0x3e: // REST_PC_DEC
-		|		output.condc = ((state->rq >> 1) & 1);
+		|		return ( ((state->rq >> 1) & 1));
 		|		break;
 		|	case 0x3f: // RESTARTABLE
-		|		output.condc = ((state->rq >> 3) & 1);
+		|		return ( ((state->rq >> 3) & 1));
 		|		break;
+		|	default:
+		|		return (false);
 		|	}
 		|}
 		|
@@ -482,6 +495,33 @@ class SEQ(PartFactory):
 		|
 		|	return(nv);
 		|}
+		|
+		|bool
+		|SCM_«mmm» ::
+		|condition(void)
+		|{
+		|	unsigned condsel;
+		|	BUS_CSEL_READ(condsel);
+		|	condsel ^= BUS_CSEL_MASK;
+		|	switch (condsel >> 3) {
+		|	case 0x0: return(PIN_CNDX0=>);
+		|	case 0x2: return(PIN_CNDX2=>);
+		|	case 0x3: return(PIN_CNDX3=>);
+		|	case 0x4: return(!(PIN_CNDXC=> && PIN_CNDXF=>));
+		|	case 0x5: return(seq_cond5(condsel));
+		|	case 0x6: return(seq_cond6(condsel));
+		|	case 0x7: return(seq_cond7(condsel));
+		|	case 0x8: return(PIN_CNDX8=>);
+		|	case 0x9: return(PIN_CNDX9=>);
+		|	case 0xa: return(PIN_CNDXA=>);
+		|	case 0xb: return(PIN_CNDXB=>);
+		|	case 0xc: return(PIN_CNDXC=>);
+		|	case 0xd: return(PIN_CNDXD=>);
+		|	case 0xe: return(PIN_CNDXE=>);
+		|	case 0xf: return(PIN_CNDXF=>);
+		|	default: return(1);
+		|	}
+		|}
 		|''')
 
 
@@ -490,12 +530,12 @@ class SEQ(PartFactory):
 
         file.fmt('''
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	bool q1pos = PIN_Q2.negedge();
+		|	//bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	//bool h1pos = PIN_H2.negedge();
-		|	bool h2pos = PIN_H2.posedge();
+		|	//bool h2pos = PIN_H2.posedge();
 		|	bool aclk = PIN_ACLK.posedge();
 		|	bool sclke = PIN_SCLKE=>;
 		|	bool sclk = aclk && !sclke;
@@ -503,7 +543,7 @@ class SEQ(PartFactory):
 		|	bool sign_extend;
 		|
 		|																							if (q3pos) {
-		|																								state->q3cond = PIN_COND=>;
+		|																								state->q3cond = condition();
 		|																								state->bad_hint_enable = !(
 		|																									output.u_event ||
 		|																									(PIN_LMAC=> && output.bhn)
@@ -1166,7 +1206,7 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|	switch (btimm) {
-		|	case 0: state->uadr_mux = !PIN_COND=>; break;
+		|	case 0: state->uadr_mux = !condition(); break;
 		|	case 1: state->uadr_mux = !state->latched_cond; break;
 		|	case 2: state->uadr_mux = false; break;
 		|	case 3: state->uadr_mux = true; break;
@@ -1269,7 +1309,7 @@ class SEQ(PartFactory):
 		|																												}
 		|																										
 		|																												if ((lin & 0x4) && !sclke) {
-		|																													state->last_late_cond = PIN_COND=>;
+		|																													state->last_late_cond = condition();
 		|																												}
 		|																										
 		|																												switch(state->lreg & 0x6) {
@@ -1328,7 +1368,7 @@ class SEQ(PartFactory):
 		|																												output.disp0 = state->display >> 15;
 		|																											}
 		|
-		|	state->cload = !(PIN_COND=> || !(output.bhn && RNDX(RND_CIB_PC_L)));
+		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));
 		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
 		|	state->ibld = !ibuff_ld;
 		|	bool ibemp = !(ibuff_ld || (state->word != 0));
@@ -1367,12 +1407,6 @@ class SEQ(PartFactory):
 		|																												state->foo9 = !RNDX(RND_TOS_VLB);
 		|																											}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|											if (q1pos) {
-		|												seq_cond();
-		|											}
-		|																			if (h2pos) {
-		|																				seq_cond();
-		|																			}
 		|	output.z_qf = PIN_QFOE=>;
 		|	if (!output.z_qf) {
 		|		output.qf = state->topu ^ 0xffff;

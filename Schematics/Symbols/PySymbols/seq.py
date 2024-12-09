@@ -47,7 +47,6 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "BRTYP", 0, 3))
         self.sig_left(ChipSig("-->+", "SSTOP"))
         self.sig_left(ChipSig("-->+", "DMODE"))
-        self.sig_left(ChipSig("-->+", "COND"))
         self.sig_left(ChipSig("-->+", "BRTIM", 0, 1))
 
         self.sig_left(ChipSig("-->+", "BHCKE"))
@@ -88,13 +87,22 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+-->", "QSTP7"))
         self.sig_right(ChipSig("+-->", "HALT"))
         self.sig_right(ChipSig("+-->", "LMACO"))
-        self.sig_right(ChipSig("+-->", "CONDA"))
-        self.sig_right(ChipSig("+-->", "CONDB"))
-        self.sig_right(ChipSig("+-->", "CONDC"))
 
         self.sig_right(ChipSig("+-->", "U_EVENT"))
         self.sig_right(ChipSig("o-->", "SFIVE"))
         self.sig_right(ChipSig("o-->", "ABORT"))
+
+        self.sig_right(ChipSig("+<--", "CNDX0"))
+        self.sig_right(ChipSig("+<--", "CNDX2"))
+        self.sig_right(ChipSig("+<--", "CNDX3"))
+        self.sig_right(ChipSig("+<--", "CNDX8"))
+        self.sig_right(ChipSig("+<--", "CNDX9"))
+        self.sig_right(ChipSig("+<--", "CNDXA"))
+        self.sig_right(ChipSig("+<--", "CNDXB"))
+        self.sig_right(ChipSig("+<--", "CNDXC"))
+        self.sig_right(ChipSig("+<--", "CNDXD"))
+        self.sig_right(ChipSig("+<--", "CNDXE"))
+        self.sig_right(ChipSig("+<--", "CNDXF"))
 
 
         self.finish()
