@@ -65,7 +65,6 @@ class VAL(PartFactory):
 		|	bool isbin, sub_else_add, ovren, carry_middle;
 		|	uint8_t zero;
 		|	bool coh;
-		|	bool divide;
 		|	bool wen;
 		|''')
 
@@ -80,7 +79,7 @@ class VAL(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_Q2"
+        yield "PIN_Q2.pos()"
         yield "PIN_Q4"
         yield "PIN_QFOE.neg()"
         yield "PIN_QVOE.neg()"
@@ -267,7 +266,7 @@ class VAL(PartFactory):
 
         file.fmt('''
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	bool q1pos = PIN_Q2.negedge();
+		|	//bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
@@ -282,12 +281,18 @@ class VAL(PartFactory):
 		|	BUS_UIRB_READ(uirb);
 		|	BUS_UIRC_READ(uirc);
 		|
+		|	unsigned rand;
+		|	BUS_RAND_READ(rand);
+		|
+		|	bool divide = rand != 0xb;
+		|
+		|
 		|																											if (aclk) {
 		|																												bool xor0c = state->mbit ^ (!state->coh);
 		|																												bool xor0d = state->output.qbit ^ xor0c;
 		|																												bool caoi0b = !(
-		|																													((!state->divide) && xor0d) ||
-		|																													(state->divide && state->coh)
+		|																													((!divide) && xor0d) ||
+		|																													(divide && state->coh)
 		|																												);
 		|																												output.qbit = caoi0b;
 		|																											}
@@ -299,51 +304,6 @@ class VAL(PartFactory):
 		|																												output.cwe = !(state->csa_hit || state->csa_write);
 		|																											}
 		|
-		|	unsigned frm;
-		|	BUS_FRM_READ(frm);
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|														
-		|											if (q1pos) {
-		|												unsigned atos = (uira & 0xf) + state->topreg + 1;
-		|												state->aadr = 0;
-		|												if (PIN_ALOOP=>) {
-		|													state->aadr = state->count;
-		|												} else if (uira <= 0x1f) {
-		|													state->aadr = frm << 5;
-		|													state->aadr |= uira & 0x1f;
-		|												} else if (uira <= 0x2f) {
-		|													state->aadr |= atos & 0xf;
-		|												} else {
-		|													state->aadr |= uira & 0x1f;
-		|												}
-		|												unsigned btos = (uirb & 0xf) + state->topreg + 1;
-		|												unsigned csa = state->botreg + (uirb&1);
-		|												if (!(uirb & 2)) {
-		|													csa += state->csa_offset;
-		|												}
-		|												state->badr = 0;
-		|												if (PIN_BLOOP=>) {
-		|													state->badr = state->count;
-		|												} else if (uirb <= 0x1f) {
-		|													state->badr = frm << 5;
-		|													state->badr |= uirb & 0x1f;
-		|												} else if (uirb <= 0x27) {
-		|													state->badr |= btos & 0xf;
-		|												} else if (uirb <= 0x2b) {
-		|													state->badr |= csa & 0xf;
-		|												} else if (uirb <= 0x2f) {
-		|													state->badr |= btos & 0xf;
-		|												} else {
-		|													state->badr |= uirb & 0x1f;
-		|												}
-		|											}
-		|
-		|	unsigned rand;
-		|	BUS_RAND_READ(rand);
-		|	bool get_literal = rand != 0x6;
-		|	bool start_mult = rand != 0xc;
-		|	state->divide = rand != 0xb;
-		|
 		|	output.z_qf = PIN_QFOE=>;
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
@@ -351,13 +311,12 @@ class VAL(PartFactory):
 		|																if (output.cwe && uirc != 0x28)
 		|																	state->wen = !state->wen;
 		|															}
-		|															if (q2pos || (!h2 && !output.z_qf)) {
+		|							if ((!h2 && !output.z_qf) ||					q2pos) {
 		|																if (uira == 0x28) {
 		|																	state->a = state->count;
 		|																	state->a |= ~0x3ff;
 		|																} else if (uira == 0x29) {
 		|																	unsigned mdst;
-		|																	// BUS_MDST_READ(mdst);
 		|																	bool prod_16 = rand != 0xd;
 		|																	bool prod_32 = rand != 0xe;
 		|																	mdst = prod_32 << 1;
@@ -374,13 +333,27 @@ class VAL(PartFactory):
 		|																} else if (uira == 0x2b) {
 		|																	state->a = BUS_DV_MASK;
 		|																} else {
+		|																	unsigned frm;
+		|																	BUS_FRM_READ(frm);
+		|																	unsigned atos = (uira & 0xf) + state->topreg + 1;
+		|																	state->aadr = 0;
+		|																	if (PIN_ALOOP=>) {
+		|																		state->aadr = state->count;
+		|																	} else if (uira <= 0x1f) {
+		|																		state->aadr = frm << 5;
+		|																		state->aadr |= uira & 0x1f;
+		|																	} else if (uira <= 0x2f) {
+		|																		state->aadr |= atos & 0xf;
+		|																	} else {
+		|																		state->aadr |= uira & 0x1f;
+		|																	}
 		|																	state->a = state->rfram[state->aadr];
 		|																}
 		|																if (!output.z_qf) {
 		|																	output.qf = state->a ^ BUS_QF_MASK;
 		|																}
 		|																state->amsb = state->a >> 63;
-		|															}
+		|							}
 		|														
 		|	output.z_qv = PIN_QVOE=>;
 		|															if (q2pos || (!h2 && !output.z_qv)) {
@@ -393,8 +366,31 @@ class VAL(PartFactory):
 		|																	oe = true;
 		|																}
 		|														
+		|																bool get_literal = rand != 0x6;
 		|																oe7 = oe || !get_literal;
 		|														
+		|																unsigned frm;
+		|																BUS_FRM_READ(frm);
+		|																unsigned btos = (uirb & 0xf) + state->topreg + 1;
+		|																unsigned csa = state->botreg + (uirb&1);
+		|																if (!(uirb & 2)) {
+		|																	csa += state->csa_offset;
+		|																}
+		|																state->badr = 0;
+		|																if (PIN_BLOOP=>) {
+		|																	state->badr = state->count;
+		|																} else if (uirb <= 0x1f) {
+		|																	state->badr = frm << 5;
+		|																	state->badr |= uirb & 0x1f;
+		|																} else if (uirb <= 0x27) {
+		|																	state->badr |= btos & 0xf;
+		|																} else if (uirb <= 0x2b) {
+		|																	state->badr |= csa & 0xf;
+		|																} else if (uirb <= 0x2f) {
+		|																	state->badr |= btos & 0xf;
+		|																} else {
+		|																	state->badr |= uirb & 0x1f;
+		|																}
 		|																uint64_t b = 0;
 		|																if (!oe) {
 		|																	b |= state->rfram[state->badr] & 0xffffffffffffff00ULL;
@@ -422,6 +418,7 @@ class VAL(PartFactory):
 		|														
 		|															if (q2pos) {
 		|																BUS_MSRC_READ(state->msrc);
+		|																bool start_mult = rand != 0xc;
 		|																if (!start_mult) {
 		|																	state->malat = state->a ^ BUS_DV_MASK;
 		|																	state->mblat = state->b ^ BUS_DV_MASK;
@@ -443,8 +440,8 @@ class VAL(PartFactory):
 		|																proma |= alur << 5;
 		|																if (
 		|																	!(
-		|																		(state->last_cond && state->divide) ||
-		|																		(output.qbit && !state->divide)
+		|																		(state->last_cond && divide) ||
+		|																		(output.qbit && !divide)
 		|																	)
 		|																) {
 		|																	proma |= 0x100;
@@ -544,6 +541,8 @@ class VAL(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																			if (q3pos) {
+		|																				unsigned frm;
+		|																				BUS_FRM_READ(frm);
 		|																				state->cadr = 0;
 		|																				if (uirc <= 0x1f) {
 		|																					// FRAME:REG
@@ -616,8 +615,8 @@ class VAL(PartFactory):
 		|																											
 		|																												bool incl = rand != 0x1;
 		|																												bool decl = rand != 0x2;
-		|																												bool lnan1a = !(decl && incl && state->divide);
-		|																												bool count_up = !(decl && state->divide);
+		|																												bool lnan1a = !(decl && incl && divide);
+		|																												bool count_up = !(decl && divide);
 		|																												bool count_en = !(lnan1a && sclken);
 		|																												bool lcmp28 = uirc != 0x28;
 		|																												bool lnan3a = !(lcmp28);
