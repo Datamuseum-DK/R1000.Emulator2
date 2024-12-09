@@ -645,20 +645,6 @@ class FIU(PartFactory):
 		|																											}
 		|}
 		|
-		|	output.z_qadr = PIN_QADROE=>;
-		|	output.z_qspc = PIN_QSPCOE=>;
-		|	if (!output.z_qadr && PIN_H1=>) {
-		|		bool inc_mar = (state->prmt >> 3) & 1;
-		|		unsigned inco = state->moff & 0x1f;
-		|		if (inc_mar && inco != 0x1f)
-		|			inco += 1;
-		|
-		|		output.qadr = (uint64_t)state->srn << 32;
-		|		output.qadr |= state->sro & 0xfffff000;
-		|		output.qadr |= (inco & 0x1f) << 7;
-		|		output.qadr |= state->oreg;
-		|		output.qspc = (state->sro >> 4) & 7;
-		|	}
 		|
 		|
 		|{
@@ -937,6 +923,20 @@ class FIU(PartFactory):
 		|																);
 		|															}
 		|}
+		|	output.z_qadr = PIN_QADROE=>;
+		|	output.z_qspc = PIN_QSPCOE=>;
+		|	if (!output.z_qadr && PIN_H1=>) {
+		|		bool inc_mar = (state->prmt >> 3) & 1;
+		|		unsigned inco = state->moff & 0x1f;
+		|		if (inc_mar && inco != 0x1f)
+		|			inco += 1;
+		|
+		|		output.qadr = (uint64_t)state->srn << 32;
+		|		output.qadr |= state->sro & 0xfffff000;
+		|		output.qadr |= (inco & 0x1f) << 7;
+		|		output.qadr |= state->oreg;
+		|		output.qspc = (state->sro >> 4) & 7;
+		|	}
 		|
 		|	output.z_qt = PIN_QTOE=>;
 		|	output.z_qv = PIN_QVOE=>;
