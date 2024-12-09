@@ -503,29 +503,30 @@ class FIU(PartFactory):
 		|
 		|//	ALWYAS						H1				Q1				Q2				H2				Q3				Q4
 		|	do_tivi();
-		|																											if ((sclk && (PIN_LDMDR=> || !PIN_TCLK=> || !PIN_VCLK=>)) ||
-		|																											    (PIN_H1=> && !PIN_QFOE=>)) {
-		|																												rotator(sclk);
-		|																											}
-		|																										
-		|																											if (sclk && !PIN_OCLK=>) {			// Q4~^
-		|																												if (PIN_ORSR=>) {			// UCODE
-		|																													BUS_OL_READ(state->oreg);
-		|																												} else {
-		|																													BUS_DADR_READ(state->oreg);
-		|																													state->oreg &= 0x7f;
-		|																												}
-		|																											}
-		|
-		|																										{
-		|																											if (sclk && !(state->prmt & 0x40)) {
-		|																												state->refresh_reg = state->ti_bus;
-		|																												state->marh &= 0xffffffffULL;
-		|																												state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
-		|																												state->marh ^= 0xffffffff00000000ULL;
-		|																											}
-		|																										
+		|							if (PIN_H1=> && !PIN_QFOE=>) {
+		|								rotator(sclk);
+		|							}
 		|																											if (sclk) {
+		|																												if (PIN_LDMDR=> || !PIN_TCLK=> || !PIN_VCLK=>) {
+		|																													rotator(sclk);
+		|																												}
+		|																										
+		|																												if (!PIN_OCLK=>) {			// Q4~^
+		|																													if (PIN_ORSR=>) {			// UCODE
+		|																														BUS_OL_READ(state->oreg);
+		|																													} else {
+		|																														BUS_DADR_READ(state->oreg);
+		|																														state->oreg &= 0x7f;
+		|																													}
+		|																												}
+		|
+		|																												if (!(state->prmt & 0x40)) {
+		|																													state->refresh_reg = state->ti_bus;
+		|																													state->marh &= 0xffffffffULL;
+		|																													state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
+		|																													state->marh ^= 0xffffffff00000000ULL;
+		|																												}
+		|																										
 		|																												unsigned lfrc;
 		|																												BUS_LFRC_READ(lfrc);			// UCODE
 		|																										
@@ -558,26 +559,22 @@ class FIU(PartFactory):
 		|																												if (state->lfreg != 0x7f)
 		|																													state->lfreg |= 1<<7;
 		|																										
-		|																											}
-		|																										}
-		|	bool co, name_match;
-		|{
-		|	unsigned a, b, dif;
-		|
-		|																											if (sclk) {
 		|																												// CSAFFB
 		|																												state->pdt = !PIN_PRED=>;
 		|																										
 		|																												// NVEMUX + CSAREG
 		|																												BUS_CNV_READ(state->nve);
-		|																											}
 		|
+		|
+		|																												if (!(csa >> 2)) {
+		|																													state->pdreg = state->ctopo & 0xfffff;
+		|																												}
+		|																											}
+		|	bool co, name_match;
+		|{
+		|	unsigned a, b, dif;
 		|	a = state->ctopo & 0xfffff;
 		|	b = state->moff & 0xfffff;
-		|
-		|																											if (sclk && !(csa >> 2)) {
-		|																												state->pdreg = a;
-		|																											}
 		|
 		|	if (state->pdt) {
 		|		co = a <= state->pdreg;
