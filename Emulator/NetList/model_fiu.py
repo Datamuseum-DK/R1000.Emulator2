@@ -489,7 +489,9 @@ class FIU(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|	//bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
+		|	//bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	// bool h1pos = PIN_H1.posedge();
 		|	bool h2pos = PIN_H1.negedge();
@@ -501,7 +503,22 @@ class FIU(PartFactory):
 		|	unsigned condsel;
 		|	BUS_CNDSL_READ(condsel);
 		|
-		|//	ALWYAS						H1				Q1				Q2				H2				Q3				Q4
+		|	unsigned mar_cntl;
+		|	BUS_MCTL_READ(mar_cntl);
+		|	bool rmarp = (mar_cntl & 0xe) == 0x4;
+		|
+		|	unsigned pa028a = mar_cntl << 5;
+		|	pa028a |= state->incmplt_mcyc << 4;
+		|	pa028a |= state->e_abort_dly << 3;
+		|	pa028a |= state->state1 << 2;
+		|	pa028a |= state->mctl_is_read << 1;
+		|	pa028a |= state->dumon;
+		|	state->prmt = state->pa028[pa028a];
+		|	state->prmt ^= 0x02;
+		|	state->prmt &= 0x7b;
+		|
+		|
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	do_tivi();
 		|							if (PIN_H1=> && !PIN_QFOE=>) {
 		|								rotator(sclk);
@@ -520,7 +537,8 @@ class FIU(PartFactory):
 		|																													}
 		|																												}
 		|
-		|																												if (!(state->prmt & 0x40)) {
+		|																												//if (!(state->prmt & 0x40)) {
+		|																												if (mar_cntl == 5) {
 		|																													state->refresh_reg = state->ti_bus;
 		|																													state->marh &= 0xffffffffULL;
 		|																													state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
@@ -570,17 +588,18 @@ class FIU(PartFactory):
 		|																													state->pdreg = state->ctopo & 0xfffff;
 		|																												}
 		|																											}
-		|	bool co, name_match;
+		|	bool carry, name_match;
+		|if (1)
 		|{
 		|	unsigned a, b, dif;
 		|	a = state->ctopo & 0xfffff;
 		|	b = state->moff & 0xfffff;
 		|
 		|	if (state->pdt) {
-		|		co = a <= state->pdreg;
+		|		carry = a <= state->pdreg;
 		|		dif = ~0xfffff + state->pdreg - a;
 		|	} else {
-		|		co = b <= a;
+		|		carry = b <= a;
 		|		dif = ~0xfffff + a - b;
 		|	}
 		|	dif &= 0xfffff;
@@ -589,12 +608,12 @@ class FIU(PartFactory):
 		|		    (state->ctopn != state->srn) ||
 		|		    ((state->sro & 0xf8000070 ) != 0x10);
 		|
-		|	// CNAN0B, CINV0B, CSCPR0
 		|	state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
 		|
 		|	output.hofs = 0xf + state->nve - (dif & 0xf);
 		|
-		|	output.chit = !(co && !(state->in_range || ((dif & 0xf) >= state->nve)));
+		|	output.chit = !(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
+		|}
 		|
 		|																											if (q4pos) {
 		|																												uint64_t adr = 0;
@@ -643,7 +662,6 @@ class FIU(PartFactory):
 		|																												}
 		|																												output.rfsh = state->refresh_count != 0xffff;
 		|																											}
-		|}
 		|
 		|
 		|
@@ -676,10 +694,6 @@ class FIU(PartFactory):
 		|	bool le_abort = PIN_LEABR=>;
 		|	bool e_abort = PIN_EABR=>;
 		|	bool eabrt = !(e_abort && le_abort);
-		|
-		|	unsigned mar_cntl;
-		|	BUS_MCTL_READ(mar_cntl);
-		|	bool rmarp = (mar_cntl & 0xe) == 0x4;
 		|
 		|	unsigned pa025a = 0;
 		|	pa025a |= mem_start;
@@ -725,12 +739,9 @@ class FIU(PartFactory):
 		|	pa027a |= pgmod << 0;
 		|	unsigned pa027 = state->pa027[pa027a];
 		|
-		|	bool sel = !(
-		|		(PIN_UEVSTP=> && memcyc1) ||
-		|		(PIN_SCLKE=> && !memcyc1)
-		|	);
 		|																											if (q4pos) {
 		|																												bool idum;
+		|																												bool sel = !((PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
 		|																												if (sel) {
 		|																													idum = (state->prmt >> 5) & 1;
 		|																													output.dnext = !((state->prmt >> 0) & 1);
@@ -816,7 +827,6 @@ class FIU(PartFactory):
 		|																												state->logrw_d = state->logrw;
 		|																											}
 		|
-		|	if (1 || h2pos) {
 		|	if (state->log_query) {
 		|		// PIN_MISS instead of cache_miss_next looks suspicious
 		|		// but confirmed on both /200 and /400 FIU boards.
@@ -824,7 +834,6 @@ class FIU(PartFactory):
 		|		state->memex = !(!state->miss && !csa_oor_next && !scav_trap_next);
 		|	} else {
 		|		state->memex = !(!state->cache_miss && !state->csa_oor && !state->scav_trap);
-		|	}
 		|	}
 		|
 		|																											if (q4pos && !PIN_SCLKE=>) {
@@ -894,19 +903,11 @@ class FIU(PartFactory):
 		|		state->pgstq |= 2;
 		|	state->nohit = board_hit != 0xf;
 		|
-		|	unsigned pa028a = mar_cntl << 5;
-		|	pa028a |= state->incmplt_mcyc << 4;
-		|	pa028a |= state->e_abort_dly << 3;
-		|	pa028a |= state->state1 << 2;
-		|	pa028a |= state->mctl_is_read << 1;
-		|	pa028a |= state->dumon;
-		|	state->prmt = state->pa028[pa028a];
-		|	state->prmt ^= 0x02;
-		|	state->prmt &= 0x7b;
 		|
-		|//	ALWYAS						H1				Q1				Q2				H2				Q3				Q4
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
 		|																output.frdr = (state->prmt >> 1) & 1;
+		|																bool sel = !((PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
 		|																if (sel) {
 		|																	output.dnext = !((state->prmt >> 0) & 1);
 		|																} else {
@@ -972,7 +973,7 @@ class FIU(PartFactory):
 		|	);
 		|}
 		|																											if (q4pos) {
-		|																												state->csa_oor_next = !(co || name_match);
+		|																												state->csa_oor_next = !(carry || name_match);
 		|																											}
 		|
 		|	if (PIN_H1=> && 60 <= condsel && condsel <= 0x6f)
