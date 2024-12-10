@@ -562,7 +562,8 @@ class SEQ(PartFactory):
 		|
 		|																											if (state_clock) {
 		|																												unsigned lex_random;
-		|																												BUS_LRN_READ(lex_random);
+		|																												//BUS_LRN_READ(lex_random);
+		|																												lex_random = (state->rndx >> 5) & 0x7;
 		|																												state->dra = state->resolve_address & 3;
 		|																												state->dlr = lex_random;
 		|																												if (lex_random & 0x2) {
@@ -1191,7 +1192,6 @@ class SEQ(PartFactory):
 		|																											}
 		|}
 		|
-		|{
 		|	unsigned br_type;
 		|	BUS_BRTYP_READ(br_type);
 		|
@@ -1221,6 +1221,7 @@ class SEQ(PartFactory):
 		|	if (state->bhreg & 0x40) adr |= 0x80;
 		|	if (state->bhreg & 0x80) adr |= 0x100;
 		|	unsigned rom = state->pa043[adr];
+		|	bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
 		|
 		|
 		|	state->wanna_dispatch = !(((rom >> 5) & 1) && !state->uadr_mux);
@@ -1253,8 +1254,6 @@ class SEQ(PartFactory):
 		|																												state->hint_last = (state->bhreg >> 1) & 1;
 		|																												state->hint_t_last = (state->bhreg >> 0) & 1;
 		|																											}
-		|	bool bhint2 = (!state->bad_hint || (state->bhreg & 0x08));
-		|	output.dbhint = bhint2;
 		|																							if (q3pos && !(state->foo9 || !output.u_event)) {
 		|																								state->treg = 0;
 		|																								state->foo7 = false;
@@ -1262,7 +1261,7 @@ class SEQ(PartFactory):
 		|
 		|																											if (aclk) {
 		|																												//state->bad_hint_enable = PIN_BHEN=>;
-		|																												if (PIN_SSTOP=> && state->bad_hint_enable && bhint2) {
+		|																												if (PIN_SSTOP=> && state->bad_hint_enable && bad_hint_disp) {
 		|																													unsigned restrt_rnd = 0;
 		|																													restrt_rnd |= RNDX(RND_RESTRT0) ? 2 : 0;
 		|																													restrt_rnd |= RNDX(RND_RESTRT1) ? 1 : 0;
@@ -1342,7 +1341,6 @@ class SEQ(PartFactory):
 		|	}
 		|	output.bhn = !state->bad_hint;
 		|
-		|}
 		|
 		|{
 		|	uint64_t val = state->val_bus >> 32;
@@ -1425,6 +1423,7 @@ class SEQ(PartFactory):
 		|	}
 		|	output.z_adr = PIN_ADROE=>;
 		|	output.z_ospc = PIN_OSPCOE=>;
+		|
 		|																							if (q3pos && !output.z_ospc) {
 		|																								if (macro_event) {
 		|																									output.ospc = 0x6;
@@ -1459,6 +1458,18 @@ class SEQ(PartFactory):
 		|																								} else {
 		|																									output.adr |= state->retseg << 32;
 		|																								}
+		|																							}
+		|	output.seqsp = !(
+		|		output.bhn &&
+		|		output.uevp &&
+		|		!PIN_LMAC=>
+		|	);
+		|	output.seqsn = !output.seqsp;
+		|																							if (q3pos) {
+		|																								output.labrt = (
+		|																									bad_hint_disp &&
+		|																									!(RNDX(RND_L_ABRT) && output.seqsn)
+		|																								);
 		|																							}
 		|''')
 

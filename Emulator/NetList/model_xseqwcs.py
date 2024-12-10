@@ -56,19 +56,7 @@ class XSEQWCS(PartFactory):
         file.fmt('''
 		|	uint64_t ram[1<<BUS_UA_WIDTH];
 		|	uint64_t wcs;
-		|	uint8_t pa045[512];
-		|	uint8_t pa047[512];
 		|	bool ff0, ff1, ff2;
-		|''')
-
-    def init(self, file):
-        file.fmt('''
-		|	load_programmable(this->name(),
-		|	    state->pa045, sizeof state->pa045,
-		|	    "PA045-03");
-		|	load_programmable(this->name(),
-		|	    state->pa047, sizeof state->pa047,
-		|	    "PA047-02");
 		|''')
 
     def sensitive(self):
@@ -89,13 +77,9 @@ class XSEQWCS(PartFactory):
 		|			state->wcs = state->ram[ua];
 		|			output.halt = !(PIN_SCE=> || PIN_HLR=>);
 		|			output.llm = !(PIN_SCE=> || !PIN_LMAC=>);
-		|			output.llmi = !output.llm;
 		|			output.uir = state->wcs;
 		|			output.uir ^= 0x7fULL << 13;	// Invert condsel
 		|			rnd = state->wcs & 0x7f;
-		|			output.r = state->pa045[rnd | 0x100] << 8;
-		|			output.r |= state->pa047[rnd | 0x100];
-		|			break;
 		|		case 0: // noop
 		|			break;
 		|		}
