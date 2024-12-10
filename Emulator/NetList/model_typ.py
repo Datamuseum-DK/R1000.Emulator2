@@ -394,7 +394,7 @@ class TYP(PartFactory):
 		|	bool fiu0, fiu1;
 		|	bool chi = false;
 		|	bool clo = false;
-		|	bool h2 = PIN_H2=>;
+		|	//bool h2 = PIN_H2=>;
 		|	bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
@@ -457,14 +457,9 @@ class TYP(PartFactory):
 		|
 		|	unsigned frm;
 		|	BUS_FRM_READ(frm);
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|															if (q2pos) {
-		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
-		|																if (output.cwe && uirc != 0x28)
-		|																state->wen = !state->wen;
-		|															}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|	output.z_qf = PIN_QFOE=>;
 		|											if (q1pos) {
 		|												state->aadr = 0;
 		|												if (PIN_ALOOP=>) {
@@ -496,81 +491,36 @@ class TYP(PartFactory):
 		|												unsigned marctl;
 		|												BUS_MCTL_READ(marctl);
 		|												state->foo1 = marctl >= 4;
+		|
+		|												if ((uira & 0x3c) != 0x28) {
+		|													state->a = state->rfram[state->aadr];
+		|												} else if (uira == 0x28) {
+		|													state->a = BUS_QF_MASK;
+		|													state->a ^= 0x3ff;
+		|													state->a |= state->count;
+		|												} else {
+		|													state->a = BUS_QF_MASK;
+		|												}
+		|												if (!output.z_qf) {
+		|													output.qf = state->a ^ BUS_QF_MASK;
+		|												}
 		|											}
 		|
-		|	output.z_qf = PIN_QFOE=>;
-		|
-		|	if (!h2) {
-		|		if ((uira & 0x3c) != 0x28) {
-		|			state->a = state->rfram[state->aadr];
-		|		} else if (uira == 0x28) {
-		|			state->a = BUS_QF_MASK;
-		|			state->a ^= 0x3ff;
-		|			state->a |= state->count;
-		|		} else {
-		|			state->a = BUS_QF_MASK;
-		|		}
-		|		if (!output.z_qf) {
-		|			output.qf = state->a ^ BUS_QF_MASK;
-		|		}
-		|	}
-		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																							if (q3pos) {
-		|																								state->cadr = 0;
-		|																								if (uirc <= 0x1f) {
-		|																									// FRAME:REG
-		|																									state->cadr |= uirc & 0x1f;
-		|																									state->cadr |= frm << 5;
-		|																								} else if (uirc <= 0x27) {
-		|																									// 0x20 = TOP-1
-		|																									// …
-		|																									// 0x27 = TOP-8
-		|																									state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
-		|																								} else if (uirc == 0x28) {
-		|																									// 0x28 LOOP COUNTER (RF write disabled)
-		|																								} else if (uirc == 0x29 && output.cwe) {
-		|																									// 0x29 DEFAULT (RF write disabled)
-		|																									unsigned sum = state->botreg + state->csa_offset + 1;
-		|																									state->cadr |= sum & 0xf;
-		|																								} else if (uirc == 0x29 && !output.cwe) {
-		|																									// 0x29 DEFAULT (RF write disabled)
-		|																									state->cadr |= uirc & 0x1f;
-		|																									state->cadr |= frm << 5;
-		|																								} else if (uirc <= 0x2b) {
-		|																									// 0x2a BOT
-		|																									// 0x2b BOT-1
-		|																									state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
-		|																									state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
-		|																								} else if (uirc == 0x2c) {
-		|																									// 0x28 = LOOP_REG
-		|																									state->cadr = state->count;
-		|																								} else if (uirc == 0x2d) {
-		|																									// 0x2d SPARE
-		|																									assert (uirc != 0x2d);
-		|																								} else if (uirc <= 0x2f) {
-		|																									// 0x2e = TOP+1
-		|																									// 0x2f = TOP
-		|																									state->cadr = (state->topreg + (uirc & 0x1) + 0xf) & 0xf;
-		|																								} else if (uirc <= 0x3f) {
-		|																									// GP[0…F]
-		|																									state->cadr |= 0x10 | (uirc & 0x0f);
-		|																								} else {
-		|																									assert(uirc <= 0x3f);
-		|																								}
-		|																								unsigned marctl;
-		|																								BUS_MCTL_READ(marctl);
-		|																								state->foo1 = marctl >= 4;
-		|																							}
+		|															if (q2pos) {
+		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
+		|																if (output.cwe && uirc != 0x28)
+		|																state->wen = !state->wen;
+		|															}
 		|	output.z_qt = PIN_QTOE=>;
-		|	if (!h2) {
-		|		if (uirb == 0x29 && output.z_qt) {
-		|			BUS_DT_READ(state->b);
-		|			state->b ^= BUS_DT_MASK;
-		|		} else {
-		|			state->b = state->rfram[state->badr];
-		|		}
-		|	}
+		|											if (q1pos) {
+		|												if (uirb == 0x29 && output.z_qt) {
+		|													BUS_DT_READ(state->b);
+		|													state->b ^= BUS_DT_MASK;
+		|												} else {
+		|													state->b = state->rfram[state->badr];
+		|												}
+		|											}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
 		|														
@@ -646,75 +596,101 @@ class TYP(PartFactory):
 		|																	output.adr = alu ^ BUS_ADR_MASK;
 		|																}
 		|														
-		|																if (condgrp == 3) {
-		|																	typ_cond(condsel, 2);
-		|																}
-		|																if (condgrp == 4) {
-		|																	typ_cond(condsel, 2);
-		|																}
 		|															}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|																							if (q3pos) {
+		|																								state->cadr = 0;
+		|																								if (uirc <= 0x1f) {
+		|																									// FRAME:REG
+		|																									state->cadr |= uirc & 0x1f;
+		|																									state->cadr |= frm << 5;
+		|																								} else if (uirc <= 0x27) {
+		|																									// 0x20 = TOP-1
+		|																									// …
+		|																									// 0x27 = TOP-8
+		|																									state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
+		|																								} else if (uirc == 0x28) {
+		|																									// 0x28 LOOP COUNTER (RF write disabled)
+		|																								} else if (uirc == 0x29 && output.cwe) {
+		|																									// 0x29 DEFAULT (RF write disabled)
+		|																									unsigned sum = state->botreg + state->csa_offset + 1;
+		|																									state->cadr |= sum & 0xf;
+		|																								} else if (uirc == 0x29 && !output.cwe) {
+		|																									// 0x29 DEFAULT (RF write disabled)
+		|																									state->cadr |= uirc & 0x1f;
+		|																									state->cadr |= frm << 5;
+		|																								} else if (uirc <= 0x2b) {
+		|																									// 0x2a BOT
+		|																									// 0x2b BOT-1
+		|																									state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|																									state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|																								} else if (uirc == 0x2c) {
+		|																									// 0x28 = LOOP_REG
+		|																									state->cadr = state->count;
+		|																								} else if (uirc == 0x2d) {
+		|																									// 0x2d SPARE
+		|																									assert (uirc != 0x2d);
+		|																								} else if (uirc <= 0x2f) {
+		|																									// 0x2e = TOP+1
+		|																									// 0x2f = TOP
+		|																									state->cadr = (state->topreg + (uirc & 0x1) + 0xf) & 0xf;
+		|																								} else if (uirc <= 0x3f) {
+		|																									// GP[0…F]
+		|																									state->cadr |= 0x10 | (uirc & 0x0f);
+		|																								} else {
+		|																									assert(uirc <= 0x3f);
+		|																								}
+		|																								unsigned marctl;
+		|																								BUS_MCTL_READ(marctl);
+		|																								state->foo1 = marctl >= 4;
+		|																							}
 		|
-		|#if 0
-		|															if (q2pos && (condgrp == 5 || condgrp == 6 || condgrp == 7)) {
-		|														
-		|																if (condgrp == 5) {
-		|																	typ_cond(condsel, 2);
-		|																}
-		|																if (condgrp == 6) {
-		|																	typ_cond(condsel, 2);
-		|																}
-		|																if (condgrp == 7) {
-		|																	typ_cond(condsel, 2);
-		|																}
-		|															}
-		|#endif
 		|
-		|	//if (h2 || PIN_WE.posedge()) {
-		|	if (q4pos) {
-		|		bool c_source = PIN_CSRC=>;
-		|		fiu0 = c_source;
-		|		fiu1 = c_source == (rand != 0x3);
-		|
-		|		bool sel = PIN_SEL=>;
-		|
-		|		if (!fiu0) {
-		|			BUS_DF_READ(fiu);
-		|			fiu ^= BUS_DF_MASK;
-		|			fiu_valid = true;
-		|			c |= fiu & 0xffffffff00000000ULL;
-		|			chi = true;
-		|		} else {
-		|			if (sel) {
-		|				c |= state->wdr & 0xffffffff00000000ULL;
-		|			} else {
-		|				c |= state->alu & 0xffffffff00000000ULL;
-		|			}
-		|			chi = true;
-		|		}
-		|		if (!fiu1) {
-		|			if (!fiu_valid) {
-		|				BUS_DF_READ(fiu);
-		|				fiu ^= BUS_DF_MASK;
-		|			}
-		|			c |= fiu & 0xffffffffULL;
-		|			clo = true;
-		|		} else {
-		|			if (sel) {
-		|				c |= state->wdr & 0xffffffffULL;
-		|			} else {
-		|				c |= state->alu & 0xffffffffULL;
-		|			}
-		|			clo = true;
-		|		}
-		|		if (chi && !clo)
-		|			c |= 0xffffffff;
-		|		if (!chi && clo)
-		|			c |= 0xffffffffULL << 32;
-		|
-		|		if (PIN_WE.posedge() && !state->wen) {
-		|			state->rfram[state->cadr] = c;
-		|		}
-		|	}
+		|																											if (q4pos) {
+		|																												bool c_source = PIN_CSRC=>;
+		|																												fiu0 = c_source;
+		|																												fiu1 = c_source == (rand != 0x3);
+		|																										
+		|																												bool sel = PIN_SEL=>;
+		|																										
+		|																												if (!fiu0) {
+		|																													BUS_DF_READ(fiu);
+		|																													fiu ^= BUS_DF_MASK;
+		|																													fiu_valid = true;
+		|																													c |= fiu & 0xffffffff00000000ULL;
+		|																													chi = true;
+		|																												} else {
+		|																													if (sel) {
+		|																														c |= state->wdr & 0xffffffff00000000ULL;
+		|																													} else {
+		|																														c |= state->alu & 0xffffffff00000000ULL;
+		|																													}
+		|																													chi = true;
+		|																												}
+		|																												if (!fiu1) {
+		|																													if (!fiu_valid) {
+		|																														BUS_DF_READ(fiu);
+		|																														fiu ^= BUS_DF_MASK;
+		|																													}
+		|																													c |= fiu & 0xffffffffULL;
+		|																													clo = true;
+		|																												} else {
+		|																													if (sel) {
+		|																														c |= state->wdr & 0xffffffffULL;
+		|																													} else {
+		|																														c |= state->alu & 0xffffffffULL;
+		|																													}
+		|																													clo = true;
+		|																												}
+		|																												if (chi && !clo)
+		|																													c |= 0xffffffff;
+		|																												if (!chi && clo)
+		|																													c |= 0xffffffffULL << 32;
+		|																										
+		|																												if (PIN_WE.posedge() && !state->wen) {
+		|																													state->rfram[state->cadr] = c;
+		|																												}
+		|																											}
 		|																											if (q4pos && sclke && !PIN_LDWDR=>) {
 		|																												BUS_DT_READ(state->wdr);
 		|																												state->wdr ^= BUS_DT_MASK;
