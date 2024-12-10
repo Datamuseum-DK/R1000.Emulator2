@@ -411,6 +411,9 @@ class TYP(PartFactory):
 		|	BUS_RAND_READ(rand);
 		|	BUS_CSEL_READ(condsel);
 		|
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|
+		|#if 0
 		|#define COND(g, c) (((g) << 3)| (c))
 		|	// Early conditions
 		|	assert (state->count <= 0x3ff);
@@ -428,6 +431,7 @@ class TYP(PartFactory):
 		|		typ_cond(condsel, 0);
 		|		break;
 		|	}
+		|#endif
 		|
 		|	unsigned condgrp = condsel >> 3;
 		|	if (condgrp == 0xb)
@@ -445,52 +449,54 @@ class TYP(PartFactory):
 		|		csa += state->csa_offset;
 		|	}
 		|
-		|	if (uirsclk) {
-		|		state->csa_hit = PIN_CSAH=>;
-		|		state->csa_write = PIN_CSAW=>;
-		|		output.cwe = !(state->csa_hit || state->csa_write);
-		|	}
+		|																											if (uirsclk) {
+		|																												state->csa_hit = PIN_CSAH=>;
+		|																												state->csa_write = PIN_CSAW=>;
+		|																												output.cwe = !(state->csa_hit || state->csa_write);
+		|																											}
 		|
 		|	unsigned frm;
 		|	BUS_FRM_READ(frm);
-		|	if (q2pos) {
-		|		state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
-		|		if (output.cwe && uirc != 0x28)
-		|		state->wen = !state->wen;
-		|	}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|															if (q2pos) {
+		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
+		|																if (output.cwe && uirc != 0x28)
+		|																state->wen = !state->wen;
+		|															}
 		|
-		|	if (q1pos) {
-		|		state->aadr = 0;
-		|		if (PIN_ALOOP=>) {
-		|			state->aadr = state->count;
-		|		} else if (uira <= 0x1f) {
-		|			state->aadr = frm << 5;
-		|			state->aadr |= uira & 0x1f;
-		|		} else if (uira <= 0x2f) {
-		|			state->aadr |= atos & 0xf;
-		|		} else {
-		|			state->aadr |= uira & 0x1f;
-		|		}
-		|
-		|		state->badr = 0;
-		|		if (PIN_BLOOP=>) {
-		|			state->badr = state->count;
-		|		} else if (uirb <= 0x1f) {
-		|			state->badr = frm << 5;
-		|			state->badr |= uirb & 0x1f;
-		|		} else if (uirb <= 0x27) {
-		|			state->badr |= btos & 0xf;
-		|		} else if (uirb <= 0x2b) {
-		|			state->badr |= csa & 0xf;
-		|		} else if (uirb <= 0x2f) {
-		|			state->badr |= btos & 0xf;
-		|		} else {
-		|			state->badr |= uirb & 0x1f;
-		|		}
-		|		unsigned marctl;
-		|		BUS_MCTL_READ(marctl);
-		|		state->foo1 = marctl >= 4;
-		|	}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|											if (q1pos) {
+		|												state->aadr = 0;
+		|												if (PIN_ALOOP=>) {
+		|													state->aadr = state->count;
+		|												} else if (uira <= 0x1f) {
+		|													state->aadr = frm << 5;
+		|													state->aadr |= uira & 0x1f;
+		|												} else if (uira <= 0x2f) {
+		|													state->aadr |= atos & 0xf;
+		|												} else {
+		|													state->aadr |= uira & 0x1f;
+		|												}
+		|										
+		|												state->badr = 0;
+		|												if (PIN_BLOOP=>) {
+		|													state->badr = state->count;
+		|												} else if (uirb <= 0x1f) {
+		|													state->badr = frm << 5;
+		|													state->badr |= uirb & 0x1f;
+		|												} else if (uirb <= 0x27) {
+		|													state->badr |= btos & 0xf;
+		|												} else if (uirb <= 0x2b) {
+		|													state->badr |= csa & 0xf;
+		|												} else if (uirb <= 0x2f) {
+		|													state->badr |= btos & 0xf;
+		|												} else {
+		|													state->badr |= uirb & 0x1f;
+		|												}
+		|												unsigned marctl;
+		|												BUS_MCTL_READ(marctl);
+		|												state->foo1 = marctl >= 4;
+		|											}
 		|
 		|	output.z_qf = PIN_QFOE=>;
 		|
@@ -509,52 +515,53 @@ class TYP(PartFactory):
 		|		}
 		|	}
 		|
-		|	if (q3pos) {
-		|		state->cadr = 0;
-		|		if (uirc <= 0x1f) {
-		|			// FRAME:REG
-		|			state->cadr |= uirc & 0x1f;
-		|			state->cadr |= frm << 5;
-		|		} else if (uirc <= 0x27) {
-		|			// 0x20 = TOP-1
-		|			// …
-		|			// 0x27 = TOP-8
-		|			state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
-		|		} else if (uirc == 0x28) {
-		|			// 0x28 LOOP COUNTER (RF write disabled)
-		|		} else if (uirc == 0x29 && output.cwe) {
-		|			// 0x29 DEFAULT (RF write disabled)
-		|			unsigned sum = state->botreg + state->csa_offset + 1;
-		|			state->cadr |= sum & 0xf;
-		|		} else if (uirc == 0x29 && !output.cwe) {
-		|			// 0x29 DEFAULT (RF write disabled)
-		|			state->cadr |= uirc & 0x1f;
-		|			state->cadr |= frm << 5;
-		|		} else if (uirc <= 0x2b) {
-		|			// 0x2a BOT
-		|			// 0x2b BOT-1
-		|			state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
-		|			state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
-		|		} else if (uirc == 0x2c) {
-		|			// 0x28 = LOOP_REG
-		|			state->cadr = state->count;
-		|		} else if (uirc == 0x2d) {
-		|			// 0x2d SPARE
-		|			assert (uirc != 0x2d);
-		|		} else if (uirc <= 0x2f) {
-		|			// 0x2e = TOP+1
-		|			// 0x2f = TOP
-		|			state->cadr = (state->topreg + (uirc & 0x1) + 0xf) & 0xf;
-		|		} else if (uirc <= 0x3f) {
-		|			// GP[0…F]
-		|			state->cadr |= 0x10 | (uirc & 0x0f);
-		|		} else {
-		|			assert(uirc <= 0x3f);
-		|		}
-		|		unsigned marctl;
-		|		BUS_MCTL_READ(marctl);
-		|		state->foo1 = marctl >= 4;
-		|	}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|																							if (q3pos) {
+		|																								state->cadr = 0;
+		|																								if (uirc <= 0x1f) {
+		|																									// FRAME:REG
+		|																									state->cadr |= uirc & 0x1f;
+		|																									state->cadr |= frm << 5;
+		|																								} else if (uirc <= 0x27) {
+		|																									// 0x20 = TOP-1
+		|																									// …
+		|																									// 0x27 = TOP-8
+		|																									state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
+		|																								} else if (uirc == 0x28) {
+		|																									// 0x28 LOOP COUNTER (RF write disabled)
+		|																								} else if (uirc == 0x29 && output.cwe) {
+		|																									// 0x29 DEFAULT (RF write disabled)
+		|																									unsigned sum = state->botreg + state->csa_offset + 1;
+		|																									state->cadr |= sum & 0xf;
+		|																								} else if (uirc == 0x29 && !output.cwe) {
+		|																									// 0x29 DEFAULT (RF write disabled)
+		|																									state->cadr |= uirc & 0x1f;
+		|																									state->cadr |= frm << 5;
+		|																								} else if (uirc <= 0x2b) {
+		|																									// 0x2a BOT
+		|																									// 0x2b BOT-1
+		|																									state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|																									state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|																								} else if (uirc == 0x2c) {
+		|																									// 0x28 = LOOP_REG
+		|																									state->cadr = state->count;
+		|																								} else if (uirc == 0x2d) {
+		|																									// 0x2d SPARE
+		|																									assert (uirc != 0x2d);
+		|																								} else if (uirc <= 0x2f) {
+		|																									// 0x2e = TOP+1
+		|																									// 0x2f = TOP
+		|																									state->cadr = (state->topreg + (uirc & 0x1) + 0xf) & 0xf;
+		|																								} else if (uirc <= 0x3f) {
+		|																									// GP[0…F]
+		|																									state->cadr |= 0x10 | (uirc & 0x0f);
+		|																								} else {
+		|																									assert(uirc <= 0x3f);
+		|																								}
+		|																								unsigned marctl;
+		|																								BUS_MCTL_READ(marctl);
+		|																								state->foo1 = marctl >= 4;
+		|																							}
 		|	output.z_qt = PIN_QTOE=>;
 		|	if (!h2) {
 		|		if (uirb == 0x29 && output.z_qt) {
@@ -564,102 +571,106 @@ class TYP(PartFactory):
 		|			state->b = state->rfram[state->badr];
 		|		}
 		|	}
-		|	if (q2pos) {
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|															if (q2pos) {
+		|														
+		|																bool divide = rand != 0xb;
+		|																bool acond = true;
+		|																if (divide && state->last_cond)
+		|																	acond = false;
+		|																if (!divide && PIN_TQBIT=>)
+		|																	acond = false;
+		|																struct f181 f181l, f181h;
+		|																unsigned tmp, idx, alurand, alufunc;
+		|																BUS_AFNC_READ(alufunc);
+		|														
+		|																if (rand < 8) {
+		|																	alurand = 7;
+		|																} else {
+		|																	alurand = 15 - rand;
+		|																}
+		|																idx = acond << 8;
+		|																idx |= alurand << 5;
+		|																idx |= alufunc;
+		|																
+		|																tmp = state->pa068[idx];
+		|																state->is_binary = (tmp >> 1) & 1;
+		|																tmp >>= 3;
+		|														
+		|																f181l.ctl = tmp >> 1;
+		|																f181l.ctl |= (tmp & 1) << 4;
+		|																f181l.ctl |= (rand != 0xf) << 5;
+		|																f181l.ci = (state->pa068[idx] >> 2) & 1;
+		|																f181l.a = state->a & 0xffffffff;
+		|																f181l.b = state->b & 0xffffffff;
+		|																f181_alu(&f181l);
+		|																state->com = f181l.co;
+		|																state->alu = f181l.o;
+		|														
+		|																tmp = state->pa010[idx];
+		|																state->sub_else_add = (tmp >> 2) & 1;
+		|																state->ovr_en = (tmp >> 1) & 1;
+		|																tmp >>= 3;
+		|														
+		|																f181h.ctl = tmp >> 1;
+		|																f181h.ctl |= (tmp & 1) << 4;
+		|																f181h.ctl |= 1 << 5;
+		|																f181h.ci = f181l.co;
+		|																f181h.a = state->a >> 32;
+		|																f181h.b = state->b >> 32;
+		|																f181_alu(&f181h);
+		|																state->coh = f181h.co;
+		|																state->alu |= ((uint64_t)f181h.o) << 32;
+		|																state->zero = 0;
+		|																if (!(state->alu & (0xffULL) <<  0)) state->zero |= 0x01;
+		|																if (!(state->alu & (0xffULL) <<  8)) state->zero |= 0x02;
+		|																if (!(state->alu & (0xffULL) << 16)) state->zero |= 0x04;
+		|																if (!(state->alu & (0xffULL) << 24)) state->zero |= 0x08;
+		|																if (!(state->alu & (0xffULL) << 32)) state->zero |= 0x10;
+		|																if (!(state->alu & (0xffULL) << 40)) state->zero |= 0x20;
+		|																if (!(state->alu & (0xffULL) << 48)) state->zero |= 0x40;
+		|																if (!(state->alu & (0xffULL) << 56)) state->zero |= 0x80;
+		|																state->alu = ~state->alu;
+		|																state->almsb = state->alu >> 63ULL;
+		|														
+		|																output.z_adr = PIN_ADROE=>;
+		|																if (!output.z_adr) {
+		|																	unsigned spc;
+		|																	BUS_DSP_READ(spc);
+		|																	uint64_t alu = state->alu;
+		|														
+		|																	if (spc != 4) {
+		|																		alu |=0xf8000000ULL;
+		|																	}
+		|														
+		|																	output.adr = alu ^ BUS_ADR_MASK;
+		|																}
+		|														
+		|																if (condgrp == 3) {
+		|																	typ_cond(condsel, 2);
+		|																}
+		|																if (condgrp == 4) {
+		|																	typ_cond(condsel, 2);
+		|																}
+		|															}
 		|
-		|		bool divide = rand != 0xb;
-		|		bool acond = true;
-		|		if (divide && state->last_cond)
-		|			acond = false;
-		|		if (!divide && PIN_TQBIT=>)
-		|			acond = false;
-		|		struct f181 f181l, f181h;
-		|		unsigned tmp, idx, alurand, alufunc;
-		|		BUS_AFNC_READ(alufunc);
+		|#if 0
+		|															if (q2pos && (condgrp == 5 || condgrp == 6 || condgrp == 7)) {
+		|														
+		|																if (condgrp == 5) {
+		|																	typ_cond(condsel, 2);
+		|																}
+		|																if (condgrp == 6) {
+		|																	typ_cond(condsel, 2);
+		|																}
+		|																if (condgrp == 7) {
+		|																	typ_cond(condsel, 2);
+		|																}
+		|															}
+		|#endif
 		|
-		|		if (rand < 8) {
-		|			alurand = 7;
-		|		} else {
-		|			alurand = 15 - rand;
-		|		}
-		|		idx = acond << 8;
-		|		idx |= alurand << 5;
-		|		idx |= alufunc;
-		|		
-		|		tmp = state->pa068[idx];
-		|		state->is_binary = (tmp >> 1) & 1;
-		|		tmp >>= 3;
-		|
-		|		f181l.ctl = tmp >> 1;
-		|		f181l.ctl |= (tmp & 1) << 4;
-		|		f181l.ctl |= (rand != 0xf) << 5;
-		|		f181l.ci = (state->pa068[idx] >> 2) & 1;
-		|		f181l.a = state->a & 0xffffffff;
-		|		f181l.b = state->b & 0xffffffff;
-		|		f181_alu(&f181l);
-		|		state->com = f181l.co;
-		|		state->alu = f181l.o;
-		|
-		|		tmp = state->pa010[idx];
-		|		state->sub_else_add = (tmp >> 2) & 1;
-		|		state->ovr_en = (tmp >> 1) & 1;
-		|		tmp >>= 3;
-		|
-		|		f181h.ctl = tmp >> 1;
-		|		f181h.ctl |= (tmp & 1) << 4;
-		|		f181h.ctl |= 1 << 5;
-		|		f181h.ci = f181l.co;
-		|		f181h.a = state->a >> 32;
-		|		f181h.b = state->b >> 32;
-		|		f181_alu(&f181h);
-		|		state->coh = f181h.co;
-		|		state->alu |= ((uint64_t)f181h.o) << 32;
-		|		state->zero = 0;
-		|		if (!(state->alu & (0xffULL) <<  0)) state->zero |= 0x01;
-		|		if (!(state->alu & (0xffULL) <<  8)) state->zero |= 0x02;
-		|		if (!(state->alu & (0xffULL) << 16)) state->zero |= 0x04;
-		|		if (!(state->alu & (0xffULL) << 24)) state->zero |= 0x08;
-		|		if (!(state->alu & (0xffULL) << 32)) state->zero |= 0x10;
-		|		if (!(state->alu & (0xffULL) << 40)) state->zero |= 0x20;
-		|		if (!(state->alu & (0xffULL) << 48)) state->zero |= 0x40;
-		|		if (!(state->alu & (0xffULL) << 56)) state->zero |= 0x80;
-		|		state->alu = ~state->alu;
-		|		state->almsb = state->alu >> 63ULL;
-		|
-		|		output.z_adr = PIN_ADROE=>;
-		|		if (!output.z_adr) {
-		|			unsigned spc;
-		|			BUS_DSP_READ(spc);
-		|			uint64_t alu = state->alu;
-		|
-		|			if (spc != 4) {
-		|				alu |=0xf8000000ULL;
-		|			}
-		|
-		|			output.adr = alu ^ BUS_ADR_MASK;
-		|		}
-		|
-		|		if (condgrp == 3) {
-		|			typ_cond(condsel, 2);
-		|		}
-		|		if (condgrp == 4) {
-		|			typ_cond(condsel, 2);
-		|		}
-		|	}
-		|
-		|	if (q2pos && (condgrp == 5 || condgrp == 6 || condgrp == 7)) {
-		|
-		|		if (condgrp == 5) {
-		|			typ_cond(condsel, 2);
-		|		}
-		|		if (condgrp == 6) {
-		|			typ_cond(condsel, 2);
-		|		}
-		|		if (condgrp == 7) {
-		|			typ_cond(condsel, 2);
-		|		}
-		|	}
-		|
-		|	if (h2 || PIN_WE.posedge()) {
+		|	//if (h2 || PIN_WE.posedge()) {
+		|	if (q4pos) {
 		|		bool c_source = PIN_CSRC=>;
 		|		fiu0 = c_source;
 		|		fiu1 = c_source == (rand != 0x3);
@@ -704,73 +715,73 @@ class TYP(PartFactory):
 		|			state->rfram[state->cadr] = c;
 		|		}
 		|	}
-		|	if (q4pos && sclke && !PIN_LDWDR=>) {
-		|		BUS_DT_READ(state->wdr);
-		|		state->wdr ^= BUS_DT_MASK;
-		|	}
-		|
-		|	if (q4pos) {
-		|		if (sclke) {
-		|			if (uirc == 0x28) {
-		|				state->count = c;
-		|			} else if (rand == 0x2) {
-		|				state->count += 1;
-		|			} else if (rand == 0x1) {
-		|				state->count += 0x3ff;
-		|			}
-		|			state->count &= 0x3ff;
-		|		}
-		|#if 0
-		|		if (rand == 0x2) {
-		|			output.lovf = state->count != 0x3ff;
-		|		} else if (rand == 0x1) {
-		|			output.lovf = state->count != 0;
-		|		} else {
-		|			output.lovf = true;
-		|		}
-		|#endif
-		|	}
+		|																											if (q4pos && sclke && !PIN_LDWDR=>) {
+		|																												BUS_DT_READ(state->wdr);
+		|																												state->wdr ^= BUS_DT_MASK;
+		|																											}
+		|																										
+		|																											if (q4pos) {
+		|																												if (sclke) {
+		|																													if (uirc == 0x28) {
+		|																														state->count = c;
+		|																													} else if (rand == 0x2) {
+		|																														state->count += 1;
+		|																													} else if (rand == 0x1) {
+		|																														state->count += 0x3ff;
+		|																													}
+		|																													state->count &= 0x3ff;
+		|																												}
+		|																										#if 0
+		|																												if (rand == 0x2) {
+		|																													output.lovf = state->count != 0x3ff;
+		|																												} else if (rand == 0x1) {
+		|																													output.lovf = state->count != 0;
+		|																												} else {
+		|																													output.lovf = true;
+		|																												}
+		|																										#endif
+		|																											}
 		|
 		|	if (!output.z_qt) {
 		|		output.qt = state->b ^ BUS_QT_MASK;
 		|	}
 		|
-		|	if (uirsclk) {
-		|		state->csa_offset = csmux3;
-		|	}
-		|	if (aclk) {
-		|		bool bot_mux_sel, top_mux_sel, add_mux_sel;
-		|		bot_mux_sel = PIN_LBOT=>;
-		|		add_mux_sel = PIN_LTOP=>;
-		|		top_mux_sel = !(add_mux_sel && PIN_LPOP=>);
-		|
-		|		unsigned csmux0;
-		|		if (add_mux_sel)
-		|			csmux0 = state->botreg;
-		|		else
-		|			csmux0 = state->topreg;
-		|
-		|		unsigned csalu0 = csmux3 + csmux0 + 1;
-		|
-		|		if (!bot_mux_sel)
-		|			state->botreg = csalu0;
-		|		if (top_mux_sel)
-		|			state->topreg = csalu0;
-		|	}
-		|	if (aclk) {
-		|		state->last_cond = state->cond;
-		|	}
-		|	if (aclk && rand == 0xc) {
-		|		state->ofreg = state->b >> 32;
-		|	}
+		|																											if (uirsclk) {
+		|																												state->csa_offset = csmux3;
+		|																											}
+		|																											if (aclk) {
+		|																												bool bot_mux_sel, top_mux_sel, add_mux_sel;
+		|																												bot_mux_sel = PIN_LBOT=>;
+		|																												add_mux_sel = PIN_LTOP=>;
+		|																												top_mux_sel = !(add_mux_sel && PIN_LPOP=>);
+		|																										
+		|																												unsigned csmux0;
+		|																												if (add_mux_sel)
+		|																													csmux0 = state->botreg;
+		|																												else
+		|																													csmux0 = state->topreg;
+		|																										
+		|																												unsigned csalu0 = csmux3 + csmux0 + 1;
+		|																										
+		|																												if (!bot_mux_sel)
+		|																													state->botreg = csalu0;
+		|																												if (top_mux_sel)
+		|																													state->topreg = csalu0;
+		|																											}
+		|																											if (aclk) {
+		|																												state->last_cond = state->cond;
+		|																											}
+		|																											if (aclk && rand == 0xc) {
+		|																												state->ofreg = state->b >> 32;
+		|																											}
 		|
 		|	unsigned priv_check;
 		|	BUS_UPVC_READ(priv_check);
 		|
-		|	if (q4pos && sclke && priv_check != 7) {
-		|		bool set_pass_priv = rand != 0xd;
-		|		state->ppriv = set_pass_priv;
-		|	}
+		|																											if (q4pos && sclke && priv_check != 7) {
+		|																												bool set_pass_priv = rand != 0xd;
+		|																												state->ppriv = set_pass_priv;
+		|																											}
 		|
 		|	bool micros_en = PIN_UEN=>;
 		|
@@ -780,30 +791,30 @@ class TYP(PartFactory):
 		|		selcond ^= 0xff;
 		|	}
 		|
-		|	if (q3pos) {
-		|		output.ue = BUS_UE_MASK;
-		|		if (micros_en && selcond == 0xbf && bin_op_pass())
-		|			output.ue &= ~0x20;	// T.BIN_OP.UE~
-		|
-		|		if (micros_en && selcond == 0x7f && priv_path_eq() && bin_op_pass())
-		|			output.ue &= ~0x10;	// T.BIN_EQ.UE~
-		|
-		|		if (micros_en && (0x3 < rand && rand < 0x8) && clev(rand))
-		|			output.ue &= ~0x08;	// T.CLASS.UE~
-		|
-		|		if (micros_en && selcond == 0xef && a_op_pass())
-		|			output.ue &= ~0x04;	// T.TOS1_OP.UE~
-		|		if (micros_en && selcond == 0xfb && b_op_pass())
-		|			output.ue &= ~0x04;	// T.TOS1_OP.UE~
-		|
-		|		if (micros_en && selcond == 0xdf && a_op_pass())
-		|			output.ue &= ~0x02;	// T.TOS_OP.UE~
-		|		if (micros_en && selcond == 0xf7 && b_op_pass())
-		|			output.ue &= ~0x02;	// T.TOS_OP.UE~
-		|
-		|		if (micros_en && (!((rand != 0xe) || !(B_LIT() != clit()))))
-		|			output.ue &= ~0x01;	// T.CHK_SYS.UE~
-		|	}
+		|																							if (q3pos) {
+		|																								output.ue = BUS_UE_MASK;
+		|																								if (micros_en && selcond == 0xbf && bin_op_pass())
+		|																									output.ue &= ~0x20;	// T.BIN_OP.UE~
+		|																						
+		|																								if (micros_en && selcond == 0x7f && priv_path_eq() && bin_op_pass())
+		|																									output.ue &= ~0x10;	// T.BIN_EQ.UE~
+		|																						
+		|																								if (micros_en && (0x3 < rand && rand < 0x8) && clev(rand))
+		|																									output.ue &= ~0x08;	// T.CLASS.UE~
+		|																						
+		|																								if (micros_en && selcond == 0xef && a_op_pass())
+		|																									output.ue &= ~0x04;	// T.TOS1_OP.UE~
+		|																								if (micros_en && selcond == 0xfb && b_op_pass())
+		|																									output.ue &= ~0x04;	// T.TOS1_OP.UE~
+		|																						
+		|																								if (micros_en && selcond == 0xdf && a_op_pass())
+		|																									output.ue &= ~0x02;	// T.TOS_OP.UE~
+		|																								if (micros_en && selcond == 0xf7 && b_op_pass())
+		|																									output.ue &= ~0x02;	// T.TOS_OP.UE~
+		|																						
+		|																								if (micros_en && (!((rand != 0xe) || !(B_LIT() != clit()))))
+		|																									output.ue &= ~0x01;	// T.CHK_SYS.UE~
+		|																							}
 		|
 		|	if (1 || q3pos) {	// Stops after VM-start
 		|		output.t0stp = true;
@@ -828,17 +839,18 @@ class TYP(PartFactory):
 		|	output.spdr = PIN_ADROE=> && PIN_VAEN=>;
 		|	output.z_qsp = output.spdr;
 		|
-		|	if (q4pos || !output.z_qsp) {
-		|		unsigned marctl;
-		|		BUS_MCTL_READ(marctl);
-		|
-		|		if (marctl & 0x8) {
-		|			output.qsp = (marctl & 0x7) ^ 0x7;
-		|		} else {
-		|			output.qsp = state->b ^ 0x7;
-		|		}
-		|	}
+		|																											if (q4pos || !output.z_qsp) {
+		|																												unsigned marctl;
+		|																												BUS_MCTL_READ(marctl);
+		|																										
+		|																												if (marctl & 0x8) {
+		|																													output.qsp = (marctl & 0x7) ^ 0x7;
+		|																												} else {
+		|																													output.qsp = state->b ^ 0x7;
+		|																												}
+		|																											}
 		|	output.ldmar = !(state->foo1 && PIN_BHSTP=>);
+		|	typ_cond(condsel, 0);
 		|''')
 
 def register(part_lib):
