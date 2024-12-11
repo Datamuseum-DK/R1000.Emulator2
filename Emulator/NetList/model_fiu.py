@@ -734,6 +734,64 @@ class FIU(PartFactory):
 		|	pa027a |= pgmod << 0;
 		|	unsigned pa027 = state->pa027[pa027a];
 		|
+		|	bool scav_trap_next = state->scav_trap;
+		|	if (condsel == 0x69) {		// SCAVENGER_HIT
+		|		scav_trap_next = false;
+		|	} else if (rmarp) {
+		|		scav_trap_next = (state->ti_bus >> BUS_DT_LSB(32)) & 1;
+		|	} else if (state->log_query) {
+		|		scav_trap_next = false;
+		|	}
+		|
+		|
+		|	bool csa_oor_next = state->csa_oor;
+		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
+		|		csa_oor_next = false;
+		|	} else if (rmarp) {
+		|		csa_oor_next = (state->ti_bus >> BUS_DT_LSB(33)) & 1;
+		|	} else if (state->log_query) {
+		|		csa_oor_next = state->csa_oor_next;
+		|	}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|															if (q2pos) {
+		|																if (state->log_query) {
+		|																	// PIN_MISS instead of cache_miss_next looks suspicious
+		|																	// but confirmed on both /200 and /400 FIU boards.
+		|																	// 20230910/phk
+		|																	state->memex = !(!state->miss && !csa_oor_next && !scav_trap_next);
+		|																} else {
+		|																	state->memex = !(!state->cache_miss && !state->csa_oor && !state->scav_trap);
+		|																}
+		|															}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|																			if (h2pos) {
+		|																				state->lcntl = state->mcntl;
+		|																				state->drive_mru = state->init_mru_d;
+		|																				state->rtv_next = (pa026 >> 4) & 1; // START_TAG_RD
+		|																				state->memcnd = (pa025 >> 4) & 1;	// CM_CTL0
+		|																				state->cndtru = (pa025 >> 3) & 1;	// CM_CTL1
+		|																				output.rtvnxt = !(state->rtv_next);
+		|																				output.memcnd = !(state->memcnd);
+		|																				output.cndtru = !(state->cndtru);
+		|																		
+		|																				if (memcyc1) {
+		|																					output.memct = state->lcntl;
+		|																				} else {
+		|																					output.memct = pa026 & 0xf;
+		|																				}
+		|																			}
+		|																			if (h2pos) {
+		|																				bool inc_mar = (state->prmt >> 3) & 1;
+		|																				state->page_crossing_next = (
+		|																					condsel != 0x6a) && (// sel_pg_xing
+		|																					condsel != 0x6e) && (// sel_incyc_px
+		|																					(
+		|																						(state->page_xing) ||
+		|																						(!state->page_xing && inc_mar && (state->moff & 0x1f) == 0x1f)
+		|																					)
+		|																				);
+		|																			}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
 		|																												bool idum;
 		|																												bool sel = !((PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
@@ -753,24 +811,6 @@ class FIU(PartFactory):
 		|																												state->csaht = !output.chit;
 		|																											}
 		|
-		|	bool scav_trap_next = state->scav_trap;
-		|	if (condsel == 0x69) {		// SCAVENGER_HIT
-		|		scav_trap_next = false;
-		|	} else if (rmarp) {
-		|		scav_trap_next = (state->ti_bus >> BUS_DT_LSB(32)) & 1;
-		|	} else if (state->log_query) {
-		|		scav_trap_next = false;
-		|	}
-		|
-		|
-		|	bool csa_oor_next = state->csa_oor;
-		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
-		|		csa_oor_next = false;
-		|	} else if (rmarp) {
-		|		csa_oor_next = (state->ti_bus >> BUS_DT_LSB(33)) & 1;
-		|	} else if (state->log_query) {
-		|		csa_oor_next = state->csa_oor_next;
-		|	}
 		|
 		|																											if (q4pos && !PIN_SFSTP=>) {
 		|																												bool cache_miss_next = state->cache_miss;
@@ -822,16 +862,6 @@ class FIU(PartFactory):
 		|																												state->logrw_d = state->logrw;
 		|																											}
 		|
-		|if (q2pos) {
-		|	if (state->log_query) {
-		|		// PIN_MISS instead of cache_miss_next looks suspicious
-		|		// but confirmed on both /200 and /400 FIU boards.
-		|		// 20230910/phk
-		|		state->memex = !(!state->miss && !csa_oor_next && !scav_trap_next);
-		|	} else {
-		|		state->memex = !(!state->cache_miss && !state->csa_oor && !state->scav_trap);
-		|	}
-		|}
 		|
 		|																											if (q4pos && !PIN_SCLKE=>) {
 		|																												state->omq = 0;
@@ -844,22 +874,6 @@ class FIU(PartFactory):
 		|																												}
 		|																												state->init_mru_d = (pa026 >> 7) & 1;
 		|																											}
-		|																			if (h2pos) {
-		|																				state->lcntl = state->mcntl;
-		|																				state->drive_mru = state->init_mru_d;
-		|																				state->rtv_next = (pa026 >> 4) & 1; // START_TAG_RD
-		|																				state->memcnd = (pa025 >> 4) & 1;	// CM_CTL0
-		|																				state->cndtru = (pa025 >> 3) & 1;	// CM_CTL1
-		|																				output.rtvnxt = !(state->rtv_next);
-		|																				output.memcnd = !(state->memcnd);
-		|																				output.cndtru = !(state->cndtru);
-		|																		
-		|																				if (memcyc1) {
-		|																					output.memct = state->lcntl;
-		|																				} else {
-		|																					output.memct = pa026 & 0xf;
-		|																				}
-		|																			}
 		|
 		|	pa025a = 0;
 		|	pa025a |= mem_start;
@@ -911,14 +925,7 @@ class FIU(PartFactory):
 		|																	output.dnext = !state->dumon;
 		|																}
 		|														
-		|																output.csawr = !(
-		|																	PIN_LABR=> &&
-		|																	PIN_LEABR=> &&
-		|																	!(
-		|																		state->logrwn ||
-		|																		(state->mcntl & 1)
-		|																	)
-		|																);
+		|																output.csawr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
 		|															}
 		|}
 		|	output.z_qadr = PIN_QADROE=>;
@@ -950,17 +957,6 @@ class FIU(PartFactory):
 		|																				output.memex = !(PIN_MICEN=> && state->memex);
 		|																				output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
 		|																			}
-		|{
-		|	bool inc_mar = (state->prmt >> 3) & 1;
-		|	state->page_crossing_next = (
-		|		condsel != 0x6a) && (// sel_pg_xing
-		|		condsel != 0x6e) && (// sel_incyc_px
-		|		(
-		|			(state->page_xing) ||
-		|			(!state->page_xing && inc_mar && (state->moff & 0x1f) == 0x1f)
-		|		)
-		|	);
-		|}
 		|{
 		|	bool mnor0b = state->pgstq == 0;
 		|	bool mnan2a = !(mnor0b && state->logrw_d);
