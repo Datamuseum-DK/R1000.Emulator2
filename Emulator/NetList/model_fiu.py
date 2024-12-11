@@ -489,11 +489,8 @@ class FIU(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	//bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
-		|	//bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	// bool h1pos = PIN_H1.posedge();
 		|	bool h2pos = PIN_H1.negedge();
 		|	bool sclk = q4pos && !PIN_SCLKE=>;
 		|
@@ -585,22 +582,20 @@ class FIU(PartFactory):
 		|
 		|
 		|																												if (!(csa >> 2)) {
-		|																													state->pdreg = state->ctopo & 0xfffff;
+		|																													state->pdreg = state->ctopo;
 		|																												}
 		|																											}
 		|	bool carry, name_match;
 		|if (1)
 		|{
-		|	unsigned a, b, dif;
-		|	a = state->ctopo & 0xfffff;
-		|	b = state->moff & 0xfffff;
+		|	unsigned dif;
 		|
 		|	if (state->pdt) {
-		|		carry = a <= state->pdreg;
-		|		dif = ~0xfffff + state->pdreg - a;
+		|		carry = state->ctopo <= state->pdreg;
+		|		dif = ~0xfffff + state->pdreg - state->ctopo;
 		|	} else {
-		|		carry = b <= a;
-		|		dif = ~0xfffff + a - b;
+		|		carry = state->moff <= state->ctopo;
+		|		dif = ~0xfffff + state->ctopo - state->moff;
 		|	}
 		|	dif &= 0xfffff;
 		|
@@ -827,6 +822,7 @@ class FIU(PartFactory):
 		|																												state->logrw_d = state->logrw;
 		|																											}
 		|
+		|if (q2pos) {
 		|	if (state->log_query) {
 		|		// PIN_MISS instead of cache_miss_next looks suspicious
 		|		// but confirmed on both /200 and /400 FIU boards.
@@ -835,6 +831,7 @@ class FIU(PartFactory):
 		|	} else {
 		|		state->memex = !(!state->cache_miss && !state->csa_oor && !state->scav_trap);
 		|	}
+		|}
 		|
 		|																											if (q4pos && !PIN_SCLKE=>) {
 		|																												state->omq = 0;
@@ -948,8 +945,8 @@ class FIU(PartFactory):
 		|		if (!output.z_qv)
 		|			output.qv = state->vi_bus ^ BUS_QT_MASK;
 		|	}
-		|	output.pgxin = !(PIN_MICEN=> && state->page_xing);
 		|																			if (h2pos) {
+		|																				output.pgxin = !(PIN_MICEN=> && state->page_xing);
 		|																				output.memex = !(PIN_MICEN=> && state->memex);
 		|																				output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
 		|																			}
