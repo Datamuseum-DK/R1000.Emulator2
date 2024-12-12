@@ -31,6 +31,25 @@
 '''
    64x4 rotator
    ============
+		|/*
+		| logrw   phys_ref
+		| 0       1       0000  PHYSICAL_MEM_WRITE
+		| 0       1       0001  PHYSICAL_MEM_READ
+		| 1       0       0010  LOGICAL_MEM_WRITE
+		| 1       0       0011  LOGICAL_MEM_READ
+		| 1       0       0100  COPY 0 TO 1 *
+		| 1       0       0101  MEMORY_TO_TAGSTORE *
+		| 1       0       0110  COPY 1 to 0 *
+		| 1       0       0111  SET HIT FLIP FLOPS *
+		| 0       1       1000  PHYSICAL TAG WRITE
+		| 0       1       1001  PHYSICAL TAG READ
+		| 0       0       1010  INITIALIZE MRU
+		| 0       0       1011  LOGICAL TAG READ
+		| 0       0       1100  NAME QUERY
+		| 0       0       1101  LRU QUERY
+		| 0       0       1110  AVAILABLE QUERY
+		| 0       0       1111  IDLE
+		|*/
 
 '''
 
@@ -574,13 +593,8 @@ class FIU(PartFactory):
 		|																												if (state->lfreg != 0x7f)
 		|																													state->lfreg |= 1<<7;
 		|																										
-		|																												// CSAFFB
 		|																												state->pdt = !PIN_PRED=>;
-		|																										
-		|																												// NVEMUX + CSAREG
 		|																												BUS_CNV_READ(state->nve);
-		|
-		|
 		|																												if (!(csa >> 2)) {
 		|																													state->pdreg = state->ctopo;
 		|																												}
@@ -661,25 +675,6 @@ class FIU(PartFactory):
 		|
 		|
 		|{
-		|/*
-		| logrw   phys_ref
-		| 0       1       0000  PHYSICAL_MEM_WRITE
-		| 0       1       0001  PHYSICAL_MEM_READ
-		| 1       0       0010  LOGICAL_MEM_WRITE
-		| 1       0       0011  LOGICAL_MEM_READ
-		| 1       0       0100  COPY 0 TO 1 *
-		| 1       0       0101  MEMORY_TO_TAGSTORE *
-		| 1       0       0110  COPY 1 to 0 *
-		| 1       0       0111  SET HIT FLIP FLOPS *
-		| 0       1       1000  PHYSICAL TAG WRITE
-		| 0       1       1001  PHYSICAL TAG READ
-		| 0       0       1010  INITIALIZE MRU
-		| 0       0       1011  LOGICAL TAG READ
-		| 0       0       1100  NAME QUERY
-		| 0       0       1101  LRU QUERY
-		| 0       0       1110  AVAILABLE QUERY
-		| 0       0       1111  IDLE
-		|*/
 		|
 		|	unsigned mem_start;
 		|	BUS_MSTRT_READ(mem_start);
@@ -810,6 +805,15 @@ class FIU(PartFactory):
 		|																												state->dumon = idum;
 		|																												state->csaht = !output.chit;
 		|																											}
+		|if (q4pos) {
+		|	pa025a = 0;
+		|	pa025a |= mem_start;
+		|	pa025a |= state->state0 << 8;
+		|	pa025a |= state->state1 << 7;
+		|	pa025a |= state->labort << 6;
+		|	pa025a |= state->e_abort_dly << 5;
+		|	pa025 = state->pa025[pa025a];
+		|}
 		|
 		|
 		|																											if (q4pos && !PIN_SFSTP=>) {
@@ -875,15 +879,13 @@ class FIU(PartFactory):
 		|																												state->init_mru_d = (pa026 >> 7) & 1;
 		|																											}
 		|
-		|	pa025a = 0;
-		|	pa025a |= mem_start;
-		|	pa025a |= state->state0 << 8;
-		|	pa025a |= state->state1 << 7;
-		|	pa025a |= state->labort << 6;
-		|	pa025a |= state->e_abort_dly << 5;
-		|	pa025 = state->pa025[pa025a];
 		|																			if (h2pos) {
 		|																				output.contin = !((pa025 >> 5) & 1);
+		|																			}
+		|																			if (h2pos) {
+		|																				output.pgxin = !(PIN_MICEN=> && state->page_xing);
+		|																				output.memex = !(PIN_MICEN=> && state->memex);
+		|																				output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
 		|																			}
 		|
 		|	pa026a = 0;
@@ -952,11 +954,6 @@ class FIU(PartFactory):
 		|		if (!output.z_qv)
 		|			output.qv = state->vi_bus ^ BUS_QT_MASK;
 		|	}
-		|																			if (h2pos) {
-		|																				output.pgxin = !(PIN_MICEN=> && state->page_xing);
-		|																				output.memex = !(PIN_MICEN=> && state->memex);
-		|																				output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
-		|																			}
 		|{
 		|	bool mnor0b = state->pgstq == 0;
 		|	bool mnan2a = !(mnor0b && state->logrw_d);
