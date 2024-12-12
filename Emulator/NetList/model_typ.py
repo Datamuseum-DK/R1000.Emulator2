@@ -99,49 +99,11 @@ class TYP(PartFactory):
 		|''')
 
     def sensitive(self):
-            #yield "PIN_CCLK"		# q4pos,prev
-            #yield "BUS_MCTL"		# uir q4pos,prev
-            #yield "PIN_OFC.pos()"	# prev
-            #yield "PIN_QFOE"		# prev
-            #yield "PIN_QSPOE"		# SPDR,prev
-            #yield "PIN_QTOE"		# prev
-            #yield "PIN_SCLKE"		# q4pos,prev
-            #yield "PIN_TQBIT"		# q2pos,prev
-            #yield "PIN_UCLK"		# q4pos,prev
-            #yield "PIN_VAEN"		# prev
-
-            #yield "PIN_ALOOP"		# uir q1pos
-            #yield "PIN_BLOOP"		# uir q1pos
-            #yield "BUS_UIRA"		# uir
-            #yield "BUS_UIRB"		# uir
-            #yield "BUS_UIRC"		# uir
-            #yield "BUS_FRM"		# uir q1pos & q3pos
-            #yield "BUS_RAND"		# uir
-            #yield "BUS_CLIT"		# uir
-            #yield "BUS_AFNC"		# uir q2pos
-            #yield "PIN_CSRC"		# uir WEpos
-            #yield "PIN_SEL"		# uir WEpos
-            #yield "BUS_UPVC"		# uir
-
-            #yield "PIN_ADROE"		# h1?
-            #yield "PIN_CSAH"		# UCLK
-            #yield "BUS_CSAO"		# UCLK, CCLK
-            #yield "PIN_CSAW"		# UCLK
-            #yield "BUS_DF"		# WEpos
-            #yield "PIN_LBOT"		# CCLK
-            #yield "PIN_LDWDR"		# q4pos
-            #yield "PIN_LPOP"		# CCLK
-            #yield "PIN_LTOP"		# CCLK
-
-            # yield "BUS_CSEL"		# uir? h1
-            # yield "BUS_DT"		# q2pos, q4pos
-
             yield "BUS_DSP"		# q2pos
             yield "PIN_H2.neg()"
             yield "PIN_Q2"
             yield "PIN_Q4"
             yield "PIN_UEN"
-            #yield "PIN_WE.pos()"	# q4?
             yield "PIN_BHSTP"
 
     def priv_decl(self, file):
@@ -395,6 +357,7 @@ class TYP(PartFactory):
 		|	bool chi = false;
 		|	bool clo = false;
 		|	//bool h2 = PIN_H2=>;
+		|	//bool h1pos = PIN_H2.negedge();
 		|	bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
@@ -412,26 +375,6 @@ class TYP(PartFactory):
 		|	BUS_CSEL_READ(condsel);
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|#if 0
-		|#define COND(g, c) (((g) << 3)| (c))
-		|	// Early conditions
-		|	assert (state->count <= 0x3ff);
-		|	switch (condsel) {
-		|	case COND(0x3, 4): // E - TYPE_COUNTER_ZERO	 
-		|	case COND(0xb, 4): // E - TYPE_COUNTER_ZERO	 
-		|		typ_cond(condsel, 0);
-		|		break;
-		|	case COND(0x4, 5): // E - TYP_FALSE
-		|	case COND(0x4, 6): // E - TYP_TRUE
-		|	case COND(0x4, 7): // E - TYP_PREVIOUS
-		|		typ_cond(condsel, 0);
-		|		break;
-		|	case COND(0x6, 4): // E - PASS_PRIVACY_BIT
-		|		typ_cond(condsel, 0);
-		|		break;
-		|	}
-		|#endif
 		|
 		|	unsigned condgrp = condsel >> 3;
 		|	if (condgrp == 0xb)
@@ -504,16 +447,6 @@ class TYP(PartFactory):
 		|												if (!output.z_qf) {
 		|													output.qf = state->a ^ BUS_QF_MASK;
 		|												}
-		|											}
-		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|															if (q2pos) {
-		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
-		|																if (output.cwe && uirc != 0x28)
-		|																state->wen = !state->wen;
-		|															}
-		|	output.z_qt = PIN_QTOE=>;
-		|											if (q1pos) {
 		|												if (uirb == 0x29 && output.z_qt) {
 		|													BUS_DT_READ(state->b);
 		|													state->b ^= BUS_DT_MASK;
@@ -521,8 +454,16 @@ class TYP(PartFactory):
 		|													state->b = state->rfram[state->badr];
 		|												}
 		|											}
+		|												output.z_qt = PIN_QTOE=>;
+		|												if (!output.z_qt) {
+		|													output.qt = state->b ^ BUS_QT_MASK;
+		|												}
+		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
+		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
+		|																if (output.cwe && uirc != 0x28)
+		|																state->wen = !state->wen;
 		|														
 		|																bool divide = rand != 0xb;
 		|																bool acond = true;
@@ -707,20 +648,8 @@ class TYP(PartFactory):
 		|																													}
 		|																													state->count &= 0x3ff;
 		|																												}
-		|																										#if 0
-		|																												if (rand == 0x2) {
-		|																													output.lovf = state->count != 0x3ff;
-		|																												} else if (rand == 0x1) {
-		|																													output.lovf = state->count != 0;
-		|																												} else {
-		|																													output.lovf = true;
-		|																												}
-		|																										#endif
 		|																											}
 		|
-		|	if (!output.z_qt) {
-		|		output.qt = state->b ^ BUS_QT_MASK;
-		|	}
 		|
 		|																											if (uirsclk) {
 		|																												state->csa_offset = csmux3;
