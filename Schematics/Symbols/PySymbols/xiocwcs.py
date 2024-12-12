@@ -13,7 +13,6 @@ class XIOCWCS(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "SFSTOP"))
         self.sig_left(ChipSig("-->+", "UADR", 0, 13))

@@ -55,7 +55,6 @@ class XIOCWCS(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_Q2.neg()"
         yield "PIN_Q4.pos()"
 
     def doit(self, file):
@@ -63,13 +62,10 @@ class XIOCWCS(PartFactory):
 
         file.fmt('''
 		|	bool q4_pos = PIN_Q4.posedge();
-		|	unsigned uadr;
-		|
-		|	BUS_UADR_READ(uadr);
-		|
-		|	bool uir_clk = false;
 		|
 		|	if (q4_pos) {
+		|		unsigned uadr;
+		|		BUS_UADR_READ(uadr);
 		|		output.dumen = !PIN_DUMNXT=>;
 		|		bool csa_hit = !PIN_ICSAH=>;
 		|		output.csahit = csa_hit;
@@ -87,30 +83,26 @@ class XIOCWCS(PartFactory):
 		|			state->tracnt &= 0x7ff;
 		|		}
 		|
+		|		bool uir_clk = false;
 		|		if (!PIN_SFSTOP=>)
 		|			uir_clk = true;
-		|	}
+		|		if (uir_clk) {
+		|			state->sr0 = state->ram[uadr] >> 8;
+		|			state->sr0 &= 0xff;
+		|			state->sr1 = state->ram[uadr] & 0xff;
+		|			state->sr1 &= 0xff;
 		|
-		|	if (q4_pos && uir_clk) {
-		|		state->sr0 = state->ram[uadr] >> 8;
-		|		state->sr0 &= 0xff;
-		|		state->sr1 = state->ram[uadr] & 0xff;
-		|		state->sr1 &= 0xff;
+		|			unsigned uir = (state->sr0 << 8) | state->sr1;
+		|			assert(uir <= 0xffff);
 		|
-		|		unsigned uir = (state->sr0 << 8) | state->sr1;
-		|		assert(uir <= 0xffff);
+		|			output.uir = uir;
 		|
-		|		output.uir = uir;
+		|			state->aen = (uir >> 6) & 3;
 		|
-		|		state->aen = (uir >> 6) & 3;
-		|
-		|		unsigned fen = (uir >> 4) & 3;
-		|		output.fen = (1 << fen) ^ 0xf;
-		|
-		|	}
-		|
-		|	if (PIN_Q2.negedge()) {
-		|		output.aen = (1 << state->aen) ^ 0xf;
+		|			unsigned fen = (uir >> 4) & 3;
+		|			output.fen = (1 << fen) ^ 0xf;
+		|			output.aen = (1 << state->aen) ^ 0xf;
+		|		}
 		|	}
 		|
 		|''')

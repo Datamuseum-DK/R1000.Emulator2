@@ -805,16 +805,6 @@ class FIU(PartFactory):
 		|																												state->dumon = idum;
 		|																												state->csaht = !output.chit;
 		|																											}
-		|if (q4pos) {
-		|	pa025a = 0;
-		|	pa025a |= mem_start;
-		|	pa025a |= state->state0 << 8;
-		|	pa025a |= state->state1 << 7;
-		|	pa025a |= state->labort << 6;
-		|	pa025a |= state->e_abort_dly << 5;
-		|	pa025 = state->pa025[pa025a];
-		|}
-		|
 		|
 		|																											if (q4pos && !PIN_SFSTP=>) {
 		|																												bool cache_miss_next = state->cache_miss;
@@ -928,23 +918,23 @@ class FIU(PartFactory):
 		|																}
 		|														
 		|																output.csawr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
+		|																output.z_qadr = PIN_QADROE=>;
+		|																output.z_qspc = PIN_QSPCOE=>;
+		|																if (!output.z_qadr && PIN_H1=>) {
+		|																	bool inc_mar = (state->prmt >> 3) & 1;
+		|																	unsigned inco = state->moff & 0x1f;
+		|																	if (inc_mar && inco != 0x1f)
+		|																		inco += 1;
+		|															
+		|																	output.qadr = (uint64_t)state->srn << 32;
+		|																	output.qadr |= state->sro & 0xfffff000;
+		|																	output.qadr |= (inco & 0x1f) << 7;
+		|																	output.qadr |= state->oreg;
+		|																	output.qspc = (state->sro >> 4) & 7;
+		|																}
 		|															}
+		|
 		|}
-		|	output.z_qadr = PIN_QADROE=>;
-		|	output.z_qspc = PIN_QSPCOE=>;
-		|	if (!output.z_qadr && PIN_H1=>) {
-		|		bool inc_mar = (state->prmt >> 3) & 1;
-		|		unsigned inco = state->moff & 0x1f;
-		|		if (inc_mar && inco != 0x1f)
-		|			inco += 1;
-		|
-		|		output.qadr = (uint64_t)state->srn << 32;
-		|		output.qadr |= state->sro & 0xfffff000;
-		|		output.qadr |= (inco & 0x1f) << 7;
-		|		output.qadr |= state->oreg;
-		|		output.qspc = (state->sro >> 4) & 7;
-		|	}
-		|
 		|	output.z_qt = PIN_QTOE=>;
 		|	output.z_qv = PIN_QVOE=>;
 		|	if ((!output.z_qt || !output.z_qv) && PIN_H1=>) {
