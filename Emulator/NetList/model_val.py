@@ -80,7 +80,7 @@ class VAL(PartFactory):
 
     def sensitive(self):
         yield "PIN_Q2.pos()"
-        yield "PIN_Q4"
+        yield "PIN_Q4.pos()"
         yield "PIN_QFOE.neg()"
         yield "PIN_QVOE.neg()"
         yield "PIN_ADROE.neg()"
@@ -268,7 +268,7 @@ class VAL(PartFactory):
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	//bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
-		|	bool q3pos = PIN_Q4.negedge();
+		|	//bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool h2 = PIN_H2=>;
 		|	bool sclken = !PIN_SCLKE=>;
@@ -540,7 +540,7 @@ class VAL(PartFactory):
 		|															}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																			if (q3pos) {
+		|																			if (q2pos) {
 		|																				unsigned frm;
 		|																				BUS_FRM_READ(frm);
 		|																				state->cadr = 0;
