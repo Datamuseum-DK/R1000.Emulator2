@@ -102,7 +102,7 @@ class TYP(PartFactory):
             yield "BUS_DSP"		# q2pos
             yield "PIN_H2.neg()"
             yield "PIN_Q2"
-            yield "PIN_Q4"
+            yield "PIN_Q4.pos()"
             yield "PIN_UEN"
             yield "PIN_BHSTP"
 
@@ -539,7 +539,7 @@ class TYP(PartFactory):
 		|														
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																							if (q3pos) {
+		|																							if (q2pos) {
 		|																								state->cadr = 0;
 		|																								if (uirc <= 0x1f) {
 		|																									// FRAME:REG
@@ -696,7 +696,7 @@ class TYP(PartFactory):
 		|		selcond ^= 0xff;
 		|	}
 		|
-		|																							if (q3pos) {
+		|																							if (q2pos) {
 		|																								output.ue = BUS_UE_MASK;
 		|																								if (micros_en && selcond == 0xbf && bin_op_pass())
 		|																									output.ue &= ~0x20;	// T.BIN_OP.UE~
