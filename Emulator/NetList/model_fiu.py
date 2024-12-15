@@ -121,7 +121,6 @@ class FIU(PartFactory):
 		|	bool page_crossing_next;
 		|	bool miss;
 		|	bool pgstq;
-		|	bool nohit;
 		|	bool csaht;
 		|	bool csa_oor_next;
 		|''')
@@ -674,6 +673,7 @@ class FIU(PartFactory):
 		|
 		|
 		|
+		|	unsigned board_hit;
 		|{
 		|
 		|	unsigned mem_start;
@@ -719,7 +719,7 @@ class FIU(PartFactory):
 		|	bool start_if_incw = (pa026 >> 5) & 1;
 		|
 		|	bool pgmod = (state->omq >> 1) & 1;
-		|	unsigned board_hit, pa027a = 0;
+		|	unsigned pa027a = 0;
 		|	BUS_BDHIT_READ(board_hit);
 		|	pa027a = 0;
 		|	pa027a |= board_hit << 5;
@@ -759,6 +759,33 @@ class FIU(PartFactory):
 		|																}
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|															if (q2pos) {
+		|																output.frdr = (state->prmt >> 1) & 1;
+		|																bool sel = !((PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
+		|																if (sel) {
+		|																	output.dnext = !((state->prmt >> 0) & 1);
+		|																} else {
+		|																	output.dnext = !state->dumon;
+		|																}
+		|														
+		|																output.csawr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
+		|																output.z_qadr = PIN_QADROE=>;
+		|																output.z_qspc = PIN_QSPCOE=>;
+		|																if (!output.z_qadr) {
+		|																	bool inc_mar = (state->prmt >> 3) & 1;
+		|																	unsigned inco = state->moff & 0x1f;
+		|																	if (inc_mar && inco != 0x1f)
+		|																		inco += 1;
+		|															
+		|																	output.qadr = (uint64_t)state->srn << 32;
+		|																	output.qadr |= state->sro & 0xfffff000;
+		|																	output.qadr |= (inco & 0x1f) << 7;
+		|																	output.qadr |= state->oreg;
+		|																	output.qspc = (state->sro >> 4) & 7;
+		|																}
+		|															}
+		|
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																			if (h2pos) {
 		|																				state->lcntl = state->mcntl;
 		|																				state->drive_mru = state->init_mru_d;
@@ -785,6 +812,14 @@ class FIU(PartFactory):
 		|																						(!state->page_xing && inc_mar && (state->moff & 0x1f) == 0x1f)
 		|																					)
 		|																				);
+		|																			}
+		|																			if (h2pos) {
+		|																				output.contin = !((pa025 >> 5) & 1);
+		|																			}
+		|																			if (h2pos) {
+		|																				output.pgxin = !(PIN_MICEN=> && state->page_xing);
+		|																				output.memex = !(PIN_MICEN=> && state->memex);
+		|																				output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
 		|																			}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
@@ -869,14 +904,6 @@ class FIU(PartFactory):
 		|																												state->init_mru_d = (pa026 >> 7) & 1;
 		|																											}
 		|
-		|																			if (h2pos) {
-		|																				output.contin = !((pa025 >> 5) & 1);
-		|																			}
-		|																			if (h2pos) {
-		|																				output.pgxin = !(PIN_MICEN=> && state->page_xing);
-		|																				output.memex = !(PIN_MICEN=> && state->memex);
-		|																				output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
-		|																			}
 		|
 		|	pa026a = 0;
 		|	pa026a |= mem_start;
@@ -904,35 +931,7 @@ class FIU(PartFactory):
 		|		state->pgstq |= 1;
 		|	if (!state->drive_mru || !(pa027 & 0x80))
 		|		state->pgstq |= 2;
-		|	state->nohit = board_hit != 0xf;
 		|
-		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|															if (q2pos) {
-		|																output.frdr = (state->prmt >> 1) & 1;
-		|																bool sel = !((PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
-		|																if (sel) {
-		|																	output.dnext = !((state->prmt >> 0) & 1);
-		|																} else {
-		|																	output.dnext = !state->dumon;
-		|																}
-		|														
-		|																output.csawr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
-		|																output.z_qadr = PIN_QADROE=>;
-		|																output.z_qspc = PIN_QSPCOE=>;
-		|																if (!output.z_qadr && PIN_H1=>) {
-		|																	bool inc_mar = (state->prmt >> 3) & 1;
-		|																	unsigned inco = state->moff & 0x1f;
-		|																	if (inc_mar && inco != 0x1f)
-		|																		inco += 1;
-		|															
-		|																	output.qadr = (uint64_t)state->srn << 32;
-		|																	output.qadr |= state->sro & 0xfffff000;
-		|																	output.qadr |= (inco & 0x1f) << 7;
-		|																	output.qadr |= state->oreg;
-		|																	output.qspc = (state->sro >> 4) & 7;
-		|																}
-		|															}
 		|
 		|}
 		|	output.z_qt = PIN_QTOE=>;
@@ -948,7 +947,7 @@ class FIU(PartFactory):
 		|	bool mnor0b = state->pgstq == 0;
 		|	bool mnan2a = !(mnor0b && state->logrw_d);
 		|	state->miss = !(
-		|		(state->nohit && mnan2a) ||
+		|		((board_hit != 0xf) && mnan2a) ||
 		|		(state->logrw_d && state->csaht)
 		|	);
 		|}
