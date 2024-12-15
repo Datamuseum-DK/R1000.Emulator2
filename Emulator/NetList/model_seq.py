@@ -209,24 +209,6 @@ class SEQ(PartFactory):
 		|	load_programmable(this->name(), state->pa048, sizeof state->pa048, "PA048-02");
 		|''')
 
-    def sensitive(self):
-        yield "PIN_Q2"
-        yield "PIN_Q4"
-        yield "PIN_H2"
-
-        yield "PIN_ACLK"
-        yield "PIN_LCLK"
-        #yield "PIN_TOSCLK"
-
-        # yield "PIN_SCLKE"
-
-        yield "PIN_BHEN"
-        yield "BUS_CSA"
-        yield "PIN_DMODE"
-        yield "PIN_DV_U"
-        yield "PIN_ENFU"
-        # yield "PIN_Q3COND"
-
     def priv_decl(self, file):
         file.fmt('''
 		|	void int_reads(unsigned ir, unsigned urand);
@@ -523,6 +505,24 @@ class SEQ(PartFactory):
 		|	}
 		|}
 		|''')
+
+    def sensitive(self):
+        yield "PIN_Q2"
+        yield "PIN_Q4"
+        yield "PIN_H2"
+
+        #yield "PIN_ACLK"
+        #yield "PIN_LCLK"
+        #yield "PIN_TOSCLK"
+
+        # yield "PIN_SCLKE"
+
+        #yield "PIN_BHEN"
+        #yield "BUS_CSA"
+        #yield "PIN_DMODE"
+        #yield "PIN_DV_U"
+        yield "PIN_ENFU"
+        # yield "PIN_Q3COND"
 
 
     def doit(self, file):
