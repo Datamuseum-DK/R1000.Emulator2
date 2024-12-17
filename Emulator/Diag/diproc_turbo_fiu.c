@@ -13,25 +13,18 @@
 #include "Infra/context.h"
 #include "Infra/vend.h"
 
-#if defined(HAS_Z022)
 static uint64_t *fiu_wcs;
-#endif
 static unsigned fiu_ptr;
 
 static int
 load_control_store_200_fiu(const struct diagproc *dp)
 {
-#if !defined(HAS_Z022)
-	fprintf(stderr, "NO Z022\n");
-	(void)dp;
-	return (0);
-#else
 	struct ctx *ctx;
 	int n;
 	uint64_t wcs, inp;
 
 	if (fiu_wcs == NULL) {
-		ctx = CTX_Find(COMP_Z022);
+		ctx = CTX_Find("FIU_WCS");
 		AN(ctx);
 		fiu_wcs = (uint64_t *)(void*)(ctx + 1);
 	}
@@ -91,7 +84,6 @@ load_control_store_200_fiu(const struct diagproc *dp)
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.FIU");
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
 static int

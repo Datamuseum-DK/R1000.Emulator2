@@ -43,9 +43,14 @@ class XTYPWCS(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t ram[1<<BUS_UAD_WIDTH];
+		|	uint64_t *ram;
 		|	unsigned addr;
 		|	uint64_t wcs;
+		|''')
+
+    def init(self, file):
+        file.fmt('''
+		|	state->ram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << BUS_UAD_WIDTH);
 		|''')
 
     def sensitive(self):

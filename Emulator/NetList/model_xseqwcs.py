@@ -54,9 +54,14 @@ class XSEQWCS(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t ram[1<<BUS_UA_WIDTH];
+		|	uint64_t *ram;
 		|	uint64_t wcs;
 		|	bool ff0, ff1, ff2;
+		|''')
+
+    def init(self, file):
+        file.fmt('''
+		|	state->ram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << BUS_UA_WIDTH);
 		|''')
 
     def sensitive(self):

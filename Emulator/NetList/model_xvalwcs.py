@@ -43,9 +43,14 @@ class XVALWCS(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t ram[1<<14];
+		|	uint64_t *ram;
 		|	unsigned addr;
 		|	uint64_t wcs, ff1, ff2, ff3, sr0, sr1, sr2, sr4;
+		|''')
+
+    def init(self, file):
+        file.fmt('''
+		|	state->ram = (uint64_t*)CTX_GetRaw("VAL_WCS", sizeof(uint64_t) << 14);
 		|''')
 
     def sensitive(self):

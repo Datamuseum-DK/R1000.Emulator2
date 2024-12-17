@@ -43,7 +43,12 @@ class XFIUWCS(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t ram[1<<14];
+		|	uint64_t *ram;
+		|''')
+
+    def init(self, file):
+        file.fmt('''
+		|	state->ram = (uint64_t*)CTX_GetRaw("FIU_WCS", sizeof(uint64_t) << 14);
 		|''')
 
     def sensitive(self):

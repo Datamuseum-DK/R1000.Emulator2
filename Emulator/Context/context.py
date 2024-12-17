@@ -122,6 +122,8 @@ def main():
 
     for ctx in contexts(filename=filename):
         i = ctx.activations
+        if i == 0:
+            continue
         delta = snapshot.get(ctx.ident)
         if delta:
             i -= delta
@@ -129,8 +131,6 @@ def main():
             ucycles = i / 10
         nact += i
         lines.append((i, ctx.wastage, str(ctx)))
-        j = "page " + ctx.ident.split(".")[1]
-        summ[j] = summ.get(j, 0) + i
         j = "board " + ctx.ident.split(".")[1].split('_')[0]
         summ[j] = summ.get(j, 0) + i
 

@@ -95,17 +95,12 @@ load_dispatch_rams_200_seq(const struct diagproc *dp)
 static int
 load_control_store_200_seq(const struct diagproc *dp)
 {
-#if !defined(HAS_Z021)
-	fprintf(stderr, "NO Z021\n");
-	(void)dp;
-	return (0);
-#else
 	struct ctx *ctx;
 	int n;
 	uint64_t wcs, inp;
 
 	if (seq_wcs == NULL) {
-		ctx = CTX_Find(COMP_Z021);
+		ctx = CTX_Find("SEQ_WCS");
 		AN(ctx);
 		seq_wcs = (uint64_t *)(void*)(ctx + 1);
 	}
@@ -158,7 +153,6 @@ load_control_store_200_seq(const struct diagproc *dp)
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.SEQ");
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
 static int

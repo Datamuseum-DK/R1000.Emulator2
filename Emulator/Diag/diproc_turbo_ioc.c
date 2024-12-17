@@ -36,8 +36,8 @@ read_last_pc(const struct diagproc *dp)
 	ctx = CTX_Find(COMP_Z023);
 	AN(ctx);
 	ptr = (uint8_t *)(void*)(ctx + 1);
-        tram = (uint16_t *)(void*)(ptr + (8 << 14));
-        ctr = (unsigned *)(void*)(ptr + (8 << 14) + (2 << 11));
+	tram = (uint16_t *)(void*)ptr;
+	ctr = (unsigned *)(void*)(ptr + (2 << 11));
 	ctr1 = *ctr;
 	ctr1 -= 4;
 	ctr1 &= (1<<11) - 1;
@@ -51,17 +51,12 @@ read_last_pc(const struct diagproc *dp)
 static int
 load_control_store_200_ioc(const struct diagproc *dp)
 {
-#if !defined(HAS_Z023)
-	fprintf(stderr, "NO Z023\n");
-	(void)dp;
-	return (0);
-#else
 	struct ctx *ctx;
 	int n;
 	uint64_t inp;
 
 	if (ioc_wcs == NULL) {
-		ctx = CTX_Find(COMP_Z023);
+		ctx = CTX_Find("IOC_WCS");
 		AN(ctx);
 		ioc_wcs = (uint64_t *)(void*)(ctx + 1);
 	}
@@ -71,7 +66,6 @@ load_control_store_200_ioc(const struct diagproc *dp)
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.IOC");
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
 int v_matchproto_(diagprocturbo_t)

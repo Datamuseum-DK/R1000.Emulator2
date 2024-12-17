@@ -153,7 +153,6 @@ run() {
 	echo "exit" | ./r1000sim \
 		-T ${R1K_PFX}/_ \
 		"include ${R1K_CLIFILE}" 2>&1 | tee ${R1K_PFX}/_.log
-	python3 Context/context.py ${R1K_PFX}/_.ctx > ${R1K_PFX}/_.ctx.txt
 }
 
 single() {

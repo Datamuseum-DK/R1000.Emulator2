@@ -47,11 +47,16 @@ class XIOCWCS(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t ram[1<<14];	// Z023
 		|	uint16_t tram[1<<11];	// Z023
 		|	unsigned tracnt;	// Z023
+		|	uint64_t *ram;
 		|	unsigned sr0, sr1;
 		|	unsigned aen;
+		|''')
+
+    def init(self, file):
+        file.fmt('''
+		|	state->ram = (uint64_t*)CTX_GetRaw("IOC_WCS", sizeof(uint64_t) << 14);
 		|''')
 
     def sensitive(self):

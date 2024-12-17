@@ -113,24 +113,17 @@ load_register_file_val(const struct diagproc *dp)
 #endif
 }
 
-#if defined(HAS_Z015)
 static uint64_t *typ_wcs;
-#endif
 
 static int
 load_control_store_200_typ(const struct diagproc *dp)
 {
-#if !defined(HAS_Z015)
-	fprintf(stderr, "NO Z015\n");
-	(void)dp;
-	return (0);
-#else
 	struct ctx *ctx;
 	int n;
 	uint64_t wcs, inp, inv;
 
 	if (typ_wcs == NULL) {
-		ctx = CTX_Find(COMP_Z015);
+		ctx = CTX_Find("TYP_WCS");
 		AN(ctx);
 		typ_wcs = (uint64_t *)(void*)(ctx + 1);
 	}
@@ -204,27 +197,19 @@ load_control_store_200_typ(const struct diagproc *dp)
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.TYP");
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
-#if defined(HAS_Z012)
 static uint64_t *val_wcs;
-#endif
 
 static int
 load_control_store_200_val(const struct diagproc *dp)
 {
-#if !defined(HAS_Z012)
-	fprintf(stderr, "NO Z012\n");
-	(void)dp;
-	return (0);
-#else
 	struct ctx *ctx;
 	int n;
 	uint64_t wcs, inp, inv;
 
 	if (val_wcs == NULL) {
-		ctx = CTX_Find(COMP_Z012);
+		ctx = CTX_Find("VAL_WCS");
 		AN(ctx);
 		val_wcs = (uint64_t *)(void*)(ctx + 1);
 	}
@@ -289,7 +274,6 @@ load_control_store_200_val(const struct diagproc *dp)
 	}
 	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.VAL");
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
 int v_matchproto_(diagprocturbo_t)
