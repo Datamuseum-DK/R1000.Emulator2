@@ -82,12 +82,11 @@ CTX_init(const char *path)
 }
 
 void *
-CTX_Get(const char *kind, const char *ident, uint32_t length)
+CTX_Get(const char *ident, uint32_t length)
 {
 
 	struct ctx *ctx;
 
-	(void)kind;
 	assert(context_fd > -1);
 	assert(sizeof *ctx == 128);
 	assert(strlen(ident) + 1 <= sizeof ctx->ident);
@@ -106,12 +105,12 @@ CTX_Get(const char *kind, const char *ident, uint32_t length)
 }
 
 void *
-CTX_GetRaw(const char *kind, const char *ident, uint32_t length)
+CTX_GetRaw(const char *ident, uint32_t length)
 {
 
 	uint8_t *ptr;
 
-        ptr = CTX_Get(kind, ident, length + sizeof(struct ctx));
+        ptr = CTX_Get(ident, length + sizeof(struct ctx));
         return (ptr + sizeof(struct ctx));
 }
 

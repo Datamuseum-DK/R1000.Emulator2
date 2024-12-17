@@ -59,11 +59,9 @@ vme_window_post_write(int debug, uint8_t *space, unsigned width, unsigned adr)
 void
 ioc_vme_init(void)
 {
-	void *ptr;
 
-	ptr = CTX_Get("enp100ram", "ENP100.ram", sizeof (struct ctx) + (1 << 21));
-	assert(ptr != NULL);
-	enp100ram = ((uint8_t*)ptr) + sizeof (struct ctx);
+	enp100ram = CTX_GetRaw("ENP100.ram", (1 << 21));
+	assert(enp100ram != NULL);
 }
 
 

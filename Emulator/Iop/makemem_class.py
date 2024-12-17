@@ -113,10 +113,8 @@ class Range():
         fo.write('};\n')
 
     def produce_init(self, fo):
-        fo.write('\tptr = CTX_Get("iop_%s", "IOP.%s", sizeof (struct ctx) + %d);\n' % (self.rd_space, self.rd_space, self.length))
-        fo.write("\tassert(ptr != NULL);\n");
-        fo.write("\t%s = ((uint8_t*)ptr) + sizeof (struct ctx);\n" % self.rd_space);
-        fo.write("\tassert(%s != NULL);\n" % self.rd_space)
+        fo.write('\t%s = CTX_GetRaw("IOP.%s", %d);\n' % (self.rd_space, self.rd_space, self.length))
+        fo.write("\tassert(%s != NULL);\n" % self.rd_space);
 
     def peg_check(self, fo, what, val, width):
         ''' call the peg_check function '''
@@ -267,7 +265,6 @@ class System():
         fo.write('void\n')
         fo.write('Memory_Init(void)\n')
         fo.write('{\n')
-        fo.write('\tvoid *ptr;\n')
         fo.write('\n')
         for i in self.ranges:
             i.produce_init(fo)
