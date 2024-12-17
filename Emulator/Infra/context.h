@@ -48,6 +48,7 @@ struct ctx {
 };
 
 void *CTX_Get(const char *kind, const char *ident, uint32_t length);
+void *CTX_GetRaw(const char *kind, const char *ident, uint32_t length);
 
 struct ctx *CTX_Iter(void **priv);
 struct ctx *CTX_Find(const char *name);

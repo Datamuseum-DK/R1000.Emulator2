@@ -105,6 +105,16 @@ CTX_Get(const char *kind, const char *ident, uint32_t length)
 	return (ctx);
 }
 
+void *
+CTX_GetRaw(const char *kind, const char *ident, uint32_t length)
+{
+
+	uint8_t *ptr;
+
+        ptr = CTX_Get(kind, ident, length + sizeof(struct ctx));
+        return (ptr + sizeof(struct ctx));
+}
+
 struct ctx *
 CTX_Iter(void **priv)
 {
