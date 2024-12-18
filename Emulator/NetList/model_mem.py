@@ -350,13 +350,9 @@ class MEM(PartFactory):
 		|									}
 		|								}
 		|							}
-		|							if (h1pos) {
-		|								bool b_tvdrv = PIN_TVDRV=>;
-		|								bool b_vdrv = PIN_VDRV=>;
-		|
-		|								bool high_board = !PIN_ISLOW=>;
-		|								output.qtdr = b_tvdrv || (output.hita && output.hitb && high_board);
-		|								output.qvdr = b_vdrv || (output.hita && output.hitb && high_board);
+		|							if (1) {
+		|								output.qtdr =  PIN_TVDRV=> || (output.hita && output.hitb && !PIN_ISLOW=>);
+		|								output.qvdr = PIN_VDRV=> || (output.hita && output.hitb && !PIN_ISLOW=>);
 		|
 		|								if (!output.qtdr)
 		|									output.qvdr = false;

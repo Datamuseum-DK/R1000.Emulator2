@@ -780,38 +780,35 @@ class FIU(PartFactory):
 		|																	output.qadr |= state->oreg;
 		|																	output.qspc = (state->sro >> 4) & 7;
 		|																}
-		|															}
 		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																			if (q2pos) {
-		|																				state->lcntl = state->mcntl;
-		|																				state->drive_mru = state->init_mru_d;
-		|																				state->rtv_next = (pa026 >> 4) & 1; // START_TAG_RD
-		|																				state->memcnd = (pa025 >> 4) & 1;	// CM_CTL0
-		|																				state->cndtru = (pa025 >> 3) & 1;	// CM_CTL1
-		|																				output.rtvnxt = !(state->rtv_next);
-		|																				output.memcnd = !(state->memcnd);
-		|																				output.cndtru = !(state->cndtru);
-		|																		
-		|																				if (memcyc1) {
-		|																					output.memct = state->lcntl;
-		|																				} else {
-		|																					output.memct = pa026 & 0xf;
-		|																				}
-		|																				bool inc_mar = (state->prmt >> 3) & 1;
-		|																				state->page_crossing_next = (
-		|																					condsel != 0x6a) && (// sel_pg_xing
-		|																					condsel != 0x6e) && (// sel_incyc_px
-		|																					(
-		|																						(state->page_xing) ||
-		|																						(!state->page_xing && inc_mar && (state->moff & 0x1f) == 0x1f)
-		|																					)
-		|																				);
-		|																				output.contin = !((pa025 >> 5) & 1);
-		|																				output.pgxin = !(PIN_MICEN=> && state->page_xing);
-		|																				output.memex = !(PIN_MICEN=> && state->memex);
-		|																				output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
-		|																			}
+		|																state->lcntl = state->mcntl;
+		|																state->drive_mru = state->init_mru_d;
+		|																state->rtv_next = (pa026 >> 4) & 1; // START_TAG_RD
+		|																state->memcnd = (pa025 >> 4) & 1;	// CM_CTL0
+		|																state->cndtru = (pa025 >> 3) & 1;	// CM_CTL1
+		|																output.rtvnxt = !(state->rtv_next);
+		|																output.memcnd = !(state->memcnd);
+		|																output.cndtru = !(state->cndtru);
+		|														
+		|																if (memcyc1) {
+		|																	output.memct = state->lcntl;
+		|																} else {
+		|																	output.memct = pa026 & 0xf;
+		|																}
+		|																bool inc_mar = (state->prmt >> 3) & 1;
+		|																state->page_crossing_next = (
+		|																	condsel != 0x6a) && (// sel_pg_xing
+		|																	condsel != 0x6e) && (// sel_incyc_px
+		|																	(
+		|																		(state->page_xing) ||
+		|																		(!state->page_xing && inc_mar && (state->moff & 0x1f) == 0x1f)
+		|																	)
+		|																);
+		|																output.contin = !((pa025 >> 5) & 1);
+		|																output.pgxin = !(PIN_MICEN=> && state->page_xing);
+		|																output.memex = !(PIN_MICEN=> && state->memex);
+		|																output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
+		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
 		|																												bool idum;
@@ -913,6 +910,13 @@ class FIU(PartFactory):
 		|
 		|
 		|}
+		|	bool mnor0b = state->pgstq == 0;
+		|	bool mnan2a = !(mnor0b && state->logrw_d);
+		|	state->miss = !(
+		|		((board_hit != 0xf) && mnan2a) ||
+		|		(state->logrw_d && state->csaht)
+		|	);
+		|
 		|	output.z_qt = PIN_QTOE=>;
 		|	output.z_qv = PIN_QVOE=>;
 		|	if ((!output.z_qt || !output.z_qv) && PIN_H1=>) {
@@ -922,14 +926,6 @@ class FIU(PartFactory):
 		|		if (!output.z_qv)
 		|			output.qv = state->vi_bus ^ BUS_QT_MASK;
 		|	}
-		|{
-		|	bool mnor0b = state->pgstq == 0;
-		|	bool mnan2a = !(mnor0b && state->logrw_d);
-		|	state->miss = !(
-		|		((board_hit != 0xf) && mnan2a) ||
-		|		(state->logrw_d && state->csaht)
-		|	);
-		|}
 		|
 		|	if (PIN_H1=> && 60 <= condsel && condsel <= 0x6f)
 		|		fiu_conditions(condsel);

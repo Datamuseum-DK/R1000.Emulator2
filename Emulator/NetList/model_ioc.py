@@ -102,33 +102,25 @@ class IOC(PartFactory):
 		|	uint8_t pb011[32];
 		|	bool multibit_error, checkbit_error;
 		|	bool pfr;
+		|	bool doecc;
 		|''');
 
 
     def init(self, file):
         file.fmt('''
-		|	load_programmable(this->name(),
-		|	    state->elprom, sizeof state->elprom,
-		|	    "PA115-01");
-		|	load_programmable(this->name(),
-		|	    state->pb011, sizeof state->pb011,
-		|	    "PB011");
+		|	load_programmable(this->name(), state->elprom, sizeof state->elprom, "PA115-01");
+		|	load_programmable(this->name(), state->pb011, sizeof state->pb011, "PB011");
 		|
 		|	struct ctx *c1 = CTX_Find("IOP.ram_space");
 		|	assert(c1 != NULL);
 		|	state->ram = (uint8_t*)(c1 + 1);
 		|''')
 
-    def xsensitive(self):
-        yield "PIN_QTYPOE"
-        yield "PIN_QVALOE"
-        yield "PIN_Q4.pos()"
-        yield "PIN_Q2.pos()"
-
     def priv_decl(self, file):
         ''' further private decls '''
         file.fmt('''
 		|       void do_xact(void);
+		|	unsigned calc_ecc(uint64_t typ, uint64_t val);
 		|''')
 
     def priv_impl(self, file):
@@ -265,7 +257,71 @@ class IOC(PartFactory):
 		|		<< state->xact->is_write
 		|	);
 		|}
+		|
+		|unsigned
+		|SCM_«mmm» ::
+		|calc_ecc(uint64_t typ, uint64_t val)
+		|{
+		|	uint64_t tmp;
+		|	unsigned cbi = 0, cbo = 0;
+		|	if (!PIN_TVEN=>) {
+		|		BUS_DC_READ(cbi);
+		|	}
 		|''')
+        for tmask, vmask, invert in self.getmasks():
+            file.fmt('''
+		|	cbo <<= 1;
+		|	tmp = (typ & 0x%016xULL) ^ (val & 0x%016xULL);
+		|	cbo |= (uint64_t)__builtin_parityll(tmp);
+		|''' % (tmask, vmask))
+            if invert:
+                file.fmt('''
+		|	cbo ^= 1;
+		|''')
+
+        file.fmt('''
+		|	cbo ^= cbi;
+		|	return (cbo);
+		|}
+		|''')
+
+    def sensitive(self):
+        yield "BUS_CONDS"
+        #yield "BUS_DC"
+        #yield "BUS_DTYP"
+        yield "PIN_DUMEN"
+        #yield "BUS_DVAL"
+        yield "PIN_Q2.pos()"
+        yield "PIN_Q4.pos()"
+        yield "PIN_QCOE"
+        yield "PIN_QTYPOE"
+        yield "PIN_QVALOE"
+        yield "BUS_RAND"
+        yield "PIN_SCLKST"
+        yield "BUS_TVBS"
+        yield "PIN_TVEN"
+        yield "PIN_ULWDR"
+
+        # yield "PIN_CSTP"      # q4
+        # yield "BUS_EXTID"     # q4
+        # yield "PIN_KEY"       # q4
+        # yield "PIN_RESET"     # unused
+        # yield "PIN_RSTRDR"    # q4
+        # yield "PIN_RTCEN"     # q4
+
+    def private(self):
+        ''' private variables '''
+        yield from self.event_or(
+            "tvc_event",
+            # "BUS_DC",
+            "BUS_DTYP",
+            "PIN_DUMEN",
+            "BUS_DVAL",
+            "PIN_Q4.posedge_event()",
+            "PIN_QCOE",
+            "PIN_SCLKST",
+            "PIN_ULWDR",
+        )
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -283,6 +339,7 @@ class IOC(PartFactory):
 		|		state->den = true;
 		|	}
 		|
+		|	bool q2_pos = PIN_Q2.posedge();
 		|	bool q4_pos = PIN_Q4.posedge();
 		|	bool sclk_pos = q4_pos && !PIN_CSTP;
 		|
@@ -293,201 +350,179 @@ class IOC(PartFactory):
 		|	BUS_DTYP_READ(typ);
 		|	BUS_DVAL_READ(val);
 		|
-		|{
-		|
-		|	unsigned cbi = 0, cbo = 0;
-		|	if (!PIN_TVEN=>) {
-		|		BUS_DC_READ(cbi);
-		|	}
-		|
-		|	uint64_t tmp;
-		|''')
-
-        for tmask, vmask, invert in self.getmasks():
-            file.fmt('\n\ttmp = (typ & 0x%016xULL) ^ (val & 0x%016xULL);\n' % (tmask, vmask))
-            file.fmt('''
-		|	cbo <<= 1;
-		|	cbo |= (uint64_t)__builtin_parityll(tmp);
-		|''')
-            if invert:
-                file.fmt('\tcbo ^= 1;\n')
-
-        file.fmt('''
-		|
-		|	if (sclk_pos && rand == 0x10) {
-		|		state->cbreg2 = (typ >> 7) & 0x1ff;
-		|	}
-		|
-		|	cbo ^= cbi;
+		|	unsigned cbo = 0;
 		|	output.z_qc = PIN_QCOE=>;
-		|	if (!output.z_qc) {
-		|		if ((rand & 0x1e) == 0x18) {
-		|			output.qc = state->cbreg2;
-		|		} else {
-		|			output.qc = cbo;
-		|		}
-		|	}
-		|	output.err = cbo != 0;
 		|
-		|	if (q4_pos && !PIN_TVEN=>) {
-		|		state->eidrg = state->elprom[cbo];
-		|		state->checkbit_error = (state->eidrg & 0x81) != 0x81;
-		|		state->multibit_error = state->eidrg & 1;
-		|		BUS_DC_READ(state->cbreg1);
-		|		state->cbreg1 ^= BUS_DC_MASK;
-		|	}
-		|}
-		|{
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|															if (q2_pos) {
+		|																if (state->slice_ev && !state->ten) {
+		|																	output.sme = false;
+		|																}
+		|																if (rand == 0x0a) {
+		|																	output.sme = true;
+		|																}
+		|																if (state->delay_ev && !state->ten) {
+		|																	output.dme = false;
+		|																}
+		|																if (rand == 0x0b) {
+		|																	output.dme = true;
+		|																}
+		|																state->doecc = true;
+		|															}
+		|																			if (state->doecc) {
+		|																				cbo = calc_ecc(typ, val);
 		|
-		|	if (sclk_pos) {
-		|		if (rand == 0x23)
-		|			state->cpu_running = true;
-		|		if (rand == 0x24)
-		|			state->cpu_running = false;
-		|	}
-		|
-		|	if (q4_pos && (state->request_int_en &&
-		|	    state->reqrdp != state->reqwrp) && state->iack != 6) {
-		|		state->iack = 6;
-		|		ioc_sc_bus_start_iack(6);
-		|	}
-		|	if (q4_pos && (!state->request_int_en ||
-		|	    state->reqrdp == state->reqwrp) && state->iack != 7) {
-		|		state->iack = 7;
-		|		ioc_sc_bus_start_iack(7);
-		|	}
-		|
-		|	if (q4_pos)
-		|		do_xact();
-		|
-		|	if (sclk_pos && rand == 0x04) {
-		|		state->reqfifo[state->reqwrp++] = typ & 0xffff;
-		|		state->reqwrp &= 0x3ff;
-		|	}
-		|
-		|	output.rspemn = state->rspwrp == state->rsprdp;
-		|
-		|	if (sclk_pos && rand == 0x05) {
-		|		state->rsprdp++;
-		|		state->rsprdp &= 0x3ff;
-		|	}
-		|
-		|	if (sclk_pos) {
-		|		unsigned adr = (state->areg | state->acnt) << 2;
-		|
-		|		if ((rand == 0x1c) || (rand == 0x1d)) {
-		|			state->rdata = vbe32dec(state->ram + adr);
-		|		}
-		|
-		|		if ((rand == 0x1e) || (rand == 0x1f)) {
-		|			uint32_t data = typ >> 32;
-		|			vbe32enc(state->ram + adr, data);
-		|		}
-		|
-		|		if (rand == 0x01) {
-		|			state->acnt = (typ >> 2) & 0x00fff;
-		|			state->areg = (typ >> 2) & 0x1f000;
-		|		}
-		|
-		|		if ((rand == 0x1c) || (rand == 0x1e)) {
-		|			state->acnt += 1;
-		|			state->acnt &= 0xfff;
-		|		}
-		|	}
-		|
-		|	if (sclk_pos && rand == 0x08) {
-		|		state->rtc = 0;
-		|	}
-		|	if (q4_pos && !PIN_RTCEN=> && rand != 0x08) {
-		|		state->rtc++;
-		|		state->rtc &= 0xffff;
-		|	}
-		|}
+		|																				if (!output.z_qc) {
+		|																					if ((rand & 0x1e) == 0x18) {
+		|																						output.qc = state->cbreg2;
+		|																					} else {
+		|																						output.qc = cbo;
+		|																					}
+		|																					if (!q4_pos) {
+		|																						idle_next = &tvc_event;
+		|																					}
+		|																				}
+		|																				output.err = cbo != 0;
+		|																			}
 		|
 		|{
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|																											if (q4_pos) {
+		|																												state->doecc = false;
+		|																												if (sclk_pos && rand == 0x10) {
+		|																													state->cbreg2 = (typ >> 7) & 0x1ff;
+		|																												}
+		|																												if (q4_pos && !PIN_TVEN=>) {
+		|																													state->eidrg = state->elprom[cbo];
+		|																													state->checkbit_error = (state->eidrg & 0x81) != 0x81;
+		|																													state->multibit_error = state->eidrg & 1;
+		|																													BUS_DC_READ(state->cbreg1);
+		|																													state->cbreg1 ^= BUS_DC_MASK;
+		|																												}
 		|
-		|	if (PIN_Q2.posedge()) {
-		|		if (state->slice_ev && !state->ten) {
-		|			output.sme = false;
-		|		}
-		|		if (rand == 0x0a) {
-		|			output.sme = true;
-		|		}
-		|		if (state->delay_ev && !state->ten) {
-		|			output.dme = false;
-		|		}
-		|		if (rand == 0x0b) {
-		|			output.dme = true;
-		|		}
-		|	}
+		|																												if (sclk_pos) {
+		|																													if (rand == 0x23)
+		|																														state->cpu_running = true;
+		|																													if (rand == 0x24)
+		|																														state->cpu_running = false;
+		|																												}
 		|
-		|	if (PIN_Q4.posedge()) {
-		|		state->prescaler++;
-		|		state->ten = state->prescaler != 0xf;
-		|		state->prescaler &= 0xf;
-		|		if (!PIN_CSTP=>) {
-		|			if (rand == 0x0c) {
-		|				state->sen = false;
-		|			}
-		|			if (rand == 0x0d) {
-		|				state->sen = true;
-		|			}
-		|			if (rand == 0x0e) {
-		|				state->den = false;
-		|			}
-		|			if (rand == 0x0f) {
-		|				state->den = true;
-		|			}
-		|		}
+		|																												if (q4_pos && (state->request_int_en &&
+		|																												    state->reqrdp != state->reqwrp) && state->iack != 6) {
+		|																													state->iack = 6;
+		|																													ioc_sc_bus_start_iack(6);
+		|																												}
+		|																												if (q4_pos && (!state->request_int_en ||
+		|																												    state->reqrdp == state->reqwrp) && state->iack != 7) {
+		|																													state->iack = 7;
+		|																													ioc_sc_bus_start_iack(7);
+		|																												}
 		|
-		|		state->slice_ev= state->slice == 0xffff;
-		|		// if (!PIN_LDSL=>) {
-		|		if (rand == 0x06) {
-		|			uint64_t tmp = typ;
-		|			tmp >>= 32;
-		|			state->slice = tmp >> 16;
-		|			TRACE(<< " LD " << std::hex << state->slice);
-		|		} else 	if (!state->sen && !state->ten) {
-		|			state->slice++;
-		|		}
+		|																												if (q4_pos)
+		|																													do_xact();
 		|
-		|		state->delay_ev= state->delay == 0xffff;
-		|		if (rand == 0x07) {
-		|			uint64_t tmp = typ;
-		|			tmp >>= 32;
-		|			state->delay = tmp;
-		|		} else if (!state->den && !state->ten) {
-		|			state->delay++;
-		|		}
-		|	}
+		|																												if (sclk_pos && rand == 0x04) {
+		|																													state->reqfifo[state->reqwrp++] = typ & 0xffff;
+		|																													state->reqwrp &= 0x3ff;
+		|																												}
+		|
+		|
+		|																												if (sclk_pos && rand == 0x05) {
+		|																													state->rsprdp++;
+		|																													state->rsprdp &= 0x3ff;
+		|																												}
+		|
+		|																												if (sclk_pos) {
+		|																													unsigned adr = (state->areg | state->acnt) << 2;
+		|																											
+		|																													if ((rand == 0x1c) || (rand == 0x1d)) {
+		|																														state->rdata = vbe32dec(state->ram + adr);
+		|																													}
+		|																											
+		|																													if ((rand == 0x1e) || (rand == 0x1f)) {
+		|																														uint32_t data = typ >> 32;
+		|																														vbe32enc(state->ram + adr, data);
+		|																													}
+		|																											
+		|																													if (rand == 0x01) {
+		|																														state->acnt = (typ >> 2) & 0x00fff;
+		|																														state->areg = (typ >> 2) & 0x1f000;
+		|																													}
+		|																											
+		|																													if ((rand == 0x1c) || (rand == 0x1e)) {
+		|																														state->acnt += 1;
+		|																														state->acnt &= 0xfff;
+		|																													}
+		|																												}
+		|																											
+		|																												if (sclk_pos && rand == 0x08) {
+		|																													state->rtc = 0;
+		|																												}
+		|																												if (q4_pos && !PIN_RTCEN=> && rand != 0x08) {
+		|																													state->rtc++;
+		|																													state->rtc &= 0xffff;
+		|																												}
+		|																											
+		|																												state->prescaler++;
+		|																												state->ten = state->prescaler != 0xf;
+		|																												state->prescaler &= 0xf;
+		|																												if (!PIN_CSTP=>) {
+		|																													if (rand == 0x0c) {
+		|																														state->sen = false;
+		|																													}
+		|																													if (rand == 0x0d) {
+		|																														state->sen = true;
+		|																													}
+		|																													if (rand == 0x0e) {
+		|																														state->den = false;
+		|																													}
+		|																													if (rand == 0x0f) {
+		|																														state->den = true;
+		|																													}
+		|																												}
+		|																										
+		|																												state->slice_ev= state->slice == 0xffff;
+		|																												if (rand == 0x06) {
+		|																													uint64_t tmp = typ;
+		|																													tmp >>= 32;
+		|																													state->slice = tmp >> 16;
+		|																													TRACE(<< " LD " << std::hex << state->slice);
+		|																												} else 	if (!state->sen && !state->ten) {
+		|																													state->slice++;
+		|																												}
+		|																										
+		|																												state->delay_ev= state->delay == 0xffff;
+		|																												if (rand == 0x07) {
+		|																													uint64_t tmp = typ;
+		|																													tmp >>= 32;
+		|																													state->delay = tmp;
+		|																												} else if (!state->den && !state->ten) {
+		|																													state->delay++;
+		|																												}
+		|																											}
 		|}
+		|
+		|	if (!q4_pos) {
+		|		output.rspemn = state->rspwrp == state->rsprdp;
+		|	}
 		|
 		|{
 		|	unsigned tvbs;
 		|	BUS_TVBS_READ(tvbs);
 		|
-		|	output.seqtv = true;
-		|	output.fiuv = true;
-		|	output.fiut = true;
 		|	bool rddum = true;
-		|	output.memv = true;
-		|	output.memtv = true;
 		|	bool ioctv = true;
-		|	output.valv = true;
-		|	output.typt = true;
 		|	switch (tvbs) {
-		|	case 0x0: output.valv = false; output.typt = false; break;
-		|	case 0x1: output.fiuv = false; output.typt = false; break;
-		|	case 0x2: output.valv = false; output.fiut = false; break;
-		|	case 0x3: output.fiuv = false; output.fiut = false; break;
+		|	case 0x0: break;
+		|	case 0x1: break;
+		|	case 0x2: break;
+		|	case 0x3: break;
 		|	case 0x4: ioctv = false; break;
-		|	case 0x5: output.seqtv = false; break;
+		|	case 0x5: break;
 		|	case 0x8:
-		|	case 0x9:
-		|		output.memv = false; output.typt = false; break;
+		|	case 0x9: break;
 		|	case 0xa:
-		|	case 0xb:
-		|		output.memv = false; output.fiut = false; break;
+		|	case 0xb: break;
 		|	case 0xc:
 		|	case 0xd:
 		|	case 0xe:
@@ -495,11 +530,6 @@ class IOC(PartFactory):
 		|		if (PIN_DUMEN=>) {
 		|			rddum = false;
 		|			ioctv = false;
-		|		} else if (PIN_CSAHIT=>) {
-		|			output.typt = false;
-		|			output.valv = false;
-		|		} else {
-		|			output.memtv = false;
 		|		}
 		|		break;
 		|	default:
@@ -512,21 +542,19 @@ class IOC(PartFactory):
 		|
 		|	output.ldwdr = !(uir_load_wdr && PIN_SCLKST=>);
 		|
-		|	if (q4_pos && rddum && !PIN_RSTRDR=>) {
-		|		state->dummy_typ = typ;
-		|		state->dummy_val = val;
-		|	}
-		|
+		|																											if (q4_pos && rddum && !PIN_RSTRDR=>) {
+		|																												state->dummy_typ = typ;
+		|																												state->dummy_val = val;
+		|																											}
+		|																										
 		|	bool disable_ecc = ((state->pb011[rand] >> 0) & 1);
-		|	output.decc = !(disable_ecc || output.memtv);
+		|	output.decc = !(disable_ecc || PIN_TVEN=>);
 		|
 		|	bool drive_other_cb = ((state->pb011[rand] >> 5) & 1);
-		|	output.qcdr = !(uir_load_wdr && drive_other_cb && output.memtv);
+		|	output.qcdr = !(uir_load_wdr && drive_other_cb && PIN_TVEN=>);
 		|	if ((rand & 0x1e) == 0x18)
 		|		output.qcdr = false;
 		|
-		|	output.qvaldr = ioctv;
-		|	output.qtypdr = ioctv;
 		|}
 		|{
 		|	uint64_t tmp;
@@ -543,11 +571,11 @@ class IOC(PartFactory):
 		|
 		|}
 		|
-		|	output.z_qval = output.qvaldr;
+		|	output.z_qval = PIN_QVALOE=>;
 		|	if (!output.z_qval)
 		|		output.qval = state->dummy_val;
 		|
-		|	output.z_qtyp = output.qtypdr;
+		|	output.z_qtyp = PIN_QTYPOE=>;
 		|	if (!output.z_qtyp) {
 		|		switch (rand) {
 		|		case 0x05:

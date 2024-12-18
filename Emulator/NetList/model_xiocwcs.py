@@ -73,7 +73,6 @@ class XIOCWCS(PartFactory):
 		|		BUS_UADR_READ(uadr);
 		|		output.dumen = !PIN_DUMNXT=>;
 		|		bool csa_hit = !PIN_ICSAH=>;
-		|		output.csahit = csa_hit;
 		|
 		|		unsigned tmp = 0;
 		|		if (PIN_CLKSTP=>)
@@ -88,10 +87,7 @@ class XIOCWCS(PartFactory):
 		|			state->tracnt &= 0x7ff;
 		|		}
 		|
-		|		bool uir_clk = false;
-		|		if (!PIN_SFSTOP=>)
-		|			uir_clk = true;
-		|		if (uir_clk) {
+		|		if (!PIN_SFSTOP=>) {
 		|			state->sr0 = state->ram[uadr] >> 8;
 		|			state->sr0 &= 0xff;
 		|			state->sr1 = state->ram[uadr] & 0xff;
@@ -107,6 +103,47 @@ class XIOCWCS(PartFactory):
 		|			unsigned fen = (uir >> 4) & 3;
 		|			output.fen = (1 << fen) ^ 0xf;
 		|			output.aen = (1 << state->aen) ^ 0xf;
+		|
+		|			unsigned tvbs = uir & 0xf;
+		|
+		|			output.seqtv = true;
+		|			output.fiuv = true;
+		|			output.fiut = true;
+		|			output.memv = true;
+		|			output.memtv = true;
+		|			output.ioctv = true;
+		|			output.valv = true;
+		|			output.typt = true;
+		|			switch (tvbs) {
+		|			case 0x0: output.valv = false; output.typt = false; break;
+		|			case 0x1: output.fiuv = false; output.typt = false; break;
+		|			case 0x2: output.valv = false; output.fiut = false; break;
+		|			case 0x3: output.fiuv = false; output.fiut = false; break;
+		|			case 0x4: output.ioctv = false; break;
+		|			case 0x5: output.seqtv = false; break;
+		|			case 0x8:
+		|			case 0x9:
+		|				output.memv = false; output.typt = false; break;
+		|			case 0xa:
+		|			case 0xb:
+		|				output.memv = false; output.fiut = false; break;
+		|			case 0xc:
+		|			case 0xd:
+		|			case 0xe:
+		|			case 0xf:
+		|				if (output.dumen) {
+		|					output.ioctv = false;
+		|				} else if (csa_hit) {
+		|					output.typt = false;
+		|					output.valv = false;
+		|				} else {
+		|					output.memtv = false;
+		|				}
+		|				break;
+		|			default:
+		|				break;
+		|			}
+		|
 		|		}
 		|	}
 		|
