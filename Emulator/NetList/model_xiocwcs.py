@@ -138,12 +138,12 @@ class XIOCWCS(PartFactory):
 		|					output.valv = false;
 		|				} else {
 		|					output.memtv = false;
+		|					output.memv = false;
 		|				}
 		|				break;
 		|			default:
 		|				break;
 		|			}
-		|
 		|		}
 		|	}
 		|

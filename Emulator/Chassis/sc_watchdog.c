@@ -70,10 +70,10 @@ fido(void *priv)
 		if (el > 0) {
 			d = 1e-9 * (t1.tv_nsec - sc_t0.tv_nsec);
 			d += (t1.tv_sec - sc_t0.tv_sec);
-			printf("FIDO: r %.1f s %.3f ds %.3f / %.2f",
+			printf("FIDO: r %.1f s %.3f ds %.4f / %.2f",
 			    d, e, e - el, d / e);
 			if (e - el > 0)
-				printf("  d/' %.1f", (d - dl) / (e - el));
+				printf("  d/ %.2f", (d - dl) / (e - el));
 			else
 				printf("  d/' %.1f", 0.0 );
 			printf(" Mda %.1f",

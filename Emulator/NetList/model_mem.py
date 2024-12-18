@@ -224,8 +224,7 @@ class MEM(PartFactory):
         ''' private variables '''
         yield from self.event_or(
             "idle_events",
-            "PIN_TVDRV",
-            "PIN_VDRV",
+            "PIN_QVOE",
             "PIN_Q4.posedge_event()",
         )
 
@@ -350,27 +349,6 @@ class MEM(PartFactory):
 		|									}
 		|								}
 		|							}
-		|							if (1) {
-		|								output.qtdr =  PIN_TVDRV=> || (output.hita && output.hitb && !PIN_ISLOW=>);
-		|								output.qvdr = PIN_VDRV=> || (output.hita && output.hitb && !PIN_ISLOW=>);
-		|
-		|								if (!output.qtdr)
-		|									output.qvdr = false;
-		|
-		|								output.z_qc = output.qtdr;
-		|								output.z_qt = output.qtdr;
-		|								output.z_qv = output.qvdr;
-		|
-		|								if (!output.z_qv && output.z_qt) {
-		|									output.qv = state->qreg;
-		|								}
-		|								if (!output.z_qc) {
-		|									output.qc = state->cqreg;
-		|									output.qt = state->tqreg;
-		|									output.qv = state->vqreg;
-		|								}
-		|							}
-		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																											if (q4pos) {
@@ -408,6 +386,31 @@ class MEM(PartFactory):
 		|																												state->labort = labort;
 		|																												state->eabort = !(PIN_EABT=> && PIN_ELABT=>);
 		|																											}
+		|
+		|	output.z_qc = PIN_QCOE=>;
+		|	output.z_qt = PIN_QTOE=>;
+		|	output.z_qv = PIN_QVOE=>;
+		|
+		|	bool not_me =  (output.hita && output.hitb && !PIN_ISLOW=>);
+		|
+		|
+		|	if (!output.z_qv && output.z_qt) {
+		|		if (not_me)
+		|			output.qv = BUS_QV_MASK;
+		|		else
+		|			output.qv = state->qreg;
+		|	}
+		|	if (!output.z_qc) {
+		|		if (not_me) {
+		|			output.qc = BUS_QC_MASK;
+		|			output.qt = BUS_QT_MASK;
+		|			output.qv = BUS_QV_MASK;
+		|		} else {
+		|			output.qc = state->cqreg;
+		|			output.qt = state->tqreg;
+		|			output.qv = state->vqreg;
+		|		}
+		|	}
 		|
 		|	if (state->q4cmd == 0xf && CMDS(CMD_IDL) && state->cyo && state->cyt) {
 		|		idle_next = &idle_events;

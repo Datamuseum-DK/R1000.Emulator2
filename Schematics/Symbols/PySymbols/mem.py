@@ -19,9 +19,7 @@ class MEM(FChip):
         self.sig_left(ChipSig("-->+", "MCMD", 0, 3))
         self.sig_left(ChipSig("-->+", "CONT"))
 
-        self.sig_left(ChipSig("<--+", "QVDR"))
         self.sig_left(ChipSig("-->+", "QVOE"))
-        self.sig_left(ChipSig("<--+", "QTDR"))
         self.sig_left(ChipSig("-->+", "QTOE"))
         self.sig_left(ChipSig("-->+", "QCOE"))
 
@@ -46,8 +44,6 @@ class MEM(FChip):
         self.sig_left(ChipSig("-->+", "EABT"))
         self.sig_left(ChipSig("-->+", "ELABT"))
         self.sig_left(ChipSig("-->+", "LABT"))
-        self.sig_left(ChipSig("-->+", "TVDRV"))
-        self.sig_left(ChipSig("-->+", "VDRV"))
 
         self.sig_left(ChipSig("<->+", "DQC", 0, 8))
 
