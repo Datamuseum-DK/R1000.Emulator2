@@ -66,7 +66,6 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+<--", "QVOE"))
         self.sig_right(ChipSig("+===", "ADR", 0, 63))
         self.sig_right(ChipSig("+<--", "ADROE"))
-        self.sig_right(ChipSig("+===", "OSPC", 0, 2))
         self.sig_right(ChipSig("+<--", "OSPCOE"))
 
         self.sig_right(ChipSig("+-->", "NU", 0, 13))

@@ -13,7 +13,6 @@ class MEM(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "SPC", 0, 2))
         self.sig_left(ChipSig("-->+", "ADR", 0, 63))
 
         self.sig_left(ChipSig("-->+", "MCMD", 0, 3))

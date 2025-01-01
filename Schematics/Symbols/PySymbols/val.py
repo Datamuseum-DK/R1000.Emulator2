@@ -30,7 +30,6 @@ class VAL(FChip):
         self.sig_left(ChipSig("-->+", "FRM", 0, 4))
         self.sig_left(ChipSig("-->+", "UIRC", 0, 5))
         self.sig_left(ChipSig("-->+", "MSRC", 0, 3))
-        self.sig_left(ChipSig("-->+", "SPC", 0, 2))
         self.sig_left(ChipSig("-->+", "RAND", 0, 3))
         self.sig_left(ChipSig("-->+", "LBOT"))
         self.sig_left(ChipSig("-->+", "LTOP"))

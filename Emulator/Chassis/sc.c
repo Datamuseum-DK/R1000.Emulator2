@@ -68,6 +68,12 @@ static int sc_quota_exit = 0;
 int sc_started;
 struct timespec sc_t0;
 
+volatile uint64_t adr_bus = -1;
+volatile uint64_t fiu_bus = -1;
+volatile uint64_t val_bus = -1;
+volatile uint64_t typ_bus = -1;
+volatile uint64_t spc_bus = -1;
+
 void
 sysc_trace(const char *me, const char *fmt)
 {

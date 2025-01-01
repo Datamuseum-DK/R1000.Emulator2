@@ -36,6 +36,12 @@ struct f181 {
 
 void f181_alu(struct f181 *);
 
+extern volatile uint64_t adr_bus;
+extern volatile uint64_t fiu_bus;
+extern volatile uint64_t val_bus;
+extern volatile uint64_t typ_bus;
+extern volatile uint64_t spc_bus;
+
 #ifdef __cplusplus
 }
 #endif

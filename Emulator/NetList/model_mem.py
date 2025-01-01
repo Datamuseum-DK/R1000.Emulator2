@@ -69,7 +69,6 @@ class MEM(PartFactory):
 		|	unsigned q4cont;
 		|	unsigned hits;
 		|	bool cyo, cyt;
-		|	unsigned myhits;
 		|	unsigned cmd, bcmd;
 		|	unsigned mar_set;
 		|''')
@@ -201,7 +200,8 @@ class MEM(PartFactory):
 		|	uint64_t a;
 		|	uint32_t s;
 		|
-		|	BUS_SPC_READ(s);
+		|	//if (spc_bus != s) ALWAYS_TRACE(<<"SPCBUS " << std::hex << s << " " << spc_bus);
+		|	s = spc_bus;
 		|	BUS_ADR_READ(a);
 		|	state->mar_space = s;
 		|	state->mar_name = (a>>32) & 0xffffffffULL;
@@ -219,12 +219,13 @@ class MEM(PartFactory):
     def sensitive(self):
         yield "PIN_Q4.pos()"
         yield "PIN_H1.pos()"
+        yield "PIN_QVOE.neg()"
 
     def private(self):
         ''' private variables '''
         yield from self.event_or(
             "idle_events",
-            "PIN_QVOE",
+            "PIN_QVOE.negedge_event()",
             "PIN_Q4.posedge_event()",
         )
 
@@ -258,113 +259,103 @@ class MEM(PartFactory):
 		|								        ((state->q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
 		|								        ((!state->q4cont) && (!p_early_abort) && (!p_mcyc2_next_hd))
 		|								    );
-		|								state->cyo =
-		|								    !(
-		|								        ((state->q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd)
-		|								    );
+		|								state->cyo = !((state->q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd);
 		|								state->cyt = p_mcyc2_next_hd;
-		|						
-		|								if (state->cyo) {
-		|									if        (state->hits & BSET_4) { output.seta = 0; output.setb = 0;
-		|									} else if (state->hits & BSET_5) { output.seta = 0; output.setb = 1;
-		|									} else if (state->hits & BSET_6) { output.seta = 1; output.setb = 0;
-		|									} else if (state->hits & BSET_7) { output.seta = 1; output.setb = 1;
-		|									} else if (state->hits & BSET_0) { output.seta = 0; output.setb = 0;
-		|									} else if (state->hits & BSET_1) { output.seta = 0; output.setb = 1;
-		|									} else if (state->hits & BSET_2) { output.seta = 1; output.setb = 0;
-		|									} else                           { output.seta = 1; output.setb = 1;
-		|									}
-		|							
-		|									output.hita = true;
-		|									output.hitb = true;
-		|									if (state->hits & (BSET_0|BSET_1|BSET_2|BSET_3))
-		|										output.hita = false;
-		|									if (state->hits & (BSET_4|BSET_5|BSET_6|BSET_7))
-		|										output.hitb = false;
-		|									state->myhits = state->hits;
-		|									if (state->hits) {
-		|										unsigned tadr = state->hash << 3;
-		|										     if (state->hits & BSET_0)	state->hit_lru = state->rame[tadr | 0];
-		|										else if (state->hits & BSET_1)	state->hit_lru = state->rame[tadr | 1];
-		|										else if (state->hits & BSET_2)	state->hit_lru = state->rame[tadr | 2];
-		|										else if (state->hits & BSET_3)	state->hit_lru = state->rame[tadr | 3];
-		|										else if (state->hits & BSET_4)	state->hit_lru = state->rame[tadr | 4];
-		|										else if (state->hits & BSET_5)	state->hit_lru = state->rame[tadr | 5];
-		|										else if (state->hits & BSET_6)	state->hit_lru = state->rame[tadr | 6];
-		|										else if (state->hits & BSET_7)	state->hit_lru = state->rame[tadr | 7];
-		|										state->hit_lru >>= 2;
-		|										state->hit_lru &= 0xf;
-		|									} else {
-		|										state->hit_lru = 0xf;
-		|									}
+		|							}
+		|							if (h1pos && state->cyo) {
+		|								if        (state->hits & BSET_4) { output.seta = 0; output.setb = 0;
+		|								} else if (state->hits & BSET_5) { output.seta = 0; output.setb = 1;
+		|								} else if (state->hits & BSET_6) { output.seta = 1; output.setb = 0;
+		|								} else if (state->hits & BSET_7) { output.seta = 1; output.setb = 1;
+		|								} else if (state->hits & BSET_0) { output.seta = 0; output.setb = 0;
+		|								} else if (state->hits & BSET_1) { output.seta = 0; output.setb = 1;
+		|								} else if (state->hits & BSET_2) { output.seta = 1; output.setb = 0;
+		|								} else                           { output.seta = 1; output.setb = 1;
 		|								}
-		|						
-		|								if (!state->cyt) {
-		|									if (CMDS(CMD_PMR|CMD_LMR|CMD_PTR)) {
-		|										unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
-		|										uint64_t data = state->ram[padr];
-		|										uint8_t pdata = state->rame[padr];
-		|										state->qreg = data & ~(0x7fULL << 6);
-		|										state->qreg |= (pdata & 0x7f) << 6;
-		|									}
-		|						
-		|									if (CMDS(CMD_LMR|CMD_PMR) && !labort) {
-		|										unsigned set = find_set(state->cmd);
-		|										uint32_t radr =
-		|											(set << 18) |
-		|											(state->cl << 6) |
-		|											state->wd;
-		|										assert(radr < (1 << 21));
-		|								
-		|										state->cqreg = state->bitc[radr];
-		|										state->tqreg = state->bitt[radr+radr];
-		|										state->vqreg = state->bitt[radr+radr+1];
-		|									}
-		|						
-		|									bool ihit = output.hita && output.hitb;
-		|									if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->labort) {
-		|										unsigned set = find_set(state->cmd);
-		|										uint32_t radr =
-		|											(set << 18) |
-		|											(state->cl << 6) |
-		|											state->wd;
-		|							
-		|										state->bitc[radr] = state->cdreg;
-		|										state->bitt[radr+radr] = state->tdreg;
-		|										state->bitt[radr+radr+1] = state->vdreg;
-		|									}
-		|							
-		|									if (CMDS(CMD_PTW)) {
-		|										bool my_board = !PIN_ISLOW=>;
-		|										bool which_board = state->mar_set >> 3;
-		|										if (which_board == my_board) {
-		|											unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
-		|											state->ram[padr] = state->vdreg & ~(0x7fULL << 6);
-		|											state->rame[padr] = (state->vdreg >> 6) & 0x7f;
-		|										}
-		|									} else if (!state->labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
-		|										unsigned padr = state->hash << 3;
-		|										for (unsigned u = 0; u < 8; u++)
-		|											state->rame[padr + u] = dolru(state->hit_lru, state->rame[padr + u], state->cmd);
-		|									}
+		|
+		|								output.hita = true;
+		|								output.hitb = true;
+		|								if (state->hits & (BSET_0|BSET_1|BSET_2|BSET_3))
+		|									output.hita = false;
+		|								if (state->hits & (BSET_4|BSET_5|BSET_6|BSET_7))
+		|								output.hitb = false;
+		|								if (state->hits) {
+		|									unsigned tadr = state->hash << 3;
+		|									     if (state->hits & BSET_0)	state->hit_lru = state->rame[tadr | 0];
+		|									else if (state->hits & BSET_1)	state->hit_lru = state->rame[tadr | 1];
+		|									else if (state->hits & BSET_2)	state->hit_lru = state->rame[tadr | 2];
+		|									else if (state->hits & BSET_3)	state->hit_lru = state->rame[tadr | 3];
+		|									else if (state->hits & BSET_4)	state->hit_lru = state->rame[tadr | 4];
+		|									else if (state->hits & BSET_5)	state->hit_lru = state->rame[tadr | 5];
+		|									else if (state->hits & BSET_6)	state->hit_lru = state->rame[tadr | 6];
+		|									else if (state->hits & BSET_7)	state->hit_lru = state->rame[tadr | 7];
+		|									state->hit_lru >>= 2;
+		|									state->hit_lru &= 0xf;
+		|								} else {
+		|									state->hit_lru = 0xf;
 		|								}
 		|							}
+		|							if (h1pos && !state->cyt) {
+		|								if (CMDS(CMD_PTR)) {
+		|									unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
+		|									state->qreg = state->ram[padr] & ~(0x7fULL << 6);
+		|									state->qreg |= (state->rame[padr] & 0x7f) << 6;
+		|								}
+		|							}
+		|
+		|							if ((h1pos || PIN_QVOE.negedge()) && !state->cyt) {
+		|								if (CMDS(CMD_LMR|CMD_PMR) && !labort) {
+		|									unsigned set = find_set(state->cmd);
+		|									uint32_t radr =	(set << 18) | (state->cl << 6) | state->wd;
+		|									assert(radr < (1 << 21));
+		|									state->cqreg = state->bitc[radr];
+		|									state->tqreg = state->bitt[radr+radr];
+		|									state->vqreg = state->bitt[radr+radr+1];
+		|								}
+		|							}
+
+		|							if (h1pos && !state->cyt) {
+		|								bool ihit = output.hita && output.hitb;
+		|								if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->labort) {
+		|									unsigned set = find_set(state->cmd);
+		|									uint32_t radr = (set << 18) | (state->cl << 6) | state->wd;
+		|									assert(radr < (1 << 21));
+		|									state->bitc[radr] = state->cdreg;
+		|									state->bitt[radr+radr] = state->tdreg;
+		|									state->bitt[radr+radr+1] = state->vdreg;
+		|								}
+		|
+		|								if (CMDS(CMD_PTW)) {
+		|									bool my_board = !PIN_ISLOW=>;
+		|									bool which_board = state->mar_set >> 3;
+		|									if (which_board == my_board) {
+		|										unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
+		|										state->ram[padr] = state->vdreg & ~(0x7fULL << 6);
+		|										state->rame[padr] = (state->vdreg >> 6) & 0x7f;
+		|									}
+		|								} else if (!state->labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
+		|									unsigned padr = state->hash << 3;
+		|									for (unsigned u = 0; u < 8; u++)
+		|										state->rame[padr + u] = dolru(state->hit_lru, state->rame[padr + u], state->cmd);
+		|								}
+		|							}
+		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																											if (q4pos) {
 		|																												state->cl = state->hash;
 		|																												state->wd = state->word;
-		|																										
+		|
 		|																												bool diag_sync = !PIN_BDISYN=>;
 		|																												bool diag_freeze = !PIN_BDIFRZ=>;
 		|																												state->cstop = !(diag_sync || diag_freeze);
-		|																										
+		|
 		|																												if (!PIN_LDWDR=>) {
 		|																													BUS_DC_READ(state->cdreg);
 		|																													BUS_DT_READ(state->tdreg);
 		|																													BUS_DV_READ(state->vdreg);
 		|																												}
-		|																										
+		|
 		|																												if (!PIN_LDMR=> && state->cstop) {
 		|																													load_mar();
 		|																												}
@@ -386,6 +377,8 @@ class MEM(PartFactory):
 		|																												state->labort = labort;
 		|																												state->eabort = !(PIN_EABT=> && PIN_ELABT=>);
 		|																											}
+
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|	output.z_qc = PIN_QCOE=>;
 		|	output.z_qt = PIN_QTOE=>;
@@ -393,14 +386,12 @@ class MEM(PartFactory):
 		|
 		|	bool not_me =  (output.hita && output.hitb && !PIN_ISLOW=>);
 		|
-		|
 		|	if (!output.z_qv && output.z_qt) {
 		|		if (not_me)
 		|			output.qv = BUS_QV_MASK;
 		|		else
 		|			output.qv = state->qreg;
-		|	}
-		|	if (!output.z_qc) {
+		|	} else if (!output.z_qt) {
 		|		if (not_me) {
 		|			output.qc = BUS_QC_MASK;
 		|			output.qt = BUS_QT_MASK;

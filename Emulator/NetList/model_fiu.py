@@ -142,6 +142,9 @@ class FIU(PartFactory):
         yield "BUS_DF"
         yield "BUS_DT"
         yield "BUS_DV"
+        yield "PIN_QVOE.neg()"
+        yield "PIN_QTOE.neg()"
+        yield "PIN_QFOE.neg()"
 
         #yield "PIN_QADROE"
 
@@ -484,6 +487,7 @@ class FIU(PartFactory):
 		|	output.z_qf = PIN_QFOE=>;			// (UCODE)
 		|	if (!output.z_qf && PIN_H1=>) { 
 		|		output.qf = vout ^ BUS_QF_MASK;
+		|		fiu_bus = output.qf;
 		|	}
 		|
 		|	if (sclk && PIN_LDMDR=>) {			// (UCODE)
@@ -632,7 +636,9 @@ class FIU(PartFactory):
 		|																													uint64_t tmp;
 		|																													state->srn = adr >> 32;
 		|																													state->sro = adr & 0xffffff80;
-		|																													BUS_DSPC_READ(tmp);
+		|																													//BUS_DSPC_READ(tmp);
+		|																													//if (tmp != spc_bus) ALWAYS_TRACE(<<"SPCBUS " << std::hex << tmp << " " << spc_bus);
+		|																													tmp = spc_bus;
 		|																													state->sro |= tmp << 4;
 		|																													state->sro |= 0xf;
 		|																												}
@@ -767,7 +773,7 @@ class FIU(PartFactory):
 		|														
 		|																output.csawr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
 		|																output.z_qadr = PIN_QADROE=>;
-		|																output.z_qspc = PIN_QSPCOE=>;
+		|																//output.z_qspc = PIN_QSPCOE=>;
 		|																if (!output.z_qadr) {
 		|																	bool inc_mar = (state->prmt >> 3) & 1;
 		|																	unsigned inco = state->moff & 0x1f;
@@ -778,7 +784,8 @@ class FIU(PartFactory):
 		|																	output.qadr |= state->sro & 0xfffff000;
 		|																	output.qadr |= (inco & 0x1f) << 7;
 		|																	output.qadr |= state->oreg;
-		|																	output.qspc = (state->sro >> 4) & 7;
+		|																	// output.qspc = (state->sro >> 4) & 7; // XXX run_udiag 0180 @17s
+		|																	spc_bus = (state->sro >> 4) & 7;
 		|																}
 		|
 		|																state->lcntl = state->mcntl;

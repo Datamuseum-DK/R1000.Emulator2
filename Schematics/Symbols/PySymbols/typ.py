@@ -62,9 +62,6 @@ class TYP(FChip):
         self.sig_right(ChipSig("+-->", "UE", 0, 5))
         self.sig_right(ChipSig("+-->", "T0STP"))
         self.sig_right(ChipSig("+-->", "T1STP"))
-        self.sig_right(ChipSig("+-->", "SPDR"))
-        self.sig_right(ChipSig("+<--", "QSPOE"))
-        self.sig_right(ChipSig("+<->", "DQSP", 0, 2))
 
         self.sig_right(ChipSig("+-->", "CONDA"))
         self.sig_right(ChipSig("+-->", "CONDB"))

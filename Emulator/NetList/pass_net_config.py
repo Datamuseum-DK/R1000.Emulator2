@@ -45,6 +45,8 @@ USE_MUXBUS = True
 
 MIN_BUS_WIDTH = 3
 
+MUXBUSNO = [0]
+
 class MuxBus():
 
     ''' ... '''
@@ -59,7 +61,8 @@ class MuxBus():
         self.scm = comp0.scm
         self.cpu = self.scm.cpu
 
-        self.partref = "UBMX%d" % self.scm.scm_unique
+        self.partref = "UBMX%d" % MUXBUSNO[0]
+        MUXBUSNO[0] += 1
         self.scm.scm_unique += 1
 
         self.muxtype = "XBUSMUX%dX%d" % (self.length, self.width)

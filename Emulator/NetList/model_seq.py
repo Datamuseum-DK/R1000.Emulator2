@@ -1409,6 +1409,7 @@ class SEQ(PartFactory):
 		|	if (!output.z_qf) {
 		|		output.qf = state->topu ^ 0xffff;
 		|		output.qf ^= 0xffff;
+		|		fiu_bus = output.qf;
 		|	}
 		|	output.z_qt = PIN_QTOE=>;
 		|	if (!output.z_qt) {
@@ -1422,13 +1423,12 @@ class SEQ(PartFactory):
 		|		output.qv ^= BUS_QV_MASK;
 		|	}
 		|	output.z_adr = PIN_ADROE=>;
-		|	output.z_ospc = PIN_OSPCOE=>;
 		|
-		|																							if (q3pos && !output.z_ospc) {
+		|																							if (q3pos && !PIN_OSPCOE=>) {
 		|																								if (macro_event) {
-		|																									output.ospc = 0x6;
+		|																									spc_bus = 0x6;
 		|																								} else {
-		|																									output.ospc = (pa040d >> 3) & 0x7;
+		|																									spc_bus = (pa040d >> 3) & 0x7;
 		|																								}
 		|																							}
 		|																							if (q3pos && !output.z_adr) {

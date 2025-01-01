@@ -99,7 +99,7 @@ class TYP(PartFactory):
 		|''')
 
     def sensitive(self):
-            yield "BUS_DSP"		# q2pos
+            # yield "BUS_DSP"		# q2pos
             yield "PIN_H2.neg()"
             yield "PIN_Q2"
             yield "PIN_Q4.pos()"
@@ -446,6 +446,7 @@ class TYP(PartFactory):
 		|												}
 		|												if (!output.z_qf) {
 		|													output.qf = state->a ^ BUS_QF_MASK;
+		|													fiu_bus = output.qf;
 		|												}
 		|												if (uirb == 0x29 && output.z_qt) {
 		|													BUS_DT_READ(state->b);
@@ -525,9 +526,11 @@ class TYP(PartFactory):
 		|																state->almsb = state->alu >> 63ULL;
 		|														
 		|																output.z_adr = PIN_ADROE=>;
-		|																if (!output.z_adr) {
+		|																if (q2pos && !output.z_adr) {
 		|																	unsigned spc;
-		|																	BUS_DSP_READ(spc);
+		|																	// BUS_DSP_READ(spc);
+		|																	// if (spc != spc_bus) ALWAYS_TRACE(<<"SPCBUS " << std::hex << spc << " " << spc_bus);
+		|																	spc = spc_bus;
 		|																	uint64_t alu = state->alu;
 		|														
 		|																	if (spc != 4) {
@@ -739,19 +742,22 @@ class TYP(PartFactory):
 		|			output.t1stp = false;
 		|	}
 		|
-		|	output.spdr = true;
+		|	//output.spdr = true;
 		|
-		|	output.spdr = PIN_ADROE=> && PIN_VAEN=>;
-		|	output.z_qsp = output.spdr;
+		|	//output.spdr = PIN_ADROE=> && PIN_VAEN=>;
+		|	//output.z_qsp = output.spdr;
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|																											if (q4pos || !output.z_qsp) {
+		|																											if (q3pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
 		|																												unsigned marctl;
 		|																												BUS_MCTL_READ(marctl);
 		|																										
 		|																												if (marctl & 0x8) {
-		|																													output.qsp = (marctl & 0x7) ^ 0x7;
+		|																													//output.qsp = (marctl & 0x7) ^ 0x7;
+		|																													spc_bus = (marctl & 0x7) ^ 0x7;
 		|																												} else {
-		|																													output.qsp = state->b ^ 0x7;
+		|																													//output.qsp = state->b ^ 0x7;
+		|																													spc_bus = (state->b & 0x7) ^ 0x7;
 		|																												}
 		|																											}
 		|	output.ldmar = !(state->foo1 && PIN_BHSTP=>);

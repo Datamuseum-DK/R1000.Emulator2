@@ -351,6 +351,7 @@ class VAL(PartFactory):
 		|																}
 		|																if (!output.z_qf) {
 		|																	output.qf = state->a ^ BUS_QF_MASK;
+		|																	fiu_bus = output.qf;
 		|																}
 		|																state->amsb = state->a >> 63;
 		|							}
@@ -485,7 +486,8 @@ class VAL(PartFactory):
 		|																output.z_adr = PIN_ADROE=>;
 		|																if (!output.z_adr) {
 		|																	unsigned spc;
-		|																	BUS_SPC_READ(spc);
+		|																	//if (spc != spc_bus) ALWAYS_TRACE(<<"SPCBUS " << std::hex << spc << " " << spc_bus);
+		|																	spc = spc_bus;
 		|																	uint64_t alu = state->alu;
 		|														
 		|																	if (spc != 4) {
