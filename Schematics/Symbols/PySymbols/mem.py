@@ -41,8 +41,6 @@ class MEM(FChip):
         self.sig_left(ChipSig("-->+", "ELABT"))
         self.sig_left(ChipSig("-->+", "LABT"))
 
-        self.sig_left(ChipSig("<->+", "DQC", 0, 8))
-
         self.sig_right(ChipSig("+<->", "DQT", 0, 63))
         self.sig_right(ChipSig("+<->", "DQV", 0, 63))
 

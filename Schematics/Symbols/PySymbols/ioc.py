@@ -41,10 +41,6 @@ class IOC(FChip):
         self.sig_right(ChipSig("+<->", "DQVAL", 0, 63))
         self.sig_right(ChipSig("+<--", "QVALOE"))
 
-        self.sig_right(ChipSig("+<->", "DQC", 0, 8))
-        self.sig_right(ChipSig("+<--", "QCOE"))
-        self.sig_right(ChipSig("+-->", "QCDR"))
-
         self.sig_right(ChipSig("+-->", "ERR"))
 
         self.sig_right(ChipSig("+===", "ORST"))

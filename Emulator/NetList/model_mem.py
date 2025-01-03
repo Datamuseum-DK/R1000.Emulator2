@@ -201,8 +201,6 @@ class MEM(PartFactory):
 		|	uint32_t s;
 		|
 		|	s = spc_bus;
-		|	//BUS_ADR_READ(a);
-		|	//if (adr_bus != a) ALWAYS_TRACE(<<"ADRBUS " << std::hex << a << " " << adr_bus);
 		|	a = adr_bus;
 		|	state->mar_space = s;
 		|	state->mar_name = (a>>32) & 0xffffffffULL;
@@ -352,7 +350,9 @@ class MEM(PartFactory):
 		|																												state->cstop = !(diag_sync || diag_freeze);
 		|
 		|																												if (!PIN_LDWDR=>) {
-		|																													BUS_DC_READ(state->cdreg);
+		|																													//BUS_DC_READ(state->cdreg);
+		|																													//if (state->cdreg != ecc_bus) {ALWAYS_TRACE(<< "ECCBUS " << std::hex << state->cdreg << " " << ecc_bus);}
+		|																													state->cdreg = ecc_bus;
 		|																													BUS_DT_READ(state->tdreg);
 		|																													BUS_DV_READ(state->vdreg);
 		|																												}
@@ -381,26 +381,34 @@ class MEM(PartFactory):
 
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|	output.z_qc = PIN_QCOE=>;
 		|	output.z_qt = PIN_QTOE=>;
 		|	output.z_qv = PIN_QVOE=>;
 		|
 		|	bool not_me =  (output.hita && output.hitb && !PIN_ISLOW=>);
 		|
 		|	if (!output.z_qv && output.z_qt) {
-		|		if (not_me)
+		|		if (not_me) {
 		|			output.qv = BUS_QV_MASK;
-		|		else
+		|			val_bus = ~0ULL;
+		|		} else {
 		|			output.qv = state->qreg;
+		|			val_bus = state->qreg;
+		|		}
 		|	} else if (!output.z_qt) {
 		|		if (not_me) {
-		|			output.qc = BUS_QC_MASK;
+		|			//output.qc = 0x1ff;
 		|			output.qt = BUS_QT_MASK;
 		|			output.qv = BUS_QV_MASK;
+		|			ecc_bus = 0x1ff;
+		|			typ_bus = ~0ULL;
+		|			val_bus = ~0ULL;
 		|		} else {
-		|			output.qc = state->cqreg;
+		|			//output.qc = state->cqreg;
 		|			output.qt = state->tqreg;
 		|			output.qv = state->vqreg;
+		|			ecc_bus = state->cqreg;
+		|			typ_bus = state->tqreg;
+		|			val_bus = state->vqreg;
 		|		}
 		|	}
 		|

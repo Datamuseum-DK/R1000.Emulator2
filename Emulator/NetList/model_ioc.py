@@ -265,7 +265,7 @@ class IOC(PartFactory):
 		|	uint64_t tmp;
 		|	unsigned cbi = 0, cbo = 0;
 		|	if (!PIN_TVEN=>) {
-		|		BUS_DC_READ(cbi);
+		|		cbi = ecc_bus;
 		|	}
 		|''')
         for tmask, vmask, invert in self.getmasks():
@@ -293,7 +293,6 @@ class IOC(PartFactory):
         #yield "BUS_DVAL"
         yield "PIN_Q2.pos()"
         yield "PIN_Q4.pos()"
-        yield "PIN_QCOE"
         yield "PIN_QTYPOE"
         yield "PIN_QVALOE"
         yield "BUS_RAND"
@@ -318,7 +317,6 @@ class IOC(PartFactory):
             "PIN_DUMEN",
             "BUS_DVAL",
             "PIN_Q4.posedge_event()",
-            "PIN_QCOE",
             "PIN_SCLKST",
             "PIN_ULWDR",
         )
@@ -351,7 +349,6 @@ class IOC(PartFactory):
 		|	BUS_DVAL_READ(val);
 		|
 		|	unsigned cbo = 0;
-		|	output.z_qc = PIN_QCOE=>;
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2_pos) {
@@ -372,11 +369,16 @@ class IOC(PartFactory):
 		|																			if (state->doecc) {
 		|																				cbo = calc_ecc(typ, val);
 		|
-		|																				if (!output.z_qc) {
+		|																				bool drive_other_cb = ((state->pb011[rand] >> 5) & 1);
+		|																				bool qcdr = !((!PIN_ULWDR=>) && drive_other_cb && PIN_TVEN=>);
+		|																				if ((rand & 0x1e) == 0x18)
+		|																					qcdr = false;
+		|																				if (!qcdr) {
 		|																					if ((rand & 0x1e) == 0x18) {
-		|																						output.qc = state->cbreg2;
+		|																						ecc_bus = state->cbreg2;
 		|																					} else {
-		|																						output.qc = cbo;
+		|																						//output.qc = cbo;
+		|																						ecc_bus = cbo;
 		|																					}
 		|																					if (!q4_pos) {
 		|																						idle_next = &tvc_event;
@@ -396,8 +398,10 @@ class IOC(PartFactory):
 		|																													state->eidrg = state->elprom[cbo];
 		|																													state->checkbit_error = (state->eidrg & 0x81) != 0x81;
 		|																													state->multibit_error = state->eidrg & 1;
-		|																													BUS_DC_READ(state->cbreg1);
-		|																													state->cbreg1 ^= BUS_DC_MASK;
+		|																													//BUS_DC_READ(state->cbreg1);
+		|																													//if (state->cbreg1 != ecc_bus) ALWAYS_TRACE(<< "ECCBUS " << std::hex << state->cbreg1 << " " << ecc_bus);
+		|																													state->cbreg1 = ecc_bus;
+		|																													state->cbreg1 ^= 0x1ff;
 		|																												}
 		|
 		|																												if (sclk_pos) {
@@ -550,10 +554,12 @@ class IOC(PartFactory):
 		|	bool disable_ecc = ((state->pb011[rand] >> 0) & 1);
 		|	output.decc = !(disable_ecc || PIN_TVEN=>);
 		|
+		|#if 0
 		|	bool drive_other_cb = ((state->pb011[rand] >> 5) & 1);
 		|	output.qcdr = !(uir_load_wdr && drive_other_cb && PIN_TVEN=>);
 		|	if ((rand & 0x1e) == 0x18)
 		|		output.qcdr = false;
+		|#endif
 		|
 		|}
 		|{
