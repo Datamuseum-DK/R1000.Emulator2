@@ -551,7 +551,8 @@ class FIU(PartFactory):
 		|																													if (PIN_ORSR=>) {			// UCODE
 		|																														BUS_OL_READ(state->oreg);
 		|																													} else {
-		|																														BUS_DADR_READ(state->oreg);
+		|																														//BUS_DADR_READ(state->oreg);
+		|																														state->oreg = adr_bus;
 		|																														state->oreg &= 0x7f;
 		|																													}
 		|																												}
@@ -629,15 +630,15 @@ class FIU(PartFactory):
 		|
 		|																											if (q4pos) {
 		|																												uint64_t adr = 0;
-		|																												BUS_DADR_READ(adr);
+		|																												//BUS_DADR_READ(adr);
+		|																												//if (adr_bus != adr) ALWAYS_TRACE(<<"ADRBUS " << std::hex << adr << " " << adr_bus);
+		|																												adr = adr_bus;
 		|																												bool load_mar = (state->prmt >> 4) & 1;
 		|																										
 		|																												if (sclk && load_mar) {
 		|																													uint64_t tmp;
 		|																													state->srn = adr >> 32;
 		|																													state->sro = adr & 0xffffff80;
-		|																													//BUS_DSPC_READ(tmp);
-		|																													//if (tmp != spc_bus) ALWAYS_TRACE(<<"SPCBUS " << std::hex << tmp << " " << spc_bus);
 		|																													tmp = spc_bus;
 		|																													state->sro |= tmp << 4;
 		|																													state->sro |= 0xf;
@@ -772,19 +773,21 @@ class FIU(PartFactory):
 		|																}
 		|														
 		|																output.csawr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
-		|																output.z_qadr = PIN_QADROE=>;
-		|																//output.z_qspc = PIN_QSPCOE=>;
-		|																if (!output.z_qadr) {
+		|																if (!PIN_QADROE=>) {
 		|																	bool inc_mar = (state->prmt >> 3) & 1;
 		|																	unsigned inco = state->moff & 0x1f;
 		|																	if (inc_mar && inco != 0x1f)
 		|																		inco += 1;
 		|															
-		|																	output.qadr = (uint64_t)state->srn << 32;
-		|																	output.qadr |= state->sro & 0xfffff000;
-		|																	output.qadr |= (inco & 0x1f) << 7;
-		|																	output.qadr |= state->oreg;
-		|																	// output.qspc = (state->sro >> 4) & 7; // XXX run_udiag 0180 @17s
+		|																	//output.qadr = (uint64_t)state->srn << 32;
+		|																	//output.qadr |= state->sro & 0xfffff000;
+		|																	//output.qadr |= (inco & 0x1f) << 7;
+		|																	//output.qadr |= state->oreg;
+		|		
+		|																	adr_bus = (uint64_t)state->srn << 32;
+		|																	adr_bus |= state->sro & 0xfffff000;
+		|																	adr_bus |= (inco & 0x1f) << 7;
+		|																	adr_bus |= state->oreg;
 		|																	spc_bus = (state->sro >> 4) & 7;
 		|																}
 		|

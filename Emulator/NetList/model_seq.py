@@ -1422,16 +1422,13 @@ class SEQ(PartFactory):
 		|		output.qv = state->val_bus;
 		|		output.qv ^= BUS_QV_MASK;
 		|	}
-		|	output.z_adr = PIN_ADROE=>;
 		|
-		|																							if (q3pos && !PIN_OSPCOE=>) {
+		|																							if (q3pos && !PIN_ADROE=>) {
 		|																								if (macro_event) {
 		|																									spc_bus = 0x6;
 		|																								} else {
 		|																									spc_bus = (pa040d >> 3) & 0x7;
 		|																								}
-		|																							}
-		|																							if (q3pos && !output.z_adr) {
 		|																								bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
 		|																								bool resolve_drive;
 		|																								if (!macro_event) {
@@ -1440,23 +1437,30 @@ class SEQ(PartFactory):
 		|																									resolve_drive = true;
 		|																								}
 		|																								if (!resolve_drive) {
-		|																									output.adr = state->resolve_offset << 7;
+		|																									// output.adr = state->resolve_offset << 7;
+		|																									adr_bus = state->resolve_offset << 7;
 		|																								} else if (adr_is_code) {
-		|																									output.adr = (state->coff >> 3) << 7;
+		|																									// output.adr = (state->coff >> 3) << 7;
+		|																									adr_bus = (state->coff >> 3) << 7;
 		|																								} else {
-		|																									output.adr = state->output_ob << 7;
+		|																									// output.adr = state->output_ob << 7;
+		|																									adr_bus = state->output_ob << 7;
 		|																								}
 		|															
 		|																								uint64_t branch;
 		|																								branch = state->branch_offset & 7;
 		|																								branch ^= 0x7;
-		|																								output.adr |= branch << 4;
+		|																								// output.adr |= branch << 4;
+		|																								adr_bus |= branch << 4;
 		|																								if (!adr_is_code) {
-		|																									output.adr |= state->name_bus << 32;
+		|																									// output.adr |= state->name_bus << 32;
+		|																									adr_bus |= state->name_bus << 32;
 		|																								} else if (!(urand & 0x2)) {
-		|																									output.adr |= state->pcseg << 32; 
+		|																									// output.adr |= state->pcseg << 32; 
+		|																									adr_bus |= state->pcseg << 32; 
 		|																								} else {
-		|																									output.adr |= state->retseg << 32;
+		|																									// output.adr |= state->retseg << 32;
+		|																									adr_bus |= state->retseg << 32;
 		|																								}
 		|																							}
 		|	output.seqsp = !(

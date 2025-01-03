@@ -483,18 +483,16 @@ class VAL(PartFactory):
 		|																if (!(state->alu & (0xffULL) << 56)) state->zero |= 0x80;
 		|																state->alu = ~state->alu;
 		|																state->cmsb = state->alu >> 63;
-		|																output.z_adr = PIN_ADROE=>;
-		|																if (!output.z_adr) {
-		|																	unsigned spc;
-		|																	//if (spc != spc_bus) ALWAYS_TRACE(<<"SPCBUS " << std::hex << spc << " " << spc_bus);
-		|																	spc = spc_bus;
+		|																if (!PIN_ADROE=>) {
+		|																	unsigned spc = spc_bus;
 		|																	uint64_t alu = state->alu;
 		|														
 		|																	if (spc != 4) {
 		|																		alu |=0xf8000000ULL;
 		|																	}
 		|														
-		|																	output.adr = alu ^ BUS_ADR_MASK;
+		|																	// output.adr = alu ^ BUS_ADR_MASK;
+		|																	adr_bus = alu ^ ~0ULL;;
 		|																}
 		|															}
 		|

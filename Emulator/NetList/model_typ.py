@@ -525,69 +525,66 @@ class TYP(PartFactory):
 		|																state->alu = ~state->alu;
 		|																state->almsb = state->alu >> 63ULL;
 		|														
-		|																output.z_adr = PIN_ADROE=>;
-		|																if (q2pos && !output.z_adr) {
-		|																	unsigned spc;
-		|																	// BUS_DSP_READ(spc);
-		|																	// if (spc != spc_bus) ALWAYS_TRACE(<<"SPCBUS " << std::hex << spc << " " << spc_bus);
-		|																	spc = spc_bus;
+		|																if (q2pos && !PIN_ADROE=>) {
+		|																	unsigned spc = spc_bus;
 		|																	uint64_t alu = state->alu;
 		|														
 		|																	if (spc != 4) {
 		|																		alu |=0xf8000000ULL;
 		|																	}
 		|														
-		|																	output.adr = alu ^ BUS_ADR_MASK;
+		|																	adr_bus = alu ^ ~0ULL;
 		|																}
 		|														
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																							if (q2pos) {
-		|																								state->cadr = 0;
-		|																								if (uirc <= 0x1f) {
-		|																									// FRAME:REG
-		|																									state->cadr |= uirc & 0x1f;
-		|																									state->cadr |= frm << 5;
-		|																								} else if (uirc <= 0x27) {
-		|																									// 0x20 = TOP-1
-		|																									// …
-		|																									// 0x27 = TOP-8
-		|																									state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
-		|																								} else if (uirc == 0x28) {
-		|																									// 0x28 LOOP COUNTER (RF write disabled)
-		|																								} else if (uirc == 0x29 && output.cwe) {
-		|																									// 0x29 DEFAULT (RF write disabled)
-		|																									unsigned sum = state->botreg + state->csa_offset + 1;
-		|																									state->cadr |= sum & 0xf;
-		|																								} else if (uirc == 0x29 && !output.cwe) {
-		|																									// 0x29 DEFAULT (RF write disabled)
-		|																									state->cadr |= uirc & 0x1f;
-		|																									state->cadr |= frm << 5;
-		|																								} else if (uirc <= 0x2b) {
-		|																									// 0x2a BOT
-		|																									// 0x2b BOT-1
-		|																									state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
-		|																									state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
-		|																								} else if (uirc == 0x2c) {
-		|																									// 0x28 = LOOP_REG
-		|																									state->cadr = state->count;
-		|																								} else if (uirc == 0x2d) {
-		|																									// 0x2d SPARE
-		|																									assert (uirc != 0x2d);
-		|																								} else if (uirc <= 0x2f) {
-		|																									// 0x2e = TOP+1
-		|																									// 0x2f = TOP
-		|																									state->cadr = (state->topreg + (uirc & 0x1) + 0xf) & 0xf;
-		|																								} else if (uirc <= 0x3f) {
-		|																									// GP[0…F]
-		|																									state->cadr |= 0x10 | (uirc & 0x0f);
-		|																								} else {
-		|																									assert(uirc <= 0x3f);
-		|																								}
-		|																								unsigned marctl;
-		|																								BUS_MCTL_READ(marctl);
-		|																								state->foo1 = marctl >= 4;
-		|																							}
+		|															if (q2pos) {
+		|																state->cadr = 0;
+		|																if (uirc <= 0x1f) {
+		|																	// FRAME:REG
+		|																	state->cadr |= uirc & 0x1f;
+		|																	state->cadr |= frm << 5;
+		|																} else if (uirc <= 0x27) {
+		|																	// 0x20 = TOP-1
+		|																	// …
+		|																	// 0x27 = TOP-8
+		|																	state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
+		|																} else if (uirc == 0x28) {
+		|																	// 0x28 LOOP COUNTER (RF write disabled)
+		|																} else if (uirc == 0x29 && output.cwe) {
+		|																	// 0x29 DEFAULT (RF write disabled)
+		|																	unsigned sum = state->botreg + state->csa_offset + 1;
+		|																	state->cadr |= sum & 0xf;
+		|																} else if (uirc == 0x29 && !output.cwe) {
+		|																	// 0x29 DEFAULT (RF write disabled)
+		|																	state->cadr |= uirc & 0x1f;
+		|																	state->cadr |= frm << 5;
+		|																} else if (uirc <= 0x2b) {
+		|																	// 0x2a BOT
+		|																	// 0x2b BOT-1
+		|																	state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|																	state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|																} else if (uirc == 0x2c) {
+		|																	// 0x28 = LOOP_REG
+		|																	state->cadr = state->count;
+		|																} else if (uirc == 0x2d) {
+		|																	// 0x2d SPARE
+		|																	assert (uirc != 0x2d);
+		|																} else if (uirc <= 0x2f) {
+		|																	// 0x2e = TOP+1
+		|																	// 0x2f = TOP
+		|																	state->cadr = (state->topreg + (uirc & 0x1) + 0xf) & 0xf;
+		|																} else if (uirc <= 0x3f) {
+		|																	// GP[0…F]
+		|																	state->cadr |= 0x10 | (uirc & 0x0f);
+		|																} else {
+		|																	assert(uirc <= 0x3f);
+		|																}
+		|																unsigned marctl;
+		|																BUS_MCTL_READ(marctl);
+		|																state->foo1 = marctl >= 4;
+		|															}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|
 		|																											if (q4pos) {
@@ -698,31 +695,32 @@ class TYP(PartFactory):
 		|		selcond = 0x80 >> priv_check;
 		|		selcond ^= 0xff;
 		|	}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|																							if (q2pos) {
-		|																								output.ue = BUS_UE_MASK;
-		|																								if (micros_en && selcond == 0xbf && bin_op_pass())
-		|																									output.ue &= ~0x20;	// T.BIN_OP.UE~
-		|																						
-		|																								if (micros_en && selcond == 0x7f && priv_path_eq() && bin_op_pass())
-		|																									output.ue &= ~0x10;	// T.BIN_EQ.UE~
-		|																						
-		|																								if (micros_en && (0x3 < rand && rand < 0x8) && clev(rand))
-		|																									output.ue &= ~0x08;	// T.CLASS.UE~
-		|																						
-		|																								if (micros_en && selcond == 0xef && a_op_pass())
-		|																									output.ue &= ~0x04;	// T.TOS1_OP.UE~
-		|																								if (micros_en && selcond == 0xfb && b_op_pass())
-		|																									output.ue &= ~0x04;	// T.TOS1_OP.UE~
-		|																						
-		|																								if (micros_en && selcond == 0xdf && a_op_pass())
-		|																									output.ue &= ~0x02;	// T.TOS_OP.UE~
-		|																								if (micros_en && selcond == 0xf7 && b_op_pass())
-		|																									output.ue &= ~0x02;	// T.TOS_OP.UE~
-		|																						
-		|																								if (micros_en && (!((rand != 0xe) || !(B_LIT() != clit()))))
-		|																									output.ue &= ~0x01;	// T.CHK_SYS.UE~
-		|																							}
+		|															if (q2pos) {
+		|																output.ue = BUS_UE_MASK;
+		|																if (micros_en && selcond == 0xbf && bin_op_pass())
+		|																	output.ue &= ~0x20;	// T.BIN_OP.UE~
+		|														
+		|																if (micros_en && selcond == 0x7f && priv_path_eq() && bin_op_pass())
+		|																	output.ue &= ~0x10;	// T.BIN_EQ.UE~
+		|														
+		|																if (micros_en && (0x3 < rand && rand < 0x8) && clev(rand))
+		|																	output.ue &= ~0x08;	// T.CLASS.UE~
+		|														
+		|																if (micros_en && selcond == 0xef && a_op_pass())
+		|																	output.ue &= ~0x04;	// T.TOS1_OP.UE~
+		|																if (micros_en && selcond == 0xfb && b_op_pass())
+		|																	output.ue &= ~0x04;	// T.TOS1_OP.UE~
+		|														
+		|																if (micros_en && selcond == 0xdf && a_op_pass())
+		|																	output.ue &= ~0x02;	// T.TOS_OP.UE~
+		|																if (micros_en && selcond == 0xf7 && b_op_pass())
+		|																	output.ue &= ~0x02;	// T.TOS_OP.UE~
+		|														
+		|																if (micros_en && (!((rand != 0xe) || !(B_LIT() != clit()))))
+		|																	output.ue &= ~0x01;	// T.CHK_SYS.UE~
+		|															}
 		|
 		|	if (1 || q3pos) {	// Stops after VM-start
 		|		output.t0stp = true;
@@ -748,18 +746,16 @@ class TYP(PartFactory):
 		|	//output.z_qsp = output.spdr;
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|																											if (q3pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
-		|																												unsigned marctl;
-		|																												BUS_MCTL_READ(marctl);
-		|																										
-		|																												if (marctl & 0x8) {
-		|																													//output.qsp = (marctl & 0x7) ^ 0x7;
-		|																													spc_bus = (marctl & 0x7) ^ 0x7;
-		|																												} else {
-		|																													//output.qsp = state->b ^ 0x7;
-		|																													spc_bus = (state->b & 0x7) ^ 0x7;
-		|																												}
-		|																											}
+		|																							if (q3pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
+		|																								unsigned marctl;
+		|																								BUS_MCTL_READ(marctl);
+		|																						
+		|																								if (marctl & 0x8) {
+		|																									spc_bus = (marctl & 0x7) ^ 0x7;
+		|																								} else {
+		|																									spc_bus = (state->b & 0x7) ^ 0x7;
+		|																								}
+		|																							}
 		|	output.ldmar = !(state->foo1 && PIN_BHSTP=>);
 		|	typ_cond(condsel, 0);
 		|''')

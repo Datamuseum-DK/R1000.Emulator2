@@ -58,9 +58,7 @@ class FIU(FChip):
         self.sig_right(ChipSig("+<->", "DQV", 0, 63))
         self.sig_right(ChipSig("+<--", "QVOE"))
 
-        self.sig_right(ChipSig("+<->", "DQADR", 0, 63))
         self.sig_right(ChipSig("+<--", "QADROE"))
-        self.sig_right(ChipSig("+<--", "QSPCOE"))
 
         self.sig_right(ChipSig("+<--", "CNDSL", 0, 6))
         self.sig_right(ChipSig("+<--", "CNV", 0, 3))

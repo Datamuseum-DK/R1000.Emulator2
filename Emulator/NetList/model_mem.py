@@ -200,13 +200,14 @@ class MEM(PartFactory):
 		|	uint64_t a;
 		|	uint32_t s;
 		|
-		|	//if (spc_bus != s) ALWAYS_TRACE(<<"SPCBUS " << std::hex << s << " " << spc_bus);
 		|	s = spc_bus;
-		|	BUS_ADR_READ(a);
+		|	//BUS_ADR_READ(a);
+		|	//if (adr_bus != a) ALWAYS_TRACE(<<"ADRBUS " << std::hex << a << " " << adr_bus);
+		|	a = adr_bus;
 		|	state->mar_space = s;
 		|	state->mar_name = (a>>32) & 0xffffffffULL;
 		|	state->mar_page = (a>>19) & 0x1fff;
-		|	state->mar_set = (a>>BUS_ADR_LSB(27)) & 0xf;
+		|	state->mar_set = (a>>BUS_DT_LSB(27)) & 0xf;
 		|
 		|	state->word = (a >> 7) & 0x3f;
 		|	state->hash = 0;
