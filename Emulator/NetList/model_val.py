@@ -94,11 +94,14 @@ class VAL(PartFactory):
 
     def priv_decl(self, file):
         file.fmt('''
+		|	unsigned rand;
 		|	bool ovrsgn(void);
 		|	bool cond_a(unsigned csel);
 		|	bool cond_b(unsigned csel);
 		|	bool cond_c(unsigned csel);
 		|	bool fiu_cond(void);
+		|	void find_a(void);
+		|	void find_b(void);
 		|''')
 
     def priv_impl(self, file):
@@ -259,6 +262,115 @@ class VAL(PartFactory):
 		|	}
 		|	return (!fcond);
 		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|find_a(void)
+		|{
+		|	unsigned uira;
+		|	BUS_UIRA_READ(uira);
+		|	if (uira == 0x28) {
+		|		state->a = state->count;
+		|		state->a |= ~0x3ff;
+		|	} else if (uira == 0x29) {
+		|		unsigned mdst;
+		|		bool prod_16 = rand != 0xd;
+		|		bool prod_32 = rand != 0xe;
+		|		mdst = prod_32 << 1;
+		|		mdst |= prod_16;
+		|		switch(mdst) {
+		|		case 0: state->a = 0; break;
+		|		case 1: state->a = state->mprod << 32; break;
+		|		case 2: state->a = state->mprod << 16; break;
+		|		case 3: state->a = state->mprod <<  0; break;
+		|		}
+		|		state->a ^= BUS_DV_MASK;
+		|	} else if (uira == 0x2a) {
+		|		state->a = state->zerocnt;
+		|	} else if (uira == 0x2b) {
+		|		state->a = BUS_DV_MASK;
+		|	} else {
+		|		unsigned frm;
+		|		BUS_FRM_READ(frm);
+		|		unsigned atos = (uira & 0xf) + state->topreg + 1;
+		|		state->aadr = 0;
+		|		if (PIN_ALOOP=>) {
+		|			state->aadr = state->count;
+		|		} else if (uira <= 0x1f) {
+		|			state->aadr = frm << 5;
+		|			state->aadr |= uira & 0x1f;
+		|		} else if (uira <= 0x2f) {
+		|			state->aadr |= atos & 0xf;
+		|		} else {
+		|			state->aadr |= uira & 0x1f;
+		|		}
+		|		state->a = state->rfram[state->aadr];
+		|	}
+		|	state->amsb = state->a >> 63;
+		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|find_b(void)
+		|{
+		|	unsigned uirb;
+		|	BUS_UIRB_READ(uirb);
+		|	bool oe, oe7;
+		|	if (uirb != (0x16 ^ BUS_UIRB_MASK)) {
+		|		oe = false;
+		|	} else if (!state->csa_hit && !PIN_QVOE=>) { 
+		|		oe = false;
+		|	} else {
+		|		oe = true;
+		|	}
+		|
+		|	bool get_literal = rand != 0x6;
+		|	oe7 = oe || !get_literal;
+		|
+		|	unsigned frm;
+		|	BUS_FRM_READ(frm);
+		|	unsigned btos = (uirb & 0xf) + state->topreg + 1;
+		|	unsigned csa = state->botreg + (uirb&1);
+		|	if (!(uirb & 2)) {
+		|		csa += state->csa_offset;
+		|	}
+		|	state->badr = 0;
+		|	if (PIN_BLOOP=>) {
+		|		state->badr = state->count;
+		|	} else if (uirb <= 0x1f) {
+		|		state->badr = frm << 5;
+		|		state->badr |= uirb & 0x1f;
+		|	} else if (uirb <= 0x27) {
+		|		state->badr |= btos & 0xf;
+		|	} else if (uirb <= 0x2b) {
+		|		state->badr |= csa & 0xf;
+		|	} else if (uirb <= 0x2f) {
+		|		state->badr |= btos & 0xf;
+		|	} else {
+		|		state->badr |= uirb & 0x1f;
+		|	}
+		|	uint64_t b = 0;
+		|	if (!oe) {
+		|		b |= state->rfram[state->badr] & 0xffffffffffffff00ULL;
+		|	}
+		|	if (!oe7) {
+		|		b |= state->rfram[state->badr] & 0xffULL;
+		|	}
+		|	if (oe || oe7) {
+		|		uint64_t bus;
+		|		BUS_DV_READ(bus);
+		|		//if (bus != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << bus << " " << val_bus);
+		|		bus ^= BUS_DV_MASK;
+		|		if (oe) {
+		|			b |= bus & 0xffffffffffffff00ULL;
+		|		}
+		|		if (oe7) {
+		|			b |= bus & 0xffULL;
+		|		}
+		|	}
+		|	state->b = b;
+		|	state->bmsb = state->b >> 63;
+		|}
 		|''')
 
     def doit(self, file):
@@ -276,12 +388,9 @@ class VAL(PartFactory):
 		|
 		|	bool uirsclk = PIN_UCLK.posedge();
 		|
-		|	unsigned uira, uirb, uirc;
-		|	BUS_UIRA_READ(uira);
-		|	BUS_UIRB_READ(uirb);
+		|	unsigned uirc;
 		|	BUS_UIRC_READ(uirc);
 		|
-		|	unsigned rand;
 		|	BUS_RAND_READ(rand);
 		|
 		|	bool divide = rand != 0xb;
@@ -312,109 +421,21 @@ class VAL(PartFactory):
 		|																	state->wen = !state->wen;
 		|															}
 		|							if ((!h2 && !output.z_qf) ||					q2pos) {
-		|																if (uira == 0x28) {
-		|																	state->a = state->count;
-		|																	state->a |= ~0x3ff;
-		|																} else if (uira == 0x29) {
-		|																	unsigned mdst;
-		|																	bool prod_16 = rand != 0xd;
-		|																	bool prod_32 = rand != 0xe;
-		|																	mdst = prod_32 << 1;
-		|																	mdst |= prod_16;
-		|																	switch(mdst) {
-		|																	case 0: state->a = 0; break;
-		|																	case 1: state->a = state->mprod << 32; break;
-		|																	case 2: state->a = state->mprod << 16; break;
-		|																	case 3: state->a = state->mprod <<  0; break;
-		|																	}
-		|																	state->a ^= BUS_DV_MASK;
-		|																} else if (uira == 0x2a) {
-		|																	state->a = state->zerocnt;
-		|																} else if (uira == 0x2b) {
-		|																	state->a = BUS_DV_MASK;
-		|																} else {
-		|																	unsigned frm;
-		|																	BUS_FRM_READ(frm);
-		|																	unsigned atos = (uira & 0xf) + state->topreg + 1;
-		|																	state->aadr = 0;
-		|																	if (PIN_ALOOP=>) {
-		|																		state->aadr = state->count;
-		|																	} else if (uira <= 0x1f) {
-		|																		state->aadr = frm << 5;
-		|																		state->aadr |= uira & 0x1f;
-		|																	} else if (uira <= 0x2f) {
-		|																		state->aadr |= atos & 0xf;
-		|																	} else {
-		|																		state->aadr |= uira & 0x1f;
-		|																	}
-		|																	state->a = state->rfram[state->aadr];
-		|																}
+		|																find_a();
+		|
 		|																if (!output.z_qf) {
 		|																	output.qf = state->a ^ BUS_QF_MASK;
 		|																	fiu_bus = output.qf;
 		|																}
-		|																state->amsb = state->a >> 63;
 		|							}
 		|														
 		|	output.z_qv = PIN_QVOE=>;
 		|															if (q2pos || (!h2 && !output.z_qv)) {
-		|																bool oe, oe7;
-		|																if (uirb != (0x16 ^ BUS_UIRB_MASK)) {
-		|																	oe = false;
-		|																} else if (!state->csa_hit && !PIN_QVOE=>) { 
-		|																	oe = false;
-		|																} else {
-		|																	oe = true;
-		|																}
-		|														
-		|																bool get_literal = rand != 0x6;
-		|																oe7 = oe || !get_literal;
-		|														
-		|																unsigned frm;
-		|																BUS_FRM_READ(frm);
-		|																unsigned btos = (uirb & 0xf) + state->topreg + 1;
-		|																unsigned csa = state->botreg + (uirb&1);
-		|																if (!(uirb & 2)) {
-		|																	csa += state->csa_offset;
-		|																}
-		|																state->badr = 0;
-		|																if (PIN_BLOOP=>) {
-		|																	state->badr = state->count;
-		|																} else if (uirb <= 0x1f) {
-		|																	state->badr = frm << 5;
-		|																	state->badr |= uirb & 0x1f;
-		|																} else if (uirb <= 0x27) {
-		|																	state->badr |= btos & 0xf;
-		|																} else if (uirb <= 0x2b) {
-		|																	state->badr |= csa & 0xf;
-		|																} else if (uirb <= 0x2f) {
-		|																	state->badr |= btos & 0xf;
-		|																} else {
-		|																	state->badr |= uirb & 0x1f;
-		|																}
-		|																uint64_t b = 0;
-		|																if (!oe) {
-		|																	b |= state->rfram[state->badr] & 0xffffffffffffff00ULL;
-		|																}
-		|																if (!oe7) {
-		|																	b |= state->rfram[state->badr] & 0xffULL;
-		|																}
-		|																if (oe || oe7) {
-		|																	uint64_t bus;
-		|																	BUS_DV_READ(bus);
-		|																	bus ^= BUS_DV_MASK;
-		|																	if (oe) {
-		|																		b |= bus & 0xffffffffffffff00ULL;
-		|																	}
-		|																	if (oe7) {
-		|																		b |= bus & 0xffULL;
-		|																	}
-		|																}
-		|																state->b = b;
+		|																find_b();
 		|																if (!output.z_qv) {
 		|																	output.qv = state->b ^ BUS_QV_MASK;
+		|																	val_bus = ~state->b;
 		|																}
-		|																state->bmsb = state->b >> 63;
 		|															}
 		|														
 		|															if (q2pos) {
@@ -595,6 +616,7 @@ class VAL(PartFactory):
 		|																												}
 		|																												if (!PIN_LDWDR=> && sclken) {
 		|																													BUS_DV_READ(state->wdr);
+		|																													//if (state->wdr != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << state->wdr << " " << val_bus);
 		|																													state->wdr ^= BUS_DV_MASK;
 		|																												}
 		|																												uint32_t a;
