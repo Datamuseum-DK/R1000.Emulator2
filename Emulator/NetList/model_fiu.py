@@ -246,6 +246,7 @@ class FIU(PartFactory):
 		|		break;
 		|	case 0x01: case 0x05: case 0x09:
 		|		BUS_DV_READ(vi);
+		|		//if (vi != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << vi << " " << val_bus);
 		|		vi ^= BUS_DV_MASK;
 		|		break;
 		|	case 0x02: case 0x06: case 0x0a:
@@ -465,6 +466,7 @@ class FIU(PartFactory):
 		|		break;
 		|	case 2:
 		|		BUS_DV_READ(tii);
+		|		//if (tii != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << tii << " " << val_bus);
 		|		tii = state->vi_bus;
 		|		break;
 		|	case 3:
@@ -933,8 +935,10 @@ class FIU(PartFactory):
 		|		do_tivi();
 		|		if (!output.z_qt)
 		|			output.qt = state->ti_bus ^ BUS_QT_MASK;
-		|		if (!output.z_qv)
+		|		if (!output.z_qv) {
 		|			output.qv = state->vi_bus ^ BUS_QT_MASK;
+		|			val_bus = ~state->vi_bus;
+		|		}
 		|	}
 		|
 		|	if (PIN_H1=> && 60 <= condsel && condsel <= 0x6f)

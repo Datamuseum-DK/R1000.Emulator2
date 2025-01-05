@@ -352,6 +352,7 @@ class IOC(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2_pos) {
+		|																//if (val != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << val << " " << val_bus);
 		|																if (state->slice_ev && !state->ten) {
 		|																	output.sme = false;
 		|																}
@@ -547,6 +548,7 @@ class IOC(PartFactory):
 		|	output.ldwdr = !(uir_load_wdr && PIN_SCLKST=>);
 		|
 		|																											if (q4_pos && rddum && !PIN_RSTRDR=>) {
+		|																												//if (val != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << val << " " << val_bus);
 		|																												state->dummy_typ = typ;
 		|																												state->dummy_val = val;
 		|																											}
@@ -578,8 +580,10 @@ class IOC(PartFactory):
 		|}
 		|
 		|	output.z_qval = PIN_QVALOE=>;
-		|	if (!output.z_qval)
+		|	if (!output.z_qval) {
 		|		output.qval = state->dummy_val;
+		|		val_bus = state->dummy_val;
+		|	}
 		|
 		|	output.z_qtyp = PIN_QTYPOE=>;
 		|	if (!output.z_qtyp) {

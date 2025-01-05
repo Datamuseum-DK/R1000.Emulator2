@@ -383,6 +383,7 @@ class VAL(PartFactory):
 		|	//bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool h2 = PIN_H2=>;
+		|	bool h1pos = PIN_H2.negedge();
 		|	bool sclken = !PIN_SCLKE=>;
 		|	bool aclk = PIN_CCLK.posedge();
 		|
@@ -415,19 +416,20 @@ class VAL(PartFactory):
 		|
 		|	output.z_qf = PIN_QFOE=>;
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|							if (h1pos && !output.z_qf) {
+		|								find_a();
+		|								output.qf = state->a ^ BUS_QF_MASK;
+		|								fiu_bus = output.qf;
+		|							}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|															if (q2pos && output.z_qf) {
+		|																find_a();
+		|															}
 		|															if (q2pos) {
 		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
 		|																if (output.cwe && uirc != 0x28)
 		|																	state->wen = !state->wen;
 		|															}
-		|							if ((!h2 && !output.z_qf) ||					q2pos) {
-		|																find_a();
-		|
-		|																if (!output.z_qf) {
-		|																	output.qf = state->a ^ BUS_QF_MASK;
-		|																	fiu_bus = output.qf;
-		|																}
-		|							}
 		|														
 		|	output.z_qv = PIN_QVOE=>;
 		|															if (q2pos || (!h2 && !output.z_qv)) {

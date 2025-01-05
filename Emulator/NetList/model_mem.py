@@ -355,6 +355,7 @@ class MEM(PartFactory):
 		|																													state->cdreg = ecc_bus;
 		|																													BUS_DT_READ(state->tdreg);
 		|																													BUS_DV_READ(state->vdreg);
+		|																													if (state->vdreg != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << state->vdreg << " " << val_bus);
 		|																												}
 		|
 		|																												if (!PIN_LDMR=> && state->cstop) {
@@ -378,7 +379,6 @@ class MEM(PartFactory):
 		|																												state->labort = labort;
 		|																												state->eabort = !(PIN_EABT=> && PIN_ELABT=>);
 		|																											}
-
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|	output.z_qt = PIN_QTOE=>;

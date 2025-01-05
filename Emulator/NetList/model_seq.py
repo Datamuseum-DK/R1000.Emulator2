@@ -231,6 +231,7 @@ class SEQ(PartFactory):
 		|		BUS_DT_READ(state->typ_bus);
 		|		state->typ_bus ^= BUS_DT_MASK;
 		|		BUS_DV_READ(state->val_bus);
+		|		//if (state->val_bus != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << state->val_bus << " " << val_bus);
 		|		state->val_bus ^= BUS_DV_MASK;
 		|		return;
 		|	}		
@@ -1421,6 +1422,7 @@ class SEQ(PartFactory):
 		|	if (!output.z_qt) {
 		|		output.qv = state->val_bus;
 		|		output.qv ^= BUS_QV_MASK;
+		|		val_bus = ~state->val_bus;
 		|	}
 		|
 		|																							if (q3pos && !PIN_ADROE=>) {
