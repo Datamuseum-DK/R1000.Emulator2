@@ -82,7 +82,6 @@ class TYP(PartFactory):
 		|	bool is_binary;
 		|	bool sub_else_add;
 		|	bool ovr_en;
-		|	bool foo1;
 		|''')
 
     def init(self, file):
@@ -439,9 +438,6 @@ class TYP(PartFactory):
 		|	BUS_RAND_READ(rand);
 		|	BUS_CSEL_READ(condsel);
 		|	BUS_FRM_READ(frm);
-		|	unsigned marctl;
-		|	BUS_MCTL_READ(marctl);
-		|	state->foo1 = marctl >= 4;
 		|
 		|	unsigned priv_check;
 		|	BUS_UPVC_READ(priv_check);
@@ -642,7 +638,10 @@ class TYP(PartFactory):
 		|															}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
+		|	unsigned marctl = 0;
+		|	BUS_MCTL_READ(marctl);
+		|	bool foo1 = marctl >= 4;
+		|	output.ldmar = !(foo1 && PIN_BHSTP=>);
 		|																							if (q3pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
 		|																								if (marctl & 0x8) {
 		|																									spc_bus = (marctl & 0x7) ^ 0x7;
@@ -697,13 +696,10 @@ class TYP(PartFactory):
 		|																												if (PIN_WE.posedge() && !state->wen) {
 		|																													state->rfram[state->cadr] = c;
 		|																												}
-		|																											}
-		|																											if (q4pos && sclke && !PIN_LDWDR=>) {
-		|																												BUS_DT_READ(state->wdr);
-		|																												state->wdr ^= BUS_DT_MASK;
-		|																											}
-		|																										
-		|																											if (q4pos) {
+		|																												if (sclke && !PIN_LDWDR=>) {
+		|																													BUS_DT_READ(state->wdr);
+		|																													state->wdr ^= BUS_DT_MASK;
+		|																												}
 		|																												if (sclke) {
 		|																													if (uirc == 0x28) {
 		|																														state->count = c;
@@ -714,50 +710,44 @@ class TYP(PartFactory):
 		|																													}
 		|																													state->count &= 0x3ff;
 		|																												}
-		|																											}
 		|
-		|
-		|																											unsigned csmux3;
-		|																											BUS_CSAO_READ(csmux3);
-		|																											csmux3 ^= BUS_CSAO_MASK;
-		|																											if (uirsclk) {
-		|																												state->csa_offset = csmux3;
-		|																											}
-		|																											if (aclk) {
-		|																												bool bot_mux_sel, top_mux_sel, add_mux_sel;
-		|																												bot_mux_sel = PIN_LBOT=>;
-		|																												add_mux_sel = PIN_LTOP=>;
-		|																												top_mux_sel = !(add_mux_sel && PIN_LPOP=>);
+		|																												unsigned csmux3;
+		|																												BUS_CSAO_READ(csmux3);
+		|																												csmux3 ^= BUS_CSAO_MASK;
+		|																												if (uirsclk) {
+		|																													state->csa_offset = csmux3;
+		|																												}
+		|																												if (aclk) {
+		|																													bool bot_mux_sel, top_mux_sel, add_mux_sel;
+		|																													bot_mux_sel = PIN_LBOT=>;
+		|																													add_mux_sel = PIN_LTOP=>;
+		|																													top_mux_sel = !(add_mux_sel && PIN_LPOP=>);
 		|																										
-		|																												unsigned csmux0;
-		|																												if (add_mux_sel)
-		|																													csmux0 = state->botreg;
-		|																												else
-		|																													csmux0 = state->topreg;
-		|																										
-		|																												unsigned csalu0 = csmux3 + csmux0 + 1;
-		|																										
-		|																												if (!bot_mux_sel)
-		|																													state->botreg = csalu0;
-		|																												if (top_mux_sel)
-		|																													state->topreg = csalu0;
-		|																											}
-		|																											if (aclk) {
-		|																												state->last_cond = state->cond;
-		|																											}
-		|																											if (aclk && rand == 0xc) {
-		|																												state->ofreg = state->b >> 32;
-		|																											}
+		|																													unsigned csmux0;
+		|																													if (add_mux_sel)
+		|																														csmux0 = state->botreg;
+		|																													else
+		|																														csmux0 = state->topreg;
+		|																											
+		|																													unsigned csalu0 = csmux3 + csmux0 + 1;
+		|																											
+		|																													if (!bot_mux_sel)
+		|																														state->botreg = csalu0;
+		|																													if (top_mux_sel)
+		|																														state->topreg = csalu0;
+		|																													state->last_cond = state->cond;
+		|																													if (rand == 0xc) {
+		|																														state->ofreg = state->b >> 32;
+		|																													}
+		|																												}
 		|
-		|
-		|																											if (q4pos && sclke && priv_check != 7) {
-		|																												bool set_pass_priv = rand != 0xd;
-		|																												state->ppriv = set_pass_priv;
+		|																												if (sclke && priv_check != 7) {
+		|																													bool set_pass_priv = rand != 0xd;
+		|																													state->ppriv = set_pass_priv;
+		|																												}
 		|																											}
-		|
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	output.ldmar = !(state->foo1 && PIN_BHSTP=>);
 		|	typ_cond(condsel, 0);
 		|''')
 
