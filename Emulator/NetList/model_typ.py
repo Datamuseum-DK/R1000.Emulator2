@@ -101,7 +101,7 @@ class TYP(PartFactory):
             yield "PIN_H2.neg()"
             yield "PIN_Q2"
             yield "PIN_Q4.pos()"
-            yield "PIN_UEN"
+            # yield "PIN_UEN"
             yield "PIN_BHSTP"
 
     def priv_decl(self, file):

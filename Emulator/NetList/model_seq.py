@@ -192,6 +192,7 @@ class SEQ(PartFactory):
 		|	bool m_ibuff_mt;
 		|	bool foo9;
 		|	bool q3cond;
+		|	bool stop;
 		|''')
 
     def init(self, file):
@@ -320,7 +321,7 @@ class SEQ(PartFactory):
 		|		return (0);
 		|	if (csa > ((dec >> 3) | 12))
 		|		return (1);
-		|	if (PIN_STOP=>)
+		|	if (state->stop)
 		|		return (2);
 		|	if (!state->m_res_ref)
 		|		return (3);
@@ -512,19 +513,7 @@ class SEQ(PartFactory):
         yield "PIN_Q2"
         yield "PIN_Q4"
         yield "PIN_H2"
-
-        #yield "PIN_ACLK"
-        #yield "PIN_LCLK"
-        #yield "PIN_TOSCLK"
-
-        # yield "PIN_SCLKE"
-
-        #yield "PIN_BHEN"
-        #yield "BUS_CSA"
-        #yield "PIN_DMODE"
-        #yield "PIN_DV_U"
-        yield "PIN_ENFU"
-        # yield "PIN_Q3COND"
+        #yield "PIN_ENFU"
 
 
     def doit(self, file):
@@ -543,6 +532,7 @@ class SEQ(PartFactory):
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = q4pos && !sclke;
 		|	bool sign_extend;
+		|	bool bhcke = !(PIN_SSTOP=> && PIN_BHEN=>);
 		|
 		|	BUS_URAND_READ(urand);
 		|	rndx = state->pa048[urand | (state->bad_hint ? 0x100 : 0)] << 24;
@@ -589,7 +579,7 @@ class SEQ(PartFactory):
 		|	if (state->wanna_dispatch) pa040a |= 0x20;
 		|	if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
 		|	if (state->import_condition) pa040a |= 0x08;
-		|	if (PIN_STOP=>) pa040a |= 0x04;
+		|	if (state->stop) pa040a |= 0x04;
 		|	if (PIN_MD=>) pa040a |= 0x02;
 		|	if (state->bad_hint) pa040a |= 0x01;
 		|	pa040d = state->pa040[pa040a];
@@ -670,7 +660,7 @@ class SEQ(PartFactory):
 		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|																											if (q4pos && !PIN_BHCKE=> && !macro_event) {
+		|																											if (q4pos && !bhcke && !macro_event) {
 		|																												unsigned mode = 0;
 		|																												unsigned u = 0;
 		|																												if (state->cload) u |= 1;
@@ -807,7 +797,7 @@ class SEQ(PartFactory):
 		|																														state->cbot = dsp;
 		|																												}
 		|																										
-		|																												if (!PIN_BHCKE=>) {
+		|																												if (!bhcke) {
 		|																													bool crnana = !(RNDX(RND_INSTR_LD) && dispatch);
 		|																													bool dmdisp = !(!state->bad_hint || (state->bhreg & 0x04));
 		|																													bool crnor0a = !(crnana || dmdisp);
@@ -883,7 +873,7 @@ class SEQ(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|																							if (q3pos && RNDX(RND_TOS_VLB) && !PIN_STOP=>) {
+		|																							if (q3pos && RNDX(RND_TOS_VLB) && !state->stop) {
 		|																								state->tost = state->typ_bus >> 32;
 		|																								state->vost = state->val_bus >> 32;
 		|																								state->tosof = (state->typ_bus >> 7) & 0xfffff;
@@ -1183,7 +1173,7 @@ class SEQ(PartFactory):
 		|																												}
 		|																												state->saved_latched = !((state->topu >> 14) & 0x1);
 		|																										
-		|																												if (RNDX(RND_CLEAR_ST) && !PIN_STOP=>) {
+		|																												if (RNDX(RND_CLEAR_ST) && !state->stop) {
 		|																													state->adr = xwrite;
 		|																												} else if (xwrite || pop) {
 		|																													if (xwrite) {
@@ -1275,7 +1265,7 @@ class SEQ(PartFactory):
 		|																													rom ^= 0x2;
 		|																												}
 		|																												unsigned mode = 3;
-		|																												if (!PIN_BHCKE=>) {
+		|																												if (!bhcke) {
 		|																													mode = 0;
 		|																													state->bhreg = rom;
 		|																												}
@@ -1363,6 +1353,14 @@ class SEQ(PartFactory):
 		|		state->bad_hint = !state->last_late_cond;
 		|	}
 		|	output.bhn = !state->bad_hint;
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|											if (q1pos) {
+		|												state->stop = !(output.bhn && output.uevp && !PIN_LMAC=>);
+		|												output.seqsp = state->stop;
+		|												output.seqsn = !state->stop;
+		|												bool evnan0d = !(PIN_ENMIC=> && output.uevp);
+		|												output.ueven = !(evnan0d || output.seqsp);
+		|											}
 		|
 		|
 		|{
@@ -1372,7 +1370,7 @@ class SEQ(PartFactory):
 		|	unsigned tmp = (val >> 7) ^ state->curins;
 		|	tmp &= 0x3ff;
 		|	state->field_number_error = tmp != 0x3ff;
-		|	state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !PIN_ENFU=>));
+		|	state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !output.ueven));
 		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
@@ -1408,7 +1406,7 @@ class SEQ(PartFactory):
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));
 		|	state->check_exit_ue = !(
-		|		PIN_ENFU=> &&
+		|		output.ueven &&
 		|		RNDX(RND_CHK_EXIT) &&
 		|		state->carry_out
 		|	);
@@ -1475,8 +1473,6 @@ class SEQ(PartFactory):
 		|																									adr_bus |= state->retseg << 32;
 		|																								}
 		|																							}
-		|	output.seqsp = !(output.bhn && output.uevp && !PIN_LMAC=>);
-		|	output.seqsn = !output.seqsp;
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
 		|																								bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));

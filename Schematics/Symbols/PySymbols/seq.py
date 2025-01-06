@@ -49,14 +49,13 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "DMODE"))
         self.sig_left(ChipSig("-->+", "BRTIM", 0, 1))
 
-        self.sig_left(ChipSig("-->+", "BHCKE"))
 
         self.sig_left(ChipSig("-->+", "LUIR"))
 
         self.sig_left(ChipSig("-->+", "BHEN"))
 
         self.sig_left(ChipSig("-->+", "ENFU"))
-        self.sig_left(ChipSig("-->+", "STOP"))
+        self.sig_left(ChipSig("-->+", "ENMIC"))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
 
         self.sig_left(ChipSig("-->+", "MCOND"))
@@ -101,6 +100,7 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+-->", "SEQSP"))
         self.sig_right(ChipSig("+-->", "SEQSN"))
         self.sig_right(ChipSig("+-->", "LABRT"))
+        self.sig_right(ChipSig("+-->", "UEVEN"))
 
 
         self.finish()
