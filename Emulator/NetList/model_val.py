@@ -81,16 +81,7 @@ class VAL(PartFactory):
     def sensitive(self):
         yield "PIN_Q2.pos()"
         yield "PIN_Q4.pos()"
-        yield "PIN_QFOE.neg()"
-        yield "PIN_QVOE.neg()"
-        yield "PIN_ADROE.neg()"
-        yield "BUS_UIRA"
-        yield "BUS_UIRB"
-        #yield "PIN_ZSCK.pos()"
-        yield "PIN_AWE.pos()"
-        #yield "PIN_UCLK.pos()"
-        #yield "PIN_CCLK.pos()"
-        yield "PIN_H2"
+        yield "PIN_H2.neg()"
 
     def priv_decl(self, file):
         file.fmt('''
