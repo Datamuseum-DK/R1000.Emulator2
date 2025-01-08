@@ -287,11 +287,8 @@ class IOC(PartFactory):
 
     def sensitive(self):
         yield "BUS_CONDS"
-        #yield "BUS_DC"
-        #yield "BUS_DTYP"
         yield "PIN_DUMEN"
-        #yield "BUS_DVAL"
-        yield "PIN_Q2.pos()"
+        yield "PIN_Q2"
         yield "PIN_Q4.pos()"
         yield "PIN_QTYPOE"
         yield "PIN_QVALOE"
@@ -301,18 +298,10 @@ class IOC(PartFactory):
         yield "PIN_TVEN"
         yield "PIN_ULWDR"
 
-        # yield "PIN_CSTP"      # q4
-        # yield "BUS_EXTID"     # q4
-        # yield "PIN_KEY"       # q4
-        # yield "PIN_RESET"     # unused
-        # yield "PIN_RSTRDR"    # q4
-        # yield "PIN_RTCEN"     # q4
-
     def private(self):
         ''' private variables '''
         yield from self.event_or(
             "tvc_event",
-            # "BUS_DC",
             "BUS_DTYP",
             "PIN_DUMEN",
             "BUS_DVAL",
@@ -337,9 +326,9 @@ class IOC(PartFactory):
 		|		state->den = true;
 		|	}
 		|
-		|	bool q2_pos = PIN_Q2.posedge();
-		|	bool q4_pos = PIN_Q4.posedge();
-		|	bool sclk_pos = q4_pos && !PIN_CSTP;
+		|	bool q2pos = PIN_Q2.posedge();
+		|	bool q4pos = PIN_Q4.posedge();
+		|	bool sclk_pos = q4pos && !PIN_CSTP;
 		|
 		|	unsigned rand;
 		|	BUS_RAND_READ(rand);
@@ -351,7 +340,7 @@ class IOC(PartFactory):
 		|	unsigned cbo = 0;
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|															if (q2_pos) {
+		|															if (q2pos) {
 		|																//if (val != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << val << " " << val_bus);
 		|																if (state->slice_ev && !state->ten) {
 		|																	output.sme = false;
@@ -381,7 +370,7 @@ class IOC(PartFactory):
 		|																						//output.qc = cbo;
 		|																						ecc_bus = cbo;
 		|																					}
-		|																					if (!q4_pos) {
+		|																					if (!q4pos) {
 		|																						idle_next = &tvc_event;
 		|																					}
 		|																				}
@@ -390,12 +379,12 @@ class IOC(PartFactory):
 		|
 		|{
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																											if (q4_pos) {
+		|																											if (q4pos) {
 		|																												state->doecc = false;
 		|																												if (sclk_pos && rand == 0x10) {
 		|																													state->cbreg2 = (typ >> 7) & 0x1ff;
 		|																												}
-		|																												if (q4_pos && !PIN_TVEN=>) {
+		|																												if (q4pos && !PIN_TVEN=>) {
 		|																													state->eidrg = state->elprom[cbo];
 		|																													state->checkbit_error = (state->eidrg & 0x81) != 0x81;
 		|																													state->multibit_error = state->eidrg & 1;
@@ -412,18 +401,18 @@ class IOC(PartFactory):
 		|																														state->cpu_running = false;
 		|																												}
 		|
-		|																												if (q4_pos && (state->request_int_en &&
+		|																												if (q4pos && (state->request_int_en &&
 		|																												    state->reqrdp != state->reqwrp) && state->iack != 6) {
 		|																													state->iack = 6;
 		|																													ioc_sc_bus_start_iack(6);
 		|																												}
-		|																												if (q4_pos && (!state->request_int_en ||
+		|																												if (q4pos && (!state->request_int_en ||
 		|																												    state->reqrdp == state->reqwrp) && state->iack != 7) {
 		|																													state->iack = 7;
 		|																													ioc_sc_bus_start_iack(7);
 		|																												}
 		|
-		|																												if (q4_pos)
+		|																												if (q4pos)
 		|																													do_xact();
 		|
 		|																												if (sclk_pos && rand == 0x04) {
@@ -463,7 +452,7 @@ class IOC(PartFactory):
 		|																												if (sclk_pos && rand == 0x08) {
 		|																													state->rtc = 0;
 		|																												}
-		|																												if (q4_pos && !PIN_RTCEN=> && rand != 0x08) {
+		|																												if (q4pos && !PIN_RTCEN=> && rand != 0x08) {
 		|																													state->rtc++;
 		|																													state->rtc &= 0xffff;
 		|																												}
@@ -507,7 +496,7 @@ class IOC(PartFactory):
 		|																											}
 		|}
 		|
-		|	if (!q4_pos) {
+		|	if (!q4pos) {
 		|		output.rspemn = state->rspwrp == state->rsprdp;
 		|	}
 		|
@@ -547,7 +536,7 @@ class IOC(PartFactory):
 		|
 		|	output.ldwdr = !(uir_load_wdr && PIN_SCLKST=>);
 		|
-		|																											if (q4_pos && rddum && !PIN_RSTRDR=>) {
+		|																											if (q4pos && rddum && !PIN_RSTRDR=>) {
 		|																												//if (val != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << val << " " << val_bus);
 		|																												state->dummy_typ = typ;
 		|																												state->dummy_val = val;
@@ -555,13 +544,6 @@ class IOC(PartFactory):
 		|																										
 		|	bool disable_ecc = ((state->pb011[rand] >> 0) & 1);
 		|	output.decc = !(disable_ecc || PIN_TVEN=>);
-		|
-		|#if 0
-		|	bool drive_other_cb = ((state->pb011[rand] >> 5) & 1);
-		|	output.qcdr = !(uir_load_wdr && drive_other_cb && PIN_TVEN=>);
-		|	if ((rand & 0x1e) == 0x18)
-		|		output.qcdr = false;
-		|#endif
 		|
 		|}
 		|{
@@ -580,13 +562,13 @@ class IOC(PartFactory):
 		|}
 		|
 		|	output.z_qval = PIN_QVALOE=>;
-		|	if (!output.z_qval) {
+		|	if (!output.z_qval && !q4pos) {
 		|		output.qval = state->dummy_val;
 		|		val_bus = state->dummy_val;
 		|	}
 		|
 		|	output.z_qtyp = PIN_QTYPOE=>;
-		|	if (!output.z_qtyp) {
+		|	if (!output.z_qtyp && !q4pos) {
 		|		switch (rand) {
 		|		case 0x05:
 		|			output.qtyp = (uint64_t)(state->slice) << 48;

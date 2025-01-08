@@ -218,15 +218,6 @@ class MEM(PartFactory):
     def sensitive(self):
         yield "PIN_Q4.pos()"
         yield "PIN_H1.pos()"
-        yield "PIN_QVOE.neg()"
-
-    def private(self):
-        ''' private variables '''
-        yield from self.event_or(
-            "idle_events",
-            "PIN_QVOE.negedge_event()",
-            "PIN_Q4.posedge_event()",
-        )
 
     def init(self, file):
         file.fmt('''
@@ -339,6 +330,37 @@ class MEM(PartFactory):
 		|								}
 		|							}
 		|
+		|
+		|							if (h1pos) {
+		|								output.z_qt = PIN_QTOE=>;
+		|								output.z_qv = PIN_QVOE=>;
+		|								bool not_me =  (output.hita && output.hitb && !PIN_ISLOW=>);
+		|							
+		|								if (!output.z_qv && output.z_qt) {
+		|									if (not_me) {
+		|										output.qv = BUS_QV_MASK;
+		|										val_bus = ~0ULL;
+		|									} else {
+		|										output.qv = state->qreg;
+		|										val_bus = state->qreg;
+		|									}
+		|								} else if (!output.z_qt) {
+		|									if (not_me) {
+		|										output.qt = BUS_QT_MASK;
+		|										output.qv = BUS_QV_MASK;
+		|										ecc_bus = 0x1ff;
+		|										typ_bus = ~0ULL;
+		|										val_bus = ~0ULL;
+		|									} else {
+		|										output.qt = state->tqreg;
+		|										output.qv = state->vqreg;
+		|										ecc_bus = state->cqreg;
+		|										typ_bus = state->tqreg;
+		|										val_bus = state->vqreg;
+		|									}
+		|								}
+		|							}
+		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																											if (q4pos) {
@@ -350,8 +372,6 @@ class MEM(PartFactory):
 		|																												state->cstop = !(diag_sync || diag_freeze);
 		|
 		|																												if (!PIN_LDWDR=>) {
-		|																													//BUS_DC_READ(state->cdreg);
-		|																													//if (state->cdreg != ecc_bus) {ALWAYS_TRACE(<< "ECCBUS " << std::hex << state->cdreg << " " << ecc_bus);}
 		|																													state->cdreg = ecc_bus;
 		|																													BUS_DT_READ(state->tdreg);
 		|																													BUS_DV_READ(state->vdreg);
@@ -379,42 +399,6 @@ class MEM(PartFactory):
 		|																												state->labort = labort;
 		|																												state->eabort = !(PIN_EABT=> && PIN_ELABT=>);
 		|																											}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|	output.z_qt = PIN_QTOE=>;
-		|	output.z_qv = PIN_QVOE=>;
-		|
-		|	bool not_me =  (output.hita && output.hitb && !PIN_ISLOW=>);
-		|
-		|	if (!output.z_qv && output.z_qt) {
-		|		if (not_me) {
-		|			output.qv = BUS_QV_MASK;
-		|			val_bus = ~0ULL;
-		|		} else {
-		|			output.qv = state->qreg;
-		|			val_bus = state->qreg;
-		|		}
-		|	} else if (!output.z_qt) {
-		|		if (not_me) {
-		|			//output.qc = 0x1ff;
-		|			output.qt = BUS_QT_MASK;
-		|			output.qv = BUS_QV_MASK;
-		|			ecc_bus = 0x1ff;
-		|			typ_bus = ~0ULL;
-		|			val_bus = ~0ULL;
-		|		} else {
-		|			//output.qc = state->cqreg;
-		|			output.qt = state->tqreg;
-		|			output.qv = state->vqreg;
-		|			ecc_bus = state->cqreg;
-		|			typ_bus = state->tqreg;
-		|			val_bus = state->vqreg;
-		|		}
-		|	}
-		|
-		|	if (state->q4cmd == 0xf && CMDS(CMD_IDL) && state->cyo && state->cyt) {
-		|		idle_next = &idle_events;
-		|	}
 		|''')
 
 def register(part_lib):
