@@ -96,10 +96,8 @@ class FIU(PartFactory):
 		|	bool page_xing;
 		|	bool init_mru_d;
 		|	bool drive_mru;
-		|	bool rtv_next;
 		|	bool memcnd;
 		|	bool cndtru;
-		|	bool rtv_next_d;
 		|	bool incmplt_mcyc;
 		|	bool mar_modified;
 		|	bool write_last;
@@ -120,7 +118,6 @@ class FIU(PartFactory):
 		|	bool logrwn;
 		|	bool page_crossing_next;
 		|	bool miss;
-		|	bool pgstq;
 		|	bool csaht;
 		|	bool csa_oor_next;
 		|''')
@@ -160,6 +157,8 @@ class FIU(PartFactory):
 
     def priv_decl(self, file):
         file.fmt('''
+		|	unsigned pa026, pa027;
+		|
 		|	void do_tivi(void);
 		|	void rotator(bool sclk);
 		|	void fiu_conditions(unsigned condsel);
@@ -538,6 +537,9 @@ class FIU(PartFactory):
 		|	state->prmt ^= 0x02;
 		|	state->prmt &= 0x7b;
 		|
+		|	unsigned mem_start;
+		|	BUS_MSTRT_READ(mem_start);
+		|	mem_start ^= 0x1e;
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	do_tivi();
@@ -670,9 +672,7 @@ class FIU(PartFactory):
 		|																										
 		|																												}
 		|																										
-		|																												unsigned mem_start;
-		|																												BUS_MSTRT_READ(mem_start);
-		|																												if (mem_start == 0x18) {
+		|																												if (mem_start == 0x06) {
 		|																													state->refresh_count = state->ti_bus >> 48;
 		|																												} else if (state->refresh_count != 0xffff) {
 		|																													state->refresh_count++;
@@ -682,12 +682,7 @@ class FIU(PartFactory):
 		|
 		|
 		|
-		|	unsigned board_hit;
 		|{
-		|
-		|	unsigned mem_start;
-		|	BUS_MSTRT_READ(mem_start);
-		|	mem_start ^= 0x1e;
 		|
 		|	bool l_abort = PIN_LABR=>;
 		|	bool le_abort = PIN_LEABR=>;
@@ -713,30 +708,17 @@ class FIU(PartFactory):
 		|	state->logrwn = !(state->logrw && memcyc1);
 		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
 		|
-		|	unsigned pa026a = 0;
-		|	pa026a |= mem_start;
-		|	if (state->omq & 0x02)	// INIT_MRU_D
-		|		pa026a |= 0x20;
-		|	if (state->phys_last)
-		|		pa026a |= 0x40;
-		|	if (state->write_last)
-		|		pa026a |= 0x80;
-		|	if (state->rtv_next_d)
-		|		pa026a |= 0x100;
-		|	unsigned pa026 = state->pa026[pa026a];
-		|	// INIT_MRU, ACK_REFRESH, START_IF_INCM, START_TAG_RD, PCNTL0-3
-		|	bool start_if_incw = (pa026 >> 5) & 1;
-		|
+		|#if 0
 		|	bool pgmod = (state->omq >> 1) & 1;
 		|	unsigned pa027a = 0;
-		|	BUS_BDHIT_READ(board_hit);
 		|	pa027a = 0;
 		|	pa027a |= board_hit << 5;
 		|	pa027a |= state->init_mru_d << 4;
 		|	pa027a |= (state->omq & 0xc);
 		|	pa027a |= 1 << 1;
 		|	pa027a |= pgmod << 0;
-		|	unsigned pa027 = state->pa027[pa027a];
+		|	pa027 = state->pa027[pa027a];
+		|#endif
 		|
 		|	bool scav_trap_next = state->scav_trap;
 		|	if (condsel == 0x69) {		// SCAVENGER_HIT
@@ -758,6 +740,16 @@ class FIU(PartFactory):
 		|	}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
+		|																unsigned pa026a = mem_start;
+		|																if (state->omq & 0x02)	// INIT_MRU_D
+		|																	pa026a |= 0x20;
+		|																if (state->phys_last)
+		|																	pa026a |= 0x40;
+		|																if (state->write_last)
+		|																	pa026a |= 0x80;
+		|																pa026 = state->pa026[pa026a];
+		|																// INIT_MRU, ACK_REFRESH, START_IF_INCM, START_TAG_RD, PCNTL0-3
+		|
 		|																if (state->log_query) {
 		|																	// PIN_MISS instead of cache_miss_next looks suspicious
 		|																	// but confirmed on both /200 and /400 FIU boards.
@@ -781,11 +773,6 @@ class FIU(PartFactory):
 		|																	if (inc_mar && inco != 0x1f)
 		|																		inco += 1;
 		|															
-		|																	//output.qadr = (uint64_t)state->srn << 32;
-		|																	//output.qadr |= state->sro & 0xfffff000;
-		|																	//output.qadr |= (inco & 0x1f) << 7;
-		|																	//output.qadr |= state->oreg;
-		|		
 		|																	adr_bus = (uint64_t)state->srn << 32;
 		|																	adr_bus |= state->sro & 0xfffff000;
 		|																	adr_bus |= (inco & 0x1f) << 7;
@@ -795,10 +782,8 @@ class FIU(PartFactory):
 		|
 		|																state->lcntl = state->mcntl;
 		|																state->drive_mru = state->init_mru_d;
-		|																state->rtv_next = (pa026 >> 4) & 1; // START_TAG_RD
 		|																state->memcnd = (pa025 >> 4) & 1;	// CM_CTL0
 		|																state->cndtru = (pa025 >> 3) & 1;	// CM_CTL1
-		|																output.rtvnxt = !(state->rtv_next);
 		|																output.memcnd = !(state->memcnd);
 		|																output.cndtru = !(state->cndtru);
 		|														
@@ -852,7 +837,6 @@ class FIU(PartFactory):
 		|																													state->scav_trap = scav_trap_next;
 		|																													state->cache_miss = cache_miss_next;
 		|																													state->csa_oor = csa_oor_next;
-		|																													state->rtv_next_d = state->rtv_next;
 		|																											
 		|																													if (rmarp) {
 		|																														state->mar_modified = (state->ti_bus >> BUS_DT_LSB(39)) & 1;
@@ -865,7 +849,7 @@ class FIU(PartFactory):
 		|																													}
 		|																													if (rmarp) {
 		|																														state->incmplt_mcyc = (state->ti_bus >> BUS_DT_LSB(40)) & 1;
-		|																													} else if (start_if_incw) {
+		|																													} else if (mem_start == 0x12) {
 		|																														state->incmplt_mcyc = true;
 		|																													} else if (memcyc1) {
 		|																														state->incmplt_mcyc = le_abort;
@@ -905,7 +889,12 @@ class FIU(PartFactory):
 		|																											}
 		|
 		|
-		|	pa027a = 0;
+		|}
+		|
+		|	bool pgmod = (state->omq >> 1) & 1;
+		|	unsigned board_hit;
+		|	BUS_BDHIT_READ(board_hit);
+		|	unsigned pa027a = 0;
 		|	pa027a |= board_hit << 5;
 		|	pa027a |= state->init_mru_d << 4;
 		|	pa027a |= (state->omq & 0xc);
@@ -914,15 +903,7 @@ class FIU(PartFactory):
 		|	pa027 = state->pa027[pa027a];
 		|	state->setq = (pa027 >> 3) & 3;
 		|
-		|	state->pgstq = 0;
-		|	if (!state->drive_mru || !(pa027 & 0x40))
-		|		state->pgstq |= 1;
-		|	if (!state->drive_mru || !(pa027 & 0x80))
-		|		state->pgstq |= 2;
-		|
-		|
-		|}
-		|	bool mnor0b = state->pgstq == 0;
+		|	bool mnor0b = state->drive_mru || ((pa027 & 3) == 0);
 		|	bool mnan2a = !(mnor0b && state->logrw_d);
 		|	state->miss = !(
 		|		((board_hit != 0xf) && mnan2a) ||
@@ -933,8 +914,10 @@ class FIU(PartFactory):
 		|	output.z_qv = PIN_QVOE=>;
 		|	if ((!output.z_qt || !output.z_qv) && PIN_H1=>) {
 		|		do_tivi();
-		|		if (!output.z_qt)
+		|		if (!output.z_qt) {
 		|			output.qt = state->ti_bus ^ BUS_QT_MASK;
+		|			typ_bus = ~state->ti_bus;
+		|		}
 		|		if (!output.z_qv) {
 		|			output.qv = state->vi_bus ^ BUS_QT_MASK;
 		|			val_bus = ~state->vi_bus;

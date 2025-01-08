@@ -76,7 +76,6 @@ class FIU(FChip):
         self.sig_right(ChipSig("+-->", "FRDR"))
 
 
-        self.sig_right(ChipSig("+-->", "RTVNXT"))
         self.sig_right(ChipSig("+-->", "MEMCND"))
         self.sig_right(ChipSig("+-->", "CNDTRU"))
         self.sig_right(ChipSig("+-->", "CONTIN"))

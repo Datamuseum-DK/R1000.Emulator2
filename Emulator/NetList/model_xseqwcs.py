@@ -72,7 +72,7 @@ class XSEQWCS(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	unsigned um, tmp, ua, rnd;
+		|	unsigned um, tmp, ua;
 		|
 		|	if (PIN_CLK.posedge()) {
 		|		BUS_UM_READ(um);
@@ -84,7 +84,6 @@ class XSEQWCS(PartFactory):
 		|			output.llm = !(PIN_SCE=> || !PIN_LMAC=>);
 		|			output.uir = state->wcs;
 		|			output.uir ^= 0x7fULL << 13;	// Invert condsel
-		|			rnd = state->wcs & 0x7f;
 		|		case 0: // noop
 		|			break;
 		|		}

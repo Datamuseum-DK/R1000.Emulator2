@@ -534,6 +534,8 @@ class SEQ(PartFactory):
 		|	bool sign_extend;
 		|	bool bhcke = !(PIN_SSTOP=> && PIN_BHEN=>);
 		|
+		|	bool maybe_dispatch = PIN_MD=>;
+		|
 		|	BUS_URAND_READ(urand);
 		|	rndx = state->pa048[urand | (state->bad_hint ? 0x100 : 0)] << 24;
 		|	rndx |= state->pa046[urand | (state->bad_hint ? 0x100 : 0)] << 16;
@@ -580,7 +582,7 @@ class SEQ(PartFactory):
 		|	if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
 		|	if (state->import_condition) pa040a |= 0x08;
 		|	if (state->stop) pa040a |= 0x04;
-		|	if (PIN_MD=>) pa040a |= 0x02;
+		|	if (maybe_dispatch) pa040a |= 0x02;
 		|	if (state->bad_hint) pa040a |= 0x01;
 		|	pa040d = state->pa040[pa040a];
 		|}
@@ -763,20 +765,6 @@ class SEQ(PartFactory):
 		|																													state->uadr_decode = 0x0420;
 		|																												}
 		|																											}
-		|	if (state->emac == 0x7f) {
-		|		unsigned ai = state->display;
-		|		ai ^= 0xffff;
-		|		bool top = (state->display >> 10) != 0x3f;
-		|		uint32_t *ptr;
-		|		if (top)
-		|			ptr = &state->top[ai >> 6];
-		|		else
-		|			ptr = &state->bot[ai & 0x3ff];
-		|		state->uadr_decode = (*ptr >> 16);
-		|		state->decode = (*ptr >> 8) & 0xff;
-		|	}
-		|	state->uses_tos = (state->uadr_decode >> 2) & 1;
-		|	state->ibuf_fill = (state->uadr_decode >> 1) & 1;
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																											if (q4pos) {
@@ -834,7 +822,6 @@ class SEQ(PartFactory):
 		|																											}
 		|
 		|{
-		|	bool maybe_dispatch = PIN_MD=>;
 		|	bool uses_tos, dis;
 		|	unsigned mem_start;
 		|	bool intreads1, intreads2;
@@ -1192,7 +1179,7 @@ class SEQ(PartFactory):
 		|																											}
 		|																										
 		|																											if (PIN_LCLK.posedge()) {
-		|																												if (PIN_MD=>) {
+		|																												if (maybe_dispatch) {
 		|																													state->late_u = 7;
 		|																												} else {
 		|																													state->late_u = late_macro_pending();
@@ -1387,6 +1374,22 @@ class SEQ(PartFactory):
 		|																												state->display &= 0xffff;
 		|																												output.disp0 = state->display >> 15;
 		|																											}
+		|	if (q4pos) {
+		|	if (state->emac == 0x7f) {
+		|		unsigned ai = state->display;
+		|		ai ^= 0xffff;
+		|		bool top = (state->display >> 10) != 0x3f;
+		|		uint32_t *ptr;
+		|		if (top)
+		|			ptr = &state->top[ai >> 6];
+		|		else
+		|			ptr = &state->bot[ai & 0x3ff];
+		|		state->uadr_decode = (*ptr >> 16);
+		|		state->decode = (*ptr >> 8) & 0xff;
+		|	}
+		|	state->uses_tos = (state->uadr_decode >> 2) & 1;
+		|	state->ibuf_fill = (state->uadr_decode >> 1) & 1;
+		|	}
 		|
 		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));
 		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));

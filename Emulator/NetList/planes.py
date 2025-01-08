@@ -65,13 +65,17 @@ class PlaneSignal():
         rval.append(self.name)
         rval.append(self.net.name)
 
+        n = 0
         for board in self.cpu.boards:
             net = self.scms.get(board.scm_uname)
             if net is not None:
                 nname = net.name.split('/')[-1]
                 rval.append(nname)
+                n += 1
             else:
                 rval.append("-")
+        if n <= 1:
+            print("PLANE SIGNAL UNUSED", self)
         return "".join(x.ljust(19) for x in rval)
 
     def __lt__(self, other):
