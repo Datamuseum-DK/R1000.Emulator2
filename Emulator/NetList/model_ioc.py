@@ -281,6 +281,7 @@ class IOC(PartFactory):
 
         file.fmt('''
 		|	cbo ^= cbi;
+		|	cbo &= 0x1ff;
 		|	return (cbo);
 		|}
 		|''')
@@ -428,6 +429,7 @@ class IOC(PartFactory):
 		|
 		|																												if (sclk_pos) {
 		|																													unsigned adr = (state->areg | state->acnt) << 2;
+		|																													assert(adr < (512<<10));
 		|																											
 		|																													if ((rand == 0x1c) || (rand == 0x1d)) {
 		|																														state->rdata = vbe32dec(state->ram + adr);
