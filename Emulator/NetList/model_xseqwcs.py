@@ -72,40 +72,41 @@ class XSEQWCS(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	unsigned um, tmp, ua;
 		|
 		|	if (PIN_CLK.posedge()) {
+		|		unsigned um, tmp, ua;
+		|		BUS_UA_READ(ua);
 		|		BUS_UM_READ(um);
 		|		switch (um) {
 		|		case 3: // load
-		|			BUS_UA_READ(ua);
+		|			{
 		|			state->wcs = state->ram[ua];
 		|			output.halt = !(PIN_SCE=> || PIN_HLR=>);
 		|			output.llm = !(PIN_SCE=> || !PIN_LMAC=>);
 		|			output.uir = state->wcs;
 		|			output.uir ^= 0x7fULL << 13;	// Invert condsel
+		|			tmp = state->ram[ua];
+		|			unsigned br_type = (tmp >> 22) & 0xf;
+		|			state->ff0 = 0xb < br_type && br_type < 0xf;
+		|			unsigned lex_adr = (tmp >> 11) & 0x3;
+		|			state->ff1 = lex_adr & 0x2;
+		|			state->ff2 = lex_adr == 0;
+		|			if (!state->ff2)
+		|				output.ras &= ~1;
+		|			else
+		|				output.ras |= 1;
+		|			output.lexi = lex_adr == 1;
+		|			}
+		|			break;
 		|		case 0: // noop
 		|			break;
 		|		}
-		|
-		|		BUS_UA_READ(ua);
-		|		tmp = state->ram[ua];
-		|		unsigned br_type = (tmp >> 22) & 0xf;
-		|		state->ff0 = 0xb < br_type && br_type < 0xf;
-		|		output.mdsp = !state->ff0;
-		|		unsigned lex_adr = (tmp >> 11) & 0x3;
-		|		state->ff1 = lex_adr & 0x2;
-		|		state->ff2 = lex_adr == 0;
-		|		if (!state->ff2)
-		|			output.ras &= ~1;
-		|		else
-		|			output.ras |= 1;
-		|		output.lexi = lex_adr == 1;
 		|	}
 		|	if ((state->ff0 && !PIN_DSP0=>) || state->ff1)
 		|		output.ras &= ~2;
 		|	else
 		|		output.ras |= 2;
+		|	//if (output.ras != state->output.ras)	ALWAYS_TRACE(<< " RAS " << std::hex << state->output.ras << " <- " << output.ras << " " << PIN_DSP0=>);
 		''')
 
 def register(part_lib):

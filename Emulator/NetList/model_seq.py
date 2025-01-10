@@ -532,9 +532,9 @@ class SEQ(PartFactory):
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = q4pos && !sclke;
 		|	bool sign_extend;
+		|	unsigned pa040d = 0;
 		|	bool bhcke = !(PIN_SSTOP=> && PIN_BHEN=>);
 		|
-		|	bool maybe_dispatch = PIN_MD=>;
 		|
 		|	BUS_URAND_READ(urand);
 		|	rndx = state->pa048[urand | (state->bad_hint ? 0x100 : 0)] << 24;
@@ -551,6 +551,32 @@ class SEQ(PartFactory):
 		|																								);
 		|																							}
 		|
+		|	BUS_BRTYP_READ(br_type);
+		|	bool maybe_dispatch = !(0xb < br_type && br_type < 0xf);
+		|{
+		|	unsigned sel;
+		|	BUS_RASEL_READ(sel);
+		|	switch (sel) {
+		|	case 0:
+		|		if (PIN_LAUIR0=> && PIN_LAUIR1=>)
+		|			state->resolve_address = 0xe;
+		|		else
+		|			state->resolve_address = 0xf;
+		|		break;
+		|	case 1:
+		|		state->resolve_address = (state->display >> 9) & 0xf;
+		|		break;
+		|	case 2:
+		|		state->resolve_address = (state->val_bus & 0xf) + 1;
+		|		break;
+		|	case 3:
+		|		state->resolve_address = state->curr_lex ^ 0xf;
+		|		break;
+		|	default:
+		|		assert(sel < 4);
+		|	}
+		|	state->resolve_address &= 0xf;
+		|}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|{
@@ -574,19 +600,6 @@ class SEQ(PartFactory):
 		|	state->lxval = !((nxt_lex_valid() >> (15 - state->resolve_address)) & 1);
 		|}
 		|
-		|	unsigned pa040d;
-		|{
-		|	unsigned pa040a = 0;
-		|	pa040a |= (state->decode & 0x7) << 6;
-		|	if (state->wanna_dispatch) pa040a |= 0x20;
-		|	if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
-		|	if (state->import_condition) pa040a |= 0x08;
-		|	if (state->stop) pa040a |= 0x04;
-		|	if (maybe_dispatch) pa040a |= 0x02;
-		|	if (state->bad_hint) pa040a |= 0x01;
-		|	pa040d = state->pa040[pa040a];
-		|}
-		|
 		|	unsigned internal_reads;
 		|	BUS_IRD_READ(internal_reads);
 		|
@@ -597,6 +610,17 @@ class SEQ(PartFactory):
 		|	bool macro_event = (!state->wanna_dispatch) && (early_macro_pending || (lmp != 8));
 		|	bool dispatch = state->wanna_dispatch || early_macro_pending || (lmp != 8);
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|																							if (q3pos) {
+		|																								unsigned pa040a = 0;
+		|																								pa040a |= (state->decode & 0x7) << 6;
+		|																								if (state->wanna_dispatch) pa040a |= 0x20;
+		|																								if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
+		|																								if (state->import_condition) pa040a |= 0x08;
+		|																								if (state->stop) pa040a |= 0x04;
+		|																								if (maybe_dispatch) pa040a |= 0x02;
+		|																								if (state->bad_hint) pa040a |= 0x01;
+		|																								pa040d = state->pa040[pa040a];
+		|																							}
 		|
 		|																							if (q3pos) {
 		|																								bool bar8;
@@ -714,30 +738,6 @@ class SEQ(PartFactory):
 		|	}
 		|	state->coff ^= 0x7fff;
 		|
-		|{
-		|	unsigned sel;
-		|	BUS_RASEL_READ(sel);
-		|	switch (sel) {
-		|	case 0:
-		|		if (PIN_LAUIR0=> && PIN_LAUIR1=>)
-		|			state->resolve_address = 0xe;
-		|		else
-		|			state->resolve_address = 0xf;
-		|		break;
-		|	case 1:
-		|		state->resolve_address = (state->display >> 9) & 0xf;
-		|		break;
-		|	case 2:
-		|		state->resolve_address = (state->val_bus & 0xf) + 1;
-		|		break;
-		|	case 3:
-		|		state->resolve_address = state->curr_lex ^ 0xf;
-		|		break;
-		|	default:
-		|		assert(sel < 4);
-		|	}
-		|	state->resolve_address &= 0xf;
-		|}
 		|	if (PIN_LINC=>) {
 		|		state->import_condition = true;
 		|		sign_extend = true;
@@ -1009,7 +1009,6 @@ class SEQ(PartFactory):
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|											if (q1pos) {
 		|												BUS_BRTIM_READ(br_tim);
-		|												BUS_BRTYP_READ(br_type);
 		|												unsigned bhow;
 		|												bool brtm3;
 		|												if (state->bad_hint) {
@@ -1089,7 +1088,9 @@ class SEQ(PartFactory):
 		|																		BUS_BRN_READ(nua);
 		|																		break;
 		|																	default:
-		|																		abort();
+		|																		nua = 0;
+		|																		assert(sel < 8);
+		|																		break;
 		|																	}
 		|																}
 		|																output.nu = nua;
@@ -1209,7 +1210,8 @@ class SEQ(PartFactory):
 		|																													state->other = (state->topu ^ 0xffff) & 0x3fff;
 		|																													break;
 		|																												default:
-		|																													abort();
+		|																													assert(sel < 8);
+		|																													break;
 		|																												}
 		|																											}
 		|
@@ -1225,7 +1227,6 @@ class SEQ(PartFactory):
 		|																												state->uei |= 1;
 		|																												state->uei ^= 0xffff;
 		|																												state->uev = 16 - fls(state->uei);
-		|																												output.uevp = state->uei == 0;
 		|																										
 		|																												if (PIN_SSTOP=> && PIN_DMODE=>) {
 		|																													state->curuadr = output.nu;
@@ -1342,11 +1343,10 @@ class SEQ(PartFactory):
 		|	output.bhn = !state->bad_hint;
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|											if (q1pos) {
-		|												state->stop = !(output.bhn && output.uevp && !PIN_LMAC=>);
-		|												output.seqsp = state->stop;
+		|												state->stop = !(output.bhn && (state->uei == 0) && !PIN_LMAC=>);
 		|												output.seqsn = !state->stop;
-		|												bool evnan0d = !(PIN_ENMIC=> && output.uevp);
-		|												output.ueven = !(evnan0d || output.seqsp);
+		|												bool evnan0d = !(PIN_ENMIC=> && (state->uei == 0));
+		|												output.ueven = !(evnan0d || !output.seqsn);
 		|											}
 		|
 		|
@@ -1373,23 +1373,22 @@ class SEQ(PartFactory):
 		|																												}
 		|																												state->display &= 0xffff;
 		|																												output.disp0 = state->display >> 15;
+		|
+		|																												if (state->emac == 0x7f) {
+		|																													unsigned ai = state->display;
+		|																													ai ^= 0xffff;
+		|																													bool top = (state->display >> 10) != 0x3f;
+		|																													uint32_t *ptr;
+		|																													if (top)
+		|																														ptr = &state->top[ai >> 6];
+		|																													else
+		|																														ptr = &state->bot[ai & 0x3ff];
+		|																													state->uadr_decode = (*ptr >> 16);
+		|																													state->decode = (*ptr >> 8) & 0xff;
+		|																												}
+		|																												state->uses_tos = (state->uadr_decode >> 2) & 1;
+		|																												state->ibuf_fill = (state->uadr_decode >> 1) & 1;
 		|																											}
-		|	if (q4pos) {
-		|	if (state->emac == 0x7f) {
-		|		unsigned ai = state->display;
-		|		ai ^= 0xffff;
-		|		bool top = (state->display >> 10) != 0x3f;
-		|		uint32_t *ptr;
-		|		if (top)
-		|			ptr = &state->top[ai >> 6];
-		|		else
-		|			ptr = &state->bot[ai & 0x3ff];
-		|		state->uadr_decode = (*ptr >> 16);
-		|		state->decode = (*ptr >> 8) & 0xff;
-		|	}
-		|	state->uses_tos = (state->uadr_decode >> 2) & 1;
-		|	state->ibuf_fill = (state->uadr_decode >> 1) & 1;
-		|	}
 		|
 		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));
 		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
