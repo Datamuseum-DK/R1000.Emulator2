@@ -184,9 +184,6 @@ class SEQ(PartFactory):
 		|	bool ferr;
 		|
 		|	uint16_t lex_valid;
-		|	uint16_t dns;
-		|	uint16_t dra;
-		|	uint16_t dlr;
 		|	bool lxval;
 		|	unsigned resolve_address;
 		|	bool m_ibuff_mt;
@@ -214,14 +211,15 @@ class SEQ(PartFactory):
 		|	unsigned rndx;
 		|	unsigned br_type;
 		|	unsigned br_tim;
+		|	unsigned internal_reads;
 		|
-		|	void int_reads(unsigned ir);
+		|	void int_reads(void);
 		|	unsigned group_sel(void);
 		|	unsigned late_macro_pending(void);
 		|	bool seq_cond5(unsigned condsel);
 		|	bool seq_cond6(unsigned condsel);
 		|	bool seq_cond7(unsigned condsel);
-		|       unsigned nxt_lex_valid(void);
+		|       void nxt_lex_valid(void);
 		|       bool condition(void);
 		|''')
 
@@ -229,9 +227,9 @@ class SEQ(PartFactory):
         file.fmt('''
 		|void
 		|SCM_«mmm» ::
-		|int_reads(unsigned ir)
+		|int_reads()
 		|{
-		|	if (ir == 0) {
+		|	if (internal_reads == 0) {
 		|		BUS_DT_READ(state->typ_bus);
 		|		state->typ_bus ^= BUS_DT_MASK;
 		|		BUS_DV_READ(state->val_bus);
@@ -244,7 +242,7 @@ class SEQ(PartFactory):
 		|	state->typ_bus |= state->output_ob << 7;
 		|	state->typ_bus ^= 0xffffffff;
 		|
-		|	switch (ir) {
+		|	switch (internal_reads) {
 		|	case 5:
 		|		state->typ_bus |= (state->name_bus ^ 0xffffffff) << 32;
 		|		break;
@@ -261,7 +259,7 @@ class SEQ(PartFactory):
 		|	state->val_bus ^= 0xffffffffULL << 32; 
 		|	state->val_bus ^= (state->coff >> 12) << 16;
 		|	state->val_bus ^= 0xffffULL << 16; 
-		|	switch (ir) {
+		|	switch (internal_reads) {
 		|	case 1:
 		|		state->val_bus |= state->curins ^ 0xffff;
 		|		break;
@@ -441,44 +439,56 @@ class SEQ(PartFactory):
 		|	}
 		|}
 		|
-		|unsigned
+		|void
 		|SCM_«mmm» ::
 		|nxt_lex_valid(void)
 		|{
+		|	unsigned lex_random;
+		|	uint16_t dns;
+		|	uint16_t dra;
+		|	uint16_t dlr;
+		|	lex_random = (rndx >> 5) & 0x7;
+		|	dra = state->resolve_address & 3;
+		|	dlr = lex_random;
+		|	if (lex_random & 0x2) {
+		|		dns = 0xf;
+		|	} else {
+		|		dns = 0xf ^ (0x8 >> (state->resolve_address >> 2));
+		|	}
 		|	unsigned adr;
 		|	uint16_t nv = 0;
 		|	adr = ((state->lex_valid >> 12) & 0xf) << 5;
-		|	adr |= state->dra << 3;
-		|	adr |= ((state->dlr >> 2) & 1) << 2;
-		|	adr |= ((state->dns >> 3) & 1) << 1;
-		|	bool pm3 = !((state->dns & 0x7) && !(state->dlr & 1));
+		|	adr |= dra << 3;
+		|	adr |= ((dlr >> 2) & 1) << 2;
+		|	adr |= ((dns >> 3) & 1) << 1;
+		|	bool pm3 = !((dns & 0x7) && !(dlr & 1));
 		|	adr |= pm3;
 		|	nv |= (state->pa041[adr] >> 4) << 12;
 		|
 		|	adr = ((state->lex_valid >> 8) & 0xf) << 5;
-		|	adr |= state->dra << 3;
-		|	adr |= ((state->dlr >> 2) & 1) << 2;
-		|	adr |= ((state->dns >> 2) & 1) << 1;
-		|	bool pm2 = !((state->dns & 0x3) && !(state->dlr & 1));
+		|	adr |= dra << 3;
+		|	adr |= ((dlr >> 2) & 1) << 2;
+		|	adr |= ((dns >> 2) & 1) << 1;
+		|	bool pm2 = !((dns & 0x3) && !(dlr & 1));
 		|	adr |= pm2;
 		|	nv |= (state->pa041[adr] >> 4) << 8;
 		|
 		|	adr = ((state->lex_valid >> 4) & 0xf) << 5;
-		|	adr |= state->dra << 3;
-		|	adr |= ((state->dlr >> 2) & 1) << 2;
-		|	adr |= ((state->dns >> 1) & 1) << 1;
-		|	bool pm1 = !((state->dns & 0x1) && !(state->dlr & 1));
+		|	adr |= dra << 3;
+		|	adr |= ((dlr >> 2) & 1) << 2;
+		|	adr |= ((dns >> 1) & 1) << 1;
+		|	bool pm1 = !((dns & 0x1) && !(dlr & 1));
 		|	adr |= pm1;
 		|	nv |= (state->pa041[adr] >> 4) << 4;
 		|
 		|	adr = ((state->lex_valid >> 0) & 0xf) << 5;
-		|	adr |= state->dra << 3;
-		|	adr |= ((state->dlr >> 2) & 1) << 2;
-		|	adr |= ((state->dns >> 0) & 1) << 1;
-		|	adr |= (state->dlr >> 0) & 1;
+		|	adr |= dra << 3;
+		|	adr |= ((dlr >> 2) & 1) << 2;
+		|	adr |= ((dns >> 0) & 1) << 1;
+		|	adr |= (dlr >> 0) & 1;
 		|	nv |= (state->pa041[adr] >> 4) << 0;
 		|
-		|	return(nv);
+		|	state->lex_valid = nv;
 		|}
 		|
 		|bool
@@ -513,8 +523,6 @@ class SEQ(PartFactory):
         yield "PIN_Q2"
         yield "PIN_Q4"
         yield "PIN_H2"
-        #yield "PIN_ENFU"
-
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -551,75 +559,72 @@ class SEQ(PartFactory):
 		|																								);
 		|																							}
 		|
+		|	// R1000_Micro_Arch_Seq.pdf pdf pg 25
+		|	//	BRANCH TYPE (4 bits)
+		|	//	0000	brf
+		|	//	0001	brt
+		|	//	0010	push
+		|	//	0011	br
+		|	//	0100	callf
+		|	//	0101	callt
+		|	//	0110	cont
+		|	//	0111	call
+		|	//	1000	returnt
+		|	//	1001	returnf
+		|	//	1010	return
+		|	//	1100	dispt
+		|	//	1101	dispf
+		|	//	1110	disp
+		|	//	1111	case_call
 		|	BUS_BRTYP_READ(br_type);
-		|	bool maybe_dispatch = !(0xb < br_type && br_type < 0xf);
+		|	bool maybe_dispatch = 0xb < br_type && br_type < 0xf;
 		|
-		|	bool ff0 = !maybe_dispatch;
-		|	unsigned lex_adr, ras = 0;
+		|	// R1000_Micro_Arch_Seq.pdf pdf pg 26, SEQ.pdf pdf pg 102:
+		|	//	LEX LEVEL ADDRESSING MICRO-ORDERS
+		|	//	00 CUR_LEX
+		|	//	01 INCOMING LEX
+		|	//	10 OUTER_FRAME
+		|	//	11 IMPORT
+		|	unsigned lex_adr;
 		|	BUS_LAUIR_READ(lex_adr);
-		|	bool linc = lex_adr == 1;
-		|{
-		|	bool ff1 = lex_adr & 0x2;
-		|	bool ff2 = lex_adr == 0;
-		|	if (!ff2)
-		|		ras &= ~1;
-		|	else
-		|		ras |= 1;
-		|	if ((ff0 && !(state->display >> 15)) || ff1)
-		|		ras &= ~2;
-		|	else
-		|		ras |= 2;
-		|}
 		|
-		|	//unsigned sel;
-		|	//BUS_RASEL_READ(sel);
-		|	switch (ras) {
-		|	case 0:
-		|		if (PIN_LAUIR0=> && PIN_LAUIR1=>)
-		|			state->resolve_address = 0xe;
-		|		else
-		|			state->resolve_address = 0xf;
-		|		break;
-		|	case 1:
-		|		state->resolve_address = (state->display >> 9) & 0xf;
-		|		break;
-		|	case 2:
-		|		state->resolve_address = (state->val_bus & 0xf) + 1;
-		|		break;
-		|	case 3:
-		|		state->resolve_address = state->curr_lex ^ 0xf;
-		|		break;
-		|	default:
-		|		assert(ras < 4);
+		|	if (maybe_dispatch && !(state->display >> 15)) {
+		|		switch (lex_adr) {
+		|		case 0:	state->resolve_address = (state->display >> 9) & 0xf; break;
+		|		case 1: state->resolve_address = 0xf; break;
+		|		case 2: state->resolve_address = 0xf; break;
+		|		case 3: state->resolve_address = 0xe; break;
+		|		}
+		|	} else {
+		|		switch (lex_adr) {
+		|		case 0:	state->resolve_address = state->curr_lex ^ 0xf; break;
+		|		case 1: state->resolve_address = (state->val_bus & 0xf) + 1; break;
+		|		case 2: state->resolve_address = 0xf; break;
+		|		case 3: state->resolve_address = 0xe; break;
+		|		}
 		|	}
+		|	
 		|	state->resolve_address &= 0xf;
+		|	if (lex_adr == 1) {
+		|		state->import_condition = true;
+		|		sign_extend = true;
+		|	} else {
+		|		state->import_condition = state->resolve_address != 0xf;
+		|		sign_extend = state->resolve_address <= 0xd;
+		|	}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|{
 		|
 		|																											if (state_clock) {
-		|																												unsigned lex_random;
-		|																												lex_random = (rndx >> 5) & 0x7;
-		|																												state->dra = state->resolve_address & 3;
-		|																												state->dlr = lex_random;
-		|																												if (lex_random & 0x2) {
-		|																													state->dns = 0xf;
-		|																												} else {
-		|																													state->dns = 0xf ^ (0x8 >> (state->resolve_address >> 2));
-		|																												}
+		|																												nxt_lex_valid();
 		|																											}
 		|
-		|																											if (PIN_Q4.posedge()) {
-		|																												state->lex_valid = nxt_lex_valid();
-		|																											}
-		|
-		|	state->lxval = !((nxt_lex_valid() >> (15 - state->resolve_address)) & 1);
+		|	state->lxval = !((state->lex_valid >> (15 - state->resolve_address)) & 1);
 		|}
 		|
-		|	unsigned internal_reads;
 		|	BUS_IRD_READ(internal_reads);
-		|
-		|	int_reads(internal_reads);
+		|	int_reads();
 		|
 		|	unsigned lmp = late_macro_pending();
 		|	bool early_macro_pending = state->emac != 0x7f;
@@ -633,7 +638,7 @@ class SEQ(PartFactory):
 		|																								if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
 		|																								if (state->import_condition) pa040a |= 0x08;
 		|																								if (state->stop) pa040a |= 0x04;
-		|																								if (maybe_dispatch) pa040a |= 0x02;
+		|																								if (!maybe_dispatch) pa040a |= 0x02;
 		|																								if (state->bad_hint) pa040a |= 0x01;
 		|																								pa040d = state->pa040[pa040a];
 		|																							}
@@ -754,13 +759,6 @@ class SEQ(PartFactory):
 		|	}
 		|	state->coff ^= 0x7fff;
 		|
-		|	if (linc) {
-		|		state->import_condition = true;
-		|		sign_extend = true;
-		|	} else {
-		|		state->import_condition = !(state->resolve_address == 0xf);
-		|		sign_extend = !((state->resolve_address > 0xd));
-		|	}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																											if (aclk) {
@@ -837,8 +835,10 @@ class SEQ(PartFactory):
 		|																												state->m_break_class = !state->m_break_class;
 		|																											}
 		|
+		|	bool dis;
+		|	unsigned intreads = 0;
 		|{
-		|	bool uses_tos, dis;
+		|	bool uses_tos;
 		|	unsigned mem_start;
 		|	bool intreads1, intreads2;
 		|	bool sel1, sel2;
@@ -846,7 +846,7 @@ class SEQ(PartFactory):
 		|	bool name_ram_cs = true;
 		|	bool type_name_oe = true;
 		|	bool val_name_oe = true;
-		|	if (maybe_dispatch) {
+		|	if (!maybe_dispatch) {
 		|		uses_tos = false;
 		|		mem_start = 7;
 		|		dis = false;
@@ -863,7 +863,6 @@ class SEQ(PartFactory):
 		|		sel1 = !(mem_start < 3);
 		|		sel2 = !(mem_start == 3 || mem_start == 7);
 		|	}
-		|	unsigned intreads = 0;
 		|	if (intreads1) intreads |= 2;
 		|	if (intreads2) intreads |= 1;
 		|
@@ -1004,20 +1003,6 @@ class SEQ(PartFactory):
 		|																												state->topcnt &= 0xfffff;
 		|																											}
 		|
-		|	if (dis) {
-		|		state->output_ob = 0xfffff;
-		|	} else if (intreads == 0) {
-		|		state->output_ob = state->pred;
-		|	} else if (intreads == 1) {
-		|		state->output_ob = state->topcnt;
-		|	} else if (intreads == 2) {
-		|		state->output_ob = state->resolve_offset;
-		|	} else if (intreads == 3) {
-		|		state->output_ob = state->savrg;
-		|	} else {
-		|		state->output_ob = 0xfffff;
-		|	}
-		|	state->output_ob &= 0xfffff;
 		|
 		|
 		|}
@@ -1196,7 +1181,7 @@ class SEQ(PartFactory):
 		|																											}
 		|																										
 		|																											if (PIN_LCLK.posedge()) {
-		|																												if (maybe_dispatch) {
+		|																												if (!maybe_dispatch) {
 		|																													state->late_u = 7;
 		|																												} else {
 		|																													state->late_u = late_macro_pending();
@@ -1435,6 +1420,21 @@ class SEQ(PartFactory):
 		|																												state->foo9 = !RNDX(RND_TOS_VLB);
 		|																											}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|	if (dis) {
+		|		state->output_ob = 0xfffff;
+		|	} else if (intreads == 0) {
+		|		state->output_ob = state->pred;
+		|	} else if (intreads == 1) {
+		|		state->output_ob = state->topcnt;
+		|	} else if (intreads == 2) {
+		|		state->output_ob = state->resolve_offset;
+		|	} else if (intreads == 3) {
+		|		state->output_ob = state->savrg;
+		|	} else {
+		|		state->output_ob = 0xfffff;
+		|	}
+		|	state->output_ob &= 0xfffff;
+		|
 		|	output.z_qf = PIN_QFOE=>;
 		|	if (!output.z_qf) {
 		|		output.qf = state->topu ^ 0xffff;
@@ -1443,7 +1443,7 @@ class SEQ(PartFactory):
 		|	}
 		|	output.z_qt = PIN_QTOE=>;
 		|	if (!output.z_qt) {
-		|		int_reads(internal_reads);	// Necessary
+		|		int_reads();	// Necessary
 		|		output.qt = state->typ_bus;
 		|		output.qt ^= BUS_QT_MASK;
 		|		typ_bus = !state->typ_bus;
