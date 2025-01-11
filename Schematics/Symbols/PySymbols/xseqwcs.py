@@ -18,15 +18,11 @@ class XSEQWCS(FChip):
         self.sig_left(ChipSig("-->+", "CLK"))
         self.sig_left(ChipSig("-->+", "HLR"))
         self.sig_left(ChipSig("-->+", "SCE"))
-        self.sig_left(ChipSig("-->+", "DSP0"))
         self.sig_left(ChipSig("-->+", "LMAC"))
 
         self.sig_right(ChipSig("+-->", "UIR", 0, 41))
         self.sig_right(ChipSig("+-->", "HALT"))
         self.sig_right(ChipSig("+-->", "LLM"))
-        self.sig_right(ChipSig("+-->", "MDSP"))
-        self.sig_right(ChipSig("+-->", "LEXI"))
-        self.sig_right(ChipSig("+-->", "RAS", 0, 1))
 
         self.finish()
 

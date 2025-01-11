@@ -553,10 +553,27 @@ class SEQ(PartFactory):
 		|
 		|	BUS_BRTYP_READ(br_type);
 		|	bool maybe_dispatch = !(0xb < br_type && br_type < 0xf);
+		|
+		|	bool ff0 = !maybe_dispatch;
+		|	unsigned lex_adr, ras = 0;
+		|	BUS_LAUIR_READ(lex_adr);
+		|	bool linc = lex_adr == 1;
 		|{
-		|	unsigned sel;
-		|	BUS_RASEL_READ(sel);
-		|	switch (sel) {
+		|	bool ff1 = lex_adr & 0x2;
+		|	bool ff2 = lex_adr == 0;
+		|	if (!ff2)
+		|		ras &= ~1;
+		|	else
+		|		ras |= 1;
+		|	if ((ff0 && !(state->display >> 15)) || ff1)
+		|		ras &= ~2;
+		|	else
+		|		ras |= 2;
+		|}
+		|
+		|	//unsigned sel;
+		|	//BUS_RASEL_READ(sel);
+		|	switch (ras) {
 		|	case 0:
 		|		if (PIN_LAUIR0=> && PIN_LAUIR1=>)
 		|			state->resolve_address = 0xe;
@@ -573,10 +590,9 @@ class SEQ(PartFactory):
 		|		state->resolve_address = state->curr_lex ^ 0xf;
 		|		break;
 		|	default:
-		|		assert(sel < 4);
+		|		assert(ras < 4);
 		|	}
 		|	state->resolve_address &= 0xf;
-		|}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|{
@@ -738,7 +754,7 @@ class SEQ(PartFactory):
 		|	}
 		|	state->coff ^= 0x7fff;
 		|
-		|	if (PIN_LINC=>) {
+		|	if (linc) {
 		|		state->import_condition = true;
 		|		sign_extend = true;
 		|	} else {
@@ -1372,7 +1388,6 @@ class SEQ(PartFactory):
 		|																												case 0x7: state->display = state->macro_ins_typ >> 48; break;
 		|																												}
 		|																												state->display &= 0xffff;
-		|																												output.disp0 = state->display >> 15;
 		|
 		|																												if (state->emac == 0x7f) {
 		|																													unsigned ai = state->display;
@@ -1413,7 +1428,7 @@ class SEQ(PartFactory):
 		|		state->carry_out
 		|	);
 		|	output.sfive = (state->check_exit_ue && state->ferr);
-		|	state->m_res_ref = !(state->lxval && !output.disp0);
+		|	state->m_res_ref = !(state->lxval && !(state->display >> 15));
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																											if (PIN_LCLK.posedge()) {

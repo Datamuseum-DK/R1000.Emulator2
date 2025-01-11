@@ -56,7 +56,6 @@ class XSEQWCS(PartFactory):
         file.fmt('''
 		|	uint64_t *ram;
 		|	uint64_t wcs;
-		|	bool ff0, ff1, ff2;
 		|''')
 
     def init(self, file):
@@ -66,7 +65,6 @@ class XSEQWCS(PartFactory):
 
     def sensitive(self):
         yield "PIN_CLK.pos()"
-        yield "PIN_DSP0"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -74,7 +72,7 @@ class XSEQWCS(PartFactory):
         file.fmt('''
 		|
 		|	if (PIN_CLK.posedge()) {
-		|		unsigned um, tmp, ua;
+		|		unsigned um, ua;
 		|		BUS_UA_READ(ua);
 		|		BUS_UM_READ(um);
 		|		switch (um) {
@@ -85,28 +83,12 @@ class XSEQWCS(PartFactory):
 		|			output.llm = !(PIN_SCE=> || !PIN_LMAC=>);
 		|			output.uir = state->wcs;
 		|			output.uir ^= 0x7fULL << 13;	// Invert condsel
-		|			tmp = state->ram[ua];
-		|			unsigned br_type = (tmp >> 22) & 0xf;
-		|			state->ff0 = 0xb < br_type && br_type < 0xf;
-		|			unsigned lex_adr = (tmp >> 11) & 0x3;
-		|			state->ff1 = lex_adr & 0x2;
-		|			state->ff2 = lex_adr == 0;
-		|			if (!state->ff2)
-		|				output.ras &= ~1;
-		|			else
-		|				output.ras |= 1;
-		|			output.lexi = lex_adr == 1;
 		|			}
 		|			break;
 		|		case 0: // noop
 		|			break;
 		|		}
 		|	}
-		|	if ((state->ff0 && !PIN_DSP0=>) || state->ff1)
-		|		output.ras &= ~2;
-		|	else
-		|		output.ras |= 2;
-		|	//if (output.ras != state->output.ras)	ALWAYS_TRACE(<< " RAS " << std::hex << state->output.ras << " <- " << output.ras << " " << PIN_DSP0=>);
 		''')
 
 def register(part_lib):
