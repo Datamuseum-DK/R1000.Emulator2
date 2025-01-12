@@ -221,6 +221,7 @@ class SEQ(PartFactory):
 		|	bool seq_cond7(unsigned condsel);
 		|       void nxt_lex_valid(void);
 		|       bool condition(void);
+		|	unsigned branch_offset(void);
 		|''')
 
     def priv_impl(self, file):
@@ -229,6 +230,13 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|int_reads()
 		|{
+		|	switch (urand & 3) {
+		|	case 3:	state->coff = state->retrn_pc_ofs; break;
+		|	case 2: state->coff = branch_offset(); break;
+		|	case 1: state->coff = state->macro_pc_offset; break;
+		|	case 0: state->coff = branch_offset(); break;
+		|	}
+		|	state->coff ^= 0x7fff;
 		|	if (internal_reads == 0) {
 		|		BUS_DT_READ(state->typ_bus);
 		|		state->typ_bus ^= BUS_DT_MASK;
@@ -517,6 +525,44 @@ class SEQ(PartFactory):
 		|	default: return(1);
 		|	}
 		|}
+		|
+		|unsigned
+		|SCM_«mmm» ::
+		|branch_offset(void)
+		|{
+		|	bool oper;
+		|	unsigned a;
+		|	if (!state->wanna_dispatch && !state->m_ibuff_mt) {
+		|		a = 0;
+		|		oper = true;
+		|	} else if (!state->wanna_dispatch && state->m_ibuff_mt) {
+		|		a = state->display;
+		|		oper = false;
+		|	} else if (state->wanna_dispatch && !state->m_ibuff_mt) {
+		|		a = state->curins;
+		|		oper = true;
+		|	} else {
+		|		a = state->curins;
+		|		oper = true;
+		|	}
+		|	a &= 0x7ff;
+		|	if (a & 0x400)
+		|		a |= 0x7800;
+		|	a ^= 0x7fff;
+		|	unsigned b = state->macro_pc_offset & 0x7fff;
+		|	if (oper) {
+		|		if (state->wanna_dispatch)
+		|			a += 1;
+		|		a &= 0x7fff;
+		|		state->branch_offset = a + b;
+		|	} else {
+		|		if (!state->wanna_dispatch)
+		|			a += 1;
+		|		state->branch_offset = b - a;
+		|	}
+		|	state->branch_offset &= 0x7fff;
+		|	return (state->branch_offset);
+		|}
 		|''')
 
     def sensitive(self):
@@ -640,9 +686,7 @@ class SEQ(PartFactory):
 		|																								if (!maybe_dispatch) pa040a |= 0x02;
 		|																								if (state->bad_hint) pa040a |= 0x01;
 		|																								pa040d = state->pa040[pa040a];
-		|																							}
 		|
-		|																							if (q3pos) {
 		|																								bool bar8;
 		|																								if (macro_event) {
 		|																									bar8 = (macro_event && !early_macro_pending) && (lmp >= 7);
@@ -659,6 +703,12 @@ class SEQ(PartFactory):
 		|																								} else {
 		|																									output.abort = false;
 		|																								}
+		|
+		|																								if (RNDX(RND_TOS_VLB) && !state->stop) {
+		|																									state->tost = state->typ_bus >> 32;
+		|																									state->vost = state->val_bus >> 32;
+		|																									state->tosof = (state->typ_bus >> 7) & 0xfffff;
+		|																								}
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (aclk) {
@@ -673,41 +723,6 @@ class SEQ(PartFactory):
 		|																											if (q4pos && !sclke && !RNDX(RND_RETRN_LD)) {
 		|																												state->retrn_pc_ofs = state->macro_pc_offset;
 		|																											}
-		|
-		|{
-		|	bool oper;
-		|	unsigned a;
-		|	if (!state->wanna_dispatch && !state->m_ibuff_mt) {
-		|		a = 0;
-		|		oper = true;
-		|	} else if (!state->wanna_dispatch && state->m_ibuff_mt) {
-		|		a = state->display;
-		|		oper = false;
-		|	} else if (state->wanna_dispatch && !state->m_ibuff_mt) {
-		|		a = state->curins;
-		|		oper = true;
-		|	} else {
-		|		a = state->curins;
-		|		oper = true;
-		|	}
-		|	a &= 0x7ff;
-		|	if (a & 0x400)
-		|		a |= 0x7800;
-		|	a ^= 0x7fff;
-		|	unsigned b = state->macro_pc_offset & 0x7fff;
-		|	if (oper) {
-		|		if (state->wanna_dispatch)
-		|			a += 1;
-		|		a &= 0x7fff;
-		|		state->branch_offset = a + b;
-		|	} else {
-		|		if (!state->wanna_dispatch)
-		|			a += 1;
-		|		state->branch_offset = b - a;
-		|	}
-		|	state->branch_offset &= 0x7fff;
-		|}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																											if (q4pos && !bhcke && !macro_event) {
 		|																												unsigned mode = 0;
@@ -736,8 +751,8 @@ class SEQ(PartFactory):
 		|																														state->word = tmp >> 4;
 		|																														state->macro_pc_offset = (tmp >> 4) & 0x7fff;
 		|																													} else {
-		|																														state->macro_pc_offset = state->branch_offset;
-		|																														state->word = state->branch_offset;
+		|																														state->macro_pc_offset = branch_offset();
+		|																														state->word = state->macro_pc_offset;
 		|																													}
 		|																												} else if (mode == 2) {
 		|																													state->macro_pc_offset += 1;
@@ -752,16 +767,6 @@ class SEQ(PartFactory):
 		|																												state->curr_lex = state->val_bus & 0xf;
 		|																												state->curr_lex ^= 0xf;
 		|																											}
-		|
-		|	switch (urand & 3) {
-		|	case 3:	state->coff = state->retrn_pc_ofs; break;
-		|	case 2: state->coff = state->branch_offset; break;
-		|	case 1: state->coff = state->macro_pc_offset; break;
-		|	case 0: state->coff = state->branch_offset; break;
-		|	}
-		|	state->coff ^= 0x7fff;
-		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																											if (aclk) {
 		|																												BUS_EMAC_READ(state->emac);
@@ -781,7 +786,6 @@ class SEQ(PartFactory):
 		|																													state->uadr_decode = 0x0420;
 		|																												}
 		|																											}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																											if (q4pos) {
 		|																												if (sclk) {
@@ -835,6 +839,25 @@ class SEQ(PartFactory):
 		|																													state->m_break_class = (state->break_mask >> (15 - ccl)) & 1;
 		|																												}
 		|																												state->m_break_class = !state->m_break_class;
+		|
+		|																												if (!sclke && !RNDX(RND_NAME_LD)) {
+		|																													state->cur_name = state->typ_bus >> 32;
+		|																												}
+		|																										
+		|																												if (!sclke && !RNDX(RND_RES_NAME)) {
+		|																													state->namram[state->resolve_address] = state->typ_bus >> 32;
+		|																												}
+		|
+		|																												if (!sclke && !RNDX(RND_RETRN_LD)) {
+		|																													state->retseg = state->pcseg;
+		|																												}
+		|																												if (!sclke && !RNDX(RND_M_PC_LDH)) {
+		|																													unsigned val;
+		|																													val = state->val_bus >> 32;
+		|																													val ^= 0xffffffff;
+		|																													state->pcseg = val;
+		|																													state->pcseg &= 0xffffff;
+		|																												}
 		|																											}
 		|
 		|	bool dis;
@@ -875,23 +898,7 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|																							if (q3pos && RNDX(RND_TOS_VLB) && !state->stop) {
-		|																								state->tost = state->typ_bus >> 32;
-		|																								state->vost = state->val_bus >> 32;
-		|																								state->tosof = (state->typ_bus >> 7) & 0xfffff;
-		|																							}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|																											if (q4pos && !sclke && !RNDX(RND_NAME_LD)) {
-		|																												state->cur_name = state->typ_bus >> 32;
-		|																											}
-		|																										
-		|																											if (q4pos && !sclke && !RNDX(RND_RES_NAME)) {
-		|																												state->namram[state->resolve_address] = state->typ_bus >> 32;
-		|																											}
-		|
+		|if (1) {
 		|	if (!type_name_oe) {
 		|		state->name_bus = state->tost ^ 0xffffffff;
 		|	} else if (!val_name_oe) {
@@ -901,18 +908,7 @@ class SEQ(PartFactory):
 		|	} else {
 		|		state->name_bus = 0xffffffff;
 		|	}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|																											if (q4pos && !sclke && !RNDX(RND_RETRN_LD)) {
-		|																												state->retseg = state->pcseg;
-		|																											}
-		|																											if (q4pos && !sclke && !RNDX(RND_M_PC_LDH)) {
-		|																												unsigned val;
-		|																												val = state->val_bus >> 32;
-		|																												val ^= 0xffffffff;
-		|																												state->pcseg = val;
-		|																												state->pcseg &= 0xffffff;
-		|																											}
+		|}
 		|
 		|
 		|	unsigned offs;
@@ -1480,7 +1476,7 @@ class SEQ(PartFactory):
 		|																								}
 		|															
 		|																								uint64_t branch;
-		|																								branch = state->branch_offset & 7;
+		|																								branch = branch_offset() & 7;
 		|																								branch ^= 0x7;
 		|																								adr_bus |= branch << 4;
 		|																								if (!adr_is_code) {
