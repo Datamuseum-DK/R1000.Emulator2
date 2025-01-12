@@ -549,7 +549,6 @@ class SEQ(PartFactory):
 		|	rndx |= state->pa046[urand | (state->bad_hint ? 0x100 : 0)] << 16;
 		|	rndx |=  state->pa045[urand | 0x100] << 8;
 		|	rndx |= state->pa047[urand | 0x100];
-		|	output.halt = RNDX(RND_HALT);
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
 		|																								state->q3cond = condition();
@@ -650,7 +649,6 @@ class SEQ(PartFactory):
 		|																								} else {
 		|																									bar8 = !((pa040d >> 1) & 1);
 		|																								}
-		|																								output.lmaco = macro_event && !early_macro_pending;
 		|
 		|																								if (!bar8) {
 		|																									output.abort = false;
@@ -663,6 +661,10 @@ class SEQ(PartFactory):
 		|																								}
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|																											if (aclk) {
+		|																												output.lmaco = !(sclke || !(macro_event && !early_macro_pending));
+		|																												output.halt = !(sclke || RNDX(RND_HALT));
+		|																											}
 		|																											if (q4pos && !sclke && !state->ibld) {
 		|																												state->macro_ins_typ = state->typ_bus;
 		|																												state->macro_ins_val = state->val_bus;
@@ -1480,7 +1482,6 @@ class SEQ(PartFactory):
 		|																								uint64_t branch;
 		|																								branch = state->branch_offset & 7;
 		|																								branch ^= 0x7;
-		|																								// output.adr |= branch << 4;
 		|																								adr_bus |= branch << 4;
 		|																								if (!adr_is_code) {
 		|																									adr_bus |= state->name_bus << 32;

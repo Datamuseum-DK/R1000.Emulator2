@@ -55,7 +55,6 @@ class XSEQWCS(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	uint64_t *ram;
-		|	uint64_t wcs;
 		|''')
 
     def init(self, file):
@@ -75,18 +74,9 @@ class XSEQWCS(PartFactory):
 		|		unsigned um, ua;
 		|		BUS_UA_READ(ua);
 		|		BUS_UM_READ(um);
-		|		switch (um) {
-		|		case 3: // load
-		|			{
-		|			state->wcs = state->ram[ua];
-		|			output.halt = !(PIN_SCE=> || PIN_HLR=>);
-		|			output.llm = !(PIN_SCE=> || !PIN_LMAC=>);
-		|			output.uir = state->wcs;
+		|		if (um == 3) {
+		|			output.uir = state->ram[ua];
 		|			output.uir ^= 0x7fULL << 13;	// Invert condsel
-		|			}
-		|			break;
-		|		case 0: // noop
-		|			break;
 		|		}
 		|	}
 		''')
