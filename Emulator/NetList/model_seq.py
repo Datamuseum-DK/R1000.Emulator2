@@ -862,6 +862,7 @@ class SEQ(PartFactory):
 		|
 		|	bool dis;
 		|	unsigned intreads = 0;
+		|       bool co = false;
 		|{
 		|	bool uses_tos;
 		|	unsigned mem_start;
@@ -897,8 +898,6 @@ class SEQ(PartFactory):
 		|		val_name_oe = (!(sel1 && sel2));
 		|	}
 		|
-		|
-		|if (1) {
 		|	if (!type_name_oe) {
 		|		state->name_bus = state->tost ^ 0xffffffff;
 		|	} else if (!val_name_oe) {
@@ -908,8 +907,6 @@ class SEQ(PartFactory):
 		|	} else {
 		|		state->name_bus = 0xffffffff;
 		|	}
-		|}
-		|
 		|
 		|	unsigned offs;
 		|	if (uses_tos) {
@@ -937,7 +934,6 @@ class SEQ(PartFactory):
 		|	bool acin = ((mem_start & 1) != 0);
 		|       sgdisp &= 0xfffff;
 		|       state->resolve_offset = 0;
-		|       bool co = false;
 		|
 		|	switch(mem_start) {
 		|	case 0:
@@ -963,48 +959,23 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|	state->resolve_offset &= 0xfffff;
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|																											if (state_clock && !RNDX(RND_SAVE_LD)) {
-		|																												state->savrg = state->resolve_offset;
-		|																												state->carry_out = co;
-		|																											}
-		|																										
-		|																											if (state_clock) {
-		|																												uint64_t cnb;
-		|																												if (!RNDX(RND_CNTL_MUX)) {
-		|																													cnb = state->typ_bus ^ 0xffffffffULL;
-		|																												} else {
-		|																													BUS_DF_READ(cnb);
-		|																												}
-		|																												cnb &= 0xffffffffULL;
-		|																												cnb >>= 7;
-		|																												cnb &= 0xfffff;
-		|																										
-		|																												if (!RNDX(RND_PRED_LD)) {
-		|																													state->pred = cnb;
-		|																												}
-		|																												unsigned csa_cntl;
-		|																												BUS_CTL_READ(csa_cntl);
-		|																										
-		|																												bool ten = (csa_cntl != 2 && csa_cntl != 3);
-		|																												bool tud = !(csa_cntl & 1);
-		|																												if (!RNDX(RND_TOP_LD)) {
-		|																													state->topcnt = cnb;
-		|																												} else if (ten) {
-		|																													// Nothing
-		|																												} else if (tud) {
-		|																													state->topcnt += 1;
-		|																												} else {
-		|																													state->topcnt += 0xfffff;
-		|																												}
-		|																												state->topcnt &= 0xfffff;
-		|																											}
-		|
-		|
-		|
 		|}
-		|{
+		|
+		|if (1) {
+		|	bool last_cond_late = (state->lreg >> 2) & 1;
+		|	if (state->hint_last) {
+		|		state->bad_hint = false;
+		|	} else if (!last_cond_late && !state->hint_t_last) {
+		|		state->bad_hint = state->lreg & 1;
+		|	} else if (!last_cond_late &&  state->hint_t_last) {
+		|		state->bad_hint = !(state->lreg & 1);
+		|	} else if ( last_cond_late && !state->hint_t_last) {
+		|		state->bad_hint = state->last_late_cond;
+		|	} else if ( last_cond_late &&  state->hint_t_last) {
+		|		state->bad_hint = !state->last_late_cond;
+		|	}
+		|	output.bhn = !state->bad_hint;
+		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|											if (q1pos) {
 		|												BUS_BRTIM_READ(br_tim);
@@ -1041,6 +1012,15 @@ class SEQ(PartFactory):
 		|												state->push   = !(((rom >> 0) & 1) ||
 		|													        !(((rom >> 2) & 1) || !state->uadr_mux));
 		|											}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|											if (q1pos) {
+		|												state->stop = !(output.bhn && (state->uei == 0) && !PIN_LMAC=>);
+		|												output.seqsn = !state->stop;
+		|												bool evnan0d = !(PIN_ENMIC=> && (state->uei == 0));
+		|												output.ueven = !(evnan0d || !output.seqsn);
+		|											}
+		|
+		|
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
@@ -1099,6 +1079,45 @@ class SEQ(PartFactory):
 		|																								state->treg = 0;
 		|																								state->foo7 = false;
 		|																							}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|
+		|																											if (state_clock && !RNDX(RND_SAVE_LD)) {
+		|																												state->savrg = state->resolve_offset;
+		|																												state->carry_out = co;
+		|																											}
+		|																										
+		|																											if (state_clock) {
+		|																												uint64_t cnb;
+		|																												if (!RNDX(RND_CNTL_MUX)) {
+		|																													cnb = state->typ_bus ^ 0xffffffffULL;
+		|																												} else {
+		|																													BUS_DF_READ(cnb);
+		|																												}
+		|																												cnb &= 0xffffffffULL;
+		|																												cnb >>= 7;
+		|																												cnb &= 0xfffff;
+		|																										
+		|																												if (!RNDX(RND_PRED_LD)) {
+		|																													state->pred = cnb;
+		|																												}
+		|																												unsigned csa_cntl;
+		|																												BUS_CTL_READ(csa_cntl);
+		|																										
+		|																												bool ten = (csa_cntl != 2 && csa_cntl != 3);
+		|																												bool tud = !(csa_cntl & 1);
+		|																												if (!RNDX(RND_TOP_LD)) {
+		|																													state->topcnt = cnb;
+		|																												} else if (ten) {
+		|																													// Nothing
+		|																												} else if (tud) {
+		|																													state->topcnt += 1;
+		|																												} else {
+		|																													state->topcnt += 0xfffff;
+		|																												}
+		|																												state->topcnt &= 0xfffff;
+		|																											}
+		|
+		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|
@@ -1231,7 +1250,6 @@ class SEQ(PartFactory):
 		|																													state->curuadr = output.nu;
 		|																												}
 		|																											}
-		|}
 		|	output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
@@ -1325,30 +1343,6 @@ class SEQ(PartFactory):
 		|																												}
 		|																											}
 		|
-		|	bool last_cond_late = (state->lreg >> 2) & 1;
-		|	if (state->hint_last) {
-		|		state->bad_hint = false;
-		|	} else if (!last_cond_late && !state->hint_t_last) {
-		|		bool e_or_ml_cond = state->lreg & 1;
-		|		state->bad_hint = e_or_ml_cond;
-		|	} else if (!last_cond_late &&  state->hint_t_last) {
-		|		bool e_or_ml_cond = state->lreg & 1;
-		|		state->bad_hint = !e_or_ml_cond;
-		|	} else if ( last_cond_late && !state->hint_t_last) {
-		|		state->bad_hint = state->last_late_cond;
-		|	} else if ( last_cond_late &&  state->hint_t_last) {
-		|		state->bad_hint = !state->last_late_cond;
-		|	}
-		|	output.bhn = !state->bad_hint;
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|											if (q1pos) {
-		|												state->stop = !(output.bhn && (state->uei == 0) && !PIN_LMAC=>);
-		|												output.seqsn = !state->stop;
-		|												bool evnan0d = !(PIN_ENMIC=> && (state->uei == 0));
-		|												output.ueven = !(evnan0d || !output.seqsn);
-		|											}
-		|
-		|
 		|{
 		|	uint64_t val = state->val_bus >> 32;
 		|	val &= 0xffffff;
@@ -1433,25 +1427,6 @@ class SEQ(PartFactory):
 		|	}
 		|	state->output_ob &= 0xfffff;
 		|
-		|	output.z_qf = PIN_QFOE=>;
-		|	if (!output.z_qf) {
-		|		output.qf = state->topu ^ 0xffff;
-		|		output.qf ^= 0xffff;
-		|		fiu_bus = output.qf;
-		|	}
-		|	output.z_qt = PIN_QTOE=>;
-		|	if (!output.z_qt) {
-		|		int_reads();	// Necessary
-		|		output.qt = state->typ_bus;
-		|		output.qt ^= BUS_QT_MASK;
-		|		typ_bus = !state->typ_bus;
-		|	}
-		|	output.z_qv = PIN_QVOE=>;
-		|	if (!output.z_qt) {
-		|		output.qv = state->val_bus;
-		|		output.qv ^= BUS_QV_MASK;
-		|		val_bus = ~state->val_bus;
-		|	}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																							if (q3pos && !PIN_ADROE=>) {
@@ -1492,6 +1467,27 @@ class SEQ(PartFactory):
 		|																								bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
 		|																								output.labrt = bad_hint_disp && !(RNDX(RND_L_ABRT) && output.seqsn);
 		|																							}
+		|	if (!q4pos) {
+		|		output.z_qf = PIN_QFOE=>;
+		|		if (!output.z_qf) {
+		|			output.qf = state->topu ^ 0xffff;
+		|			output.qf ^= 0xffff;
+		|			fiu_bus = output.qf;
+		|		}
+		|		output.z_qt = PIN_QTOE=>;
+		|		if (!output.z_qt) {
+		|			int_reads();	// Necessary
+		|			output.qt = state->typ_bus;
+		|			output.qt ^= BUS_QT_MASK;
+		|			typ_bus = !state->typ_bus;
+		|		}
+		|		output.z_qv = PIN_QVOE=>;
+		|		if (!output.z_qt) {
+		|			output.qv = state->val_bus;
+		|			output.qv ^= BUS_QV_MASK;
+		|			val_bus = ~state->val_bus;
+		|		}
+		|	}
 		|''')
 
 
