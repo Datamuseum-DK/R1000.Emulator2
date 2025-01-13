@@ -568,7 +568,7 @@ class SEQ(PartFactory):
     def sensitive(self):
         yield "PIN_Q2"
         yield "PIN_Q4"
-        yield "PIN_H2"
+        yield "PIN_H2.neg()"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -711,83 +711,83 @@ class SEQ(PartFactory):
 		|																								}
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																											if (aclk) {
-		|																												output.lmaco = !(sclke || !(macro_event && !early_macro_pending));
-		|																												output.halt = !(sclke || RNDX(RND_HALT));
-		|																											}
-		|																											if (q4pos && !sclke && !state->ibld) {
-		|																												state->macro_ins_typ = state->typ_bus;
-		|																												state->macro_ins_val = state->val_bus;
-		|																											}
-		|
-		|																											if (q4pos && !sclke && !RNDX(RND_RETRN_LD)) {
-		|																												state->retrn_pc_ofs = state->macro_pc_offset;
-		|																											}
-		|
-		|																											if (q4pos && !bhcke && !macro_event) {
-		|																												unsigned mode = 0;
-		|																												unsigned u = 0;
-		|																												if (state->cload) u |= 1;
-		|																												if (state->wanna_dispatch) u |= 2;
-		|																												switch (u) {
-		|																												case 0: mode = 1; break;
-		|																												case 1: mode = 1; break;
-		|																												case 2:
-		|																													if (!state->bad_hint) {
-		|																														state->m_pc_mb = RNDX(RND_M_PC_MD0);
-		|																													} else {
-		|																														state->m_pc_mb = !((state->bhreg >> 2) & 1);
-		|																													}
-		|																										
-		|																													if (state->m_pc_mb) mode |= 2;
-		|																													if (RNDX(RND_M_PC_MD1)) mode |= 1;
-		|																													break;
-		|																												case 3: mode = 0; break;
-		|																												}
-		|																												if (mode == 3) {
-		|																													uint64_t tmp;
-		|																													if (!RNDX(RND_M_PC_MUX)) {
-		|																														tmp = state->val_bus;
-		|																														state->word = tmp >> 4;
-		|																														state->macro_pc_offset = (tmp >> 4) & 0x7fff;
-		|																													} else {
-		|																														state->macro_pc_offset = branch_offset();
-		|																														state->word = state->macro_pc_offset;
-		|																													}
-		|																												} else if (mode == 2) {
-		|																													state->macro_pc_offset += 1;
-		|																													state->word += 1;
-		|																												} else if (mode == 1) {
-		|																													state->macro_pc_offset -= 1;
-		|																													state->word += 7;
-		|																												}
-		|																												state->word &= 7;
-		|																											}
-		|																											if (q4pos && !sclke && !RNDX(RND_CUR_LEX)) {
-		|																												state->curr_lex = state->val_bus & 0xf;
-		|																												state->curr_lex ^= 0xf;
-		|																											}
-		|
-		|																											if (aclk) {
-		|																												BUS_EMAC_READ(state->emac);
-		|																												if (!(state->emac & 0x40)) {
-		|																													state->uadr_decode = 0x04e0;
-		|																												} else if (!(state->emac & 0x20)) {
-		|																													state->uadr_decode = 0x04c0;
-		|																												} else if (!(state->emac & 0x10)) {
-		|																													state->uadr_decode = 0x04a0;
-		|																												} else if (!(state->emac & 0x08)) {
-		|																													state->uadr_decode = 0x0480;
-		|																												} else if (!(state->emac & 0x04)) {
-		|																													state->uadr_decode = 0x0460;
-		|																												} else if (!(state->emac & 0x02)) {
-		|																													state->uadr_decode = 0x0440;
-		|																												} else if (!(state->emac & 0x01)) {
-		|																													state->uadr_decode = 0x0420;
-		|																												}
-		|																											}
-		|
 		|																											if (q4pos) {
+		|																												if (aclk) {
+		|																													output.lmaco = !(sclke || !(macro_event && !early_macro_pending));
+		|																													output.halt = !(sclke || RNDX(RND_HALT));
+		|																												}
+		|																												if (!sclke && !state->ibld) {
+		|																													state->macro_ins_typ = state->typ_bus;
+		|																													state->macro_ins_val = state->val_bus;
+		|																												}
+		|
+		|																												if (!sclke && !RNDX(RND_RETRN_LD)) {
+		|																													state->retrn_pc_ofs = state->macro_pc_offset;
+		|																												}
+		|
+		|																												if (!bhcke && !macro_event) {
+		|																													unsigned mode = 0;
+		|																													unsigned u = 0;
+		|																													if (state->cload) u |= 1;
+		|																													if (state->wanna_dispatch) u |= 2;
+		|																													switch (u) {
+		|																													case 0: mode = 1; break;
+		|																													case 1: mode = 1; break;
+		|																													case 2:
+		|																														if (!state->bad_hint) {
+		|																															state->m_pc_mb = RNDX(RND_M_PC_MD0);
+		|																														} else {
+		|																															state->m_pc_mb = !((state->bhreg >> 2) & 1);
+		|																														}
+		|																											
+		|																														if (state->m_pc_mb) mode |= 2;
+		|																														if (RNDX(RND_M_PC_MD1)) mode |= 1;
+		|																														break;
+		|																													case 3: mode = 0; break;
+		|																													}
+		|																													if (mode == 3) {
+		|																														uint64_t tmp;
+		|																														if (!RNDX(RND_M_PC_MUX)) {
+		|																															tmp = state->val_bus;
+		|																															state->word = tmp >> 4;
+		|																															state->macro_pc_offset = (tmp >> 4) & 0x7fff;
+		|																														} else {
+		|																															state->macro_pc_offset = branch_offset();
+		|																															state->word = state->macro_pc_offset;
+		|																														}
+		|																													} else if (mode == 2) {
+		|																														state->macro_pc_offset += 1;
+		|																														state->word += 1;
+		|																													} else if (mode == 1) {
+		|																														state->macro_pc_offset -= 1;
+		|																														state->word += 7;
+		|																													}
+		|																													state->word &= 7;
+		|																												}
+		|																												if (!sclke && !RNDX(RND_CUR_LEX)) {
+		|																													state->curr_lex = state->val_bus & 0xf;
+		|																													state->curr_lex ^= 0xf;
+		|																												}
+		|
+		|																												if (aclk) {
+		|																													BUS_EMAC_READ(state->emac);
+		|																													if (!(state->emac & 0x40)) {
+		|																														state->uadr_decode = 0x04e0;
+		|																													} else if (!(state->emac & 0x20)) {
+		|																														state->uadr_decode = 0x04c0;
+		|																													} else if (!(state->emac & 0x10)) {
+		|																														state->uadr_decode = 0x04a0;
+		|																													} else if (!(state->emac & 0x08)) {
+		|																														state->uadr_decode = 0x0480;
+		|																													} else if (!(state->emac & 0x04)) {
+		|																														state->uadr_decode = 0x0460;
+		|																													} else if (!(state->emac & 0x02)) {
+		|																														state->uadr_decode = 0x0440;
+		|																													} else if (!(state->emac & 0x01)) {
+		|																														state->uadr_decode = 0x0420;
+		|																													}
+		|																												}
+		|
 		|																												if (sclk) {
 		|																													unsigned dsp = 0;
 		|																													if (!RNDX(RND_INSTR_MX)) {
@@ -859,6 +859,7 @@ class SEQ(PartFactory):
 		|																													state->pcseg &= 0xffffff;
 		|																												}
 		|																											}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|	bool dis;
 		|	unsigned intreads = 0;
@@ -1011,16 +1012,11 @@ class SEQ(PartFactory):
 		|												state->push_br =    (rom >> 1) & 1;
 		|												state->push   = !(((rom >> 0) & 1) ||
 		|													        !(((rom >> 2) & 1) || !state->uadr_mux));
-		|											}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|											if (q1pos) {
 		|												state->stop = !(output.bhn && (state->uei == 0) && !PIN_LMAC=>);
 		|												output.seqsn = !state->stop;
 		|												bool evnan0d = !(PIN_ENMIC=> && (state->uei == 0));
 		|												output.ueven = !(evnan0d || !output.seqsn);
 		|											}
-		|
-		|
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
@@ -1080,266 +1076,264 @@ class SEQ(PartFactory):
 		|																								state->foo7 = false;
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|																											if (state_clock && !RNDX(RND_SAVE_LD)) {
-		|																												state->savrg = state->resolve_offset;
-		|																												state->carry_out = co;
-		|																											}
-		|																										
-		|																											if (state_clock) {
-		|																												uint64_t cnb;
-		|																												if (!RNDX(RND_CNTL_MUX)) {
-		|																													cnb = state->typ_bus ^ 0xffffffffULL;
-		|																												} else {
-		|																													BUS_DF_READ(cnb);
+		|																											if (q4pos) {
+		|																												if (state_clock && !RNDX(RND_SAVE_LD)) {
+		|																													state->savrg = state->resolve_offset;
+		|																													state->carry_out = co;
 		|																												}
-		|																												cnb &= 0xffffffffULL;
-		|																												cnb >>= 7;
-		|																												cnb &= 0xfffff;
-		|																										
-		|																												if (!RNDX(RND_PRED_LD)) {
-		|																													state->pred = cnb;
+		|																											
+		|																												if (state_clock) {
+		|																													uint64_t cnb;
+		|																													if (!RNDX(RND_CNTL_MUX)) {
+		|																														cnb = state->typ_bus ^ 0xffffffffULL;
+		|																													} else {
+		|																														BUS_DF_READ(cnb);
+		|																													}
+		|																													cnb &= 0xffffffffULL;
+		|																													cnb >>= 7;
+		|																													cnb &= 0xfffff;
+		|																											
+		|																													if (!RNDX(RND_PRED_LD)) {
+		|																														state->pred = cnb;
+		|																													}
+		|																													unsigned csa_cntl;
+		|																													BUS_CTL_READ(csa_cntl);
+		|																											
+		|																													bool ten = (csa_cntl != 2 && csa_cntl != 3);
+		|																													bool tud = !(csa_cntl & 1);
+		|																													if (!RNDX(RND_TOP_LD)) {
+		|																														state->topcnt = cnb;
+		|																													} else if (ten) {
+		|																														// Nothing
+		|																													} else if (tud) {
+		|																														state->topcnt += 1;
+		|																													} else {
+		|																														state->topcnt += 0xfffff;
+		|																													}
+		|																													state->topcnt &= 0xfffff;
 		|																												}
-		|																												unsigned csa_cntl;
-		|																												BUS_CTL_READ(csa_cntl);
-		|																										
-		|																												bool ten = (csa_cntl != 2 && csa_cntl != 3);
-		|																												bool tud = !(csa_cntl & 1);
-		|																												if (!RNDX(RND_TOP_LD)) {
-		|																													state->topcnt = cnb;
-		|																												} else if (ten) {
-		|																													// Nothing
-		|																												} else if (tud) {
-		|																													state->topcnt += 1;
-		|																												} else {
-		|																													state->topcnt += 0xfffff;
+		|
+		|																												if (PIN_SSTOP=> && state->l_macro_hic) {
+		|																													bool xwrite;
+		|																													bool pop;
+		|																													bool stkinpsel_0;
+		|																													bool stkinpsel_1;
+		|																													if (output.u_event) {
+		|																														xwrite = true;
+		|																														pop = true;
+		|																														stkinpsel_0 = true;
+		|																														stkinpsel_1 = true;
+		|																													} else if (!state->push) {
+		|																														xwrite = true;
+		|																														pop = false;
+		|																														stkinpsel_0 = !state->push_br;
+		|																														stkinpsel_1 = state->bad_hint;
+		|																													} else {
+		|																														xwrite = !RNDX(RND_PUSH);
+		|																														pop = !!(state->preturn || RNDX(RND_POP));
+		|																														stkinpsel_0 = false;
+		|																														stkinpsel_1 = true;
+		|																													}
+		|																											
+		|																													unsigned stkinpsel = 0;
+		|																													if (stkinpsel_0) stkinpsel |= 2;
+		|																													if (stkinpsel_1) stkinpsel |= 1;
+		|																											
+		|																													if (xwrite) {
+		|																														switch(stkinpsel) {
+		|																														case 0:
+		|																															BUS_BRN_READ(state->topu);
+		|																															if (state->q3cond)	 state->topu |= (1<<15);
+		|																															if (state->latched_cond) state->topu |= (1<<14);
+		|																															state->topu ^= 0xffff;
+		|																															break;
+		|																														case 1:
+		|																															BUS_DF_READ(state->topu);
+		|																															state->topu &= 0xffff;
+		|																															break;
+		|																														case 2:
+		|																															state->topu = state->curuadr;
+		|																															if (state->q3cond)	 state->topu |= (1<<15);
+		|																															if (state->latched_cond) state->topu |= (1<<14);
+		|																															state->topu += 1;
+		|																															state->topu ^= 0xffff;
+		|																															break;
+		|																														case 3:
+		|																															state->topu = state->curuadr;
+		|																															if (state->q3cond)	 state->topu |= (1<<15);
+		|																															if (state->latched_cond) state->topu |= (1<<14);
+		|																															state->topu ^= 0xffff;;
+		|																															break;
+		|																														}
+		|																													} else if (pop) {
+		|																														state->topu = state->ram[state->adr];
+		|																													}
+		|																													state->saved_latched = !((state->topu >> 14) & 0x1);
+		|																											
+		|																													if (RNDX(RND_CLEAR_ST) && !state->stop) {
+		|																														state->adr = xwrite;
+		|																													} else if (xwrite || pop) {
+		|																														if (xwrite) {
+		|																															state->adr = (state->adr + 1) & 0xf;
+		|																														} else {
+		|																															state->adr = (state->adr + 0xf) & 0xf;
+		|																														}
+		|																													}
+		|																													state->stack_size_zero = state->adr == 0;
 		|																												}
-		|																												state->topcnt &= 0xfffff;
-		|																											}
 		|
 		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|
-		|
-		|																											if (q4pos && PIN_SSTOP=> && state->l_macro_hic) {
-		|																												bool xwrite;
-		|																												bool pop;
-		|																												bool stkinpsel_0;
-		|																												bool stkinpsel_1;
-		|																												if (output.u_event) {
-		|																													xwrite = true;
-		|																													pop = true;
-		|																													stkinpsel_0 = true;
-		|																													stkinpsel_1 = true;
-		|																												} else if (!state->push) {
-		|																													xwrite = true;
-		|																													pop = false;
-		|																													stkinpsel_0 = !state->push_br;
-		|																													stkinpsel_1 = state->bad_hint;
-		|																												} else {
-		|																													xwrite = !RNDX(RND_PUSH);
-		|																													pop = !!(state->preturn || RNDX(RND_POP));
-		|																													stkinpsel_0 = false;
-		|																													stkinpsel_1 = true;
+		|																												if (sclk && aclk) {
+		|																													BUS_DF_READ(state->fiu);
+		|																													state->fiu &= 0x3fff;
 		|																												}
-		|																										
-		|																												unsigned stkinpsel = 0;
-		|																												if (stkinpsel_0) stkinpsel |= 2;
-		|																												if (stkinpsel_1) stkinpsel |= 1;
-		|																										
-		|																												if (xwrite) {
-		|																													switch(stkinpsel) {
+		|																											
+		|																												if (PIN_LCLK.posedge()) {
+		|																													if (!maybe_dispatch) {
+		|																														state->late_u = 7;
+		|																													} else {
+		|																														state->late_u = late_macro_pending();
+		|																														if (state->late_u == 8)
+		|																															state->late_u = 7;
+		|																													}
+		|																													unsigned sel = group_sel();
+		|																													switch (sel) {
 		|																													case 0:
-		|																														BUS_BRN_READ(state->topu);
-		|																														if (state->q3cond)	 state->topu |= (1<<15);
-		|																														if (state->latched_cond) state->topu |= (1<<14);
-		|																														state->topu ^= 0xffff;
+		|																													case 7:
+		|																														state->other = state->curuadr + 1;
 		|																														break;
 		|																													case 1:
-		|																														BUS_DF_READ(state->topu);
-		|																														state->topu &= 0xffff;
-		|																														break;
 		|																													case 2:
-		|																														state->topu = state->curuadr;
-		|																														if (state->q3cond)	 state->topu |= (1<<15);
-		|																														if (state->latched_cond) state->topu |= (1<<14);
-		|																														state->topu += 1;
-		|																														state->topu ^= 0xffff;
-		|																														break;
 		|																													case 3:
-		|																														state->topu = state->curuadr;
-		|																														if (state->q3cond)	 state->topu |= (1<<15);
-		|																														if (state->latched_cond) state->topu |= (1<<14);
-		|																														state->topu ^= 0xffff;;
+		|																														BUS_BRN_READ(state->other);
+		|																														break;
+		|																													case 4:
+		|																														BUS_BRN_READ(state->other);
+		|																														state->other += state->fiu;
+		|																														break;
+		|																													case 5:
+		|																														state->other = state->decode >> 3;
+		|																														state->other <<= 1;
+		|																														break;
+		|																													case 6:
+		|																														state->other = (state->topu ^ 0xffff) & 0x3fff;
+		|																														break;
+		|																													default:
+		|																														assert(sel < 8);
 		|																														break;
 		|																													}
-		|																												} else if (pop) {
-		|																													state->topu = state->ram[state->adr];
 		|																												}
-		|																												state->saved_latched = !((state->topu >> 14) & 0x1);
-		|																										
-		|																												if (RNDX(RND_CLEAR_ST) && !state->stop) {
-		|																													state->adr = xwrite;
-		|																												} else if (xwrite || pop) {
-		|																													if (xwrite) {
-		|																														state->adr = (state->adr + 1) & 0xf;
-		|																													} else {
-		|																														state->adr = (state->adr + 0xf) & 0xf;
+		|
+		|																												if (aclk) {
+		|																													BUS_UEI_READ(state->uei);
+		|																													state->uei &= ~(1 << BUS_UEI_LSB(4));
+		|																													state->uei |= state->ferr << BUS_UEI_LSB(4);
+		|																													if (state->check_exit_ue)
+		|																														state->uei |= (1<<BUS_UEI_LSB(3));
+		|																													else
+		|																														state->uei &= ~(1<<BUS_UEI_LSB(3));
+		|																													state->uei <<= 1;
+		|																													state->uei |= 1;
+		|																													state->uei ^= 0xffff;
+		|																													state->uev = 16 - fls(state->uei);
+		|																											
+		|																													if (PIN_SSTOP=> && PIN_DMODE=>) {
+		|																														state->curuadr = output.nu;
 		|																													}
-		|																												}
-		|																												state->stack_size_zero = state->adr == 0;
-		|																											}
-		|
-		|
-		|																											if (sclk && aclk) {
-		|																												BUS_DF_READ(state->fiu);
-		|																												state->fiu &= 0x3fff;
-		|																											}
-		|																										
-		|																											if (PIN_LCLK.posedge()) {
-		|																												if (!maybe_dispatch) {
-		|																													state->late_u = 7;
-		|																												} else {
-		|																													state->late_u = late_macro_pending();
-		|																													if (state->late_u == 8)
-		|																														state->late_u = 7;
-		|																												}
-		|																												unsigned sel = group_sel();
-		|																												switch (sel) {
-		|																												case 0:
-		|																												case 7:
-		|																													state->other = state->curuadr + 1;
-		|																													break;
-		|																												case 1:
-		|																												case 2:
-		|																												case 3:
-		|																													BUS_BRN_READ(state->other);
-		|																													break;
-		|																												case 4:
-		|																													BUS_BRN_READ(state->other);
-		|																													state->other += state->fiu;
-		|																													break;
-		|																												case 5:
-		|																													state->other = state->decode >> 3;
-		|																													state->other <<= 1;
-		|																													break;
-		|																												case 6:
-		|																													state->other = (state->topu ^ 0xffff) & 0x3fff;
-		|																													break;
-		|																												default:
-		|																													assert(sel < 8);
-		|																													break;
-		|																												}
-		|																											}
-		|
-		|																											if (aclk) {
-		|																												BUS_UEI_READ(state->uei);
-		|																												state->uei &= ~(1 << BUS_UEI_LSB(4));
-		|																												state->uei |= state->ferr << BUS_UEI_LSB(4);
-		|																												if (state->check_exit_ue)
-		|																													state->uei |= (1<<BUS_UEI_LSB(3));
-		|																												else
-		|																													state->uei &= ~(1<<BUS_UEI_LSB(3));
-		|																												state->uei <<= 1;
-		|																												state->uei |= 1;
-		|																												state->uei ^= 0xffff;
-		|																												state->uev = 16 - fls(state->uei);
-		|																										
-		|																												if (PIN_SSTOP=> && PIN_DMODE=>) {
-		|																													state->curuadr = output.nu;
 		|																												}
 		|																											}
 		|	output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|																											if (aclk) {
-		|																												unsigned adr = 0;
-		|																												if (!output.u_event)
-		|																													adr |= 0x02;
-		|																												if (!macro_event)
-		|																													adr |= 0x04;
-		|																												adr |= br_tim << 3;
-		|																												adr |= br_type << 5;
-		|																												unsigned rom = state->pa044[adr];
-		|																										
-		|																												if (sclke) {
-		|																													rom |= 0x2;
-		|																												} else {
-		|																													rom ^= 0x2;
-		|																												}
-		|																												unsigned mode = 3;
-		|																												if (!bhcke) {
-		|																													mode = 0;
-		|																													state->bhreg = rom;
-		|																												}
-		|																										
-		|																												state->hint_last = (state->bhreg >> 1) & 1;
-		|																												state->hint_t_last = (state->bhreg >> 0) & 1;
-		|
-		|																												bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
-		|																												if (PIN_SSTOP=> && state->bad_hint_enable && bad_hint_disp) {
-		|																													unsigned restrt_rnd = 0;
-		|																													restrt_rnd |= RNDX(RND_RESTRT0) ? 2 : 0;
-		|																													restrt_rnd |= RNDX(RND_RESTRT1) ? 1 : 0;
-		|																													if (!state->wanna_dispatch) {
-		|																														state->rreg = 0xa;
-		|																													} else if (restrt_rnd != 0) {
-		|																														state->rreg = (restrt_rnd & 0x3) << 1;
+		|																											if (q4pos) {
+		|																												if (aclk) {
+		|																													unsigned adr = 0;
+		|																													if (!output.u_event)
+		|																														adr |= 0x02;
+		|																													if (!macro_event)
+		|																														adr |= 0x04;
+		|																													adr |= br_tim << 3;
+		|																													adr |= br_type << 5;
+		|																													unsigned rom = state->pa044[adr];
+		|																											
+		|																													if (sclke) {
+		|																														rom |= 0x2;
 		|																													} else {
-		|																														state->rreg &= 0xa;
+		|																														rom ^= 0x2;
 		|																													}
-		|																													if (macro_event) {
-		|																														state->rreg &= ~0x2;
+		|																													unsigned mode = 3;
+		|																													if (!bhcke) {
+		|																														mode = 0;
+		|																														state->bhreg = rom;
 		|																													}
-		|																													state->treg = 0x3;
-		|																													bool dnan0d = !(dispatch && RNDX(RND_PRED_LD));
-		|																													bool tsnor0b = !(dnan0d || state->tos_vld_cond);
-		|																													if (tsnor0b)
-		|																														state->treg |= 0x8;
-		|																													if (!state->tos_vld_cond)
-		|																														state->treg |= 0x4;
-		|																												} else if (PIN_SSTOP=> && state->bad_hint_enable) {
-		|																													state->rreg <<= 1;
-		|																													state->rreg &= 0xe;
-		|																													state->rreg |= 0x1;
-		|																													state->treg <<= 1;
-		|																													state->treg &= 0xe;
-		|																													state->treg |= 0x1;
-		|																												}
-		|																												state->rq = state->rreg;
-		|																												state->foo7 = state->treg >> 3;
 		|																										
-		|																												unsigned lin = 0;
-		|																												lin |= state->latched_cond << 3;
-		|																												unsigned condsel;
-		|																												BUS_CSEL_READ(condsel);
-		|																												uint8_t pa042 = state->pa042[condsel << 2];
-		|																												bool is_e_ml = (pa042 >> 7) & 1;
-		|																												lin |= is_e_ml << 2;
-		|																												lin |= PIN_LUIR=> << 1;
-		|																												lin |= state->q3cond << 0;
-		|																										
-		|																												if (!sclke) {
-		|																													state->lreg = lin;
-		|																												}
-		|																										
-		|																												if ((lin & 0x4) && !sclke) {
-		|																													state->last_late_cond = condition();
-		|																												}
-		|																										
-		|																												switch(state->lreg & 0x6) {
-		|																												case 0x0:
-		|																												case 0x4:
-		|																													state->latched_cond = (state->lreg >> 3) & 1;
-		|																													break;
-		|																												case 0x2:
-		|																													state->latched_cond = (state->lreg >> 0) & 1;
-		|																													break;
-		|																												case 0x6:
-		|																													state->latched_cond = state->last_late_cond;
-		|																													break;
+		|																													state->hint_last = (state->bhreg >> 1) & 1;
+		|																													state->hint_t_last = (state->bhreg >> 0) & 1;
+		|
+		|																													bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
+		|																													if (PIN_SSTOP=> && state->bad_hint_enable && bad_hint_disp) {
+		|																														unsigned restrt_rnd = 0;
+		|																														restrt_rnd |= RNDX(RND_RESTRT0) ? 2 : 0;
+		|																														restrt_rnd |= RNDX(RND_RESTRT1) ? 1 : 0;
+		|																														if (!state->wanna_dispatch) {
+		|																															state->rreg = 0xa;
+		|																														} else if (restrt_rnd != 0) {
+		|																															state->rreg = (restrt_rnd & 0x3) << 1;
+		|																														} else {
+		|																															state->rreg &= 0xa;
+		|																														}
+		|																														if (macro_event) {
+		|																															state->rreg &= ~0x2;
+		|																														}
+		|																														state->treg = 0x3;
+		|																														bool dnan0d = !(dispatch && RNDX(RND_PRED_LD));
+		|																														bool tsnor0b = !(dnan0d || state->tos_vld_cond);
+		|																														if (tsnor0b)
+		|																															state->treg |= 0x8;
+		|																														if (!state->tos_vld_cond)
+		|																															state->treg |= 0x4;
+		|																													} else if (PIN_SSTOP=> && state->bad_hint_enable) {
+		|																														state->rreg <<= 1;
+		|																														state->rreg &= 0xe;
+		|																														state->rreg |= 0x1;
+		|																														state->treg <<= 1;
+		|																														state->treg &= 0xe;
+		|																														state->treg |= 0x1;
+		|																													}
+		|																													state->rq = state->rreg;
+		|																													state->foo7 = state->treg >> 3;
+		|																											
+		|																													unsigned lin = 0;
+		|																													lin |= state->latched_cond << 3;
+		|																													unsigned condsel;
+		|																													BUS_CSEL_READ(condsel);
+		|																													uint8_t pa042 = state->pa042[condsel << 2];
+		|																													bool is_e_ml = (pa042 >> 7) & 1;
+		|																													lin |= is_e_ml << 2;
+		|																													lin |= PIN_LUIR=> << 1;
+		|																													lin |= state->q3cond << 0;
+		|																											
+		|																													if (!sclke) {
+		|																														state->lreg = lin;
+		|																													}
+		|																											
+		|																													if ((lin & 0x4) && !sclke) {
+		|																														state->last_late_cond = condition();
+		|																													}
+		|																											
+		|																													switch(state->lreg & 0x6) {
+		|																													case 0x0:
+		|																													case 0x4:
+		|																														state->latched_cond = (state->lreg >> 3) & 1;
+		|																														break;
+		|																													case 0x2:
+		|																														state->latched_cond = (state->lreg >> 0) & 1;
+		|																														break;
+		|																													case 0x6:
+		|																														state->latched_cond = state->last_late_cond;
+		|																														break;
+		|																													}
 		|																												}
 		|																											}
 		|
@@ -1429,41 +1423,40 @@ class SEQ(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|																							if (q3pos && !PIN_ADROE=>) {
-		|																								if (macro_event) {
-		|																									spc_bus = 0x6;
-		|																								} else {
-		|																									spc_bus = (pa040d >> 3) & 0x7;
-		|																								}
-		|																								bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
-		|																								bool resolve_drive;
-		|																								if (!macro_event) {
-		|																									resolve_drive = !((pa040d >> 6) & 1);
-		|																								} else {
-		|																									resolve_drive = true;
-		|																								}
-		|																								if (!resolve_drive) {
-		|																									adr_bus = state->resolve_offset << 7;
-		|																								} else if (adr_is_code) {
-		|																									adr_bus = (state->coff >> 3) << 7;
-		|																								} else {
-		|																									adr_bus = state->output_ob << 7;
-		|																								}
-		|															
-		|																								uint64_t branch;
-		|																								branch = branch_offset() & 7;
-		|																								branch ^= 0x7;
-		|																								adr_bus |= branch << 4;
-		|																								if (!adr_is_code) {
-		|																									adr_bus |= state->name_bus << 32;
-		|																								} else if (!(urand & 0x2)) {
-		|																									adr_bus |= state->pcseg << 32; 
-		|																								} else {
-		|																									adr_bus |= state->retseg << 32;
-		|																								}
-		|																							}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
+		|																								if (!PIN_ADROE=>) {
+		|																									if (macro_event) {
+		|																										spc_bus = 0x6;
+		|																									} else {
+		|																										spc_bus = (pa040d >> 3) & 0x7;
+		|																									}
+		|																									bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
+		|																									bool resolve_drive;
+		|																									if (!macro_event) {
+		|																										resolve_drive = !((pa040d >> 6) & 1);
+		|																									} else {
+		|																										resolve_drive = true;
+		|																									}
+		|																									if (!resolve_drive) {
+		|																										adr_bus = state->resolve_offset << 7;
+		|																									} else if (adr_is_code) {
+		|																										adr_bus = (state->coff >> 3) << 7;
+		|																									} else {
+		|																										adr_bus = state->output_ob << 7;
+		|																									}
+		|															
+		|																									uint64_t branch;
+		|																									branch = branch_offset() & 7;
+		|																									branch ^= 0x7;
+		|																									adr_bus |= branch << 4;
+		|																									if (!adr_is_code) {
+		|																										adr_bus |= state->name_bus << 32;
+		|																									} else if (!(urand & 0x2)) {
+		|																										adr_bus |= state->pcseg << 32; 
+		|																									} else {
+		|																										adr_bus |= state->retseg << 32;
+		|																									}
+		|																								}
 		|																								bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
 		|																								output.labrt = bad_hint_disp && !(RNDX(RND_L_ABRT) && output.seqsn);
 		|																							}

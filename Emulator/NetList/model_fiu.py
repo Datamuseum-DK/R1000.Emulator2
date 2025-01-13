@@ -303,8 +303,8 @@ class FIU(PartFactory):
 		|	uint64_t rot = 0;
 		|	uint64_t vmsk = 0, tmsk = 0;
 		|	bool sgnbit = 0;
-		|	uint64_t ft, tir, vir, m;
-		|	unsigned s, fs, u, sgn;
+		|	uint64_t ft, tir, vir;
+		|	unsigned s, fs, sgn;
 		|	bool zero_length;
 		|
 		|	unsigned lfl;
@@ -357,14 +357,32 @@ class FIU(PartFactory):
 		|	sbit &= 0x7f;
 		|	ebit &= 0x7f;
 		|
-		|	unsigned msk;
+		|	uint64_t msk6;
 		|	if (op != 0) {
-		|		if (((offset + lenone) & 3) == 3)
-		|			msk = 0xffff;
-		|		else
-		|			msk = 0x7fff;
+		|		msk6 = ~0ULL;
+		|		if (((offset + lenone) & 3) != 3) {
+		|			msk6 >>= 4;
+		|		}
 		|	} else {
-		|		msk = 0xffff0000 >> ((offset + (lenone & 3)) >> 2);
+		|#if 0
+		|		unsigned sx = ((offset + (lenone & 3)) >> 2);
+		|		if (sx == 0 || sx == 0x20) {
+		|			msk6 = 0;
+		|		} else if (sx < 0x10) {
+		|			msk6 = ~0ULL << (4 * (16 - sx));
+		|		} else {
+		|			msk6 = ~0ULL >> (4 * (sx - 16));
+		|		}
+		|#else
+		|		unsigned sx = (offset + (lenone & 3)) & ~0x3;
+		|		if (sx == 0 || sx == 0x80) {
+		|			msk6 = 0;
+		|		} else if (sx < 0x40) {
+		|			msk6 = ~0ULL << (64 - sx);
+		|		} else {
+		|			msk6 = ~0ULL >> (sx - 64);
+		|		}
+		|#endif
 		|	}
 		|
 		|	// The actual rotation
@@ -376,33 +394,18 @@ class FIU(PartFactory):
 		|	s &= 0x3f;
 		|
 		|	fs = s & 3;
-		|	tir = state->ti_bus >> fs;
-		|	vir = state->vi_bus >> fs;
-		|	switch (fs) {
-		|	case 1:
-		|		tir |= (state->vi_bus & 1) << 63;
-		|		vir |= (state->ti_bus & 1) << 63;
-		|		break;
-		|	case 2:
-		|		tir |= (state->vi_bus & 3) << 62;
-		|		vir |= (state->ti_bus & 3) << 62;
-		|		break;
-		|	case 3:
-		|		tir |= (state->vi_bus & 7) << 61;
-		|		vir |= (state->ti_bus & 7) << 61;
-		|		break;
-		|	default:
-		|		break;
+		|	if (fs == 0) {
+		|		tir = state->ti_bus;
+		|		vir = state->vi_bus;
+		|	} else {
+		|		tir = state->ti_bus >> fs;
+		|		tir |= state->vi_bus << (64 - fs);
+		|		vir = state->vi_bus >> fs;
+		|		vir |= state->ti_bus << (64 - fs);
 		|	}
-		|	m = 0xf;
-		|	ft = 0x0;
-		|	for (u = 1; u < (1<<16); u += u) {
-		|		if (msk & u)
-		|			ft |= vir & m;
-		|		else
-		|			ft |= tir & m;
-		|		m <<= 4;
-		|	}
+		|
+		|	ft = msk6 & vir;
+		|	ft |= (~msk6) & tir;
 		|
 		|	if (fill_mode) {
 		|		sgnbit = true;
