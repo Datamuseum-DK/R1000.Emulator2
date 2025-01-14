@@ -143,14 +143,9 @@ class FIU(PartFactory):
         yield "PIN_QTOE.neg()"
         yield "PIN_QFOE.neg()"
 
-        #yield "PIN_QADROE"
-
-        #yield "BUS_MSTRT"
         yield "PIN_LABR"
         yield "PIN_LEABR"
         yield "PIN_EABR"
-        #yield "BUS_MCTL"
-        #yield "BUS_CNDSL"
         yield "BUS_BDHIT"
 
         yield "BUS_ST"
@@ -364,16 +359,6 @@ class FIU(PartFactory):
 		|			msk6 >>= 4;
 		|		}
 		|	} else {
-		|#if 0
-		|		unsigned sx = ((offset + (lenone & 3)) >> 2);
-		|		if (sx == 0 || sx == 0x20) {
-		|			msk6 = 0;
-		|		} else if (sx < 0x10) {
-		|			msk6 = ~0ULL << (4 * (16 - sx));
-		|		} else {
-		|			msk6 = ~0ULL >> (4 * (sx - 16));
-		|		}
-		|#else
 		|		unsigned sx = (offset + (lenone & 3)) & ~0x3;
 		|		if (sx == 0 || sx == 0x80) {
 		|			msk6 = 0;
@@ -382,7 +367,6 @@ class FIU(PartFactory):
 		|		} else {
 		|			msk6 = ~0ULL >> (sx - 64);
 		|		}
-		|#endif
 		|	}
 		|
 		|	// The actual rotation

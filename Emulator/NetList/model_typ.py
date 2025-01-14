@@ -99,9 +99,8 @@ class TYP(PartFactory):
 
     def sensitive(self):
             yield "PIN_H2.neg()"
-            yield "PIN_Q2"
+            yield "PIN_Q2.pos()"
             yield "PIN_Q4.pos()"
-            # yield "PIN_UEN"
             yield "PIN_BHSTP"
 
     def priv_decl(self, file):
@@ -423,10 +422,10 @@ class TYP(PartFactory):
 		|	bool chi = false;
 		|	bool clo = false;
 		|	//bool h2 = PIN_H2=>;
-		|	//bool h1pos = PIN_H2.negedge();
-		|	bool q1pos = PIN_Q2.negedge();
+		|	bool h1pos = PIN_H2.negedge();
+		|	//bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
-		|	bool q3pos = PIN_Q4.negedge();
+		|	//bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool aclk = PIN_CCLK.posedge();
 		|
@@ -455,21 +454,25 @@ class TYP(PartFactory):
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	output.z_qf = PIN_QFOE=>;
 		|	output.z_qt = PIN_QTOE=>;
-		|											if (q1pos) {
+		|											if (h1pos && !output.z_qf) {
 		|												find_a();
+		|												output.qf = state->a ^ BUS_QF_MASK;
+		|												fiu_bus = ~state->a;
+		|											}
+		|											if (h1pos && !output.z_qt) {
 		|												find_b();
-		|												if (!output.z_qf) {
-		|													output.qf = state->a ^ BUS_QF_MASK;
-		|													fiu_bus = ~state->a;
-		|												}
-		|												if (!output.z_qt) {
-		|													output.qt = state->b ^ BUS_QT_MASK;
-		|													typ_bus = ~state->b;
-		|												}
+		|												output.qt = state->b ^ BUS_QT_MASK;
+		|												typ_bus = ~state->b;
 		|											}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
+		|																if (output.z_qf) {
+		|																	find_a();
+		|																}
+		|																if (output.z_qt) {
+		|																	find_b();
+		|																}
 		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
 		|																if (output.cwe && uirc != 0x28)
 		|																state->wen = !state->wen;
@@ -642,7 +645,7 @@ class TYP(PartFactory):
 		|	BUS_MCTL_READ(marctl);
 		|	bool foo1 = marctl >= 4;
 		|	output.ldmar = !(foo1 && PIN_BHSTP=>);
-		|																							if (q3pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
+		|																							if (q2pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
 		|																								if (marctl & 0x8) {
 		|																									spc_bus = (marctl & 0x7) ^ 0x7;
 		|																								} else {

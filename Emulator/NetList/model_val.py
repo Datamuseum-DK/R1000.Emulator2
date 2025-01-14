@@ -373,7 +373,7 @@ class VAL(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	//bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	bool h2 = PIN_H2=>;
+		|	//bool h2 = PIN_H2=>;
 		|	bool h1pos = PIN_H2.negedge();
 		|	bool sclken = !PIN_SCLKE=>;
 		|	bool aclk = PIN_CCLK.posedge();
@@ -406,41 +406,37 @@ class VAL(PartFactory):
 		|																											}
 		|
 		|	output.z_qf = PIN_QFOE=>;
+		|	output.z_qv = PIN_QVOE=>;
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|							if (h1pos && !output.z_qf) {
 		|								find_a();
 		|								output.qf = state->a ^ BUS_QF_MASK;
 		|								fiu_bus = output.qf;
 		|							}
+		|							if (h1pos && !output.z_qv) {
+		|								find_b();
+		|								output.qv = state->b ^ BUS_QV_MASK;
+		|								val_bus = ~state->b;
+		|							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|															if (q2pos && output.z_qf) {
-		|																find_a();
-		|															}
 		|															if (q2pos) {
+		|																if (output.z_qf) {
+		|																	find_a();
+		|																}
+		|																if (output.z_qv) {
+		|																	find_b();
+		|																}
 		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
 		|																if (output.cwe && uirc != 0x28)
 		|																	state->wen = !state->wen;
-		|															}
 		|														
-		|	output.z_qv = PIN_QVOE=>;
-		|															if (q2pos || (!h2 && !output.z_qv)) {
-		|																find_b();
-		|																if (!output.z_qv) {
-		|																	output.qv = state->b ^ BUS_QV_MASK;
-		|																	val_bus = ~state->b;
-		|																}
-		|															}
-		|														
-		|															if (q2pos) {
 		|																BUS_MSRC_READ(state->msrc);
 		|																bool start_mult = rand != 0xc;
 		|																if (!start_mult) {
 		|																	state->malat = state->a ^ BUS_DV_MASK;
 		|																	state->mblat = state->b ^ BUS_DV_MASK;
 		|																}
-		|															}
 		|
-		|															if (q2pos) {
 		|																struct f181 f181l, f181h;
 		|																unsigned tmp, proma, alur;
 		|														
