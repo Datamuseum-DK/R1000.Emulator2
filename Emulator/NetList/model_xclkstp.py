@@ -51,7 +51,6 @@ class XCLKSTP(PartFactory):
             "idle_event",
             "PIN_DFCLK",
             "BUS_DIAG",
-            "BUS_ECC",
             "BUS_STOP",
         )
 
@@ -70,9 +69,6 @@ class XCLKSTP(PartFactory):
 		|
 		|	unsigned clock_stop;
 		|	BUS_STOP_READ(clock_stop);
-		|
-		|	unsigned ecc;
-		|	BUS_ECC_READ(ecc);
 		|
 		|	bool q3 = PIN_Q3=>;
 		|	bool q3pos = PIN_Q3.posedge();
@@ -93,11 +89,6 @@ class XCLKSTP(PartFactory):
 		|			event = false;
 		|		}
 		|
-		|		if (ecc == BUS_ECC_MASK) {
-		|			if (q3x)
-		|				output.clkrun = false;
-		|			event = false;
-		|		}
 		|		if (state->sf_stop) {
 		|			if (q3x)
 		|				output.clkrun = false;
@@ -111,7 +102,7 @@ class XCLKSTP(PartFactory):
 		|		idle_next = &q3neg_event;
 		|	}
 		|
-		|	if (state->idle > 5 && ecc == 2 && diag == 3 && clock_stop == 0xff) {
+		|	if (state->idle > 5 && diag == 3 && clock_stop == 0xff) {
 		|		idle_next = &idle_event;
 		|	}
 		|
@@ -133,7 +124,6 @@ class XCLKSTPTV(PartFactory):
             "PIN_DFCLK",
             "PIN_CSAWR",
             "BUS_DIAG",
-            "BUS_ECC",
             "BUS_STOP",
         )
 
@@ -151,9 +141,6 @@ class XCLKSTPTV(PartFactory):
 		|
 		|	unsigned clock_stop;
 		|	BUS_STOP_READ(clock_stop);
-		|
-		|	unsigned ecc;
-		|	BUS_ECC_READ(ecc);
 		|
 		|	bool q3 = PIN_Q3=>;
 		|	bool q3pos = PIN_Q3.posedge();
@@ -176,10 +163,6 @@ class XCLKSTPTV(PartFactory):
 		|				output.ramrun = false;
 		|		}
 		|
-		|		if (ecc == BUS_ECC_MASK && q3x) {
-		|			output.ramrun = false;
-		|		}
-		|
 		|		if (state->sf_stop) {
 		|			if (q3x)
 		|				output.clkrun = false;
@@ -191,7 +174,7 @@ class XCLKSTPTV(PartFactory):
 		|	if (q3) {
 		|		idle_next = &q3neg_event;
 		|	}
-		|	if (state->idle > 5 && ecc == 2 && diag == 3 && clock_stop == 0xff) {
+		|	if (state->idle > 5 && diag == 3 && clock_stop == 0xff) {
 		|		idle_next = &idle_event;
 		|	}
 		|

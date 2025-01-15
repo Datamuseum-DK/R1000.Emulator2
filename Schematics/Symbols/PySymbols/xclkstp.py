@@ -18,8 +18,6 @@ class XCLKSTP(FChip):
 
         self.sig_left(ChipSig("-->+", "DIAG", 0, 1))
 
-        self.sig_left(ChipSig("-->+", "ECC", 0, 1))
-
         self.sig_left(ChipSig("-->+", "STOP", 0, 7))
 
         self.sig_right(ChipSig("+-->", "CLKRUN"))
@@ -44,8 +42,6 @@ class XCLKSTPTV(FChip):
         self.sig_left(ChipSig("-->+", "DFCLK"))
 
         self.sig_left(ChipSig("-->+", "DIAG", 0, 1))
-
-        self.sig_left(ChipSig("-->+", "ECC", 0, 1))
 
         self.sig_left(ChipSig("-->+", "STOP", 0, 7))
         self.sig_left(ChipSig("-->+", "CSAWR"))
