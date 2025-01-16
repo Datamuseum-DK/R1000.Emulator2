@@ -791,7 +791,6 @@ class FIU(PartFactory):
 		|																output.contin = !((pa025 >> 5) & 1);
 		|																output.pgxin = !(PIN_MICEN=> && state->page_xing);
 		|																output.memex = !(PIN_MICEN=> && state->memex);
-		|																output.nopck = !(state->miss && !(PIN_FRDRDR=> && PIN_FRDTYP));
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {

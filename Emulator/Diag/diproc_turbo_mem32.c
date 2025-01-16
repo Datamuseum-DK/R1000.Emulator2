@@ -45,13 +45,11 @@ fill_memory_m32(const struct diagproc *dp)
 	return (0);
 #else
 	struct ctx *ctx;
-	uint16_t *ptrc;
-	uint64_t typ, val, cbit, *ptrt;
+	uint64_t typ, val, *ptrt;
 	int i;
 
 	typ = vbe64dec(dp->ram + 0x18);		// P18IS8 DATA.TYP
 	val = vbe64dec(dp->ram + 0x20);		// P20IS8 DATA.VAL
-	cbit = vbe16dec(dp->ram + 0x29);	// P29IS2 DATA.CBITS
 
 	// P28IS1 DATA.VPAR is loaded into DREGVP but not stored anywhere.
 
@@ -59,10 +57,8 @@ fill_memory_m32(const struct diagproc *dp)
 	ctx = CTX_Find(COMP_Z000);
 	AN(ctx);
 	uint8_t *ptr = (void*)(ctx + 1);
-	ptrc = (uint16_t *)(void*)(ptr + (9 << 15));
-	ptrt = (uint64_t *)(void*)(ptrc + (1<<21));
+	ptrt = (uint64_t *)(void*)(ptr + (9 << 15));
 	for (i = 0; i < 1<<21; i++) {
-		ptrc[i] = cbit;
 		ptrt[i+i] = typ;
 		ptrt[i+i+1] = val;
 	}

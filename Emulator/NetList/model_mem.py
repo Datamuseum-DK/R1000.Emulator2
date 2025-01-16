@@ -48,12 +48,9 @@ class MEM(PartFactory):
         file.fmt('''
 		|	uint64_t ram[1<<15];	// Turbo 12 bit line, 3 bit set
 		|	uint8_t rame[1<<15];	// Turbo 12 bit line, 3 bit set
-		|
-		|	uint16_t bitc[1 << 21];	// Turbo 12 bit line, 3 bit set, 6 bit word
 		|	uint64_t bitt[1 << 22];	// Turbo 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
 		|
 		|	unsigned cl, wd;
-		|	uint16_t cdreg, cqreg;
 		|	uint64_t tdreg, tqreg;
 		|	uint64_t vdreg, vqreg;
 		|
@@ -298,19 +295,17 @@ class MEM(PartFactory):
 		|									unsigned set = find_set(state->cmd);
 		|									uint32_t radr =	(set << 18) | (state->cl << 6) | state->wd;
 		|									assert(radr < (1 << 21));
-		|									state->cqreg = state->bitc[radr];
 		|									state->tqreg = state->bitt[radr+radr];
 		|									state->vqreg = state->bitt[radr+radr+1];
 		|								}
 		|							}
-
+		|	
 		|							if (h1pos && !state->cyt) {
 		|								bool ihit = output.hita && output.hitb;
 		|								if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->labort) {
 		|									unsigned set = find_set(state->cmd);
 		|									uint32_t radr = (set << 18) | (state->cl << 6) | state->wd;
 		|									assert(radr < (1 << 21));
-		|									state->bitc[radr] = state->cdreg;
 		|									state->bitt[radr+radr] = state->tdreg;
 		|									state->bitt[radr+radr+1] = state->vdreg;
 		|								}
@@ -348,13 +343,11 @@ class MEM(PartFactory):
 		|									if (not_me) {
 		|										output.qt = BUS_QT_MASK;
 		|										output.qv = BUS_QV_MASK;
-		|										ecc_bus = 0x1ff;
 		|										typ_bus = ~0ULL;
 		|										val_bus = ~0ULL;
 		|									} else {
 		|										output.qt = state->tqreg;
 		|										output.qv = state->vqreg;
-		|										ecc_bus = state->cqreg;
 		|										typ_bus = state->tqreg;
 		|										val_bus = state->vqreg;
 		|									}
@@ -372,7 +365,6 @@ class MEM(PartFactory):
 		|																												state->cstop = !(diag_sync || diag_freeze);
 		|
 		|																												if (!PIN_LDWDR=>) {
-		|																													state->cdreg = ecc_bus;
 		|																													BUS_DT_READ(state->tdreg);
 		|																													BUS_DV_READ(state->vdreg);
 		|																													if (state->vdreg != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << state->vdreg << " " << val_bus);

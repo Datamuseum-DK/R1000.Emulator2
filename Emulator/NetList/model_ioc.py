@@ -36,19 +36,6 @@
 
 from part import PartModelDQ, PartFactory
 
-CBITS = '''
-           TYP:0                                                     TYP:63 VAL:0                                                     VAL:63 CHECKBIT
-    ECCG16 --------------------------------++++++++++++++++++++++++++++++++ --------------------------------++++++++++++++++++++++++++++++++ +--------
-    ECCG17 ++++++++++++++++++++++++++++++++-------------------------------- --------------------------------++++++++++++++++++++++++++++++++ -+-------
-    ECCG28 ++++++++-----++---+++-+--+++--+-++++++++-----++---+++-+--+++--+- ++++++++-------+-----+-+--+-+-+----++---+-+-+--++++---++++-+---- --+------
-    ECCG29 +++++++++++++-++++---+-------+--+++++++++++++-++++---+-------+-- -+------++++++++-------++----++-----+++++--+-++----+---+--++---+ ---+-----
-    ECCG44 ++-----+++++++++--++--+++---+-++++-----+++++++++--++--+++-----++ ---+---+----+++---++++--++++------------++++++++---++++------++- ----+----
-    ECCG45 -----++++--+---++++++++++++----+-----++++--+---++++++++++++-+--+ --+--++----+--+-++++++++-----+---++----+--------++++++++----+--+ -----+---
-    ECCG46 +-++--+-++--+---++----+-+++++++++-++--+-++--+---++----+-++++++++ ----+-+--++------++---+-+++++++++-++--+--+----++--+-+----++-++-- ------+--
-    ECCG61 -++-++----+-++-++-+-++-++-++++---++-++----+-++-++-+-++-++-++++-- +---++-++-+-+--++---+-+--+-----+++---+----+--+---+---+--++++++++ -------+-
-    ECCG62 ---++----+++-++--+-+++-+-+-+++++---++----+++-++--+-+++-+-+-+++++ ++++----++-+-+--++-+-------++--+++++++++-+-++---+-------+-----+- --------+
-'''
-
 class IOC(PartFactory):
     ''' IOC Dummy register '''
 
@@ -61,23 +48,9 @@ class IOC(PartFactory):
         self.scm.sf_cc.include("Iop/iop_sc_68k20.hh")
         file.include("Infra/vend.h")
 
-    def getmasks(self):
-        invert = [0, 0, 0, 0, 1, 1, 1, 0, 0]
-        for i in CBITS.split("\n"):
-            if not "ECCG" in i:
-                continue
-            j = i.split()
-            tmask = int(j[1].replace("-", "0").replace("+", "1"), 2)
-            vmask = int(j[2].replace("-", "0").replace("+", "1"), 2)
-            yield tmask, vmask, invert.pop(0)
-
     def state(self, file):
         file.fmt('''
 		|	uint64_t dummy_typ, dummy_val;
-		|	uint8_t elprom[512];
-		|	uint8_t eidrg;
-		|	unsigned cbreg1;
-		|	unsigned cbreg2;
 		|
 		|	unsigned iack;
 		|	struct ioc_sc_bus_xact *xact;
@@ -100,15 +73,12 @@ class IOC(PartFactory):
 		|	bool slice_ev, delay_ev;
 		|	bool sen, den, ten;
 		|	uint8_t pb011[32];
-		|	bool multibit_error, checkbit_error;
 		|	bool pfr;
-		|	bool doecc;
 		|''');
 
 
     def init(self, file):
         file.fmt('''
-		|	load_programmable(this->name(), state->elprom, sizeof state->elprom, "PA115-01");
 		|	load_programmable(this->name(), state->pb011, sizeof state->pb011, "PB011");
 		|
 		|	struct ctx *c1 = CTX_Find("IOP.ram_space");
@@ -120,7 +90,6 @@ class IOC(PartFactory):
         ''' further private decls '''
         file.fmt('''
 		|       void do_xact(void);
-		|	unsigned calc_ecc(uint64_t typ, uint64_t val);
 		|''')
 
     def priv_impl(self, file):
@@ -257,33 +226,6 @@ class IOC(PartFactory):
 		|		<< state->xact->is_write
 		|	);
 		|}
-		|
-		|unsigned
-		|SCM_«mmm» ::
-		|calc_ecc(uint64_t typ, uint64_t val)
-		|{
-		|	uint64_t tmp;
-		|	unsigned cbi = 0, cbo = 0;
-		|	if (!PIN_TVEN=>) {
-		|		cbi = ecc_bus;
-		|	}
-		|''')
-        for tmask, vmask, invert in self.getmasks():
-            file.fmt('''
-		|	cbo <<= 1;
-		|	tmp = (typ & 0x%016xULL) ^ (val & 0x%016xULL);
-		|	cbo |= (uint64_t)__builtin_parityll(tmp);
-		|''' % (tmask, vmask))
-            if invert:
-                file.fmt('''
-		|	cbo ^= 1;
-		|''')
-
-        file.fmt('''
-		|	cbo ^= cbi;
-		|	cbo &= 0x1ff;
-		|	return (cbo);
-		|}
 		|''')
 
     def sensitive(self):
@@ -338,8 +280,6 @@ class IOC(PartFactory):
 		|	BUS_DTYP_READ(typ);
 		|	BUS_DVAL_READ(val);
 		|
-		|	unsigned cbo = 0;
-		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
 		|																//if (val != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << val << " " << val_bus);
@@ -355,45 +295,10 @@ class IOC(PartFactory):
 		|																if (rand == 0x0b) {
 		|																	output.dme = true;
 		|																}
-		|																state->doecc = true;
 		|															}
-		|																			if (state->doecc) {
-		|																				cbo = calc_ecc(typ, val);
-		|
-		|																				bool drive_other_cb = ((state->pb011[rand] >> 5) & 1);
-		|																				bool qcdr = !((!PIN_ULWDR=>) && drive_other_cb && PIN_TVEN=>);
-		|																				if ((rand & 0x1e) == 0x18)
-		|																					qcdr = false;
-		|																				if (!qcdr) {
-		|																					if ((rand & 0x1e) == 0x18) {
-		|																						ecc_bus = state->cbreg2;
-		|																					} else {
-		|																						//output.qc = cbo;
-		|																						ecc_bus = cbo;
-		|																					}
-		|																					if (!q4pos) {
-		|																						idle_next = &tvc_event;
-		|																					}
-		|																				}
-		|																				output.err = cbo != 0;
-		|																			}
-		|
 		|{
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
-		|																												state->doecc = false;
-		|																												if (sclk_pos && rand == 0x10) {
-		|																													state->cbreg2 = (typ >> 7) & 0x1ff;
-		|																												}
-		|																												if (q4pos && !PIN_TVEN=>) {
-		|																													state->eidrg = state->elprom[cbo];
-		|																													state->checkbit_error = (state->eidrg & 0x81) != 0x81;
-		|																													state->multibit_error = state->eidrg & 1;
-		|																													//BUS_DC_READ(state->cbreg1);
-		|																													//if (state->cbreg1 != ecc_bus) ALWAYS_TRACE(<< "ECCBUS " << std::hex << state->cbreg1 << " " << ecc_bus);
-		|																													state->cbreg1 = ecc_bus;
-		|																													state->cbreg1 ^= 0x1ff;
-		|																												}
 		|
 		|																												if (sclk_pos) {
 		|																													if (rand == 0x23)
@@ -584,16 +489,16 @@ class IOC(PartFactory):
 		|			output.qtyp = (uint64_t)(state->slice) << 48;
 		|			output.qtyp |= (uint64_t)(state->delay) << 32;
 		|			output.qtyp |= ((uint64_t)state->rtc) << 16;
-		|			output.qtyp |= state->eidrg >> 1;
-		|			output.qtyp |= state->cbreg1 << 7;
+		|			// output.qtyp |= state->eidrg >> 1;
+		|			// output.qtyp |= state->cbreg1 << 7;
 		|			break;
 		|		case 0x16:
 		|		case 0x1c:
 		|		case 0x1d:
 		|			output.qtyp = ((uint64_t)state->rdata) << 32;
 		|			output.qtyp |= ((uint64_t)state->rtc) << 16;
-		|			output.qtyp |= state->eidrg >> 1;
-		|			output.qtyp |= state->cbreg1 << 7;
+		|			// output.qtyp |= state->eidrg >> 1;
+		|			// output.qtyp |= state->cbreg1 << 7;
 		|			break;
 		|		default:
 		|			output.qtyp = state->dummy_typ;
@@ -605,13 +510,13 @@ class IOC(PartFactory):
 		|	BUS_CONDS_READ(cond_sel);
 		|	switch (cond_sel) {
 		|	case 0x78:
-		|		output.cond = state->multibit_error;
+		|		output.cond = true; // state->multibit_error;
 		|		break;
 		|	case 0x79:
 		|		output.cond = state->pfr;
 		|		break;
 		|	case 0x7a:
-		|		output.cond = state->checkbit_error;
+		|		output.cond = true; // state->checkbit_error;
 		|		break;
 		|	case 0x7b:
 		|		output.cond = state->reqwrp != state->reqrdp;
