@@ -19,6 +19,7 @@ class IOC(FChip):
 
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "Q2"))
+        self.sig_left(ChipSig("-->+", "H2"))
         self.sig_left(ChipSig("-->+", "CSTP"))
 
         self.sig_left(ChipSig("-->o", "RESET"))

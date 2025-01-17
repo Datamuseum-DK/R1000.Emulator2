@@ -229,16 +229,17 @@ class IOC(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "BUS_CONDS"
-        yield "PIN_DUMEN"
-        yield "PIN_Q2"
+        #yield "BUS_CONDS"
+        #yield "PIN_DUMEN"
+        yield "PIN_H2.neg()"
+        yield "PIN_Q2.pos()"
         yield "PIN_Q4.pos()"
-        yield "PIN_QTYPOE"
-        yield "PIN_QVALOE"
-        yield "BUS_RAND"
+        #yield "PIN_QTYPOE"
+        #yield "PIN_QVALOE"
+        #yield "BUS_RAND"
         yield "PIN_SCLKST"
-        yield "BUS_TVBS"
-        yield "PIN_ULWDR"
+        #yield "BUS_TVBS"
+        #yield "PIN_ULWDR"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -256,6 +257,7 @@ class IOC(PartFactory):
 		|		state->den = true;
 		|	}
 		|
+		|	//bool h1pos = PIN_H2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool sclk_pos = q4pos && !PIN_CSTP;
