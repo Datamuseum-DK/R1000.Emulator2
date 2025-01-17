@@ -238,20 +238,7 @@ class IOC(PartFactory):
         yield "BUS_RAND"
         yield "PIN_SCLKST"
         yield "BUS_TVBS"
-        yield "PIN_TVEN"
         yield "PIN_ULWDR"
-
-    def private(self):
-        ''' private variables '''
-        yield from self.event_or(
-            "tvc_event",
-            "BUS_DTYP",
-            "PIN_DUMEN",
-            "BUS_DVAL",
-            "PIN_Q4.posedge_event()",
-            "PIN_SCLKST",
-            "PIN_ULWDR",
-        )
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -448,10 +435,6 @@ class IOC(PartFactory):
 		|																												state->dummy_typ = typ;
 		|																												state->dummy_val = val;
 		|																											}
-		|																										
-		|	bool disable_ecc = ((state->pb011[rand] >> 0) & 1);
-		|	output.decc = !(disable_ecc || PIN_TVEN=>);
-		|
 		|}
 		|{
 		|	uint64_t tmp;

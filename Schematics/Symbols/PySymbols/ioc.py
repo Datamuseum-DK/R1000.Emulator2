@@ -19,7 +19,6 @@ class IOC(FChip):
 
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "Q2"))
-        self.sig_left(ChipSig("-->+", "TVEN"))
         self.sig_left(ChipSig("-->+", "CSTP"))
 
         self.sig_left(ChipSig("-->o", "RESET"))
@@ -41,8 +40,6 @@ class IOC(FChip):
         self.sig_right(ChipSig("+<->", "DQVAL", 0, 63))
         self.sig_right(ChipSig("+<--", "QVALOE"))
 
-        self.sig_right(ChipSig("+-->", "ERR"))
-
         self.sig_right(ChipSig("+===", "ORST"))
 
         self.sig_right(ChipSig("+-->", "RSPEMN"))
@@ -53,7 +50,6 @@ class IOC(FChip):
 
 
         self.sig_right(ChipSig("+-->", "LDWDR"))
-        self.sig_right(ChipSig("+-->", "DECC"))
 
         self.sig_right(ChipSig("+-->", "COND"))
         self.sig_right(ChipSig("+-->", "BLTCP"))
