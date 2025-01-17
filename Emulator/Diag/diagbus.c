@@ -10,7 +10,10 @@
 #include "Infra/r1000.h"
 #include "Infra/elastic.h"
 #include "Infra/vsb.h"
+#include "Infra/vend.h"
 #include "Diag/diag.h"
+
+extern uint8_t *ram_space;
 
 struct elastic *diag_elastic;
 
@@ -67,6 +70,16 @@ DiagBus_Send(const struct diproc *dp, unsigned u)
 	uint8_t buf[2];
 	buf[0] = u >> 8;
 	buf[1] = u & 0xff;
+	uint32_t x;
+	while (1) {
+		x = vbe32dec(ram_space + 0x14e0);
+		if (x == 0) {
+			Trace(1, "DIAGBUS, IOP NOT READY 0x%08x 0x%03x", x, u);
+			usleep(10000);
+		} else {
+			break;
+		}
+	} while (u == 0)
 	elastic_put(diag_elastic, buf, 2);
 }
 
