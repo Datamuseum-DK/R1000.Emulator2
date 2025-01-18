@@ -133,15 +133,15 @@ class FIU(PartFactory):
 
     def sensitive(self):
         yield "PIN_H1.pos()"
-        yield "PIN_Q2.pos()"
+        yield "PIN_Q2"
         yield "PIN_Q4.pos()"
 
         yield "BUS_DF"
-        yield "BUS_DT"
-        yield "BUS_DV"
-        yield "PIN_QVOE.neg()"
-        yield "PIN_QTOE.neg()"
-        yield "PIN_QFOE.neg()"
+        #yield "BUS_DT"
+        #yield "BUS_DV"
+        #yield "PIN_QVOE.neg()"
+        #yield "PIN_QTOE.neg()"
+        #yield "PIN_QFOE.neg()"
 
         yield "PIN_LABR"
         yield "PIN_LEABR"
@@ -499,6 +499,7 @@ class FIU(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|	bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	//bool h2pos = PIN_H1.negedge();
@@ -530,7 +531,7 @@ class FIU(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	do_tivi();
-		|							if (PIN_H1=> && !PIN_QFOE=>) {
+		|							if (q1pos && !PIN_QFOE=>) {
 		|								rotator(sclk);
 		|							}
 		|																											if (sclk) {
@@ -694,18 +695,6 @@ class FIU(PartFactory):
 		|	state->phys_ref = !(state->mcntl & 0x6);
 		|	state->logrwn = !(state->logrw && memcyc1);
 		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
-		|
-		|#if 0
-		|	bool pgmod = (state->omq >> 1) & 1;
-		|	unsigned pa027a = 0;
-		|	pa027a = 0;
-		|	pa027a |= board_hit << 5;
-		|	pa027a |= state->init_mru_d << 4;
-		|	pa027a |= (state->omq & 0xc);
-		|	pa027a |= 1 << 1;
-		|	pa027a |= pgmod << 0;
-		|	pa027 = state->pa027[pa027a];
-		|#endif
 		|
 		|	bool scav_trap_next = state->scav_trap;
 		|	if (condsel == 0x69) {		// SCAVENGER_HIT
