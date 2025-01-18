@@ -14,6 +14,7 @@
 #include "Diag/i8052_emul.h"
 #include "Infra/elastic.h"
 #include "Infra/vsb.h"
+#include "Infra/vend.h"
 #include "Diag/diag.h"
 
 #define FLAG_RX_SPIN		(1)
@@ -27,6 +28,8 @@
 #define FLAG_DOWNLOAD_LEN	(1<<8)
 #define FLAG_DOWNLOAD_RUN	(1<<9)
 #define FLAG_UPLOAD		(1<<10)
+
+extern uint8_t *ram_space;
 
 static void v_matchproto_(movx8_write)
 diagproc_movx8_write(struct mcs51 *mcs51, uint8_t adr, int data)
@@ -68,6 +71,13 @@ diagproc_sfrfunc(struct mcs51 * mcs51, uint8_t sfr_adr, int what)
 		if (what >= 0) {
 			Trace(trace_diagbus, "%s TX %02x", dp->name, what);
 			txbuf[0] = what;
+			uint32_t x, y;
+			y = vbe16dec(ram_space + 0x077a);
+			x = vbe32dec(ram_space + 0x14e0);
+			while (!y && !x) {
+				Trace(1, "%s DIAGBUS, IOP NOT READY 0x%08x", dp->name, x);
+				usleep(10000);
+			}
 			elastic_inject(diag_elastic, txbuf, 1);
 			dp->mcs51->sfr[SFR_SCON] |= 0x2;
 			retval = what;
