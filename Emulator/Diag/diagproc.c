@@ -69,7 +69,6 @@ diagproc_sfrfunc(struct mcs51 * mcs51, uint8_t sfr_adr, int what)
 		break;
 	case SFR_SBUF:
 		if (what >= 0) {
-			Trace(trace_diagbus, "%s TX %02x", dp->name, what);
 			txbuf[0] = what;
 			uint32_t x, y;
 			y = vbe16dec(ram_space + 0x077a);
@@ -77,7 +76,10 @@ diagproc_sfrfunc(struct mcs51 * mcs51, uint8_t sfr_adr, int what)
 			while (!y && !x) {
 				Trace(1, "%s DIAGBUS, IOP NOT READY 0x%08x", dp->name, x);
 				usleep(10000);
+				y = vbe16dec(ram_space + 0x077a);
+				x = vbe32dec(ram_space + 0x14e0);
 			}
+			Trace(trace_diagbus, "%s TX %02x", dp->name, what);
 			elastic_inject(diag_elastic, txbuf, 1);
 			dp->mcs51->sfr[SFR_SCON] |= 0x2;
 			retval = what;

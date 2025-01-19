@@ -991,6 +991,22 @@ class SEQ(PartFactory):
 		|	}
 		|	output.bhn = !state->bad_hint;
 		|}
+		|{
+		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));			// q4
+		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
+		|	state->ibld = !ibuff_ld;								// q4
+		|	bool ibemp = !(ibuff_ld || (state->word != 0));
+		|	state->m_ibuff_mt = !(ibemp && state->ibuf_fill);					// lmp, cond, branch_off
+		|
+		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
+		|
+		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
+		|	state->check_exit_ue = !(output.ueven && RNDX(RND_CHK_EXIT) && state->carry_out);	// q4
+		|	state->m_res_ref = !(state->lxval && !(state->display >> 15));				// lmp, cond
+		|
+		|	output.qstp7 = output.bhn && state->l_macro_hic;					// q3 sig
+		|	output.sfive = (state->check_exit_ue && state->ferr);					// q3 sig
+		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|											if (q1pos) {
 		|												BUS_BRTIM_READ(br_tim);
@@ -1033,7 +1049,16 @@ class SEQ(PartFactory):
 		|											}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|															if (q2pos) {
+		|															if (q2pos)
+		|															{
+		|																uint64_t val = state->val_bus >> 32;
+		|																val &= 0xffffff;
+		|
+		|																unsigned tmp = (val >> 7) ^ state->curins;
+		|																tmp &= 0x3ff;
+		|																state->field_number_error = tmp != 0x3ff;
+		|																state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !output.ueven));
+		|
 		|																state->ram[(state->adr + 1) & 0xf] = state->topu;
 		|
 		|																state->l_macro_hic = true;
@@ -1083,11 +1108,49 @@ class SEQ(PartFactory):
 		|																	}
 		|																}
 		|																output.nu = nua;
+		|																output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																							if (q3pos && !(state->foo9 || !output.u_event)) {
-		|																								state->treg = 0;
-		|																								state->foo7 = false;
+		|																							if (q3pos) {
+		|																								if (!(state->foo9 || !output.u_event)) {
+		|																									state->treg = 0;
+		|																									state->foo7 = false;
+		|																								}
+		|																								if (!PIN_ADROE=>) {
+		|																									if (macro_event) {
+		|																										spc_bus = 0x6;
+		|																									} else {
+		|																										spc_bus = (pa040d >> 3) & 0x7;
+		|																									}
+		|																									bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
+		|																									bool resolve_drive;
+		|																									if (!macro_event) {
+		|																										resolve_drive = !((pa040d >> 6) & 1);
+		|																									} else {
+		|																										resolve_drive = true;
+		|																									}
+		|																									if (!resolve_drive) {
+		|																										adr_bus = state->resolve_offset << 7;
+		|																									} else if (adr_is_code) {
+		|																										adr_bus = (state->coff >> 3) << 7;
+		|																									} else {
+		|																										adr_bus = state->output_ob << 7;
+		|																									}
+		|															
+		|																									uint64_t branch;
+		|																									branch = branch_offset() & 7;
+		|																									branch ^= 0x7;
+		|																									adr_bus |= branch << 4;
+		|																									if (!adr_is_code) {
+		|																										adr_bus |= state->name_bus << 32;
+		|																									} else if (!(urand & 0x2)) {
+		|																										adr_bus |= state->pcseg << 32; 
+		|																									} else {
+		|																										adr_bus |= state->retseg << 32;
+		|																									}
+		|																								}
+		|																								bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
+		|																								output.labrt = bad_hint_disp && !(RNDX(RND_L_ABRT) && output.seqsn);
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
@@ -1255,12 +1318,6 @@ class SEQ(PartFactory):
 		|																														state->curuadr = output.nu;
 		|																													}
 		|																												}
-		|																											}
-		|	output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
-		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|																											if (q4pos) {
 		|																												if (aclk) {
 		|																													unsigned adr = 0;
 		|																													if (!output.u_event)
@@ -1349,74 +1406,6 @@ class SEQ(PartFactory):
 		|																														break;
 		|																													}
 		|																												}
-		|																											}
-		|
-		|{
-		|	uint64_t val = state->val_bus >> 32;
-		|	val &= 0xffffff;
-		|
-		|	unsigned tmp = (val >> 7) ^ state->curins;
-		|	tmp &= 0x3ff;
-		|	state->field_number_error = tmp != 0x3ff;
-		|	state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !output.ueven));
-		|}
-		|{
-		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));
-		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
-		|	state->ibld = !ibuff_ld;
-		|	bool ibemp = !(ibuff_ld || (state->word != 0));
-		|	state->m_ibuff_mt = !(ibemp && state->ibuf_fill);
-		|
-		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);
-		|
-		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));
-		|	state->check_exit_ue = !(output.ueven && RNDX(RND_CHK_EXIT) && state->carry_out);
-		|	state->m_res_ref = !(state->lxval && !(state->display >> 15));
-		|
-		|	output.qstp7 = output.bhn && state->l_macro_hic;
-		|	output.sfive = (state->check_exit_ue && state->ferr);
-		|}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|																							if (q3pos) {
-		|																								if (!PIN_ADROE=>) {
-		|																									if (macro_event) {
-		|																										spc_bus = 0x6;
-		|																									} else {
-		|																										spc_bus = (pa040d >> 3) & 0x7;
-		|																									}
-		|																									bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
-		|																									bool resolve_drive;
-		|																									if (!macro_event) {
-		|																										resolve_drive = !((pa040d >> 6) & 1);
-		|																									} else {
-		|																										resolve_drive = true;
-		|																									}
-		|																									if (!resolve_drive) {
-		|																										adr_bus = state->resolve_offset << 7;
-		|																									} else if (adr_is_code) {
-		|																										adr_bus = (state->coff >> 3) << 7;
-		|																									} else {
-		|																										adr_bus = state->output_ob << 7;
-		|																									}
-		|															
-		|																									uint64_t branch;
-		|																									branch = branch_offset() & 7;
-		|																									branch ^= 0x7;
-		|																									adr_bus |= branch << 4;
-		|																									if (!adr_is_code) {
-		|																										adr_bus |= state->name_bus << 32;
-		|																									} else if (!(urand & 0x2)) {
-		|																										adr_bus |= state->pcseg << 32; 
-		|																									} else {
-		|																										adr_bus |= state->retseg << 32;
-		|																									}
-		|																								}
-		|																								bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
-		|																								output.labrt = bad_hint_disp && !(RNDX(RND_L_ABRT) && output.seqsn);
-		|																							}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																											if (q4pos) {
 		|																												switch(state->word) {
 		|																												case 0x0: state->display = state->macro_ins_val >>  0; break;
 		|																												case 0x1: state->display = state->macro_ins_val >> 16; break;
