@@ -787,6 +787,7 @@ class SEQ(PartFactory):
 		|																														state->uadr_decode = 0x0420;
 		|																													}
 		|																												}
+		|																												bool crnana = !(RNDX(RND_INSTR_LD) && dispatch);
 		|
 		|																												if (sclk) {
 		|																													unsigned dsp = 0;
@@ -798,15 +799,13 @@ class SEQ(PartFactory):
 		|																													}
 		|																													dsp ^= 0xffff;;
 		|																										
-		|																													bool gate = !(RNDX(RND_INSTR_LD) && dispatch);
-		|																													if (gate && state->topbot)
+		|																													if (crnana && state->topbot)
 		|																														state->ctop = dsp;
-		|																													if (gate && !state->topbot)
+		|																													if (crnana && !state->topbot)
 		|																														state->cbot = dsp;
 		|																												}
 		|																										
 		|																												if (!bhcke) {
-		|																													bool crnana = !(RNDX(RND_INSTR_LD) && dispatch);
 		|																													bool dmdisp = !(!state->bad_hint || (state->bhreg & 0x04));
 		|																													bool crnor0a = !(crnana || dmdisp);
 		|																													if (!crnor0a)
@@ -960,6 +959,21 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|	state->resolve_offset &= 0xfffff;
+		|
+		|	if (dis) {
+		|		state->output_ob = 0xfffff;
+		|	} else if (intreads == 0) {
+		|		state->output_ob = state->pred;
+		|	} else if (intreads == 1) {
+		|		state->output_ob = state->topcnt;
+		|	} else if (intreads == 2) {
+		|		state->output_ob = state->resolve_offset;
+		|	} else if (intreads == 3) {
+		|		state->output_ob = state->savrg;
+		|	} else {
+		|		state->output_ob = 0xfffff;
+		|	}
+		|	state->output_ob &= 0xfffff;
 		|}
 		|
 		|if (1) {
@@ -1346,36 +1360,7 @@ class SEQ(PartFactory):
 		|	state->field_number_error = tmp != 0x3ff;
 		|	state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !output.ueven));
 		|}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																											if (q4pos) {
-		|																												switch(state->word) {
-		|																												case 0x0: state->display = state->macro_ins_val >>  0; break;
-		|																												case 0x1: state->display = state->macro_ins_val >> 16; break;
-		|																												case 0x2: state->display = state->macro_ins_val >> 32; break;
-		|																												case 0x3: state->display = state->macro_ins_val >> 48; break;
-		|																												case 0x4: state->display = state->macro_ins_typ >>  0; break;
-		|																												case 0x5: state->display = state->macro_ins_typ >> 16; break;
-		|																												case 0x6: state->display = state->macro_ins_typ >> 32; break;
-		|																												case 0x7: state->display = state->macro_ins_typ >> 48; break;
-		|																												}
-		|																												state->display &= 0xffff;
-		|
-		|																												if (state->emac == 0x7f) {
-		|																													unsigned ai = state->display;
-		|																													ai ^= 0xffff;
-		|																													bool top = (state->display >> 10) != 0x3f;
-		|																													uint32_t *ptr;
-		|																													if (top)
-		|																														ptr = &state->top[ai >> 6];
-		|																													else
-		|																														ptr = &state->bot[ai & 0x3ff];
-		|																													state->uadr_decode = (*ptr >> 16);
-		|																													state->decode = (*ptr >> 8) & 0xff;
-		|																												}
-		|																												state->uses_tos = (state->uadr_decode >> 2) & 1;
-		|																												state->ibuf_fill = (state->uadr_decode >> 1) & 1;
-		|																											}
-		|
+		|{
 		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));
 		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
 		|	state->ibld = !ibuff_ld;
@@ -1384,43 +1369,13 @@ class SEQ(PartFactory):
 		|
 		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);
 		|
-		|	output.qstp7 = output.bhn && state->l_macro_hic;
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|																											if (state_clock) {
-		|																												BUS_CSA_READ(state->n_in_csa);
-		|																											}
-		|																										
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));
-		|	state->check_exit_ue = !(
-		|		output.ueven &&
-		|		RNDX(RND_CHK_EXIT) &&
-		|		state->carry_out
-		|	);
-		|	output.sfive = (state->check_exit_ue && state->ferr);
+		|	state->check_exit_ue = !(output.ueven && RNDX(RND_CHK_EXIT) && state->carry_out);
 		|	state->m_res_ref = !(state->lxval && !(state->display >> 15));
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|																											if (PIN_LCLK.posedge()) {
-		|																												state->foo9 = !RNDX(RND_TOS_VLB);
-		|																											}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	if (dis) {
-		|		state->output_ob = 0xfffff;
-		|	} else if (intreads == 0) {
-		|		state->output_ob = state->pred;
-		|	} else if (intreads == 1) {
-		|		state->output_ob = state->topcnt;
-		|	} else if (intreads == 2) {
-		|		state->output_ob = state->resolve_offset;
-		|	} else if (intreads == 3) {
-		|		state->output_ob = state->savrg;
-		|	} else {
-		|		state->output_ob = 0xfffff;
-		|	}
-		|	state->output_ob &= 0xfffff;
-		|
+		|	output.qstp7 = output.bhn && state->l_macro_hic;
+		|	output.sfive = (state->check_exit_ue && state->ferr);
+		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|																							if (q3pos) {
@@ -1460,6 +1415,42 @@ class SEQ(PartFactory):
 		|																								bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
 		|																								output.labrt = bad_hint_disp && !(RNDX(RND_L_ABRT) && output.seqsn);
 		|																							}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|																											if (q4pos) {
+		|																												switch(state->word) {
+		|																												case 0x0: state->display = state->macro_ins_val >>  0; break;
+		|																												case 0x1: state->display = state->macro_ins_val >> 16; break;
+		|																												case 0x2: state->display = state->macro_ins_val >> 32; break;
+		|																												case 0x3: state->display = state->macro_ins_val >> 48; break;
+		|																												case 0x4: state->display = state->macro_ins_typ >>  0; break;
+		|																												case 0x5: state->display = state->macro_ins_typ >> 16; break;
+		|																												case 0x6: state->display = state->macro_ins_typ >> 32; break;
+		|																												case 0x7: state->display = state->macro_ins_typ >> 48; break;
+		|																												}
+		|																												state->display &= 0xffff;
+		|
+		|																												if (state->emac == 0x7f) {
+		|																													unsigned ai = state->display;
+		|																													ai ^= 0xffff;
+		|																													bool top = (state->display >> 10) != 0x3f;
+		|																													uint32_t *ptr;
+		|																													if (top)
+		|																														ptr = &state->top[ai >> 6];
+		|																													else
+		|																														ptr = &state->bot[ai & 0x3ff];
+		|																													state->uadr_decode = (*ptr >> 16);
+		|																													state->decode = (*ptr >> 8) & 0xff;
+		|																												}
+		|																												state->uses_tos = (state->uadr_decode >> 2) & 1;
+		|																												state->ibuf_fill = (state->uadr_decode >> 1) & 1;
+		|																												if (state_clock) {
+		|																													BUS_CSA_READ(state->n_in_csa);
+		|																												}
+		|																												if (PIN_LCLK.posedge()) {
+		|																													state->foo9 = !RNDX(RND_TOS_VLB);
+		|																												}
+		|																											}
+		|
 		|	if (!q4pos) {
 		|		output.z_qf = PIN_QFOE=>;
 		|		if (!output.z_qf) {
