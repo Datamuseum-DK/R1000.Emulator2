@@ -579,7 +579,7 @@ class SEQ(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	//bool h1pos = PIN_H2.negedge();
+		|	bool h1pos = PIN_H2.negedge();
 		|	//bool h2pos = PIN_H2.posedge();
 		|	bool aclk = PIN_ACLK.posedge();
 		|	bool sclke = PIN_SCLKE=>;
@@ -682,8 +682,6 @@ class SEQ(PartFactory):
 		|
 		|	bool uses_tos;
 		|	unsigned mem_start;
-		|	bool intreads1, intreads2;
-		|	bool sel1, sel2;
 		|
 		|	bool name_ram_cs = true;
 		|	bool type_name_oe = true;
@@ -692,27 +690,29 @@ class SEQ(PartFactory):
 		|		uses_tos = false;
 		|		mem_start = 7;
 		|		dis = false;
-		|		intreads1 = !((internal_reads >> 1) & 1);
-		|		intreads2 = !((internal_reads >> 0) & 1);
-		|		sel1 = false;
-		|		sel2 = true;
+		|		intreads = internal_reads & 3;
+		|		name_ram_cs = false;
 		|	} else {
 		|		uses_tos = state->uses_tos;
 		|		mem_start = state->decode & 0x7;
 		|		dis = !PIN_H2=>;
-		|		intreads1 = !(mem_start == 0 || mem_start == 4);
-		|		intreads2 = false;
-		|		sel1 = !(mem_start < 3);
-		|		sel2 = !(mem_start == 3 || mem_start == 7);
+		|		if (mem_start == 0 || mem_start == 4) {
+		|			intreads = 3;
+		|		} else {
+		|			intreads = 1;
+		|		}
+		|		if (PIN_H2=>) {
+		|			switch (mem_start) {
+		|			case 0:
+		|			case 1:
+		|			case 2:	name_ram_cs = false; break;
+		|			case 3:
+		|			case 7: type_name_oe = false; break;
+		|			default: val_name_oe = false; break;
+		|			}
+		|		}
 		|	}
-		|	if (intreads1) intreads |= 2;
-		|	if (intreads2) intreads |= 1;
 		|
-		|	if (!dis) {
-		|		name_ram_cs = (!(!sel1 && sel2));
-		|		type_name_oe = (!(sel1 && !sel2));
-		|		val_name_oe = (!(sel1 && sel2));
-		|	}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
 		|																								unsigned pa040a = 0;
@@ -748,6 +748,8 @@ class SEQ(PartFactory):
 		|																									state->tosof = (state->typ_bus >> 7) & 0xfffff;
 		|																								}
 		|																							}
+		|if (h1pos || q3pos) {
+		|	//unsigned oldnb = state->name_bus;
 		|	if (!type_name_oe) {
 		|		state->name_bus = state->tost ^ 0xffffffff;
 		|	} else if (!val_name_oe) {
@@ -757,6 +759,8 @@ class SEQ(PartFactory):
 		|	} else {
 		|		state->name_bus = 0xffffffff;
 		|	}
+		|	//if (oldnb != state->name_bus) ALWAYS_TRACE(<< " NAMEBUS " << std::hex << oldnb << " <- " << state->name_bus << " " << type_name_oe << val_name_oe << name_ram_cs);
+		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
 		|																												if (aclk) {
@@ -963,13 +967,13 @@ class SEQ(PartFactory):
 		|
 		|	if (dis) {
 		|		state->output_ob = 0xfffff;
-		|	} else if (intreads == 0) {
-		|		state->output_ob = state->pred;
-		|	} else if (intreads == 1) {
-		|		state->output_ob = state->topcnt;
-		|	} else if (intreads == 2) {
-		|		state->output_ob = state->resolve_offset;
 		|	} else if (intreads == 3) {
+		|		state->output_ob = state->pred;
+		|	} else if (intreads == 2) {
+		|		state->output_ob = state->topcnt;
+		|	} else if (intreads == 1) {
+		|		state->output_ob = state->resolve_offset;
+		|	} else if (intreads == 0) {
 		|		state->output_ob = state->savrg;
 		|	} else {
 		|		state->output_ob = 0xfffff;
