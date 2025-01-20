@@ -676,6 +676,44 @@ class SEQ(PartFactory):
 		|	bool macro_event = (!state->wanna_dispatch) && (early_macro_pending || (lmp != 8));
 		|	bool dispatch = state->wanna_dispatch || early_macro_pending || (lmp != 8);
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|	bool dis;
+		|	unsigned intreads = 0;
+		|       bool co = false;
+		|
+		|	bool uses_tos;
+		|	unsigned mem_start;
+		|	bool intreads1, intreads2;
+		|	bool sel1, sel2;
+		|
+		|	bool name_ram_cs = true;
+		|	bool type_name_oe = true;
+		|	bool val_name_oe = true;
+		|	if (!maybe_dispatch) {
+		|		uses_tos = false;
+		|		mem_start = 7;
+		|		dis = false;
+		|		intreads1 = !((internal_reads >> 1) & 1);
+		|		intreads2 = !((internal_reads >> 0) & 1);
+		|		sel1 = false;
+		|		sel2 = true;
+		|	} else {
+		|		uses_tos = state->uses_tos;
+		|		mem_start = state->decode & 0x7;
+		|		dis = !PIN_H2=>;
+		|		intreads1 = !(mem_start == 0 || mem_start == 4);
+		|		intreads2 = false;
+		|		sel1 = !(mem_start < 3);
+		|		sel2 = !(mem_start == 3 || mem_start == 7);
+		|	}
+		|	if (intreads1) intreads |= 2;
+		|	if (intreads2) intreads |= 1;
+		|
+		|	if (!dis) {
+		|		name_ram_cs = (!(!sel1 && sel2));
+		|		type_name_oe = (!(sel1 && !sel2));
+		|		val_name_oe = (!(sel1 && sel2));
+		|	}
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
 		|																								unsigned pa040a = 0;
 		|																								pa040a |= (state->decode & 0x7) << 6;
@@ -710,6 +748,15 @@ class SEQ(PartFactory):
 		|																									state->tosof = (state->typ_bus >> 7) & 0xfffff;
 		|																								}
 		|																							}
+		|	if (!type_name_oe) {
+		|		state->name_bus = state->tost ^ 0xffffffff;
+		|	} else if (!val_name_oe) {
+		|		state->name_bus = state->vost ^ 0xffffffff;
+		|	} else if (!name_ram_cs) {
+		|		state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|	} else {
+		|		state->name_bus = 0xffffffff;
+		|	}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
 		|																												if (aclk) {
@@ -860,53 +907,7 @@ class SEQ(PartFactory):
 		|																											}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|	bool dis;
-		|	unsigned intreads = 0;
-		|       bool co = false;
-		|{
-		|	bool uses_tos;
-		|	unsigned mem_start;
-		|	bool intreads1, intreads2;
-		|	bool sel1, sel2;
 		|
-		|	bool name_ram_cs = true;
-		|	bool type_name_oe = true;
-		|	bool val_name_oe = true;
-		|	if (!maybe_dispatch) {
-		|		uses_tos = false;
-		|		mem_start = 7;
-		|		dis = false;
-		|		intreads1 = !((internal_reads >> 1) & 1);
-		|		intreads2 = !((internal_reads >> 0) & 1);
-		|		sel1 = false;
-		|		sel2 = true;
-		|	} else {
-		|		uses_tos = state->uses_tos;
-		|		mem_start = state->decode & 0x7;
-		|		dis = !PIN_H2=>;
-		|		intreads1 = !(mem_start == 0 || mem_start == 4);
-		|		intreads2 = false;
-		|		sel1 = !(mem_start < 3);
-		|		sel2 = !(mem_start == 3 || mem_start == 7);
-		|	}
-		|	if (intreads1) intreads |= 2;
-		|	if (intreads2) intreads |= 1;
-		|
-		|	if (!dis) {
-		|		name_ram_cs = (!(!sel1 && sel2));
-		|		type_name_oe = (!(sel1 && !sel2));
-		|		val_name_oe = (!(sel1 && sel2));
-		|	}
-		|
-		|	if (!type_name_oe) {
-		|		state->name_bus = state->tost ^ 0xffffffff;
-		|	} else if (!val_name_oe) {
-		|		state->name_bus = state->vost ^ 0xffffffff;
-		|	} else if (!name_ram_cs) {
-		|		state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
-		|	} else {
-		|		state->name_bus = 0xffffffff;
-		|	}
 		|
 		|	unsigned offs;
 		|	if (uses_tos) {
@@ -974,7 +975,6 @@ class SEQ(PartFactory):
 		|		state->output_ob = 0xfffff;
 		|	}
 		|	state->output_ob &= 0xfffff;
-		|}
 		|
 		|if (1) {
 		|	bool last_cond_late = (state->lreg >> 2) & 1;
