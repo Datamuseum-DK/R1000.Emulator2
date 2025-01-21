@@ -683,15 +683,11 @@ class SEQ(PartFactory):
 		|	bool uses_tos;
 		|	unsigned mem_start;
 		|
-		|	bool name_ram_cs = true;
-		|	bool type_name_oe = true;
-		|	bool val_name_oe = true;
 		|	if (!maybe_dispatch) {
 		|		uses_tos = false;
 		|		mem_start = 7;
 		|		dis = false;
 		|		intreads = internal_reads & 3;
-		|		name_ram_cs = false;
 		|	} else {
 		|		uses_tos = state->uses_tos;
 		|		mem_start = state->decode & 0x7;
@@ -701,18 +697,16 @@ class SEQ(PartFactory):
 		|		} else {
 		|			intreads = 1;
 		|		}
-		|		if (PIN_H2=>) {
-		|			switch (mem_start) {
-		|			case 0:
-		|			case 1:
-		|			case 2:	name_ram_cs = false; break;
-		|			case 3:
-		|			case 7: type_name_oe = false; break;
-		|			default: val_name_oe = false; break;
-		|			}
-		|		}
 		|	}
 		|
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|							if (h1pos) {
+		|								if (!maybe_dispatch) {
+		|									state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|								} else {
+		|									state->name_bus = 0xffffffff;
+		|								}
+		|							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
 		|																								unsigned pa040a = 0;
@@ -747,20 +741,25 @@ class SEQ(PartFactory):
 		|																									state->vost = state->val_bus >> 32;
 		|																									state->tosof = (state->typ_bus >> 7) & 0xfffff;
 		|																								}
+		|																								if (maybe_dispatch) {
+		|																									switch (mem_start) {
+		|																									case 0:
+		|																									case 1:
+		|																									case 2:
+		|																										state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|																										break;
+		|																									case 3:
+		|																									case 7:
+		|																										state->name_bus = state->tost ^ 0xffffffff;
+		|																										break;
+		|																									default:
+		|																										state->name_bus = state->vost ^ 0xffffffff;
+		|																										break;
+		|																									}
+		|																								} else {
+		|																									state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|																								}
 		|																							}
-		|if (h1pos || q3pos) {
-		|	//unsigned oldnb = state->name_bus;
-		|	if (!type_name_oe) {
-		|		state->name_bus = state->tost ^ 0xffffffff;
-		|	} else if (!val_name_oe) {
-		|		state->name_bus = state->vost ^ 0xffffffff;
-		|	} else if (!name_ram_cs) {
-		|		state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
-		|	} else {
-		|		state->name_bus = 0xffffffff;
-		|	}
-		|	//if (oldnb != state->name_bus) ALWAYS_TRACE(<< " NAMEBUS " << std::hex << oldnb << " <- " << state->name_bus << " " << type_name_oe << val_name_oe << name_ram_cs);
-		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
 		|																												if (aclk) {
