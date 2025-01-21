@@ -698,6 +698,75 @@ class SEQ(PartFactory):
 		|			intreads = 1;
 		|		}
 		|	}
+		|	unsigned offs;
+		|	if (uses_tos) {
+		|		if (RNDX(RND_TOS_VLB)) {
+		|			offs = (state->typ_bus >> 7) & 0xfffff;
+		|		} else {
+		|			offs = state->tosof;
+		|		}
+		|	} else {
+		|#if 0
+		|		if (q4pos && !sclke && !RNDX(RND_RES_OFFS)) {
+		|			state->tosram[state->resolve_address] = (state->typ_bus >> 7) & 0xfffff;
+		|		}
+		|#endif
+		|		offs = state->tosram[state->resolve_address];
+		|	}
+		|	offs ^= 0xfffff;
+		|       offs &= 0xfffff;
+		|
+		|       bool d7 = (state->display & 0x8100) == 0;
+		|       unsigned sgdisp = state->display & 0xff;
+		|       if (!d7)
+		|               sgdisp |= 0x100;
+		|       if (!(sign_extend && d7))
+		|               sgdisp |= 0xffe00;
+		|
+		|	bool acin = ((mem_start & 1) != 0);
+		|       sgdisp &= 0xfffff;
+		|       state->resolve_offset = 0;
+		|
+		|	switch(mem_start) {
+		|	case 0:
+		|	case 2:
+		|               state->resolve_offset = offs + sgdisp + 1;
+		|               co = (state->resolve_offset >> 20) == 0;
+		|		break;
+		|	case 1:
+		|	case 3:
+		|               state->resolve_offset = (1<<20) + offs - (sgdisp + 1);
+		|               co = acin && (offs == 0);
+		|		break;
+		|	case 4:
+		|	case 6:
+		|               state->resolve_offset = sgdisp ^ 0xfffff;
+		|               // Carry is probably "undefined" here.
+		|		break;
+		|	case 5:
+		|	case 7:
+		|               state->resolve_offset = offs;
+		|               co = acin && (offs == 0);
+		|		break;
+		|	}
+		|
+		|	state->resolve_offset &= 0xfffff;
+		|
+		|	if (dis) {
+		|		state->output_ob = 0xfffff;
+		|	} else if (intreads == 3) {
+		|		state->output_ob = state->pred;
+		|	} else if (intreads == 2) {
+		|		state->output_ob = state->topcnt;
+		|	} else if (intreads == 1) {
+		|		state->output_ob = state->resolve_offset;
+		|	} else if (intreads == 0) {
+		|		state->output_ob = state->savrg;
+		|	} else {
+		|		state->output_ob = 0xfffff;
+		|	}
+		|	state->output_ob &= 0xfffff;
+		|
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|							if (h1pos) {
@@ -761,6 +830,11 @@ class SEQ(PartFactory):
 		|																								}
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|#if 1
+		|		if (q4pos && !sclke && !RNDX(RND_RES_OFFS)) {
+		|			state->tosram[state->resolve_address] = (state->typ_bus >> 7) & 0xfffff;
+		|		}
+		|#endif
 		|																											if (q4pos) {
 		|																												if (aclk) {
 		|																													output.lmaco = !(sclke || !(macro_event && !early_macro_pending));
@@ -912,74 +986,7 @@ class SEQ(PartFactory):
 		|
 		|
 		|
-		|	unsigned offs;
-		|	if (uses_tos) {
-		|		if (RNDX(RND_TOS_VLB)) {
-		|			offs = (state->typ_bus >> 7) & 0xfffff;
-		|		} else {
-		|			offs = state->tosof;
-		|		}
-		|	} else {
-		|		if (q4pos && !sclke && !RNDX(RND_RES_OFFS)) {
-		|			state->tosram[state->resolve_address] = (state->typ_bus >> 7) & 0xfffff;
-		|		}
-		|		offs = state->tosram[state->resolve_address];
-		|	}
-		|	offs ^= 0xfffff;
-		|       offs &= 0xfffff;
-		|
-		|       bool d7 = (state->display & 0x8100) == 0;
-		|       unsigned sgdisp = state->display & 0xff;
-		|       if (!d7)
-		|               sgdisp |= 0x100;
-		|       if (!(sign_extend && d7))
-		|               sgdisp |= 0xffe00;
-		|
-		|	bool acin = ((mem_start & 1) != 0);
-		|       sgdisp &= 0xfffff;
-		|       state->resolve_offset = 0;
-		|
-		|	switch(mem_start) {
-		|	case 0:
-		|	case 2:
-		|               state->resolve_offset = offs + sgdisp + 1;
-		|               co = (state->resolve_offset >> 20) == 0;
-		|		break;
-		|	case 1:
-		|	case 3:
-		|               state->resolve_offset = (1<<20) + offs - (sgdisp + 1);
-		|               co = acin && (offs == 0);
-		|		break;
-		|	case 4:
-		|	case 6:
-		|               state->resolve_offset = sgdisp ^ 0xfffff;
-		|               // Carry is probably "undefined" here.
-		|		break;
-		|	case 5:
-		|	case 7:
-		|               state->resolve_offset = offs;
-		|               co = acin && (offs == 0);
-		|		break;
-		|	}
-		|
-		|	state->resolve_offset &= 0xfffff;
-		|
-		|	if (dis) {
-		|		state->output_ob = 0xfffff;
-		|	} else if (intreads == 3) {
-		|		state->output_ob = state->pred;
-		|	} else if (intreads == 2) {
-		|		state->output_ob = state->topcnt;
-		|	} else if (intreads == 1) {
-		|		state->output_ob = state->resolve_offset;
-		|	} else if (intreads == 0) {
-		|		state->output_ob = state->savrg;
-		|	} else {
-		|		state->output_ob = 0xfffff;
-		|	}
-		|	state->output_ob &= 0xfffff;
-		|
-		|if (1) {
+		|if (0) {
 		|	bool last_cond_late = (state->lreg >> 2) & 1;
 		|	if (state->hint_last) {
 		|		state->bad_hint = false;
@@ -1409,6 +1416,21 @@ class SEQ(PartFactory):
 		|																														break;
 		|																													}
 		|																												}
+		|if (1) {
+		|	bool last_cond_late = (state->lreg >> 2) & 1;
+		|	if (state->hint_last) {
+		|		state->bad_hint = false;
+		|	} else if (!last_cond_late && !state->hint_t_last) {
+		|		state->bad_hint = state->lreg & 1;
+		|	} else if (!last_cond_late &&  state->hint_t_last) {
+		|		state->bad_hint = !(state->lreg & 1);
+		|	} else if ( last_cond_late && !state->hint_t_last) {
+		|		state->bad_hint = state->last_late_cond;
+		|	} else if ( last_cond_late &&  state->hint_t_last) {
+		|		state->bad_hint = !state->last_late_cond;
+		|	}
+		|	output.bhn = !state->bad_hint;
+		|}
 		|																												switch(state->word) {
 		|																												case 0x0: state->display = state->macro_ins_val >>  0; break;
 		|																												case 0x1: state->display = state->macro_ins_val >> 16; break;
