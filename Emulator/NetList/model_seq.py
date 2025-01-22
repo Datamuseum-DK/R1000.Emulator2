@@ -706,11 +706,6 @@ class SEQ(PartFactory):
 		|			offs = state->tosof;
 		|		}
 		|	} else {
-		|#if 0
-		|		if (q4pos && !sclke && !RNDX(RND_RES_OFFS)) {
-		|			state->tosram[state->resolve_address] = (state->typ_bus >> 7) & 0xfffff;
-		|		}
-		|#endif
 		|		offs = state->tosram[state->resolve_address];
 		|	}
 		|	offs ^= 0xfffff;
@@ -776,6 +771,22 @@ class SEQ(PartFactory):
 		|									state->name_bus = 0xffffffff;
 		|								}
 		|							}
+		|if (1) {
+		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));			// q4
+		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
+		|	state->ibld = !ibuff_ld;								// q4
+		|	bool ibemp = !(ibuff_ld || (state->word != 0));
+		|	state->m_ibuff_mt = !(ibemp && state->ibuf_fill);					// lmp, cond, branch_off
+		|
+		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
+		|
+		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
+		|	state->check_exit_ue = !(output.ueven && RNDX(RND_CHK_EXIT) && state->carry_out);	// q4
+		|	state->m_res_ref = !(state->lxval && !(state->display >> 15));				// lmp, cond
+		|
+		|	output.qstp7 = output.bhn && state->l_macro_hic;					// q3 sig
+		|	output.sfive = (state->check_exit_ue && state->ferr);					// q3 sig
+		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
 		|																								unsigned pa040a = 0;
@@ -830,12 +841,26 @@ class SEQ(PartFactory):
 		|																								}
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|#if 1
-		|		if (q4pos && !sclke && !RNDX(RND_RES_OFFS)) {
-		|			state->tosram[state->resolve_address] = (state->typ_bus >> 7) & 0xfffff;
-		|		}
-		|#endif
+		|if (0) {
+		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));			// q4
+		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
+		|	state->ibld = !ibuff_ld;								// q4
+		|	bool ibemp = !(ibuff_ld || (state->word != 0));
+		|	state->m_ibuff_mt = !(ibemp && state->ibuf_fill);					// lmp, cond, branch_off
+		|
+		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
+		|
+		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
+		|	state->check_exit_ue = !(output.ueven && RNDX(RND_CHK_EXIT) && state->carry_out);	// q4
+		|	state->m_res_ref = !(state->lxval && !(state->display >> 15));				// lmp, cond
+		|
+		|	output.qstp7 = output.bhn && state->l_macro_hic;					// q3 sig
+		|	output.sfive = (state->check_exit_ue && state->ferr);					// q3 sig
+		|}
 		|																											if (q4pos) {
+		|																												if (!sclke && !RNDX(RND_RES_OFFS)) {
+		|																													state->tosram[state->resolve_address] = (state->typ_bus >> 7) & 0xfffff;
+		|																												}
 		|																												if (aclk) {
 		|																													output.lmaco = !(sclke || !(macro_event && !early_macro_pending));
 		|																													output.halt = !(sclke || RNDX(RND_HALT));
@@ -984,24 +1009,7 @@ class SEQ(PartFactory):
 		|																											}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|
-		|
 		|if (0) {
-		|	bool last_cond_late = (state->lreg >> 2) & 1;
-		|	if (state->hint_last) {
-		|		state->bad_hint = false;
-		|	} else if (!last_cond_late && !state->hint_t_last) {
-		|		state->bad_hint = state->lreg & 1;
-		|	} else if (!last_cond_late &&  state->hint_t_last) {
-		|		state->bad_hint = !(state->lreg & 1);
-		|	} else if ( last_cond_late && !state->hint_t_last) {
-		|		state->bad_hint = state->last_late_cond;
-		|	} else if ( last_cond_late &&  state->hint_t_last) {
-		|		state->bad_hint = !state->last_late_cond;
-		|	}
-		|	output.bhn = !state->bad_hint;
-		|}
-		|{
 		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));			// q4
 		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
 		|	state->ibld = !ibuff_ld;								// q4
@@ -1416,21 +1424,21 @@ class SEQ(PartFactory):
 		|																														break;
 		|																													}
 		|																												}
-		|if (1) {
-		|	bool last_cond_late = (state->lreg >> 2) & 1;
-		|	if (state->hint_last) {
-		|		state->bad_hint = false;
-		|	} else if (!last_cond_late && !state->hint_t_last) {
-		|		state->bad_hint = state->lreg & 1;
-		|	} else if (!last_cond_late &&  state->hint_t_last) {
-		|		state->bad_hint = !(state->lreg & 1);
-		|	} else if ( last_cond_late && !state->hint_t_last) {
-		|		state->bad_hint = state->last_late_cond;
-		|	} else if ( last_cond_late &&  state->hint_t_last) {
-		|		state->bad_hint = !state->last_late_cond;
-		|	}
-		|	output.bhn = !state->bad_hint;
-		|}
+		|
+		|																												bool last_cond_late = (state->lreg >> 2) & 1;
+		|																												if (state->hint_last) {
+		|																													state->bad_hint = false;
+		|																												} else if (!last_cond_late && !state->hint_t_last) {
+		|																													state->bad_hint = state->lreg & 1;
+		|																												} else if (!last_cond_late &&  state->hint_t_last) {
+		|																													state->bad_hint = !(state->lreg & 1);
+		|																												} else if ( last_cond_late && !state->hint_t_last) {
+		|																													state->bad_hint = state->last_late_cond;
+		|																												} else if ( last_cond_late &&  state->hint_t_last) {
+		|																													state->bad_hint = !state->last_late_cond;
+		|																												}
+		|																												output.bhn = !state->bad_hint;
+		|
 		|																												switch(state->word) {
 		|																												case 0x0: state->display = state->macro_ins_val >>  0; break;
 		|																												case 0x1: state->display = state->macro_ins_val >> 16; break;
