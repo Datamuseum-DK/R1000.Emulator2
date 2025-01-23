@@ -582,7 +582,7 @@ class SEQ(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	bool h1pos = PIN_H2.negedge();
+		|	//bool h1pos = PIN_H2.negedge();
 		|	//bool h2pos = PIN_H2.posedge();
 		|	bool aclk = PIN_ACLK.posedge();
 		|	bool sclke = PIN_SCLKE=>;
@@ -592,13 +592,19 @@ class SEQ(PartFactory):
 		|	unsigned pa040d = 0;
 		|	bool bhcke = !(PIN_SSTOP=> && PIN_BHEN=>);
 		|
+		|	BUS_IRD_READ(internal_reads);
+		|	int_reads();
 		|
 		|	BUS_URAND_READ(urand);
 		|	rndx = state->pa048[urand | (state->bad_hint ? 0x100 : 0)] << 24;
 		|	rndx |= state->pa046[urand | (state->bad_hint ? 0x100 : 0)] << 16;
 		|	rndx |=  state->pa045[urand | 0x100] << 8;
 		|	rndx |= state->pa047[urand | 0x100];
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|//	ALWAYS		UIR				H1				Q1				Q2				H2				Q3				Q4
+		|
+		|			output.qstp7 = output.bhn && state->l_macro_hic;
+		|
+		|//	ALWAYS		UIR				H1				Q1				Q2				H2				Q3				Q4
 		|
 		|	// R1000_Micro_Arch_Seq.pdf pdf pg 25
 		|	//	BRANCH TYPE (4 bits)
@@ -661,9 +667,6 @@ class SEQ(PartFactory):
 		|	state->lxval = !((state->lex_valid >> (15 - state->resolve_address)) & 1);
 		|}
 		|
-		|	BUS_IRD_READ(internal_reads);
-		|	int_reads();
-		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	bool dis;
 		|	unsigned intreads = 0;
@@ -709,6 +712,7 @@ class SEQ(PartFactory):
 		|
 		|	bool acin = ((mem_start & 1) != 0);
 		|       sgdisp &= 0xfffff;
+		|	if (q1pos) {
 		|       state->resolve_offset = 0;
 		|
 		|	switch(mem_start) {
@@ -735,6 +739,7 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|	state->resolve_offset &= 0xfffff;
+		|	}
 		|
 		|	if (dis) {
 		|		state->output_ob = 0xfffff;
@@ -752,8 +757,9 @@ class SEQ(PartFactory):
 		|	state->output_ob &= 0xfffff;
 		|
 		|
+		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|							if (h1pos) {
+		|							if (q1pos) {
 		|								if (!maybe_dispatch) {
 		|									state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
 		|								} else {
@@ -773,9 +779,6 @@ class SEQ(PartFactory):
 		|	state->check_exit_ue = !(output.ueven && RNDX(RND_CHK_EXIT) && state->carry_out);	// q4
 		|	state->m_res_ref = !(state->lxval && !(state->display >> 15));				// lmp, cond
 		|
-		|	output.qstp7 = output.bhn && state->l_macro_hic;					// q3 sig
-		|	output.sfive = (state->check_exit_ue && state->ferr);					// q3 sig
-		|	if (output.sfive != state->output.sfive) ALWAYS_TRACE(<< " SFIVE " << state->output.sfive << " <- " << output.sfive);
 		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|											if (q1pos) {
@@ -879,6 +882,7 @@ class SEQ(PartFactory):
 		|																}
 		|																output.nu = nua;
 		|																output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
+		|																output.sfive = (state->check_exit_ue && state->ferr);
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
