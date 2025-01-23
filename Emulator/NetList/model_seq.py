@@ -106,7 +106,6 @@ class SEQ(PartFactory):
 		|	unsigned macro_pc_offset;
 		|	unsigned curr_lex;
 		|	unsigned retrn_pc_ofs;
-		|	unsigned branch_offset;
 		|	unsigned break_mask;
 		|
 		|	// SEQNAM
@@ -212,6 +211,9 @@ class SEQ(PartFactory):
 		|	unsigned br_type;
 		|	unsigned br_tim;
 		|	unsigned internal_reads;
+		|	bool macro_event;
+		|	unsigned lmp;
+		|	bool early_macro_pending;
 		|
 		|	void int_reads(void);
 		|	unsigned group_sel(void);
@@ -351,7 +353,7 @@ class SEQ(PartFactory):
 		|	case 0x29: // LATCHED_COND
 		|		return (!state->latched_cond);
 		|	case 0x2a: // E_MACRO_PEND
-		|		return (state->emac == 0x7f);
+		|		return (!early_macro_pending);
 		|	case 0x2b: // E_MACRO_EVNT~6
 		|		return (!((state->emac >> 0) & 1));
 		|	case 0x2c: // E_MACRO_EVNT~5
@@ -550,18 +552,19 @@ class SEQ(PartFactory):
 		|		a |= 0x7800;
 		|	a ^= 0x7fff;
 		|	unsigned b = state->macro_pc_offset & 0x7fff;
+		|	unsigned retval;
 		|	if (oper) {
 		|		if (state->wanna_dispatch)
 		|			a += 1;
 		|		a &= 0x7fff;
-		|		state->branch_offset = a + b;
+		|		retval = a + b;
 		|	} else {
 		|		if (!state->wanna_dispatch)
 		|			a += 1;
-		|		state->branch_offset = b - a;
+		|		retval = b - a;
 		|	}
-		|	state->branch_offset &= 0x7fff;
-		|	return (state->branch_offset);
+		|	retval &= 0x7fff;
+		|	return (retval);
 		|}
 		|''')
 
@@ -596,13 +599,6 @@ class SEQ(PartFactory):
 		|	rndx |=  state->pa045[urand | 0x100] << 8;
 		|	rndx |= state->pa047[urand | 0x100];
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																							if (q3pos) {
-		|																								state->q3cond = condition();
-		|																								state->bad_hint_enable = !(
-		|																									output.u_event ||
-		|																									(PIN_LMAC=> && output.bhn)
-		|																								);
-		|																							}
 		|
 		|	// R1000_Micro_Arch_Seq.pdf pdf pg 25
 		|	//	BRANCH TYPE (4 bits)
@@ -661,9 +657,6 @@ class SEQ(PartFactory):
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|{
 		|
-		|																											if (state_clock) {
-		|																												nxt_lex_valid();
-		|																											}
 		|
 		|	state->lxval = !((state->lex_valid >> (15 - state->resolve_address)) & 1);
 		|}
@@ -671,10 +664,6 @@ class SEQ(PartFactory):
 		|	BUS_IRD_READ(internal_reads);
 		|	int_reads();
 		|
-		|	unsigned lmp = late_macro_pending();
-		|	bool early_macro_pending = state->emac != 0x7f;
-		|	bool macro_event = (!state->wanna_dispatch) && (early_macro_pending || (lmp != 8));
-		|	bool dispatch = state->wanna_dispatch || early_macro_pending || (lmp != 8);
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	bool dis;
 		|	unsigned intreads = 0;
@@ -778,14 +767,15 @@ class SEQ(PartFactory):
 		|	bool ibemp = !(ibuff_ld || (state->word != 0));
 		|	state->m_ibuff_mt = !(ibemp && state->ibuf_fill);					// lmp, cond, branch_off
 		|
+		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
 		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
 		|
-		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
 		|	state->check_exit_ue = !(output.ueven && RNDX(RND_CHK_EXIT) && state->carry_out);	// q4
 		|	state->m_res_ref = !(state->lxval && !(state->display >> 15));				// lmp, cond
 		|
 		|	output.qstp7 = output.bhn && state->l_macro_hic;					// q3 sig
 		|	output.sfive = (state->check_exit_ue && state->ferr);					// q3 sig
+		|	if (output.sfive != state->output.sfive) ALWAYS_TRACE(<< " SFIVE " << state->output.sfive << " <- " << output.sfive);
 		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|											if (q1pos) {
@@ -892,6 +882,8 @@ class SEQ(PartFactory):
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
+		|																								state->q3cond = condition();
+		|																								state->bad_hint_enable = !(output.u_event || (PIN_LMAC=> && output.bhn));
 		|																								unsigned pa040a = 0;
 		|																								pa040a |= (state->decode & 0x7) << 6;
 		|																								if (state->wanna_dispatch) pa040a |= 0x20;
@@ -903,6 +895,8 @@ class SEQ(PartFactory):
 		|																								pa040d = state->pa040[pa040a];
 		|
 		|																								bool bar8;
+		|																								lmp = late_macro_pending();
+		|																								macro_event = (!state->wanna_dispatch) && (early_macro_pending || (lmp != 8));
 		|																								if (macro_event) {
 		|																									bar8 = (macro_event && !early_macro_pending) && (lmp >= 7);
 		|																								} else {
@@ -942,9 +936,6 @@ class SEQ(PartFactory):
 		|																								} else {
 		|																									state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
 		|																								}
-		|																							}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																							if (q3pos) {
 		|																								if (!(state->foo9 || !output.u_event)) {
 		|																									state->treg = 0;
 		|																									state->foo7 = false;
@@ -987,6 +978,10 @@ class SEQ(PartFactory):
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
+		|																												if (state_clock) {
+		|																													nxt_lex_valid();
+		|																												}
+		|																												bool dispatch = state->wanna_dispatch || early_macro_pending || (lmp != 8);
 		|																												if (!sclke && !RNDX(RND_RES_OFFS)) {
 		|																													state->tosram[state->resolve_address] = (state->typ_bus >> 7) & 0xfffff;
 		|																												}
@@ -1064,6 +1059,7 @@ class SEQ(PartFactory):
 		|																													} else if (!(state->emac & 0x01)) {
 		|																														state->uadr_decode = 0x0420;
 		|																													}
+		|																													early_macro_pending = state->emac != 0x7f;
 		|																												}
 		|																												bool crnana = !(RNDX(RND_INSTR_LD) && dispatch);
 		|
@@ -1135,9 +1131,6 @@ class SEQ(PartFactory):
 		|																													state->pcseg = val;
 		|																													state->pcseg &= 0xffffff;
 		|																												}
-		|																											}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																											if (q4pos) {
 		|																												if (state_clock && !RNDX(RND_SAVE_LD)) {
 		|																													state->savrg = state->resolve_offset;
 		|																													state->carry_out = co;
@@ -1417,7 +1410,7 @@ class SEQ(PartFactory):
 		|																												}
 		|																												state->display &= 0xffff;
 		|
-		|																												if (state->emac == 0x7f) {
+		|																												if (!early_macro_pending) {
 		|																													unsigned ai = state->display;
 		|																													ai ^= 0xffff;
 		|																													bool top = (state->display >> 10) != 0x3f;
