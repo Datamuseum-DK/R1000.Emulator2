@@ -582,7 +582,7 @@ class SEQ(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	//bool h1pos = PIN_H2.negedge();
+		|	bool h1pos = PIN_H2.negedge();
 		|	//bool h2pos = PIN_H2.posedge();
 		|	bool aclk = PIN_ACLK.posedge();
 		|	bool sclke = PIN_SCLKE=>;
@@ -668,7 +668,7 @@ class SEQ(PartFactory):
 		|}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	bool dis;
+		|	//bool dis;
 		|	unsigned intreads = 0;
 		|       bool co = false;
 		|
@@ -678,12 +678,12 @@ class SEQ(PartFactory):
 		|	if (!maybe_dispatch) {
 		|		uses_tos = false;
 		|		mem_start = 7;
-		|		dis = false;
+		|		//dis = false;
 		|		intreads = internal_reads & 3;
 		|	} else {
 		|		uses_tos = state->uses_tos;
 		|		mem_start = state->decode & 0x7;
-		|		dis = !PIN_H2=>;
+		|		//dis = !PIN_H2=>;
 		|		if (mem_start == 0 || mem_start == 4) {
 		|			intreads = 3;
 		|		} else {
@@ -741,9 +741,10 @@ class SEQ(PartFactory):
 		|	state->resolve_offset &= 0xfffff;
 		|	}
 		|
-		|	if (dis) {
-		|		state->output_ob = 0xfffff;
-		|	} else if (intreads == 3) {
+		|if (h1pos && maybe_dispatch) {
+		|	state->output_ob = 0xfffff;
+		|} else if (h1pos || q1pos || q3pos) {
+		|	if (intreads == 3) {
 		|		state->output_ob = state->pred;
 		|	} else if (intreads == 2) {
 		|		state->output_ob = state->topcnt;
@@ -755,6 +756,7 @@ class SEQ(PartFactory):
 		|		state->output_ob = 0xfffff;
 		|	}
 		|	state->output_ob &= 0xfffff;
+		|}
 		|
 		|
 		|
@@ -766,7 +768,7 @@ class SEQ(PartFactory):
 		|									state->name_bus = 0xffffffff;
 		|								}
 		|							}
-		|if (1) {
+		|if (h1pos || q1pos) {
 		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));			// q4
 		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
 		|	state->ibld = !ibuff_ld;								// q4
