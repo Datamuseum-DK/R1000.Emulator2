@@ -774,7 +774,9 @@ class SEQ(PartFactory):
 		|	state->ibld = !ibuff_ld;								// q4
 		|	bool ibemp = !(ibuff_ld || (state->word != 0));
 		|	state->m_ibuff_mt = !(ibemp && state->ibuf_fill);					// lmp, cond, branch_off
+		|}
 		|
+		|if (q2pos) {	// (h1+q1 works)
 		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
 		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
 		|
