@@ -42,6 +42,30 @@ IR0     IR1     IR2     0-32            32-47           48-63           0-31    
 1       0       1       OFFS.OE~        OFFS.OE~        PC.OE~          REF_NAME.OE~    OFFS.OE~        RESOLVE RAM
 1       1       0       OFFS.OE~        OFFS.OE~        PC.OE~          CUR_NAME.OE~    OFFS.OE~        CONTROL TOP
 1       1       1       OFFS.OE~        OFFS.OE~        PC.OE~          CUR_NAME.OE~    OFFS.OE~        CONTROL PRED
+
+		|	// R1000_Micro_Arch_Seq.pdf pdf pg 25
+		|	//	BRANCH TYPE (4 bits)
+		|	//	0000	brf
+		|	//	0001	brt
+		|	//	0010	push
+		|	//	0011	br
+		|	//	0100	callf
+		|	//	0101	callt
+		|	//	0110	cont
+		|	//	0111	call
+		|	//	1000	returnt
+		|	//	1001	returnf
+		|	//	1010	return
+		|	//	1100	dispt
+		|	//	1101	dispf
+		|	//	1110	disp
+		|	//	1111	case_call
+		|	// R1000_Micro_Arch_Seq.pdf pdf pg 26, SEQ.pdf pdf pg 102:
+		|	//	LEX LEVEL ADDRESSING MICRO-ORDERS
+		|	//	00 CUR_LEX
+		|	//	01 INCOMING LEX
+		|	//	10 OUTER_FRAME
+		|	//	11 IMPORT
 '''
 
 from part import PartModelDQ, PartFactory
@@ -214,6 +238,7 @@ class SEQ(PartFactory):
 		|	bool macro_event;
 		|	unsigned lmp;
 		|	bool early_macro_pending;
+		|	bool maybe_dispatch;
 		|
 		|	void int_reads(void);
 		|	unsigned group_sel(void);
@@ -600,38 +625,12 @@ class SEQ(PartFactory):
 		|	rndx |= state->pa046[urand | (state->bad_hint ? 0x100 : 0)] << 16;
 		|	rndx |=  state->pa045[urand | 0x100] << 8;
 		|	rndx |= state->pa047[urand | 0x100];
-		|//	ALWAYS		UIR				H1				Q1				Q2				H2				Q3				Q4
-		|
-		|			output.qstp7 = output.bhn && state->l_macro_hic;
 		|
 		|//	ALWAYS		UIR				H1				Q1				Q2				H2				Q3				Q4
 		|
-		|	// R1000_Micro_Arch_Seq.pdf pdf pg 25
-		|	//	BRANCH TYPE (4 bits)
-		|	//	0000	brf
-		|	//	0001	brt
-		|	//	0010	push
-		|	//	0011	br
-		|	//	0100	callf
-		|	//	0101	callt
-		|	//	0110	cont
-		|	//	0111	call
-		|	//	1000	returnt
-		|	//	1001	returnf
-		|	//	1010	return
-		|	//	1100	dispt
-		|	//	1101	dispf
-		|	//	1110	disp
-		|	//	1111	case_call
 		|	BUS_BRTYP_READ(br_type);
-		|	bool maybe_dispatch = 0xb < br_type && br_type < 0xf;
+		|	maybe_dispatch = 0xb < br_type && br_type < 0xf;
 		|
-		|	// R1000_Micro_Arch_Seq.pdf pdf pg 26, SEQ.pdf pdf pg 102:
-		|	//	LEX LEVEL ADDRESSING MICRO-ORDERS
-		|	//	00 CUR_LEX
-		|	//	01 INCOMING LEX
-		|	//	10 OUTER_FRAME
-		|	//	11 IMPORT
 		|	unsigned lex_adr;
 		|	BUS_LAUIR_READ(lex_adr);
 		|
@@ -645,7 +644,9 @@ class SEQ(PartFactory):
 		|	} else {
 		|		switch (lex_adr) {
 		|		case 0:	state->resolve_address = state->curr_lex ^ 0xf; break;
-		|		case 1: state->resolve_address = (state->val_bus & 0xf) + 1; break;
+		|		case 1:
+		|			state->resolve_address = (state->val_bus & 0xf) + 1; 
+		|			break;
 		|		case 2: state->resolve_address = 0xf; break;
 		|		case 3: state->resolve_address = 0xe; break;
 		|		}
@@ -741,9 +742,10 @@ class SEQ(PartFactory):
 		|	state->resolve_offset &= 0xfffff;
 		|	}
 		|
+		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|if (h1pos && maybe_dispatch) {
 		|	state->output_ob = 0xfffff;
-		|} else if (h1pos || q1pos || q3pos) {
+		|} else if (h1pos || q1pos) {
 		|	if (intreads == 3) {
 		|		state->output_ob = state->pred;
 		|	} else if (intreads == 2) {
@@ -758,17 +760,8 @@ class SEQ(PartFactory):
 		|	state->output_ob &= 0xfffff;
 		|}
 		|
-		|
-		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|							if (q1pos) {
-		|								if (!maybe_dispatch) {
-		|									state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
-		|								} else {
-		|									state->name_bus = 0xffffffff;
-		|								}
-		|							}
-		|if (h1pos || q1pos) {
+		|//+ if (h1pos || q1pos) {
+		|if (q1pos) {
 		|	state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));			// q4
 		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
 		|	state->ibld = !ibuff_ld;								// q4
@@ -776,16 +769,14 @@ class SEQ(PartFactory):
 		|	state->m_ibuff_mt = !(ibemp && state->ibuf_fill);					// lmp, cond, branch_off
 		|}
 		|
-		|if (q2pos) {	// (h1+q1 works)
-		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
-		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
-		|
-		|	state->check_exit_ue = !(output.ueven && RNDX(RND_CHK_EXIT) && state->carry_out);	// q4
-		|	state->m_res_ref = !(state->lxval && !(state->display >> 15));				// lmp, cond
-		|
-		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|											if (q1pos) {
+		|												if (!maybe_dispatch) {
+		|													state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|												} else {
+		|													state->name_bus = 0xffffffff;
+		|												}
+		|
 		|												BUS_BRTIM_READ(br_tim);
 		|												unsigned bhow;
 		|												bool brtm3;
@@ -822,12 +813,17 @@ class SEQ(PartFactory):
 		|												state->stop = !(output.bhn && (state->uei == 0) && !PIN_LMAC=>);
 		|												output.seqsn = !state->stop;
 		|												bool evnan0d = !(PIN_ENMIC=> && (state->uei == 0));
-		|												output.ueven = !(evnan0d || !output.seqsn);
+		|												output.ueven = !(evnan0d || state->stop);
 		|											}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|															if (q2pos)
-		|															{
+		|															if (q2pos) {
+		|																state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
+		|																state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
+		|															
+		|																state->check_exit_ue = !(output.ueven && RNDX(RND_CHK_EXIT) && state->carry_out);	// q4
+		|																state->m_res_ref = !(state->lxval && !(state->display >> 15));				// lmp, cond
+		|															
 		|																uint64_t val = state->val_bus >> 32;
 		|																val &= 0xffffff;
 		|
@@ -887,6 +883,7 @@ class SEQ(PartFactory):
 		|																output.nu = nua;
 		|																output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
 		|																output.sfive = (state->check_exit_ue && state->ferr);
+		|																output.qstp7 = output.bhn && state->l_macro_hic;
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
@@ -982,7 +979,7 @@ class SEQ(PartFactory):
 		|																									}
 		|																								}
 		|																								bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
-		|																								output.labrt = bad_hint_disp && !(RNDX(RND_L_ABRT) && output.seqsn);
+		|																								output.labrt = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->stop);
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
@@ -1438,6 +1435,7 @@ class SEQ(PartFactory):
 		|																												if (PIN_LCLK.posedge()) {
 		|																													state->foo9 = !RNDX(RND_TOS_VLB);
 		|																												}
+		|																												output.qstp7 = output.bhn && state->l_macro_hic;
 		|																											}
 		|
 		|	if (!q4pos) {
@@ -1448,16 +1446,19 @@ class SEQ(PartFactory):
 		|			fiu_bus = output.qf;
 		|		}
 		|		output.z_qt = PIN_QTOE=>;
+		|		output.z_qv = PIN_QVOE=>;
+		|		assert(output.z_qt == output.z_qv);
 		|		if (!output.z_qt) {
 		|			int_reads();	// Necessary
+		|
 		|			output.qt = state->typ_bus;
 		|			output.qt ^= BUS_QT_MASK;
+		|			//if (output.qt != state->output.qt) ALWAYS_TRACE(<< "TYPBUS " << std::hex << state->output.qt << " <- " << output.qt << " intreads " << intreads << " i_r " << internal_reads << " mb " << maybe_dispatch << " rnd " << urand);
 		|			typ_bus = !state->typ_bus;
-		|		}
-		|		output.z_qv = PIN_QVOE=>;
-		|		if (!output.z_qt) {
+		|
 		|			output.qv = state->val_bus;
 		|			output.qv ^= BUS_QV_MASK;
+		|			//if (output.qv != state->output.qv) ALWAYS_TRACE(<< "VALBUS " << std::hex << state->output.qv << " <- " << output.qv << " intreads " << intreads << " i_r " << internal_reads << " mb " << maybe_dispatch << " rnd " << urand);
 		|			val_bus = ~state->val_bus;
 		|		}
 		|	}
