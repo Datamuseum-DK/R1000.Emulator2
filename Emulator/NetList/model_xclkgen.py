@@ -79,9 +79,9 @@ class XClkGen(PartFactory):
 		|		PIN_H1E<=(1);
 		|		//PIN_H2E<=(0);
 		|		PIN_Q4<=(1);
-		|		state->when = 20;
+		|		state->when = 30;
 		|		break;
-		|	case 20:
+		|	case 30:
 		|		PIN_H1<=(1);
 		|		PIN_H2<=(0);
 		|		state->when = 55;
@@ -108,9 +108,9 @@ class XClkGen(PartFactory):
 		|		PIN_H1E<=(0);
 		|		//PIN_H2E<=(1);
 		|		PIN_Q2<=(1); PIN_Q3<=(0);
-		|		state->when = 120;
+		|		state->when = 130;
 		|		break;
-		|	case 120:
+		|	case 130:
 		|		PIN_H1<=(0);
 		|		PIN_H2<=(1);
 		|		state->when = 155;

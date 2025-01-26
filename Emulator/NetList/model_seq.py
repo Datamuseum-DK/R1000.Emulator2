@@ -713,7 +713,7 @@ class SEQ(PartFactory):
 		|
 		|	bool acin = ((mem_start & 1) != 0);
 		|       sgdisp &= 0xfffff;
-		|	if (q1pos) {
+		|	if (h1pos || q1pos) {
 		|       state->resolve_offset = 0;
 		|
 		|	switch(mem_start) {
@@ -743,9 +743,7 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|if (h1pos && maybe_dispatch) {
-		|	state->output_ob = 0xfffff;
-		|} else if (h1pos || q1pos) {
+		|if (h1pos || q1pos) {
 		|	if (intreads == 3) {
 		|		state->output_ob = state->pred;
 		|	} else if (intreads == 2) {
@@ -758,6 +756,11 @@ class SEQ(PartFactory):
 		|		state->output_ob = 0xfffff;
 		|	}
 		|	state->output_ob &= 0xfffff;
+		|												if (!maybe_dispatch) {
+		|													state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|												} else {
+		|													state->name_bus = 0xffffffff;
+		|												}
 		|}
 		|
 		|//+ if (h1pos || q1pos) {
@@ -771,11 +774,6 @@ class SEQ(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|											if (q1pos) {
-		|												if (!maybe_dispatch) {
-		|													state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
-		|												} else {
-		|													state->name_bus = 0xffffffff;
-		|												}
 		|
 		|												BUS_BRTIM_READ(br_tim);
 		|												unsigned bhow;
@@ -1453,12 +1451,24 @@ class SEQ(PartFactory):
 		|
 		|			output.qt = state->typ_bus;
 		|			output.qt ^= BUS_QT_MASK;
-		|			//if (output.qt != state->output.qt) ALWAYS_TRACE(<< "TYPBUS " << std::hex << state->output.qt << " <- " << output.qt << " intreads " << intreads << " i_r " << internal_reads << " mb " << maybe_dispatch << " rnd " << urand);
+		|#if 0
+		|			if (h1pos || (output.qt != state->output.qt)) {
+		|				ALWAYS_TRACE(<< "TYPBUS " << std::hex << state->output.qt << " <- " << output.qt << " intrd " << intreads << " i_reads " << internal_reads << " maybe_disp " << maybe_dispatch << " urand " << urand << " m_start " << mem_start << " u_tos " << uses_tos
+		|					<< " s->res_off " << state->resolve_offset
+		|					<< " s->res_adr " << state->resolve_address
+		|					<< " s->output_ob " << state->output_ob
+		|					<< " s->tosram[s->res_adr] " << state->tosram[state->resolve_address]
+		|					<< " offs " << offs
+		|					<< " s->topcnt " << state->topcnt
+		|					<< " clk " << h1pos << q1pos
+		|				);
+		|			}
+		|#endif
 		|			typ_bus = !state->typ_bus;
 		|
 		|			output.qv = state->val_bus;
 		|			output.qv ^= BUS_QV_MASK;
-		|			//if (output.qv != state->output.qv) ALWAYS_TRACE(<< "VALBUS " << std::hex << state->output.qv << " <- " << output.qv << " intreads " << intreads << " i_r " << internal_reads << " mb " << maybe_dispatch << " rnd " << urand);
+		|			// if (output.qv != state->output.qv) ALWAYS_TRACE(<< "VALBUS " << std::hex << state->output.qv << " <- " << output.qv << " intreads " << intreads << " internal_reads " << internal_reads << " maybe_dispatch " << maybe_dispatch << " urand " << urand << " mem_start " << mem_start);
 		|			val_bus = ~state->val_bus;
 		|		}
 		|	}
