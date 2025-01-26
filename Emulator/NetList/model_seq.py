@@ -1436,7 +1436,7 @@ class SEQ(PartFactory):
 		|																												output.qstp7 = output.bhn && state->l_macro_hic;
 		|																											}
 		|
-		|	if (!q4pos) {
+		|	if (h1pos) {
 		|		output.z_qf = PIN_QFOE=>;
 		|		if (!output.z_qf) {
 		|			output.qf = state->topu ^ 0xffff;
@@ -1452,7 +1452,7 @@ class SEQ(PartFactory):
 		|			output.qt = state->typ_bus;
 		|			output.qt ^= BUS_QT_MASK;
 		|#if 0
-		|			if (h1pos || (output.qt != state->output.qt)) {
+		|			if ((!h1pos) && (output.qt != state->output.qt)) {
 		|				ALWAYS_TRACE(<< "TYPBUS " << std::hex << state->output.qt << " <- " << output.qt << " intrd " << intreads << " i_reads " << internal_reads << " maybe_disp " << maybe_dispatch << " urand " << urand << " m_start " << mem_start << " u_tos " << uses_tos
 		|					<< " s->res_off " << state->resolve_offset
 		|					<< " s->res_adr " << state->resolve_address
