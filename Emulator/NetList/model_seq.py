@@ -239,6 +239,11 @@ class SEQ(PartFactory):
 		|	unsigned lmp;
 		|	bool early_macro_pending;
 		|	bool maybe_dispatch;
+		|	bool sign_extend;
+		|	unsigned intreads;
+		|       bool carry_out;
+		|	bool uses_tos;
+		|	unsigned mem_start;
 		|
 		|	void int_reads(void);
 		|	unsigned group_sel(void);
@@ -613,13 +618,7 @@ class SEQ(PartFactory):
 		|	bool sclke = PIN_SCLKE=>;
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = q4pos && !sclke;
-		|	bool sign_extend;
-		|	unsigned pa040d = 0;
-		|	unsigned intreads = 0;
-		|       bool co = false;
 		|
-		|	bool uses_tos;
-		|	unsigned mem_start;
 		|
 		|
 		|//	ALWAYS		UIR				H1				Q1				Q2				H2				Q3				Q4
@@ -634,6 +633,19 @@ class SEQ(PartFactory):
 		|
 		|								BUS_BRTYP_READ(br_type);
 		|								maybe_dispatch = 0xb < br_type && br_type < 0xf;
+		|
+		|								output.z_qf = PIN_QFOE=>;
+		|								if (!output.z_qf) {
+		|									output.qf = state->topu ^ 0xffff;
+		|									output.qf ^= 0xffff;
+		|									fiu_bus = output.qf;
+		|								}
+		|								output.z_qt = PIN_QTOE=>;
+		|								output.z_qv = PIN_QVOE=>;
+		|								assert(output.z_qt == output.z_qv);
+		|								if (output.z_qt) {
+		|									h1pos = false;
+		|								}
 		|							}
 		|
 		|//	ALWAYS		UIR				H1				Q1				Q2				H2				Q3				Q4
@@ -646,7 +658,8 @@ class SEQ(PartFactory):
 		|	int_reads();
 		|}
 		|//+if (h1pos || q1pos || q3pos || q4pos) {
-		|if (h1pos || q1pos || q3pos || q4pos) {
+		|//+if (h1pos || q1pos || q3pos         ) {
+		|if (h1pos || q1pos) {
 		|	unsigned lex_adr;
 		|	BUS_LAUIR_READ(lex_adr);
 		|
@@ -685,16 +698,14 @@ class SEQ(PartFactory):
 		|//+ if (h1pos || q1pos ||          q3pos ) {
 		|//-if (h1pos ||                   q3pos ) {
 		|//-if (         q1pos ||          q3pos ) {
-		|if (h1pos || q1pos ||          q3pos ) {
+		|if (h1pos || q1pos                   ) {
 		|	if (!maybe_dispatch) {
 		|		uses_tos = false;
 		|		mem_start = 7;
-		|		//dis = false;
 		|		intreads = internal_reads & 3;
 		|	} else {
 		|		uses_tos = state->uses_tos;
 		|		mem_start = state->decode & 0x7;
-		|		//dis = !PIN_H2=>;
 		|		if (mem_start == 0 || mem_start == 4) {
 		|			intreads = 3;
 		|		} else {
@@ -732,12 +743,12 @@ class SEQ(PartFactory):
 		|	case 0:
 		|	case 2:
 		|               state->resolve_offset = offs + sgdisp + 1;
-		|               co = (state->resolve_offset >> 20) == 0;
+		|               carry_out = (state->resolve_offset >> 20) == 0;
 		|		break;
 		|	case 1:
 		|	case 3:
 		|               state->resolve_offset = (1<<20) + offs - (sgdisp + 1);
-		|               co = acin && (offs == 0);
+		|               carry_out = acin && (offs == 0);
 		|		break;
 		|	case 4:
 		|	case 6:
@@ -747,7 +758,7 @@ class SEQ(PartFactory):
 		|	case 5:
 		|	case 7:
 		|               state->resolve_offset = offs;
-		|               co = acin && (offs == 0);
+		|               carry_out = acin && (offs == 0);
 		|		break;
 		|	}
 		|
@@ -755,7 +766,7 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|							if (h1pos) {
+		|							if (h1pos || q1pos) {
 		|								if (intreads == 3) {
 		|									state->output_ob = state->pred;
 		|								} else if (intreads == 2) {
@@ -779,16 +790,14 @@ class SEQ(PartFactory):
 		|								bool ibemp = !(ibuff_ld || (state->word != 0));
 		|								state->m_ibuff_mt = !(ibemp && state->ibuf_fill);					// lmp, cond, branch_off
 		|
-		|								output.z_qf = PIN_QFOE=>;
-		|								if (!output.z_qf) {
-		|									output.qf = state->topu ^ 0xffff;
-		|									output.qf ^= 0xffff;
-		|									fiu_bus = output.qf;
-		|								}
+		|}
+		|#if 0
 		|								output.z_qt = PIN_QTOE=>;
 		|								output.z_qv = PIN_QVOE=>;
 		|								assert(output.z_qt == output.z_qv);
 		|								if (!output.z_qt) {
+		|#endif
+		|							if (h1pos) {
 		|									int_reads();	// Necessary
 		|
 		|									output.qt = state->typ_bus;
@@ -798,7 +807,6 @@ class SEQ(PartFactory):
 		|									output.qv = state->val_bus;
 		|									output.qv ^= BUS_QV_MASK;
 		|									val_bus = ~state->val_bus;
-		|								}
 		|							}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
@@ -924,7 +932,7 @@ class SEQ(PartFactory):
 		|																								if (state->stop) pa040a |= 0x04;
 		|																								if (!maybe_dispatch) pa040a |= 0x02;
 		|																								if (state->bad_hint) pa040a |= 0x01;
-		|																								pa040d = state->pa040[pa040a];
+		|																								unsigned pa040d = state->pa040[pa040a];
 		|
 		|																								bool bar8;
 		|																								lmp = late_macro_pending();
@@ -1166,7 +1174,7 @@ class SEQ(PartFactory):
 		|																												}
 		|																												if (state_clock && !RNDX(RND_SAVE_LD)) {
 		|																													state->savrg = state->resolve_offset;
-		|																													state->carry_out = co;
+		|																													state->carry_out = carry_out;
 		|																												}
 		|																											
 		|																												if (state_clock) {
