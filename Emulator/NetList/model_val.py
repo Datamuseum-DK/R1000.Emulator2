@@ -349,9 +349,10 @@ class VAL(PartFactory):
 		|	}
 		|	if (oe || oe7) {
 		|		uint64_t bus;
-		|		BUS_DV_READ(bus);
+		|		//BUS_DV_READ(bus);
 		|		//if (bus != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << bus << " " << val_bus);
-		|		bus ^= BUS_DV_MASK;
+		|		//bus ^= BUS_DV_MASK;
+		|		bus = ~val_bus;
 		|		if (oe) {
 		|			b |= bus & 0xffffffffffffff00ULL;
 		|		}
@@ -415,7 +416,7 @@ class VAL(PartFactory):
 		|							}
 		|							if (h1pos && !output.z_qv) {
 		|								find_b();
-		|								output.qv = state->b ^ BUS_QV_MASK;
+		|								//output.qv = state->b ^ BUS_QV_MASK;
 		|								val_bus = ~state->b;
 		|							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
@@ -604,9 +605,10 @@ class VAL(PartFactory):
 		|																													state->zerocnt = ~count2;
 		|																												}
 		|																												if (!PIN_LDWDR=> && sclken) {
-		|																													BUS_DV_READ(state->wdr);
+		|																													//BUS_DV_READ(state->wdr);
 		|																													//if (state->wdr != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << state->wdr << " " << val_bus);
-		|																													state->wdr ^= BUS_DV_MASK;
+		|																													//state->wdr ^= BUS_DV_MASK;
+		|																													state->wdr = ~val_bus;
 		|																												}
 		|																												uint32_t a;
 		|																												switch (state->msrc >> 2) {

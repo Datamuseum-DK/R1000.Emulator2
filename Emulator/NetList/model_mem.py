@@ -333,21 +333,21 @@ class MEM(PartFactory):
 		|							
 		|								if (!output.z_qv && output.z_qt) {
 		|									if (not_me) {
-		|										output.qv = BUS_QV_MASK;
+		|										//output.qv = BUS_QV_MASK;
 		|										val_bus = ~0ULL;
 		|									} else {
-		|										output.qv = state->qreg;
+		|										//output.qv = state->qreg;
 		|										val_bus = state->qreg;
 		|									}
 		|								} else if (!output.z_qt) {
 		|									if (not_me) {
-		|										output.qt = BUS_QT_MASK;
-		|										output.qv = BUS_QV_MASK;
+		|										//output.qt = BUS_QT_MASK;
+		|										//output.qv = BUS_QV_MASK;
 		|										typ_bus = ~0ULL;
 		|										val_bus = ~0ULL;
 		|									} else {
-		|										output.qt = state->tqreg;
-		|										output.qv = state->vqreg;
+		|										//output.qt = state->tqreg;
+		|										//output.qv = state->vqreg;
 		|										typ_bus = state->tqreg;
 		|										val_bus = state->vqreg;
 		|									}
@@ -365,8 +365,10 @@ class MEM(PartFactory):
 		|																												state->cstop = !(diag_sync || diag_freeze);
 		|
 		|																												if (!PIN_LDWDR=>) {
-		|																													BUS_DT_READ(state->tdreg);
-		|																													BUS_DV_READ(state->vdreg);
+		|																													//BUS_DT_READ(state->tdreg);
+		|																													//BUS_DV_READ(state->vdreg);
+		|																													state->tdreg = typ_bus;
+		|																													state->vdreg = val_bus;
 		|																													if (state->vdreg != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << state->vdreg << " " << val_bus);
 		|																												}
 		|

@@ -266,8 +266,10 @@ class IOC(PartFactory):
 		|	BUS_RAND_READ(rand);
 		|
 		|	uint64_t typ, val;
-		|	BUS_DTYP_READ(typ);
-		|	BUS_DVAL_READ(val);
+		|	//BUS_DTYP_READ(typ);
+		|	typ = typ_bus;
+		|	//BUS_DVAL_READ(val);
+		|	val = val_bus;
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
@@ -455,7 +457,7 @@ class IOC(PartFactory):
 		|
 		|	output.z_qval = PIN_QVALOE=>;
 		|	if (!output.z_qval && !q4pos) {
-		|		output.qval = state->dummy_val;
+		|		//output.qval = state->dummy_val;
 		|		val_bus = state->dummy_val;
 		|	}
 		|
@@ -489,6 +491,8 @@ class IOC(PartFactory):
 		|			output.qtyp = state->dummy_typ;
 		|			break;
 		|		}
+		|		typ_bus = output.qtyp;
+		|		output.qtyp = ~0ULL;
 		|	}
 		|
 		|	unsigned cond_sel;

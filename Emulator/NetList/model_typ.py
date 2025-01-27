@@ -98,10 +98,10 @@ class TYP(PartFactory):
 		|''')
 
     def sensitive(self):
-            yield "PIN_H2.neg()"
-            yield "PIN_Q2.pos()"
-            yield "PIN_Q4.pos()"
-            yield "PIN_BHSTP"
+        yield "PIN_H2.neg()"
+        yield "PIN_Q2.pos()"
+        yield "PIN_Q4.pos()"
+        yield "PIN_BHSTP"
 
     def priv_decl(self, file):
         file.fmt('''
@@ -403,8 +403,9 @@ class TYP(PartFactory):
 		|		state->badr |= uirb & 0x1f;
 		|	}
 		|	if (uirb == 0x29 && output.z_qt) {
-		|		BUS_DT_READ(state->b);
-		|		state->b ^= BUS_DT_MASK;
+		|		//BUS_DT_READ(state->b);
+		|		//state->b ^= BUS_DT_MASK;
+		|		state->b = ~typ_bus;
 		|	} else {
 		|		state->b = state->rfram[state->badr];
 		|	}
@@ -461,7 +462,7 @@ class TYP(PartFactory):
 		|											}
 		|											if (h1pos && !output.z_qt) {
 		|												find_b();
-		|												output.qt = state->b ^ BUS_QT_MASK;
+		|												//output.qt = state->b ^ BUS_QT_MASK;
 		|												typ_bus = ~state->b;
 		|											}
 		|
@@ -700,8 +701,9 @@ class TYP(PartFactory):
 		|																													state->rfram[state->cadr] = c;
 		|																												}
 		|																												if (sclke && !PIN_LDWDR=>) {
-		|																													BUS_DT_READ(state->wdr);
-		|																													state->wdr ^= BUS_DT_MASK;
+		|																													//BUS_DT_READ(state->wdr);
+		|																													//state->wdr ^= BUS_DT_MASK;
+		|																													state->wdr = ~typ_bus;
 		|																												}
 		|																												if (sclke) {
 		|																													if (uirc == 0x28) {

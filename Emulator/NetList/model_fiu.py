@@ -137,11 +137,6 @@ class FIU(PartFactory):
         yield "PIN_Q4.pos()"
 
         yield "BUS_DF"
-        #yield "BUS_DT"
-        #yield "BUS_DV"
-        #yield "PIN_QVOE.neg()"
-        #yield "PIN_QTOE.neg()"
-        #yield "PIN_QFOE.neg()"
 
         yield "PIN_LABR"
         yield "PIN_LEABR"
@@ -239,7 +234,8 @@ class FIU(PartFactory):
 		|		vi = state->vreg;
 		|		break;
 		|	case 0x01: case 0x05: case 0x09:
-		|		BUS_DV_READ(vi);
+		|		//BUS_DV_READ(vi);
+		|		vi = val_bus;
 		|		//if (vi != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << vi << " " << val_bus);
 		|		vi ^= BUS_DV_MASK;
 		|		break;
@@ -267,7 +263,8 @@ class FIU(PartFactory):
 		|		ti ^= BUS_DF_MASK;
 		|		break;
 		|	case 0x08: case 0x09: case 0x0a: case 0x0b:
-		|		BUS_DT_READ(ti);
+		|		//BUS_DT_READ(ti);
+		|		ti = typ_bus;
 		|		ti ^= BUS_DT_MASK;
 		|		break;
 		|	default:
@@ -451,7 +448,8 @@ class FIU(PartFactory):
 		|			tii = BUS_DV_MASK;
 		|		break;
 		|	case 2:
-		|		BUS_DV_READ(tii);
+		|		//BUS_DV_READ(tii);
+		|		tii = val_bus;
 		|		//if (tii != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << tii << " " << val_bus);
 		|		tii = state->vi_bus;
 		|		break;
@@ -543,7 +541,6 @@ class FIU(PartFactory):
 		|																													if (PIN_ORSR=>) {			// UCODE
 		|																														BUS_OL_READ(state->oreg);
 		|																													} else {
-		|																														//BUS_DADR_READ(state->oreg);
 		|																														state->oreg = adr_bus;
 		|																														state->oreg &= 0x7f;
 		|																													}
@@ -622,8 +619,6 @@ class FIU(PartFactory):
 		|
 		|																											if (q4pos) {
 		|																												uint64_t adr = 0;
-		|																												//BUS_DADR_READ(adr);
-		|																												//if (adr_bus != adr) ALWAYS_TRACE(<<"ADRBUS " << std::hex << adr << " " << adr_bus);
 		|																												adr = adr_bus;
 		|																												bool load_mar = (state->prmt >> 4) & 1;
 		|																										
@@ -890,11 +885,11 @@ class FIU(PartFactory):
 		|	if ((!output.z_qt || !output.z_qv) && PIN_H1=>) {
 		|		do_tivi();
 		|		if (!output.z_qt) {
-		|			output.qt = state->ti_bus ^ BUS_QT_MASK;
+		|			//output.qt = state->ti_bus ^ BUS_QT_MASK;
 		|			typ_bus = ~state->ti_bus;
 		|		}
 		|		if (!output.z_qv) {
-		|			output.qv = state->vi_bus ^ BUS_QT_MASK;
+		|			//output.qv = state->vi_bus ^ BUS_QT_MASK;
 		|			val_bus = ~state->vi_bus;
 		|		}
 		|	}

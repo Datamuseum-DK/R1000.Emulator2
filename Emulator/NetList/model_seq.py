@@ -270,11 +270,16 @@ class SEQ(PartFactory):
 		|	}
 		|	state->coff ^= 0x7fff;
 		|	if (internal_reads == 0) {
-		|		BUS_DT_READ(state->typ_bus);
-		|		state->typ_bus ^= BUS_DT_MASK;
-		|		BUS_DV_READ(state->val_bus);
+		|
+		|		//BUS_DT_READ(state->typ_bus);
+		|		//if (state->typ_bus != typ_bus) ALWAYS_TRACE(<<"TYPBUS " << std::hex << state->typ_bus << " " << typ_bus);
+		|		//state->typ_bus ^= BUS_DT_MASK;
+		|		state->typ_bus = ~typ_bus;
+		|
+		|		//BUS_DV_READ(state->val_bus);
 		|		//if (state->val_bus != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << state->val_bus << " " << val_bus);
-		|		state->val_bus ^= BUS_DV_MASK;
+		|		//state->val_bus ^= BUS_DV_MASK;
+		|		state->val_bus = ~val_bus;
 		|		return;
 		|	}		
 		|
@@ -800,12 +805,12 @@ class SEQ(PartFactory):
 		|							if (h1pos) {
 		|									int_reads();	// Necessary
 		|
-		|									output.qt = state->typ_bus;
-		|									output.qt ^= BUS_QT_MASK;
-		|									typ_bus = !state->typ_bus;
+		|									//output.qt = state->typ_bus;
+		|									//output.qt ^= BUS_QT_MASK;
+		|									typ_bus = ~state->typ_bus;
 		|
-		|									output.qv = state->val_bus;
-		|									output.qv ^= BUS_QV_MASK;
+		|									//output.qv = state->val_bus;
+		|									//output.qv ^= BUS_QV_MASK;
 		|									val_bus = ~state->val_bus;
 		|							}
 		|
