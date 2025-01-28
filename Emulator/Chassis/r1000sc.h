@@ -81,6 +81,8 @@ extern volatile uint64_t ecc_bus;
 #define IS_L(cond) ((cond) == sc_dt::sc_logic_0)
 #define AS(cond) ((cond) ? sc_dt::sc_logic_1 : sc_dt::sc_logic_0)
 
+#define BUS64_LSB(lsb) (63 - (lsb))
+
 #endif /* __cplusplus */
 
 #endif /* R1000SC_H */

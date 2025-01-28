@@ -199,23 +199,23 @@ class FIU(PartFactory):
 		|	uint64_t st;
 		|	BUS_ST_READ(st);
 		|
-		|	u |= (uint64_t)output.cndtru << BUS_DV_LSB(9);
-		|	u |= (uint64_t)output.memcnd << BUS_DV_LSB(10);
-		|	u |= line << BUS_DV_LSB(23);
-		|	u |= (uint64_t)state->setq << BUS_DV_LSB(25);
-		|	u |= st << BUS_DV_LSB(27);
-		|	u |= (uint64_t)((state->omq >> 2) & 0x3) << BUS_DV_LSB(29);
-		|	u |= 0x3ULL << BUS_DV_LSB(31);
-		|	u |= (uint64_t)(output.pgxin) << BUS_DV_LSB(32);
-		|	u |= (uint64_t)((state->prmt >> 1) & 1) << BUS_DV_LSB(33);
-		|	u |= (uint64_t)output.rfsh << BUS_DV_LSB(34);
-		|	u |= (uint64_t)(output.memex) << BUS_DV_LSB(35);
-		|	u |= ((line >> 0) & 1) << BUS_DV_LSB(48);
-		|	u |= ((line >> 1) & 1) << BUS_DV_LSB(50);
-		|	u |= (uint64_t)state->nmatch << BUS_DV_LSB(56);
-		|	u |= (uint64_t)state->in_range << BUS_DV_LSB(57);
-		|	u |= (uint64_t)state->csa_oor_next << BUS_DV_LSB(58);
-		|	u |= (uint64_t)output.chit << BUS_DV_LSB(59);
+		|	u |= (uint64_t)output.cndtru << BUS_DF_LSB(9);
+		|	u |= (uint64_t)output.memcnd << BUS_DF_LSB(10);
+		|	u |= line << BUS_DF_LSB(23);
+		|	u |= (uint64_t)state->setq << BUS_DF_LSB(25);
+		|	u |= st << BUS_DF_LSB(27);
+		|	u |= (uint64_t)((state->omq >> 2) & 0x3) << BUS_DF_LSB(29);
+		|	u |= 0x3ULL << BUS_DF_LSB(31);
+		|	u |= (uint64_t)(output.pgxin) << BUS_DF_LSB(32);
+		|	u |= (uint64_t)((state->prmt >> 1) & 1) << BUS_DF_LSB(33);
+		|	u |= (uint64_t)output.rfsh << BUS_DF_LSB(34);
+		|	u |= (uint64_t)(output.memex) << BUS_DF_LSB(35);
+		|	u |= ((line >> 0) & 1) << BUS_DF_LSB(48);
+		|	u |= ((line >> 1) & 1) << BUS_DF_LSB(50);
+		|	u |= (uint64_t)state->nmatch << BUS_DF_LSB(56);
+		|	u |= (uint64_t)state->in_range << BUS_DF_LSB(57);
+		|	u |= (uint64_t)state->csa_oor_next << BUS_DF_LSB(58);
+		|	u |= (uint64_t)output.chit << BUS_DF_LSB(59);
 		|	u |= (uint64_t)output.hofs;
 		|	return (u);
 		|}
@@ -234,23 +234,23 @@ class FIU(PartFactory):
 		|		vi = state->vreg;
 		|		break;
 		|	case 0x01: case 0x05: case 0x09:
-		|		//BUS_DV_READ(vi);
+		|		//BUS_DF_READ(vi);
 		|		vi = val_bus;
 		|		//if (vi != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << vi << " " << val_bus);
-		|		vi ^= BUS_DV_MASK;
+		|		vi ^= BUS_DF_MASK;
 		|		break;
 		|	case 0x02: case 0x06: case 0x0a:
 		|		BUS_DF_READ(vi);
 		|		vi ^= BUS_DF_MASK;
 		|		break;
 		|	case 0x03: case 0x07: case 0x0b:
-		|		vi = frame() ^ BUS_DV_MASK;
+		|		vi = frame() ^ BUS_DF_MASK;
 		|		break;
 		|	default:
 		|		vi = (uint64_t)state->srn << 32;
 		|		vi |= state->sro & 0xffffff80;
 		|		vi |= state->oreg;
-		|		vi ^= BUS_DV_MASK;
+		|		vi ^= BUS_DF_MASK;
 		|		break;
 		|	}
 		|	uint64_t ti;
@@ -263,9 +263,9 @@ class FIU(PartFactory):
 		|		ti ^= BUS_DF_MASK;
 		|		break;
 		|	case 0x08: case 0x09: case 0x0a: case 0x0b:
-		|		//BUS_DT_READ(ti);
+		|		//BUS_DF_READ(ti);
 		|		ti = typ_bus;
-		|		ti ^= BUS_DT_MASK;
+		|		ti ^= BUS_DF_MASK;
 		|		break;
 		|	default:
 		|		uint64_t tmp;
@@ -445,10 +445,10 @@ class FIU(PartFactory):
 		|	case 0:
 		|	case 1:
 		|		if (sgnbit)
-		|			tii = BUS_DV_MASK;
+		|			tii = BUS_DF_MASK;
 		|		break;
 		|	case 2:
-		|		//BUS_DV_READ(tii);
+		|		//BUS_DF_READ(tii);
 		|		tii = val_bus;
 		|		//if (tii != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << tii << " " << val_bus);
 		|		tii = state->vi_bus;
@@ -468,7 +468,7 @@ class FIU(PartFactory):
 		|
 		|	uint64_t vout = 0;
 		|	vout = (rdq & vmsk);
-		|	vout |= (tii & (vmsk ^ BUS_DV_MASK));
+		|	vout |= (tii & (vmsk ^ BUS_DF_MASK));
 		|
 		|	output.z_qf = PIN_QFOE=>;			// (UCODE)
 		|	if (!output.z_qf && PIN_H1=>) { 
@@ -482,7 +482,7 @@ class FIU(PartFactory):
 		|
 		|	if (sclk && !PIN_TCLK=>) {			// Q4~^
 		|		state->treg = (rdq & tmsk);
-		|		state->treg |= (state->ti_bus & (tmsk ^ BUS_DT_MASK));
+		|		state->treg |= (state->ti_bus & (tmsk ^ BUS_DF_MASK));
 		|	}
 		|
 		|	if (sclk && !PIN_VCLK=>) {			// Q4~^
@@ -559,10 +559,10 @@ class FIU(PartFactory):
 		|																										
 		|																												switch(lfrc) {
 		|																												case 0:
-		|																													state->lfreg = (((state->vi_bus >> BUS_DV_LSB(31)) & 0x3f) + 1) & 0x3f;
-		|																													if ((state->ti_bus >> BUS_DT_LSB(36)) & 1)
+		|																													state->lfreg = (((state->vi_bus >> BUS_DF_LSB(31)) & 0x3f) + 1) & 0x3f;
+		|																													if ((state->ti_bus >> BUS_DF_LSB(36)) & 1)
 		|																														state->lfreg |= (1 << 6);
-		|																													else if (!((state->vi_bus >> BUS_DV_LSB(25)) & 1))
+		|																													else if (!((state->vi_bus >> BUS_DF_LSB(25)) & 1))
 		|																														state->lfreg |= (1 << 6);
 		|																													state->lfreg ^= 0x7f;
 		|																													break;
@@ -570,8 +570,8 @@ class FIU(PartFactory):
 		|																													BUS_LFL_READ(state->lfreg);
 		|																													break;
 		|																												case 2:
-		|																													state->lfreg = (state->ti_bus >> BUS_DT_LSB(48)) & 0x3f;
-		|																													if ((state->ti_bus >> BUS_DT_LSB(36)) & 1)
+		|																													state->lfreg = (state->ti_bus >> BUS_DF_LSB(48)) & 0x3f;
+		|																													if ((state->ti_bus >> BUS_DF_LSB(36)) & 1)
 		|																														state->lfreg |= (1 << 6);
 		|																													state->lfreg = state->lfreg ^ 0x7f;
 		|																													break;
@@ -695,7 +695,7 @@ class FIU(PartFactory):
 		|	if (condsel == 0x69) {		// SCAVENGER_HIT
 		|		scav_trap_next = false;
 		|	} else if (rmarp) {
-		|		scav_trap_next = (state->ti_bus >> BUS_DT_LSB(32)) & 1;
+		|		scav_trap_next = (state->ti_bus >> BUS_DF_LSB(32)) & 1;
 		|	} else if (state->log_query) {
 		|		scav_trap_next = false;
 		|	}
@@ -705,7 +705,7 @@ class FIU(PartFactory):
 		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
 		|		csa_oor_next = false;
 		|	} else if (rmarp) {
-		|		csa_oor_next = (state->ti_bus >> BUS_DT_LSB(33)) & 1;
+		|		csa_oor_next = (state->ti_bus >> BUS_DF_LSB(33)) & 1;
 		|	} else if (state->log_query) {
 		|		csa_oor_next = state->csa_oor_next;
 		|	}
@@ -800,7 +800,7 @@ class FIU(PartFactory):
 		|																													if (condsel == 0x6b) {		// CACHE_MISS
 		|																														cache_miss_next = false;
 		|																													} else if (rmarp) {
-		|																														cache_miss_next = (state->ti_bus >> BUS_DT_LSB(35)) & 1;
+		|																														cache_miss_next = (state->ti_bus >> BUS_DF_LSB(35)) & 1;
 		|																													} else if (state->log_query) {
 		|																														cache_miss_next = state->miss;
 		|																													}
@@ -809,7 +809,7 @@ class FIU(PartFactory):
 		|																													state->csa_oor = csa_oor_next;
 		|																											
 		|																													if (rmarp) {
-		|																														state->mar_modified = (state->ti_bus >> BUS_DT_LSB(39)) & 1;
+		|																														state->mar_modified = (state->ti_bus >> BUS_DF_LSB(39)) & 1;
 		|																													} else if (condsel == 0x6d) {
 		|																														state->mar_modified = 1;
 		|																													} else if (state->omf20) {
@@ -818,15 +818,15 @@ class FIU(PartFactory):
 		|																														state->mar_modified = le_abort;
 		|																													}
 		|																													if (rmarp) {
-		|																														state->incmplt_mcyc = (state->ti_bus >> BUS_DT_LSB(40)) & 1;
+		|																														state->incmplt_mcyc = (state->ti_bus >> BUS_DF_LSB(40)) & 1;
 		|																													} else if (mem_start == 0x12) {
 		|																														state->incmplt_mcyc = true;
 		|																													} else if (memcyc1) {
 		|																														state->incmplt_mcyc = le_abort;
 		|																													}
 		|																													if (rmarp) {
-		|																														state->phys_last = (state->ti_bus >> BUS_DT_LSB(37)) & 1;
-		|																														state->write_last = (state->ti_bus >> BUS_DT_LSB(38)) & 1;
+		|																														state->phys_last = (state->ti_bus >> BUS_DF_LSB(37)) & 1;
+		|																														state->write_last = (state->ti_bus >> BUS_DF_LSB(38)) & 1;
 		|																													} else if (memcyc1) {
 		|																														state->phys_last = state->phys_ref;
 		|																														state->write_last = (state->mcntl & 1);
@@ -849,7 +849,7 @@ class FIU(PartFactory):
 		|																													state->omq |= (pa027 & 3) << 2;
 		|																													state->omq |= ((pa027 >> 5) & 1) << 1;
 		|																													if (rmarp) {
-		|																														state->page_xing = (state->ti_bus >> BUS_DT_LSB(34)) & 1;
+		|																														state->page_xing = (state->ti_bus >> BUS_DF_LSB(34)) & 1;
 		|																													} else {
 		|																														state->page_xing = (state->page_crossing_next);
 		|																													}
@@ -880,16 +880,12 @@ class FIU(PartFactory):
 		|		(state->logrw_d && state->csaht)
 		|	);
 		|
-		|	output.z_qt = PIN_QTOE=>;
-		|	output.z_qv = PIN_QVOE=>;
-		|	if ((!output.z_qt || !output.z_qv) && PIN_H1=>) {
+		|	if ((!PIN_QTOE=> || !PIN_QVOE=>) && PIN_H1=>) {
 		|		do_tivi();
-		|		if (!output.z_qt) {
-		|			//output.qt = state->ti_bus ^ BUS_QT_MASK;
+		|		if (!PIN_QTOE=>) {
 		|			typ_bus = ~state->ti_bus;
 		|		}
-		|		if (!output.z_qv) {
-		|			//output.qv = state->vi_bus ^ BUS_QT_MASK;
+		|		if (!PIN_QVOE=>) {
 		|			val_bus = ~state->vi_bus;
 		|		}
 		|	}

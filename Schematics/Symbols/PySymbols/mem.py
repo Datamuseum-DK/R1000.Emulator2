@@ -27,7 +27,6 @@ class MEM(FChip):
 
         self.sig_left(ChipSig("-->+", "ISLOW"))
 
-
         self.sig_left(ChipSig("<--+", "SETA"))
         self.sig_left(ChipSig("<--+", "SETB"))
         self.sig_left(ChipSig("<--+", "HITA"))
@@ -41,8 +40,7 @@ class MEM(FChip):
         self.sig_left(ChipSig("-->+", "ELABT"))
         self.sig_left(ChipSig("-->+", "LABT"))
 
-        self.sig_right(ChipSig("+<->", "DQT", 0, 63))
-        self.sig_right(ChipSig("+<->", "DQV", 0, 63))
+        self.sig_right(ChipSig("+<--", "XXX"))
 
         self.finish(21)
 

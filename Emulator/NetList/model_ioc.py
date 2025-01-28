@@ -266,9 +266,7 @@ class IOC(PartFactory):
 		|	BUS_RAND_READ(rand);
 		|
 		|	uint64_t typ, val;
-		|	//BUS_DTYP_READ(typ);
 		|	typ = typ_bus;
-		|	//BUS_DVAL_READ(val);
 		|	val = val_bus;
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
@@ -455,44 +453,39 @@ class IOC(PartFactory):
 		|
 		|}
 		|
-		|	output.z_qval = PIN_QVALOE=>;
-		|	if (!output.z_qval && !q4pos) {
-		|		//output.qval = state->dummy_val;
+		|	if (!PIN_QVALOE=> && !q4pos) {
 		|		val_bus = state->dummy_val;
 		|	}
 		|
-		|	output.z_qtyp = PIN_QTYPOE=>;
-		|	if (!output.z_qtyp && !q4pos) {
+		|	if (!PIN_QTYPOE=> && !q4pos) {
 		|		switch (rand) {
 		|		case 0x05:
-		|			output.qtyp = (uint64_t)(state->slice) << 48;
-		|			output.qtyp |= (uint64_t)(state->delay) << 32;
-		|			output.qtyp |= ((uint64_t)state->rtc) << 16;
-		|			output.qtyp |= state->rspfifo[state->rsprdp];
+		|			typ_bus = (uint64_t)(state->slice) << 48;
+		|			typ_bus |= (uint64_t)(state->delay) << 32;
+		|			typ_bus |= ((uint64_t)state->rtc) << 16;
+		|			typ_bus |= state->rspfifo[state->rsprdp];
 		|			break;
 		|		case 0x08:
 		|		case 0x09:
 		|		case 0x19:
-		|			output.qtyp = (uint64_t)(state->slice) << 48;
-		|			output.qtyp |= (uint64_t)(state->delay) << 32;
-		|			output.qtyp |= ((uint64_t)state->rtc) << 16;
+		|			typ_bus = (uint64_t)(state->slice) << 48;
+		|			typ_bus |= (uint64_t)(state->delay) << 32;
+		|			typ_bus |= ((uint64_t)state->rtc) << 16;
 		|			// output.qtyp |= state->eidrg >> 1;
 		|			// output.qtyp |= state->cbreg1 << 7;
 		|			break;
 		|		case 0x16:
 		|		case 0x1c:
 		|		case 0x1d:
-		|			output.qtyp = ((uint64_t)state->rdata) << 32;
-		|			output.qtyp |= ((uint64_t)state->rtc) << 16;
+		|			typ_bus = ((uint64_t)state->rdata) << 32;
+		|			typ_bus |= ((uint64_t)state->rtc) << 16;
 		|			// output.qtyp |= state->eidrg >> 1;
 		|			// output.qtyp |= state->cbreg1 << 7;
 		|			break;
 		|		default:
-		|			output.qtyp = state->dummy_typ;
+		|			typ_bus = state->dummy_typ;
 		|			break;
 		|		}
-		|		typ_bus = output.qtyp;
-		|		output.qtyp = ~0ULL;
 		|	}
 		|
 		|	unsigned cond_sel;

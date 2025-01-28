@@ -202,7 +202,7 @@ class MEM(PartFactory):
 		|	state->mar_space = s;
 		|	state->mar_name = (a>>32) & 0xffffffffULL;
 		|	state->mar_page = (a>>19) & 0x1fff;
-		|	state->mar_set = (a>>BUS_DT_LSB(27)) & 0xf;
+		|	state->mar_set = (a>>BUS64_LSB(27)) & 0xf;
 		|
 		|	state->word = (a >> 7) & 0x3f;
 		|	state->hash = 0;
@@ -327,27 +327,19 @@ class MEM(PartFactory):
 		|
 		|
 		|							if (h1pos) {
-		|								output.z_qt = PIN_QTOE=>;
-		|								output.z_qv = PIN_QVOE=>;
 		|								bool not_me =  (output.hita && output.hitb && !PIN_ISLOW=>);
 		|							
-		|								if (!output.z_qv && output.z_qt) {
+		|								if (!PIN_QVOE=> && PIN_QTOE=>) {
 		|									if (not_me) {
-		|										//output.qv = BUS_QV_MASK;
 		|										val_bus = ~0ULL;
 		|									} else {
-		|										//output.qv = state->qreg;
 		|										val_bus = state->qreg;
 		|									}
-		|								} else if (!output.z_qt) {
+		|								} else if (!PIN_QTOE=>) {
 		|									if (not_me) {
-		|										//output.qt = BUS_QT_MASK;
-		|										//output.qv = BUS_QV_MASK;
 		|										typ_bus = ~0ULL;
 		|										val_bus = ~0ULL;
 		|									} else {
-		|										//output.qt = state->tqreg;
-		|										//output.qv = state->vqreg;
 		|										typ_bus = state->tqreg;
 		|										val_bus = state->vqreg;
 		|									}

@@ -275,11 +275,11 @@ class VAL(PartFactory):
 		|		case 2: state->a = state->mprod << 16; break;
 		|		case 3: state->a = state->mprod <<  0; break;
 		|		}
-		|		state->a ^= BUS_DV_MASK;
+		|		state->a = ~state->a;
 		|	} else if (uira == 0x2a) {
 		|		state->a = state->zerocnt;
 		|	} else if (uira == 0x2b) {
-		|		state->a = BUS_DV_MASK;
+		|		state->a = ~0ULL;
 		|	} else {
 		|		unsigned frm;
 		|		BUS_FRM_READ(frm);
@@ -349,9 +349,6 @@ class VAL(PartFactory):
 		|	}
 		|	if (oe || oe7) {
 		|		uint64_t bus;
-		|		//BUS_DV_READ(bus);
-		|		//if (bus != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << bus << " " << val_bus);
-		|		//bus ^= BUS_DV_MASK;
 		|		bus = ~val_bus;
 		|		if (oe) {
 		|			b |= bus & 0xffffffffffffff00ULL;
@@ -407,16 +404,14 @@ class VAL(PartFactory):
 		|																											}
 		|
 		|	output.z_qf = PIN_QFOE=>;
-		|	output.z_qv = PIN_QVOE=>;
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|							if (h1pos && !output.z_qf) {
 		|								find_a();
 		|								output.qf = state->a ^ BUS_QF_MASK;
 		|								fiu_bus = output.qf;
 		|							}
-		|							if (h1pos && !output.z_qv) {
+		|							if (h1pos && !PIN_QVOE=>) {
 		|								find_b();
-		|								//output.qv = state->b ^ BUS_QV_MASK;
 		|								val_bus = ~state->b;
 		|							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
@@ -424,7 +419,7 @@ class VAL(PartFactory):
 		|																if (output.z_qf) {
 		|																	find_a();
 		|																}
-		|																if (output.z_qv) {
+		|																if (PIN_QVOE=>) {
 		|																	find_b();
 		|																}
 		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
@@ -434,8 +429,8 @@ class VAL(PartFactory):
 		|																BUS_MSRC_READ(state->msrc);
 		|																bool start_mult = rand != 0xc;
 		|																if (!start_mult) {
-		|																	state->malat = state->a ^ BUS_DV_MASK;
-		|																	state->mblat = state->b ^ BUS_DV_MASK;
+		|																	state->malat = ~state->a;
+		|																	state->mblat = ~state->b;
 		|																}
 		|
 		|																struct f181 f181l, f181h;
@@ -605,9 +600,6 @@ class VAL(PartFactory):
 		|																													state->zerocnt = ~count2;
 		|																												}
 		|																												if (!PIN_LDWDR=> && sclken) {
-		|																													//BUS_DV_READ(state->wdr);
-		|																													//if (state->wdr != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << state->wdr << " " << val_bus);
-		|																													//state->wdr ^= BUS_DV_MASK;
 		|																													state->wdr = ~val_bus;
 		|																												}
 		|																												uint32_t a;

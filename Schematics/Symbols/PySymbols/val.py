@@ -44,7 +44,6 @@ class VAL(FChip):
         self.sig_left(ChipSig("-->+", "AWE"))
 
 
-        self.sig_right(ChipSig("+<->", "DQV", 0, 63))
         self.sig_right(ChipSig("+<--", "QVOE"))
 
         self.sig_right(ChipSig("+<--", "ADROE"))

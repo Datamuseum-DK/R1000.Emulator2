@@ -13,7 +13,6 @@ class IOC(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("<->+", "DQTYP", 0, 63))
         self.sig_left(ChipSig("-->+", "QTYPOE"))
 
 
@@ -38,7 +37,6 @@ class IOC(FChip):
 
         self.sig_left(ChipSig("-->+", "CONDS", 0, 6))
 
-        self.sig_right(ChipSig("+<->", "DQVAL", 0, 63))
         self.sig_right(ChipSig("+<--", "QVALOE"))
 
         self.sig_right(ChipSig("+===", "ORST"))

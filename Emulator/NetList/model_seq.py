@@ -645,10 +645,8 @@ class SEQ(PartFactory):
 		|									output.qf ^= 0xffff;
 		|									fiu_bus = output.qf;
 		|								}
-		|								output.z_qt = PIN_QTOE=>;
-		|								output.z_qv = PIN_QVOE=>;
-		|								assert(output.z_qt == output.z_qv);
-		|								if (output.z_qt) {
+		|								assert(PIN_QTOE=> == PIN_QVOE=>);
+		|								if (PIN_QTOE=>) {
 		|									h1pos = false;
 		|								}
 		|							}
@@ -805,12 +803,7 @@ class SEQ(PartFactory):
 		|							if (h1pos) {
 		|									int_reads();	// Necessary
 		|
-		|									//output.qt = state->typ_bus;
-		|									//output.qt ^= BUS_QT_MASK;
 		|									typ_bus = ~state->typ_bus;
-		|
-		|									//output.qv = state->val_bus;
-		|									//output.qv ^= BUS_QV_MASK;
 		|									val_bus = ~state->val_bus;
 		|							}
 		|

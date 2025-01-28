@@ -44,8 +44,8 @@ class TYP(PartFactory):
     def extra(self, file):
         file.fmt('''
 		|
-		|#define A_LSB BUS_DT_LSB
-		|#define B_LSB BUS_DT_LSB
+		|#define A_LSB BUS64_LSB
+		|#define B_LSB BUS64_LSB
 		|#define A_BITS(n) (state->a >> A_LSB(n))
 		|#define B_BITS(n) (state->b >> B_LSB(n))
 		|#define A_BIT(n) (A_BITS(n) & 1)
@@ -402,9 +402,7 @@ class TYP(PartFactory):
 		|	} else {
 		|		state->badr |= uirb & 0x1f;
 		|	}
-		|	if (uirb == 0x29 && output.z_qt) {
-		|		//BUS_DT_READ(state->b);
-		|		//state->b ^= BUS_DT_MASK;
+		|	if (uirb == 0x29 && PIN_QTOE=>) {
 		|		state->b = ~typ_bus;
 		|	} else {
 		|		state->b = state->rfram[state->badr];
@@ -454,15 +452,13 @@ class TYP(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	output.z_qf = PIN_QFOE=>;
-		|	output.z_qt = PIN_QTOE=>;
 		|											if (h1pos && !output.z_qf) {
 		|												find_a();
 		|												output.qf = state->a ^ BUS_QF_MASK;
 		|												fiu_bus = ~state->a;
 		|											}
-		|											if (h1pos && !output.z_qt) {
+		|											if (h1pos && !PIN_QTOE=>) {
 		|												find_b();
-		|												//output.qt = state->b ^ BUS_QT_MASK;
 		|												typ_bus = ~state->b;
 		|											}
 		|
@@ -471,7 +467,7 @@ class TYP(PartFactory):
 		|																if (output.z_qf) {
 		|																	find_a();
 		|																}
-		|																if (output.z_qt) {
+		|																if (PIN_QTOE=>) {
 		|																	find_b();
 		|																}
 		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
