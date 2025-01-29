@@ -17,11 +17,6 @@ static int
 clear_tagstore_m32(const struct diagproc *dp)
 {
 
-#if !defined(HAS_Z000)
-	fprintf(stderr, "NO Z000\n");
-	(void)dp;
-	return (0);
-#else
 	struct ctx *ctx;
 	uint8_t *ptr;
 
@@ -33,17 +28,11 @@ clear_tagstore_m32(const struct diagproc *dp)
 
 	sc_tracef(dp->name, "Turbo CLEAR_TAGSTORE.M32");
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
 static int
 fill_memory_m32(const struct diagproc *dp)
 {
-#if !defined(HAS_Z000)
-	fprintf(stderr, "NO Z000\n");
-	(void)dp;
-	return (0);
-#else
 	struct ctx *ctx;
 	uint64_t typ, val, *ptrt;
 	int i;
@@ -65,7 +54,6 @@ fill_memory_m32(const struct diagproc *dp)
 
 	sc_tracef(dp->name, "Turbo FILL_MEMORY.M32");
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
 int v_matchproto_(diagprocturbo_t)

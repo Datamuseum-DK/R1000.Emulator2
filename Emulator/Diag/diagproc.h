@@ -15,7 +15,7 @@ struct diagproc_context {
 
 struct diagproc {
 
-	char *name;
+	const char *name;
 	char *arg;
 	unsigned mod;
 	struct mcs51 *mcs51;

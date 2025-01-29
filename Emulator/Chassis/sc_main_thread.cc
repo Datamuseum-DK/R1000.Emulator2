@@ -109,9 +109,6 @@ sc_main(int argc, char *argv[])
 	planes->PD = false;
 	planes->PU = true;
 
-	planes->B_SLOT0 = false;
-	planes->B_SLOT1 = false;
-
 	PowerSequencer powseq("UNCLAMP");
 	powseq.clamp(planes->CLAMPnot);	// CLAMP
 	powseq.reset(planes->RESETnot);

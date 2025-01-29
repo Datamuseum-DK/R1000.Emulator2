@@ -36,6 +36,7 @@
 #include "Infra/r1000.h"
 #include "Infra/vsb.h"
 #include "Diag/diag.h"
+#include "Diag/diagproc.h"
 
 #include "Infra/elastic.h"
 
@@ -73,18 +74,29 @@ i8052_rx_diagbus(struct i8052 *i52)
 	return (retval);
 }
 
+#define UPDATE_KOOPMAN32(hashvar, newbyte) \
+	do { \
+		hashvar = (((hashvar) << 32) + (newbyte)) % 0xFFFFFFFB; \
+	} while (0)
+
 static void *
 i8052_thread(void *priv)
 {
 	struct i8052 *i52 = priv;
+	struct diagproc dp[1];
 	uint8_t csum, counter, pointer, reply;
 	unsigned u;
 	uint8_t u8;
 	struct vsb *vsb;
+	uint64_t hash;
 	int me;
 
 	vsb = VSB_new_auto();
 	AN(vsb);
+
+	dp->ip = &dp->ram[0];
+	dp->name = i52->name;
+	dp->ram = i52->ram;
 
 	reply = 0;
 	while (1) {
@@ -128,17 +140,29 @@ i8052_thread(void *priv)
 		case 0xa:
 			pointer = 0x10;
 			csum = 0;
+			hash = 0;
 			counter = i8052_rx_diagbus(i52);
+			hash = 0;
 			csum += counter;
 			VSB_clear(vsb);
+			UPDATE_KOOPMAN32(hash, counter);
 			while (counter--) {
 				u8 = i8052_rx_diagbus(i52);
 				csum += u8;
+				if (counter > 0 && (pointer <= 0x10 || pointer >= i52->ram[0x10])) {
+					UPDATE_KOOPMAN32(hash, u8);
+				}
 				i52->ram[pointer++] = u8;
 				VSB_printf(vsb, " %02x", u8);
 			}
 			AZ(VSB_finish(vsb));
 			assert (csum == i8052_rx_diagbus(i52));
+			UPDATE_KOOPMAN32(hash, 0);
+			dp->dl_hash = hash;
+			if (i52->address == 0xc) {
+				dp->ip = &dp->ram[0];
+				diagproc_turbo_mem32(dp);
+			}
 			break;
 		default:
 			break;
