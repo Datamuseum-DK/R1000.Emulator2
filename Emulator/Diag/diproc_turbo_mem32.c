@@ -71,8 +71,18 @@ fill_memory_m32(const struct diagproc *dp)
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_mem32(const struct diagproc *dp)
 {
-	if (1 && dp->dl_hash == SET_HIT_M32_HASH) {
+	if (dp->dl_hash == RUN_CHECK_M32_HASH) {
+		sc_tracef(dp->name, "Turbo RUN_CHECK.M32");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	
+	if (dp->dl_hash == SET_HIT_M32_HASH) {
 		sc_tracef(dp->name, "Turbo SET_HIT.M32");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	
+	if (dp->dl_hash == LOAD_CONFIG_M32_HASH) {
+		sc_tracef(dp->name, "Turbo LOAD_CONFIG.M32");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	

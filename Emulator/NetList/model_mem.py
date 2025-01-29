@@ -311,7 +311,7 @@ class MEM(PartFactory):
 		|									}
 		|
 		|									if (CMDS(CMD_PTW)) {
-		|										bool my_board = !PIN_ISLOW=>;
+		|										bool my_board = false;
 		|										bool which_board = state->mar_set >> 3;
 		|										if (which_board == my_board) {
 		|											unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
@@ -325,7 +325,7 @@ class MEM(PartFactory):
 		|									}
 		|								}
 		|
-		|								bool not_me =  (output.hita && output.hitb && !PIN_ISLOW=>);
+		|								bool not_me =  (output.hita && output.hitb);
 		|							
 		|								if (!PIN_QVOE=> && PIN_QTOE=>) {
 		|									if (not_me) {
