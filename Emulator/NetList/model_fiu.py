@@ -137,13 +137,6 @@ class FIU(PartFactory):
 
         yield "BUS_DF"
 
-        #yield "PIN_LABR"
-        #yield "PIN_LEABR"
-        #yield "PIN_EABR"
-        #yield "BUS_BDHIT"
-
-        #yield "BUS_ST"
-
     def priv_decl(self, file):
         file.fmt('''
 		|	unsigned pa025, pa026, pa027;
@@ -501,6 +494,7 @@ class FIU(PartFactory):
 		|	bool h1pos = PIN_H1.posedge();
 		|	bool sclk = q4pos && !PIN_SCLKE=>;
 		|
+		|	bool carry, name_match;
 		|	unsigned csa;
 		|	BUS_CSA_READ(csa);
 		|
@@ -527,190 +521,69 @@ class FIU(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	do_tivi();
-		|							if (q1pos && !PIN_QFOE=>) {
-		|								rotator(sclk);
-		|							}
-		|																											if (sclk) {
-		|																												if (PIN_LDMDR=> || !PIN_TCLK=> || !PIN_VCLK=>) {
-		|																													rotator(sclk);
-		|																												}
-		|																										
-		|																												if (!PIN_OCLK=>) {			// Q4~^
-		|																													if (PIN_ORSR=>) {			// UCODE
-		|																														BUS_OL_READ(state->oreg);
-		|																													} else {
-		|																														state->oreg = adr_bus;
-		|																														state->oreg &= 0x7f;
-		|																													}
-		|																												}
+		|											if (q1pos) {
+		|												if (!PIN_QFOE=>) {
+		|													rotator(sclk);
+		|												}
+		|												unsigned dif;
+		|											
+		|												if (state->pdt) {
+		|													carry = state->ctopo <= state->pdreg;
+		|													dif = ~0xfffff + state->pdreg - state->ctopo;
+		|												} else {
+		|													carry = state->moff <= state->ctopo;
+		|													dif = ~0xfffff + state->ctopo - state->moff;
+		|												}
+		|												dif &= 0xfffff;
+		|											
+		|												name_match = 
+		|													    (state->ctopn != state->srn) ||
+		|													    ((state->sro & 0xf8000070 ) != 0x10);
+		|											
+		|												state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
+		|											
+		|												output.hofs = 0xf + state->nve - (dif & 0xf);
+		|											
+		|												output.chit = !(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
 		|
-		|																												//if (!(state->prmt & 0x40)) {
-		|																												if (mar_cntl == 5) {
-		|																													state->refresh_reg = state->ti_bus;
-		|																													state->marh &= 0xffffffffULL;
-		|																													state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
-		|																													state->marh ^= 0xffffffff00000000ULL;
-		|																												}
-		|																										
-		|																												unsigned lfrc;
-		|																												BUS_LFRC_READ(lfrc);			// UCODE
-		|																										
-		|																												switch(lfrc) {
-		|																												case 0:
-		|																													state->lfreg = (((state->vi_bus >> BUS64_LSB(31)) & 0x3f) + 1) & 0x3f;
-		|																													if ((state->ti_bus >> BUS64_LSB(36)) & 1)
-		|																														state->lfreg |= (1 << 6);
-		|																													else if (!((state->vi_bus >> BUS64_LSB(25)) & 1))
-		|																														state->lfreg |= (1 << 6);
-		|																													state->lfreg ^= 0x7f;
-		|																													break;
-		|																												case 1:
-		|																													BUS_LFL_READ(state->lfreg);
-		|																													break;
-		|																												case 2:
-		|																													state->lfreg = (state->ti_bus >> BUS64_LSB(48)) & 0x3f;
-		|																													if ((state->ti_bus >> BUS64_LSB(36)) & 1)
-		|																														state->lfreg |= (1 << 6);
-		|																													state->lfreg = state->lfreg ^ 0x7f;
-		|																													break;
-		|																												case 3:	// No load
-		|																													break;
-		|																												}
-		|																										
-		|																												state->marh &= ~(0x3fULL << 15);
-		|																												state->marh |= (state->lfreg & 0x3f) << 15;
-		|																												state->marh &= ~(1ULL << 27);
-		|																												state->marh |= ((state->lfreg >> 6) & 1) << 27;
-		|																												if (state->lfreg != 0x7f)
-		|																													state->lfreg |= 1<<7;
-		|																										
-		|																												state->pdt = !PIN_PRED=>;
-		|																												BUS_CNV_READ(state->nve);
-		|																												if (!(csa >> 2)) {
-		|																													state->pdreg = state->ctopo;
-		|																												}
-		|																											}
-		|	bool carry, name_match;
-		|//+if (q1pos || q2pos || q4pos) {
-		|//-if (q1pos || q2pos         ) {
-		|//+if (q1pos ||          q4pos) {
-		|//-if (                  q4pos) {
-		|if (q1pos ||          q4pos) {
-		|	unsigned dif;
+		|												unsigned pa025a = 0;
+		|												pa025a |= mem_start;
+		|												pa025a |= state->state0 << 8;
+		|												pa025a |= state->state1 << 7;
+		|												pa025a |= state->labort << 6;
+		|												pa025a |= state->e_abort_dly << 5;
+		|												pa025 = state->pa025[pa025a];
+		|												memcyc1 = (pa025 >> 1) & 1;
+		|												memstart = (pa025 >> 0) & 1;
+		|											
+		|												if (memstart) {
+		|													state->mcntl = state->lcntl;
+		|												} else {
+		|													state->mcntl = state->pcntl_d;
+		|												}
+		|												state->phys_ref = !(state->mcntl & 0x6);
+		|												state->logrwn = !(state->logrw && memcyc1);
+		|												state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
+		|											
+		|												scav_trap_next = state->scav_trap;
+		|												if (condsel == 0x69) {		// SCAVENGER_HIT
+		|													scav_trap_next = false;
+		|												} else if (rmarp) {
+		|													scav_trap_next = (state->ti_bus >> BUS64_LSB(32)) & 1;
+		|												} else if (state->log_query) {
+		|													scav_trap_next = false;
+		|												}
+		|											
+		|											
+		|												csa_oor_next = state->csa_oor;
+		|												if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
+		|													csa_oor_next = false;
+		|												} else if (rmarp) {
+		|													csa_oor_next = (state->ti_bus >> BUS64_LSB(33)) & 1;
+		|												} else if (state->log_query) {
+		|													csa_oor_next = state->csa_oor_next;
+		|												}
 		|
-		|	if (state->pdt) {
-		|		carry = state->ctopo <= state->pdreg;
-		|		dif = ~0xfffff + state->pdreg - state->ctopo;
-		|	} else {
-		|		carry = state->moff <= state->ctopo;
-		|		dif = ~0xfffff + state->ctopo - state->moff;
-		|	}
-		|	dif &= 0xfffff;
-		|
-		|	name_match = 
-		|		    (state->ctopn != state->srn) ||
-		|		    ((state->sro & 0xf8000070 ) != 0x10);
-		|
-		|	state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
-		|
-		|	output.hofs = 0xf + state->nve - (dif & 0xf);
-		|
-		|	output.chit = !(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
-		|}
-		|
-		|																											if (q4pos) {
-		|																												uint64_t adr = 0;
-		|																												adr = adr_bus;
-		|																												bool load_mar = (state->prmt >> 4) & 1;
-		|																										
-		|																												if (sclk && load_mar) {
-		|																													uint64_t tmp;
-		|																													state->srn = adr >> 32;
-		|																													state->sro = adr & 0xffffff80;
-		|																													tmp = spc_bus;
-		|																													state->sro |= tmp << 4;
-		|																													state->sro |= 0xf;
-		|																												}
-		|																												state->moff = (state->sro >> 7) & 0xffffff;
-		|																										
-		|																												state->nmatch =
-		|																												    (state->ctopn != state->srn) ||
-		|																												    ((state->sro & 0xf8000070 ) != 0x10);
-		|																										
-		|																												if (sclk && (csa == 0)) {
-		|																													state->ctopn = adr >> 32;
-		|																													state->nmatch =
-		|																													    (state->ctopn != state->srn) ||
-		|																													    ((state->sro & 0xf8000070 ) != 0x10);
-		|																												}
-		|																										
-		|																												if (sclk && !(csa >> 2)) {
-		|																													if (csa <= 1) {
-		|																														state->ctopo = adr >> 7;
-		|																													} else if (!(csa & 1)) {
-		|																														state->ctopo += 1;
-		|																													} else {
-		|																														state->ctopo += 0xfffff;
-		|																													}
-		|																													state->ctopo &= 0xfffff;
-		|																										
-		|																												}
-		|																										
-		|																												if (mem_start == 0x06) {
-		|																													state->refresh_count = state->ti_bus >> 48;
-		|																												} else if (state->refresh_count != 0xffff) {
-		|																													state->refresh_count++;
-		|																												}
-		|																												output.rfsh = state->refresh_count != 0xffff;
-		|																											}
-		|
-		|
-		|
-		|
-		|//+ if (q1pos || q2pos || q4pos) {
-		|//+if (q1pos || q2pos        ) {
-		|//-if (q1pos                 ) {
-		|if (q1pos || q2pos        ) {
-		|	unsigned pa025a = 0;
-		|	pa025a |= mem_start;
-		|	pa025a |= state->state0 << 8;
-		|	pa025a |= state->state1 << 7;
-		|	pa025a |= state->labort << 6;
-		|	pa025a |= state->e_abort_dly << 5;
-		|	pa025 = state->pa025[pa025a];
-		|	memcyc1 = (pa025 >> 1) & 1;
-		|	memstart = (pa025 >> 0) & 1;
-		|
-		|	if (memstart) {
-		|		state->mcntl = state->lcntl;
-		|	} else {
-		|		state->mcntl = state->pcntl_d;
-		|	}
-		|	state->phys_ref = !(state->mcntl & 0x6);
-		|	state->logrwn = !(state->logrw && memcyc1);
-		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
-		|
-		|	scav_trap_next = state->scav_trap;
-		|	if (condsel == 0x69) {		// SCAVENGER_HIT
-		|		scav_trap_next = false;
-		|	} else if (rmarp) {
-		|		scav_trap_next = (state->ti_bus >> BUS64_LSB(32)) & 1;
-		|	} else if (state->log_query) {
-		|		scav_trap_next = false;
-		|	}
-		|
-		|
-		|	csa_oor_next = state->csa_oor;
-		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
-		|		csa_oor_next = false;
-		|	} else if (rmarp) {
-		|		csa_oor_next = (state->ti_bus >> BUS64_LSB(33)) & 1;
-		|	} else if (state->log_query) {
-		|		csa_oor_next = state->csa_oor_next;
-		|	}
-		|}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|											if (q1pos) { 
 		|												bool pgmod = (state->omq >> 1) & 1;
 		|												unsigned board_hit;
 		|												BUS_BDHIT_READ(board_hit);
@@ -732,6 +605,44 @@ class FIU(PartFactory):
 		|											}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
+		|																unsigned pa025a = 0;
+		|																pa025a |= mem_start;
+		|																pa025a |= state->state0 << 8;
+		|																pa025a |= state->state1 << 7;
+		|																pa025a |= state->labort << 6;
+		|																pa025a |= state->e_abort_dly << 5;
+		|																pa025 = state->pa025[pa025a];
+		|																memcyc1 = (pa025 >> 1) & 1;
+		|																memstart = (pa025 >> 0) & 1;
+		|															
+		|																if (memstart) {
+		|																	state->mcntl = state->lcntl;
+		|																} else {
+		|																	state->mcntl = state->pcntl_d;
+		|																}
+		|																state->phys_ref = !(state->mcntl & 0x6);
+		|																state->logrwn = !(state->logrw && memcyc1);
+		|																state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
+		|															
+		|																scav_trap_next = state->scav_trap;
+		|																if (condsel == 0x69) {		// SCAVENGER_HIT
+		|																	scav_trap_next = false;
+		|																} else if (rmarp) {
+		|																	scav_trap_next = (state->ti_bus >> BUS64_LSB(32)) & 1;
+		|																} else if (state->log_query) {
+		|																	scav_trap_next = false;
+		|																}
+		|															
+		|															
+		|																csa_oor_next = state->csa_oor;
+		|																if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
+		|																	csa_oor_next = false;
+		|																} else if (rmarp) {
+		|																	csa_oor_next = (state->ti_bus >> BUS64_LSB(33)) & 1;
+		|																} else if (state->log_query) {
+		|																	csa_oor_next = state->csa_oor_next;
+		|																}
+		|
 		|																unsigned pa026a = mem_start;
 		|																if (state->omq & 0x02)	// INIT_MRU_D
 		|																	pa026a |= 0x20;
@@ -799,6 +710,132 @@ class FIU(PartFactory):
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
+		|																												if (sclk) {
+		|																													if (PIN_LDMDR=> || !PIN_TCLK=> || !PIN_VCLK=>) {
+		|																														rotator(sclk);
+		|																													}
+		|																											
+		|																													if (!PIN_OCLK=>) {			// Q4~^
+		|																														if (PIN_ORSR=>) {			// UCODE
+		|																															BUS_OL_READ(state->oreg);
+		|																														} else {
+		|																															state->oreg = adr_bus;
+		|																															state->oreg &= 0x7f;
+		|																														}
+		|																													}
+		|	
+		|																													//if (!(state->prmt & 0x40)) {
+		|																													if (mar_cntl == 5) {
+		|																														state->refresh_reg = state->ti_bus;
+		|																														state->marh &= 0xffffffffULL;
+		|																														state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
+		|																														state->marh ^= 0xffffffff00000000ULL;
+		|																													}
+		|																											
+		|																													unsigned lfrc;
+		|																													BUS_LFRC_READ(lfrc);			// UCODE
+		|																											
+		|																													switch(lfrc) {
+		|																													case 0:
+		|																														state->lfreg = (((state->vi_bus >> BUS64_LSB(31)) & 0x3f) + 1) & 0x3f;
+		|																														if ((state->ti_bus >> BUS64_LSB(36)) & 1)
+		|																															state->lfreg |= (1 << 6);
+		|																														else if (!((state->vi_bus >> BUS64_LSB(25)) & 1))
+		|																															state->lfreg |= (1 << 6);
+		|																														state->lfreg ^= 0x7f;
+		|																														break;
+		|																													case 1:
+		|																														BUS_LFL_READ(state->lfreg);
+		|																														break;
+		|																													case 2:
+		|																														state->lfreg = (state->ti_bus >> BUS64_LSB(48)) & 0x3f;
+		|																														if ((state->ti_bus >> BUS64_LSB(36)) & 1)
+		|																															state->lfreg |= (1 << 6);
+		|																														state->lfreg = state->lfreg ^ 0x7f;
+		|																														break;
+		|																													case 3:	// No load
+		|																														break;
+		|																													}
+		|																											
+		|																													state->marh &= ~(0x3fULL << 15);
+		|																													state->marh |= (state->lfreg & 0x3f) << 15;
+		|																													state->marh &= ~(1ULL << 27);
+		|																													state->marh |= ((state->lfreg >> 6) & 1) << 27;
+		|																													if (state->lfreg != 0x7f)
+		|																														state->lfreg |= 1<<7;
+		|																											
+		|																													state->pdt = !PIN_PRED=>;
+		|																													BUS_CNV_READ(state->nve);
+		|																													if (!(csa >> 2)) {
+		|																														state->pdreg = state->ctopo;
+		|																													}
+		|																												}
+		|
+		|																												unsigned dif;
+		|																											
+		|																												if (state->pdt) {
+		|																													carry = state->ctopo <= state->pdreg;
+		|																													dif = ~0xfffff + state->pdreg - state->ctopo;
+		|																												} else {
+		|																													carry = state->moff <= state->ctopo;
+		|																													dif = ~0xfffff + state->ctopo - state->moff;
+		|																												}
+		|																												dif &= 0xfffff;
+		|																											
+		|																												name_match = 
+		|																													    (state->ctopn != state->srn) ||
+		|																													    ((state->sro & 0xf8000070 ) != 0x10);
+		|																											
+		|																												state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
+		|																											
+		|																												output.hofs = 0xf + state->nve - (dif & 0xf);
+		|																											
+		|																												output.chit = !(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
+		|
+		|																												uint64_t adr = 0;
+		|																												adr = adr_bus;
+		|																												bool load_mar = (state->prmt >> 4) & 1;
+		|																										
+		|																												if (sclk && load_mar) {
+		|																													uint64_t tmp;
+		|																													state->srn = adr >> 32;
+		|																													state->sro = adr & 0xffffff80;
+		|																													tmp = spc_bus;
+		|																													state->sro |= tmp << 4;
+		|																													state->sro |= 0xf;
+		|																												}
+		|																												state->moff = (state->sro >> 7) & 0xffffff;
+		|																										
+		|																												state->nmatch =
+		|																												    (state->ctopn != state->srn) ||
+		|																												    ((state->sro & 0xf8000070 ) != 0x10);
+		|																										
+		|																												if (sclk && (csa == 0)) {
+		|																													state->ctopn = adr >> 32;
+		|																													state->nmatch =
+		|																													    (state->ctopn != state->srn) ||
+		|																													    ((state->sro & 0xf8000070 ) != 0x10);
+		|																												}
+		|																										
+		|																												if (sclk && !(csa >> 2)) {
+		|																													if (csa <= 1) {
+		|																														state->ctopo = adr >> 7;
+		|																													} else if (!(csa & 1)) {
+		|																														state->ctopo += 1;
+		|																													} else {
+		|																														state->ctopo += 0xfffff;
+		|																													}
+		|																													state->ctopo &= 0xfffff;
+		|																										
+		|																												}
+		|																										
+		|																												if (mem_start == 0x06) {
+		|																													state->refresh_count = state->ti_bus >> 48;
+		|																												} else if (state->refresh_count != 0xffff) {
+		|																													state->refresh_count++;
+		|																												}
+		|																												output.rfsh = state->refresh_count != 0xffff;
+		|
 		|																												bool le_abort = PIN_LEABR=>;
 		|																												bool e_abort = PIN_EABR=>;
 		|																												bool eabrt = !(e_abort && le_abort);
