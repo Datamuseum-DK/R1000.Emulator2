@@ -146,8 +146,12 @@ class FIU(PartFactory):
 
     def priv_decl(self, file):
         file.fmt('''
-		|	unsigned pa026, pa027;
+		|	unsigned pa025, pa026, pa027;
 		|	unsigned tivi;
+		|	bool csa_oor_next;
+		|	bool scav_trap_next;
+		|	bool memcyc1;
+		|	bool memstart;
 		|
 		|	void do_tivi(void);
 		|	void rotator(bool sclk);
@@ -587,8 +591,11 @@ class FIU(PartFactory):
 		|																												}
 		|																											}
 		|	bool carry, name_match;
-		|if (1)
-		|{
+		|//+if (q1pos || q2pos || q4pos) {
+		|//-if (q1pos || q2pos         ) {
+		|//+if (q1pos ||          q4pos) {
+		|//-if (                  q4pos) {
+		|if (q1pos ||          q4pos) {
 		|	unsigned dif;
 		|
 		|	if (state->pdt) {
@@ -659,22 +666,20 @@ class FIU(PartFactory):
 		|
 		|
 		|
-		|{
 		|
-		|	bool l_abort = PIN_LABR=>;
-		|	bool le_abort = PIN_LEABR=>;
-		|	bool e_abort = PIN_EABR=>;
-		|	bool eabrt = !(e_abort && le_abort);
-		|
+		|//+ if (q1pos || q2pos || q4pos) {
+		|//+if (q1pos || q2pos        ) {
+		|//-if (q1pos                 ) {
+		|if (q1pos || q2pos        ) {
 		|	unsigned pa025a = 0;
 		|	pa025a |= mem_start;
 		|	pa025a |= state->state0 << 8;
 		|	pa025a |= state->state1 << 7;
 		|	pa025a |= state->labort << 6;
 		|	pa025a |= state->e_abort_dly << 5;
-		|	unsigned pa025 = state->pa025[pa025a];
-		|	bool memcyc1 = (pa025 >> 1) & 1;
-		|	bool memstart = (pa025 >> 0) & 1;
+		|	pa025 = state->pa025[pa025a];
+		|	memcyc1 = (pa025 >> 1) & 1;
+		|	memstart = (pa025 >> 0) & 1;
 		|
 		|	if (memstart) {
 		|		state->mcntl = state->lcntl;
@@ -685,7 +690,7 @@ class FIU(PartFactory):
 		|	state->logrwn = !(state->logrw && memcyc1);
 		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
 		|
-		|	bool scav_trap_next = state->scav_trap;
+		|	scav_trap_next = state->scav_trap;
 		|	if (condsel == 0x69) {		// SCAVENGER_HIT
 		|		scav_trap_next = false;
 		|	} else if (rmarp) {
@@ -695,7 +700,7 @@ class FIU(PartFactory):
 		|	}
 		|
 		|
-		|	bool csa_oor_next = state->csa_oor;
+		|	csa_oor_next = state->csa_oor;
 		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
 		|		csa_oor_next = false;
 		|	} else if (rmarp) {
@@ -703,6 +708,7 @@ class FIU(PartFactory):
 		|	} else if (state->log_query) {
 		|		csa_oor_next = state->csa_oor_next;
 		|	}
+		|}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|											if (q1pos) { 
 		|												bool pgmod = (state->omq >> 1) & 1;
@@ -793,6 +799,10 @@ class FIU(PartFactory):
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
+		|																												bool le_abort = PIN_LEABR=>;
+		|																												bool e_abort = PIN_EABR=>;
+		|																												bool eabrt = !(e_abort && le_abort);
+		|																												bool l_abort = PIN_LABR=>;
 		|																												bool idum;
 		|																												bool sel = !((PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
 		|																												if (sel) {
@@ -874,18 +884,15 @@ class FIU(PartFactory):
 		|																											}
 		|
 		|
-		|}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|	if ((!PIN_QTOE=> || !PIN_QVOE=>) && !q4pos) {
 		|		do_tivi();
 		|		if (!PIN_QTOE=>) {
-		|			// if (typ_bus != ~state->ti_bus && !(h1pos||q1pos||q2pos)) ALWAYS_TRACE(<< " TYPBUS " << std::hex << typ_bus << " <- " << ~state->ti_bus << " tivi " << tivi);
 		|			typ_bus = ~state->ti_bus;
 		|		}
 		|		if (!PIN_QVOE=>) {
-		|			// if (val_bus != ~state->vi_bus && !(h1pos||q1pos||q2pos)) ALWAYS_TRACE(<< " VALBUS " << std::hex << val_bus << " <- " << ~state->vi_bus << " tivi " << tivi);
 		|			val_bus = ~state->vi_bus;
 		|		}
 		|	}
