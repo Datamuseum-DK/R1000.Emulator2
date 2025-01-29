@@ -86,6 +86,7 @@ sc_boards() {
 	    echo "$*" | grep -q -i ${brd} || cli diproc dummy -TIMEOUT ${brd}
 	done
 	cli diproc dummy mem0
+	cli diproc dummy typ
 	cli 'sc watchdog -dont_bite 5' 
 }
 

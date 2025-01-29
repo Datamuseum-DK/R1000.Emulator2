@@ -159,7 +159,10 @@ i8052_thread(void *priv)
 			assert (csum == i8052_rx_diagbus(i52));
 			UPDATE_KOOPMAN32(hash, 0);
 			dp->dl_hash = hash;
-			if (i52->address == 0xc) {
+			dp->ip = &dp->ram[0];
+			if (i52->address == 0x6) {
+				diagproc_turbo_typ(dp);
+			} else if (i52->address == 0xc) {
 				dp->ip = &dp->ram[0];
 				diagproc_turbo_mem32(dp);
 			}
