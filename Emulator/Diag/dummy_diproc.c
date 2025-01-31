@@ -52,8 +52,7 @@ struct i8052 {
 static void
 i8052_tx_diagbus(const struct i8052 *i52, uint8_t x)
 {
-	Trace(trace_diagbus, "%s_DUMMY TX 0x%02x", i52->name, x);
-	elastic_inject(diag_elastic, &x, 1);
+	DiagBus_Reply(i52->name, x);
 }
 
 static unsigned

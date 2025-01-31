@@ -68,6 +68,8 @@ struct diproc {
 
 extern struct diproc diprocs[16];
 void DiagBus_Send(const struct diproc *dp, unsigned u);
+void DiagBus_Reply(const char *from, uint8_t msg);
+
 
 struct diproc *diagbus_get_board(struct cli *cli, const char *);
 

@@ -66,6 +66,7 @@ extern volatile nanosec		simclock;
 extern volatile nanosec		systemc_t_zero;
 extern volatile int		systemc_clock;
 extern int			trace_fd;
+extern volatile int		iop_running;
 
 /* CONTEXT  ***************************************************************/
 

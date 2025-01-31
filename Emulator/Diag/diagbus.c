@@ -9,6 +9,7 @@
 
 #include "Infra/r1000.h"
 #include "Infra/elastic.h"
+#include "Infra/vend.h"
 #include "Infra/vsb.h"
 #include "Diag/diag.h"
 
@@ -69,6 +70,21 @@ DiagBus_Send(const struct diproc *dp, unsigned u)
 	buf[0] = u >> 8;
 	buf[1] = u & 0xff;
 	elastic_put(diag_elastic, buf, 2);
+}
+
+extern uint8_t *ram_space;
+
+void
+DiagBus_Reply(const char *from, uint8_t msg)
+{
+
+	AN(from);
+	int n;
+	for (n = 0; n < 5 && iop_running; n++) {
+		usleep(1000);
+	}
+	Trace(trace_diagbus, "%s TX 0x%02x (race=0x%x)", from, msg, n);
+	elastic_inject(diag_elastic, &msg, 1);
 }
 
 void

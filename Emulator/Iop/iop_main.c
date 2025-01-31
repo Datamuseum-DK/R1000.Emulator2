@@ -49,6 +49,8 @@
 
 static pthread_t ioc_cpu;
 
+
+volatile int iop_running;
 static uintmax_t ioc_maxins = 0;
 uintmax_t ioc_nins = 0;
 uintmax_t ioc_t_stopped = 0;
@@ -373,10 +375,13 @@ main_ioc(void *priv)
 			mytime += 100ULL * i;
 		}
 
-		if (i == 1)
+		if (i == 1) {
 			ioc_t_stopped += 100ULL;
-		else
+			iop_running = 0;
+		} else {
 			ioc_nins++;
+			iop_running = 1;
+		}
 
 		if (ioc_maxins && ioc_nins > ioc_maxins)
 			finish(4, "IOP maxins reached");
