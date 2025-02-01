@@ -1016,7 +1016,11 @@ class SEQ(PartFactory):
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
-		|																												bool bhcke = !(PIN_SSTOP=> && PIN_BHEN=>);
+		|																												bool bhen = !((output.lmaco && output.bhn) || output.u_event);
+		|																												if (bhen ^ PIN_BHEN=>) {
+		|																													ALWAYS_TRACE( << "BHEN " << PIN_BHEN=> << " < " << bhen << " " << output.lmaco << output.bhn << output.u_event);
+		|																												}
+		|																												bool bhcke = !(PIN_SSTOP=> && bhen);
 		|																												if (state_clock) {
 		|																													nxt_lex_valid();
 		|																												}
