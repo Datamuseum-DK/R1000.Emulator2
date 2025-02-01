@@ -25,14 +25,11 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "LAUIR", 0, 1))
         self.sig_left(ChipSig("-->+", "URAND", 0, 6))
         self.sig_left(ChipSig("-->+", "IRD", 0, 2))
-        self.sig_left(ChipSig("-->+", "ACLK"))
         self.sig_left(ChipSig("-->+", "SCLKE"))
 
         self.sig_left(ChipSig("-->+", "CTL", 0, 2))
 
         self.sig_left(ChipSig("-->+", "CSA", 0, 3))
-
-        self.sig_left(ChipSig("-->+", "LCLK"))
 
         self.sig_left(ChipSig("-->+", "DV_U"))
         self.sig_left(ChipSig("-->+", "LMAC"))
@@ -47,13 +44,13 @@ class SEQ(FChip):
 
         self.sig_left(ChipSig("-->+", "LUIR"))
 
-        self.sig_left(ChipSig("-->+", "BHEN"))
-
         self.sig_left(ChipSig("-->+", "ENMIC"))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
 
         self.sig_left(ChipSig("-->+", "MCOND"))
         self.sig_left(ChipSig("-->+", "MCPOL"))
+        self.sig_left(ChipSig("-->+", "SFSTP"))
+        self.sig_left(ChipSig("-->+", "DSTOP"))
 
         self.sig_right(ChipSig("+<--", "QVOE"))
         self.sig_right(ChipSig("+<--", "ADROE"))
@@ -63,7 +60,6 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+<--", "EMAC", 0, 6))
         self.sig_right(ChipSig("+<--", "UEI", 0, 14))
 
-        self.sig_right(ChipSig("+-->", "BHN"))
 
         self.sig_right(ChipSig("+-->", "QSTP7"))
         self.sig_right(ChipSig("+-->", "HALT"))

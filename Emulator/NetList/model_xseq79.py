@@ -49,10 +49,8 @@ class XSEQ79(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	bool bad_hint_en = (PIN_LLMC=> && PIN_BHNT=>);
 		|
 		|	if (PIN_C2EN.posedge()) {
-		|		output.bhen = !(bad_hint_en || PIN_UEVNT);
 		|		if (!PIN_H1E=> && !PIN_SFSTP=>) {
 		|			output.aclk = false;
 		|		}
@@ -60,7 +58,6 @@ class XSEQ79(PartFactory):
 		|			output.lclk = false;
 		|		}
 		|	} else if (PIN_C2EN.negedge()) {
-		|		output.bhen = !(bad_hint_en || PIN_UEVNT);
 		|		output.aclk = true;
 		|		output.lclk = true;
 		|	}

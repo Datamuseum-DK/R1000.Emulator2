@@ -619,7 +619,8 @@ class SEQ(PartFactory):
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool h1pos = PIN_H2.negedge();
 		|	//bool h2pos = PIN_H2.posedge();
-		|	bool aclk = PIN_ACLK.posedge();
+		|	bool aclk = q4pos && !PIN_SFSTP=>;
+		|	bool lclk = aclk && !PIN_DSTOP=>;
 		|	bool sclke = PIN_SCLKE=>;
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = q4pos && !sclke;
@@ -787,7 +788,7 @@ class SEQ(PartFactory):
 		|								} else {
 		|									state->name_bus = 0xffffffff;
 		|								}
-		|								state->cload = !(condition() || !(output.bhn && RNDX(RND_CIB_PC_L)));			// q4
+		|								state->cload = !(condition() || !(!state->bad_hint && RNDX(RND_CIB_PC_L)));			// q4
 		|								bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
 		|								state->ibld = !ibuff_ld;								// q4
 		|								bool ibemp = !(ibuff_ld || (state->word != 0));
@@ -843,7 +844,7 @@ class SEQ(PartFactory):
 		|												state->push_br =    (rom >> 1) & 1;
 		|												state->push   = !(((rom >> 0) & 1) ||
 		|													        !(((rom >> 2) & 1) || !state->uadr_mux));
-		|												state->stop = !(output.bhn && (state->uei == 0) && !PIN_LMAC=>);
+		|												state->stop = !(!state->bad_hint && (state->uei == 0) && !PIN_LMAC=>);
 		|												output.seqsn = !state->stop;
 		|												bool evnan0d = !(PIN_ENMIC=> && (state->uei == 0));
 		|												output.ueven = !(evnan0d || state->stop);
@@ -916,12 +917,12 @@ class SEQ(PartFactory):
 		|																output.nu = nua;
 		|																output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
 		|																output.sfive = (state->check_exit_ue && state->ferr);
-		|																output.qstp7 = output.bhn && state->l_macro_hic;
+		|																output.qstp7 = !state->bad_hint && state->l_macro_hic;
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																							if (q3pos) {
 		|																								state->q3cond = condition();
-		|																								state->bad_hint_enable = !(output.u_event || (PIN_LMAC=> && output.bhn));
+		|																								state->bad_hint_enable = !(output.u_event || (PIN_LMAC=> && !state->bad_hint));
 		|																								unsigned pa040a = 0;
 		|																								pa040a |= (state->decode & 0x7) << 6;
 		|																								if (state->wanna_dispatch) pa040a |= 0x20;
@@ -1016,10 +1017,7 @@ class SEQ(PartFactory):
 		|																							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
-		|																												bool bhen = !((output.lmaco && output.bhn) || output.u_event);
-		|																												if (bhen ^ PIN_BHEN=>) {
-		|																													ALWAYS_TRACE( << "BHEN " << PIN_BHEN=> << " < " << bhen << " " << output.lmaco << output.bhn << output.u_event);
-		|																												}
+		|																												bool bhen = !((output.lmaco && !state->bad_hint) || output.u_event);
 		|																												bool bhcke = !(PIN_SSTOP=> && bhen);
 		|																												if (state_clock) {
 		|																													nxt_lex_valid();
@@ -1285,7 +1283,7 @@ class SEQ(PartFactory):
 		|																													state->fiu &= 0x3fff;
 		|																												}
 		|																											
-		|																												if (PIN_LCLK.posedge()) {
+		|																												if (lclk) {
 		|																													if (!maybe_dispatch) {
 		|																														state->late_u = 7;
 		|																													} else {
@@ -1439,7 +1437,6 @@ class SEQ(PartFactory):
 		|																												} else if ( last_cond_late &&  state->hint_t_last) {
 		|																													state->bad_hint = !state->last_late_cond;
 		|																												}
-		|																												output.bhn = !state->bad_hint;
 		|
 		|																												switch(state->word) {
 		|																												case 0x0: state->display = state->macro_ins_val >>  0; break;
@@ -1470,10 +1467,10 @@ class SEQ(PartFactory):
 		|																												if (state_clock) {
 		|																													BUS_CSA_READ(state->n_in_csa);
 		|																												}
-		|																												if (PIN_LCLK.posedge()) {
+		|																												if (lclk) {
 		|																													state->foo9 = !RNDX(RND_TOS_VLB);
 		|																												}
-		|																												output.qstp7 = output.bhn && state->l_macro_hic;
+		|																												output.qstp7 = !state->bad_hint && state->l_macro_hic;
 		|																											}
 		|
 		|''')

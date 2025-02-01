@@ -70,7 +70,7 @@ class XSEQWCS(PartFactory):
 
         file.fmt('''
 		|
-		|	if (PIN_CLK.posedge()) {
+		|	if (PIN_CLK.posedge() && !PIN_SFSTP=>) {
 		|		unsigned um, ua;
 		|		BUS_UA_READ(ua);
 		|		BUS_UM_READ(um);
