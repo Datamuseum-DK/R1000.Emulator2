@@ -73,7 +73,6 @@ volatile uint64_t fiu_bus = -1;
 volatile uint64_t val_bus = -1;
 volatile uint64_t typ_bus = -1;
 volatile uint64_t spc_bus = -1;
-volatile uint64_t ecc_bus = -1;
 
 void
 sysc_trace(const char *me, const char *fmt)

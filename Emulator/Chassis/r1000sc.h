@@ -41,7 +41,8 @@ extern volatile uint64_t fiu_bus;
 extern volatile uint64_t val_bus;
 extern volatile uint64_t typ_bus;
 extern volatile uint64_t spc_bus;
-extern volatile uint64_t ecc_bus;
+#define UADR_MASK 0x3fff
+#define UADR_WIDTH 14
 
 #ifdef __cplusplus
 }
