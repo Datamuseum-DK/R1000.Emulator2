@@ -82,19 +82,29 @@ class TYP(PartFactory):
 		|	bool is_binary;
 		|	bool sub_else_add;
 		|	bool ovr_en;
+		|	uint64_t *wcsram;
+		|	uint64_t uir;
+		|
+		|#define UIR_A		((state->uir >> 41) & 0x3f)
+		|#define UIR_B		((state->uir >> 35) & 0x3f)
+		|#define UIR_FRM	((state->uir >> 30) & 0x1f)
+		|#define UIR_RAND	((state->uir >> 24) & 0xf)
+		|#define UIR_C		((state->uir >> 18) & 0x3f)
+		|#define UIR_CLIT	(((state->uir >> (46-16)) & 0x1f) | (((state->uir >> (46-18) & 0x3)<<5)))
+		|#define UIR_UPVC	((state->uir >> 15) & 0x7)
+		|#define UIR_SEL	((state->uir >> 14) & 0x1)
+		|#define UIR_AFNC	((state->uir >> 9) & 0x1f)
+		|#define UIR_CSRC	((state->uir >> 8) & 0x1)
+		|#define UIR_MCTL	((state->uir >> 4) & 0xf)
+		|#define UIR_CCTL	((state->uir >> 1) & 0x7)
 		|''')
 
     def init(self, file):
         file.fmt('''
-		|	load_programmable(this->name(),
-		|	    state->pa010, sizeof state->pa010,
-		|	    "PA010");
-		|	load_programmable(this->name(),
-		|	    state->pa068, sizeof state->pa068,
-		|	    "PA068");
-		|	load_programmable(this->name(),
-		|	    state->pa059, sizeof state->pa059,
-		|	    "PA059-01");
+		|	load_programmable(this->name(), state->pa010, sizeof state->pa010, "PA010");
+		|	load_programmable(this->name(), state->pa068, sizeof state->pa068, "PA068");
+		|	load_programmable(this->name(), state->pa059, sizeof state->pa059, "PA059-01");
+		|	state->wcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 		|''')
 
     def sensitive(self):
@@ -107,7 +117,6 @@ class TYP(PartFactory):
         file.fmt('''
 		|	unsigned rand, frm;
 		|
-		|	unsigned clit(void);
 		|	bool bin_op_pass(void);
 		|	bool priv_path_eq(void);
 		|	bool a_op_pass(void);
@@ -125,14 +134,6 @@ class TYP(PartFactory):
 
     def priv_impl(self, file):
         file.fmt('''
-		|unsigned
-		|SCM_«mmm» ::
-		|clit(void)
-		|{
-		|	unsigned tmp;
-		|	BUS_CLIT_READ(tmp);
-		|	return (tmp);
-		|}
 		|
 		|bool
 		|SCM_«mmm» ::
@@ -179,10 +180,10 @@ class TYP(PartFactory):
 		|clev(void)
 		|{
 		|	return (!(
-		|		(!(rand != 0x4) && !(A_LIT() != clit())) ||
+		|		(!(rand != 0x4) && !(A_LIT() != UIR_CLIT)) ||
 		|		(!(rand != 0x6) && !(A_LIT() != B_LIT())) ||
-		|		(!(rand != 0x5) && !(B_LIT() != clit())) ||
-		|		(!(rand != 0x7) && !(A_LIT() != B_LIT()) && !(B_LIT() != clit()))
+		|		(!(rand != 0x5) && !(B_LIT() != UIR_CLIT)) ||
+		|		(!(rand != 0x7) && !(A_LIT() != B_LIT()) && !(B_LIT() != UIR_CLIT))
 		|	));
 		|}
 		|
@@ -262,12 +263,12 @@ class TYP(PartFactory):
 		|		break;
 		|	case 0x28:	// ML - OF_KIND_MATCH
 		|		{
-		|		unsigned mask_a = state->pa059[clit()] >> 1;
-		|		unsigned okpat_a = state->pa059[clit() + 256] >> 1;
+		|		unsigned mask_a = state->pa059[UIR_CLIT] >> 1;
+		|		unsigned okpat_a = state->pa059[UIR_CLIT + 256] >> 1;
 		|		bool oka = (0x7f ^ (mask_a & B_LIT())) != okpat_a; // XXX state->b ??
 		|
-		|		unsigned mask_b = state->pa059[clit() + 128] >> 1;
-		|		unsigned okpat_b = state->pa059[clit() + 384] >> 1;
+		|		unsigned mask_b = state->pa059[UIR_CLIT + 128] >> 1;
+		|		unsigned okpat_b = state->pa059[UIR_CLIT + 384] >> 1;
 		|		bool okb = (0x7f ^ (mask_b & B_LIT())) != okpat_b;
 		|
 		|		bool okm = !(oka & okb);
@@ -275,16 +276,16 @@ class TYP(PartFactory):
 		|		}
 		|		break;
 		|	case 0x29:	// ML - CLASS_A_EQ_LIT
-		|		cond_c(A_LIT() != clit());
+		|		cond_c(A_LIT() != UIR_CLIT);
 		|		break;
 		|	case 0x2a:	// ML - CLASS_B_EQ_LIT
-		|		cond_c(B_LIT() != clit());
+		|		cond_c(B_LIT() != UIR_CLIT);
 		|		break;
 		|	case 0x2b:	// ML - CLASS_A_EQ_B
 		|		cond_c(A_LIT() != B_LIT());
 		|		break;
 		|	case 0x2c:	// ML - CLASS_A_B_EQ_LIT
-		|		cond_c(!(A_LIT() != clit()) || (B_LIT() != clit()));
+		|		cond_c(!(A_LIT() != UIR_CLIT) || (B_LIT() != UIR_CLIT));
 		|		break;
 		|	case 0x2d:	// E - PRIVACY_A_OP_PASS
 		|		cond_c(a_op_pass());
@@ -350,11 +351,10 @@ class TYP(PartFactory):
 		|SCM_«mmm» ::
 		|find_a(void)
 		|{
-		|	unsigned uira;
-		|	BUS_UIRA_READ(uira);
+		|	unsigned uira = UIR_A;
 		|	unsigned atos = (uira & 0xf) + state->topreg + 1;
 		|	state->aadr = 0;
-		|	if (PIN_ALOOP=>) {
+		|	if (uira == 0x2c) {
 		|		state->aadr = state->count;
 		|	} else if (uira <= 0x1f) {
 		|		state->aadr = frm << 5;
@@ -379,8 +379,8 @@ class TYP(PartFactory):
 		|SCM_«mmm» ::
 		|find_b(void)
 		|{
-		|	unsigned uirb;
-		|	BUS_UIRB_READ(uirb);
+		|	unsigned uirb = UIR_B;
+		|	//BUS_UIRB_READ(uirb);
 		|	unsigned btos = (uirb & 0xf) + state->topreg + 1;
 		|	unsigned csa = state->botreg + (uirb&1);
 		|	if (!(uirb & 2)) {
@@ -388,7 +388,7 @@ class TYP(PartFactory):
 		|	}
 		|
 		|	state->badr = 0;
-		|	if (PIN_BLOOP=>) {
+		|	if (uirb == 0x2c) {
 		|		state->badr = state->count;
 		|	} else if (uirb <= 0x1f) {
 		|		state->badr = frm << 5;
@@ -432,13 +432,12 @@ class TYP(PartFactory):
 		|	bool sclke = !PIN_SCLKE=>;
 		|
 		|	unsigned uirc, condsel;
-		|	BUS_UIRC_READ(uirc);
-		|	BUS_RAND_READ(rand);
+		|	uirc = UIR_C;
+		|	rand = UIR_RAND;
 		|	BUS_CSEL_READ(condsel);
-		|	BUS_FRM_READ(frm);
+		|	frm = UIR_FRM;
 		|
-		|	unsigned priv_check;
-		|	BUS_UPVC_READ(priv_check);
+		|	unsigned priv_check = UIR_UPVC;
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
@@ -481,8 +480,7 @@ class TYP(PartFactory):
 		|																if (!divide && PIN_TQBIT=>)
 		|																	acond = false;
 		|																struct f181 f181l, f181h;
-		|																unsigned tmp, idx, alurand, alufunc;
-		|																BUS_AFNC_READ(alufunc);
+		|																unsigned tmp, idx, alurand, alufunc = UIR_AFNC;
 		|														
 		|																if (rand < 8) {
 		|																	alurand = 7;
@@ -618,10 +616,10 @@ class TYP(PartFactory):
 		|																if (micros_en && selcond == 0xf7 && b_op_pass())
 		|																	output.ue &= ~0x02;	// T.TOS_OP.UE~
 		|														
-		|																if (micros_en && (!((rand != 0xe) || !(B_LIT() != clit()))))
+		|																if (micros_en && (!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
 		|																	output.ue &= ~0x01;	// T.CHK_SYS.UE~
 		|																output.t0stp = true;
-		|																if (micros_en && (!((rand != 0xe) || !(B_LIT() != clit()))))
+		|																if (micros_en && (!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
 		|																	output.t0stp = false;
 		|																if (micros_en && (0x3 < rand && rand < 0x8) && clev())
 		|																	output.t0stp = false;
@@ -638,26 +636,25 @@ class TYP(PartFactory):
 		|															}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	unsigned marctl = 0;
-		|	BUS_MCTL_READ(marctl);
+		|	unsigned marctl = UIR_MCTL;
 		|	bool foo1 = marctl >= 4;
 		|	output.ldmar = !(foo1 && PIN_BHSTP=>);
-		|																							if (q2pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
-		|																								if (marctl & 0x8) {
-		|																									spc_bus = (marctl & 0x7) ^ 0x7;
-		|																								} else {
-		|																									spc_bus = (state->b & 0x7) ^ 0x7;
-		|																								}
-		|																							}
+		|															if (q2pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
+		|																if (marctl & 0x8) {
+		|																	spc_bus = (marctl & 0x7) ^ 0x7;
+		|																} else {
+		|																	spc_bus = (state->b & 0x7) ^ 0x7;
+		|																}
+		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|
 		|																											if (q4pos) {
-		|																												bool c_source = PIN_CSRC=>;
+		|																												bool c_source = UIR_CSRC;
 		|																												fiu0 = c_source;
 		|																												fiu1 = c_source == (rand != 0x3);
 		|																										
-		|																												bool sel = PIN_SEL=>;
+		|																												bool sel = UIR_SEL;
 		|																										
 		|																												if (!fiu0) {
 		|																													BUS_DF_READ(fiu);
@@ -745,6 +742,13 @@ class TYP(PartFactory):
 		|																												if (sclke && priv_check != 7) {
 		|																													bool set_pass_priv = rand != 0xd;
 		|																													state->ppriv = set_pass_priv;
+		|																												}
+		|																												if (uirsclk) {
+		|																													unsigned addr;
+		|																													BUS_UAD_READ(addr);
+		|																													state->uir = state->wcsram[addr] ^ 0x7fffc0000000ULL;
+		|																													output.mctl = UIR_MCTL;
+		|																													output.cctl = UIR_CCTL;
 		|																												}
 		|																											}
 		|

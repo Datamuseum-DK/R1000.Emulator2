@@ -17,14 +17,14 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "QFOE"))
 
         # UWORD order 
-        self.sig_left(ChipSig("-->+", "UIRA", 0, 5))
-        self.sig_left(ChipSig("-->+", "UIRB", 0, 5))
-        self.sig_left(ChipSig("-->+", "FRM", 0, 4))
-        self.sig_left(ChipSig("-->+", "RAND", 0, 3))
-        self.sig_left(ChipSig("-->+", "UIRC", 0, 5))
-        self.sig_left(ChipSig("-->+", "SEL"))
-        self.sig_left(ChipSig("-->+", "AFNC", 0, 4))
-        self.sig_left(ChipSig("-->+", "CSRC"))
+        #self.sig_left(ChipSig("-->+", "UIRA", 0, 5))
+        #self.sig_left(ChipSig("-->+", "UIRB", 0, 5))
+        #self.sig_left(ChipSig("-->+", "FRM", 0, 4))
+        #self.sig_left(ChipSig("-->+", "RAND", 0, 3))
+        #self.sig_left(ChipSig("-->+", "UIRC", 0, 5))
+        #self.sig_left(ChipSig("-->+", "SEL"))
+        #self.sig_left(ChipSig("-->+", "AFNC", 0, 4))
+        #self.sig_left(ChipSig("-->+", "CSRC"))
 
         # CLOCKS
         self.sig_left(ChipSig("-->+", "Q2"))
@@ -42,14 +42,10 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "LDWDR"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "SCLKE"))
-        self.sig_left(ChipSig("-->+", "ALOOP"))
-        self.sig_left(ChipSig("-->+", "BLOOP"))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
-        self.sig_left(ChipSig("-->+", "CLIT", 0, 6))
-        self.sig_left(ChipSig("-->+", "UPVC", 0, 2))
+        #self.sig_left(ChipSig("-->+", "UPVC", 0, 2))
         self.sig_left(ChipSig("-->+", "UEN"))
         self.sig_left(ChipSig("-->+", "TQBIT"))
-        self.sig_left(ChipSig("-->+", "MCTL", 0, 3))
         self.sig_left(ChipSig("-->+", "VAEN"))
         self.sig_left(ChipSig("-->+", "BHSTP"))
 
@@ -67,6 +63,10 @@ class TYP(FChip):
         self.sig_right(ChipSig("+-->", "CONDD"))
         self.sig_right(ChipSig("+-->", "CONDE"))
         self.sig_right(ChipSig("+-->", "LDMAR"))
+        self.sig_right(ChipSig("+<--", "UAD", 0, 13))
+        self.sig_right(ChipSig("+-->", "MCTL", 0, 3))
+        self.sig_right(ChipSig("+-->", "CCTL", 0, 2))
+        self.sig_right(ChipSig("+-->", "FPDT"))
 
         self.finish()
 

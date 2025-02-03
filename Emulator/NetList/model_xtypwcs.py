@@ -61,32 +61,21 @@ class XTYPWCS(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|#define UIR_LSB(x) (46 - (x))
 		|	BUS_UAD_READ(state->addr);
 		|
 		|	if (PIN_UCLK.posedge()) {
 		|		state->wcs = state->ram[state->addr];
 		|		state->wcs |= (1ULL << 63);
 		|		state->wcs ^= 0x7fffc0000000ULL;
-		|		output.uir = state->wcs;
 		|	}
 		|
-		|	unsigned csacntl0 = (state->ram[state->addr] >> BUS_UIR_LSB(45)) & 7;
-		|	unsigned csacntl1 = (state->wcs >> BUS_UIR_LSB(45)) & 6;
+		|	unsigned csacntl0 = (state->ram[state->addr] >> UIR_LSB(45)) & 7;
+		|	unsigned csacntl1 = (state->wcs >> UIR_LSB(45)) & 6;
 		|	output.fpdt = !(
 		|		(csacntl0 == 7) &&
 		|		(csacntl1 == 0)
 		|	);
-		|
-		|	uint64_t tmp = state->ram[state->addr];
-		|	unsigned aadr = (tmp >> BUS_UIR_LSB(5)) & 0x3f;
-		|	output.ald = (aadr == 0x13);
-		|	unsigned badr = (tmp >> BUS_UIR_LSB(11)) & 0x3f;
-		|	output.bld = (badr == 0x13);
-		|
-		|	unsigned clit = 0;
-		|	clit |= (state->wcs >> BUS_UIR_LSB(16)) & 0x1f;
-		|	clit |= ((state->wcs >> BUS_UIR_LSB(18)) & 0x3) << 5;
-		|	output.clit = clit;
 		|''')
 
 def register(part_lib):

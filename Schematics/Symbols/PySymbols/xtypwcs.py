@@ -16,10 +16,6 @@ class XTYPWCS(FChip):
         self.sig_left(ChipSig("-->+", "UCLK"))
         self.sig_left(ChipSig("-->+", "UAD", 0, 13))
 
-        self.sig_right(ChipSig("+-->", "UIR", 0, 46))
-        self.sig_right(ChipSig("+-->", "CLIT", 0, 6))
-        self.sig_right(ChipSig("+-->", "ALD"))
-        self.sig_right(ChipSig("+-->", "BLD"))
         self.sig_right(ChipSig("+-->", "FPDT"))
 
         self.finish()

@@ -109,9 +109,16 @@ CTX_GetRaw(const char *ident, uint32_t length)
 {
 
 	uint8_t *ptr;
+	struct ctx *cp;
 
-        ptr = CTX_Get(ident, length + sizeof(struct ctx));
-        return (ptr + sizeof(struct ctx));
+	cp = CTX_Find(ident);
+	if (cp != NULL) {
+		assert(cp->length = length + sizeof(struct ctx));
+		return (cp + 1);
+	} else {
+		ptr = CTX_Get(ident, length + sizeof(struct ctx));
+		return (ptr + sizeof(struct ctx));
+	}
 }
 
 struct ctx *
