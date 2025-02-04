@@ -119,7 +119,6 @@ i8052_thread(void *priv)
 			pointer = i8052_rx_diagbus(i52);
 			counter = i8052_rx_diagbus(i52);
 			csum = 0;
-			i52->ram[0x11] = 0x02;
 			VSB_clear(vsb);
 			VSB_printf(vsb, " %02x", i52->ram[0x11]);
 			i8052_tx_diagbus(i52, i52->ram[0x11]);
@@ -158,13 +157,12 @@ i8052_thread(void *priv)
 			assert (csum == i8052_rx_diagbus(i52));
 			UPDATE_KOOPMAN32(hash, 0);
 			dp->dl_hash = hash;
-			dp->ip = &dp->ram[0];
+			dp->ip = &dp->ram[0x11];
 			if (i52->address == 0x6) {
 				diagproc_turbo_typ(dp);
 			} else if (i52->address == 0x7) {
 				diagproc_turbo_val(dp);
 			} else if (i52->address == 0xc) {
-				dp->ip = &dp->ram[0];
 				diagproc_turbo_mem32(dp);
 			}
 			break;

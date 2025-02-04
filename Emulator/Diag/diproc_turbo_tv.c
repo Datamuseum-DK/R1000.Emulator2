@@ -285,7 +285,7 @@ diagproc_turbo_typ(const struct diagproc *dp)
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == REG_TO_LOOP_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo READ_B_REG.TYP");
+		sc_tracef(dp->name, "Turbo REG_TO_LOOP.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == READ_B_REG_TYP_HASH) {
@@ -410,6 +410,13 @@ diagproc_turbo_val(const struct diagproc *dp)
 	}
 	if (dp->dl_hash == RUN_NORMAL_VAL_HASH) {
 		sc_tracef(dp->name, "Turbo RUN_NORMAL.VAL");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+	if (dp->dl_hash == READ_RF_B_VAL_HASH) {
+		unsigned ptr = ~vbe16dec(dp->ram + 0x31) & 0x3ff;
+		sc_tracef(dp->name, "Turbo READ_RF_B.TYP [0x%x]", ptr);
+		if (ptr < 1024)
+			vbe64enc(dp->ram + 0x33, ~val_aram[ptr]);
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	return (0);
