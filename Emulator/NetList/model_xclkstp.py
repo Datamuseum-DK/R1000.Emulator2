@@ -121,7 +121,6 @@ class XCLKSTPTV(PartFactory):
         )
         yield from self.event_or(
             "idle_event",
-            "PIN_DFCLK",
             "PIN_CSAWR",
             "BUS_DIAG",
             "BUS_STOP",
@@ -144,7 +143,6 @@ class XCLKSTPTV(PartFactory):
 		|
 		|	bool q3 = PIN_Q3=>;
 		|	bool q3pos = PIN_Q3.posedge();
-		|	bool q3x = !PIN_DFCLK=>;
 		|	bool csa_write_en = PIN_CSAWR=>;
 		|
 		|	if (PIN_Q3.negedge()) {
@@ -157,15 +155,14 @@ class XCLKSTPTV(PartFactory):
 		|		output.clkrun = true;
 		|		output.ramrun = true;
 		|
-		|		if (clock_stop != BUS_STOP_MASK && q3x) {
+		|		if (clock_stop != BUS_STOP_MASK) {
 		|			output.clkrun = false;
 		|			if (!csa_write_en)
 		|				output.ramrun = false;
 		|		}
 		|
 		|		if (state->sf_stop) {
-		|			if (q3x)
-		|				output.clkrun = false;
+		|			output.clkrun = false;
 		|			if (!csa_write_en)
 		|				output.ramrun = false;
 		|		}

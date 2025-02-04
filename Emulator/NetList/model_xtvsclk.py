@@ -49,16 +49,14 @@ class XTVSCLK(PartFactory):
 
         file.fmt('''
 		|	if (PIN_Q4E.negedge()) {
-		|		output.zclk = true;
 		|		output.aclk = true;
 		|		output.uclk = true;
 		|		output.arfwe = true;
 		|	} else if (PIN_Q4E.posedge()) {
-		|		output.uclk = PIN_UON=> && (PIN_UOF=> || PIN_SFS=>);
+		|		output.uclk = PIN_SFS=>;
 		|
 		|		bool sce = !(PIN_STS=> && PIN_RMS=> && PIN_WEL=>);
-		|		output.zclk = sce || PIN_ZCE=>;
-		|		output.aclk = sce || PIN_ACE=>;
+		|		output.aclk = sce;
 		|
 		|		output.arfwe = !(!(PIN_DSTOP=>) && PIN_RMS=>);
 		|	}

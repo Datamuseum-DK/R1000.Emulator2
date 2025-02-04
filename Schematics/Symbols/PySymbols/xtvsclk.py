@@ -15,17 +15,12 @@ class XTVSCLK(FChip):
 
         self.sig_left(ChipSig("-->+", "Q4E"))
         self.sig_left(ChipSig("-->+", "SCE"))
-        self.sig_left(ChipSig("-->+", "ZCE"))
-        self.sig_left(ChipSig("-->+", "ACE"))
-        self.sig_left(ChipSig("-->+", "UON"))
-        self.sig_left(ChipSig("-->+", "UOF"))
         self.sig_left(ChipSig("-->+", "SFS"))
         self.sig_left(ChipSig("-->+", "STS"))
         self.sig_left(ChipSig("-->+", "RMS"))
         self.sig_left(ChipSig("-->+", "WEL"))
         self.sig_left(ChipSig("-->+", "DSTOP"))
 
-        self.sig_right(ChipSig("+-->", "ZCLK"))
         self.sig_right(ChipSig("+-->", "ACLK"))
         self.sig_right(ChipSig("+-->", "UCLK"))
         self.sig_right(ChipSig("+-->", "ARFWE"))
