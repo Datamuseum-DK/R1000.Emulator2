@@ -79,9 +79,6 @@ load_register_file_typ(const struct diagproc *dp)
 #if defined(HAS_Z013)
 static uint64_t *val_aram;
 #endif
-#if defined(HAS_Z014)
-static uint64_t *val_bram;
-#endif
 
 static unsigned val_ptr;
 
@@ -385,6 +382,14 @@ diagproc_turbo_val(const struct diagproc *dp)
 		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.VAL");
 		*dp->ip = 0x3;
 		return(diag_load_novram(dp, "R1000_VAL_NOVRAM", 0, 0x20, 21));
+	}
+	if (dp->dl_hash == PREP_RUN_VAL_HASH) {
+		sc_tracef(dp->name, "Turbo PREP_RUN.VAL");
+		unsigned uad = vbe16dec(dp->ram + 0x18);
+		if (uad == 0x100) {
+			val_aram[0x1f] = ~0;
+		}
+		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == PREP_LOAD_REGISTER_FILE_VAL_HASH) {
 		val_ptr = 0;

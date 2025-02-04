@@ -59,8 +59,6 @@ class VAL(PartFactory):
 		|	unsigned aadr;
 		|	unsigned badr;
 		|	unsigned cadr;
-		|	uint8_t pa010[512];
-		|	uint8_t pa011[512];
 		|	bool amsb, bmsb, cmsb, mbit, last_cond;
 		|	bool isbin, sub_else_add, ovren, carry_middle;
 		|	uint8_t zero;
@@ -68,14 +66,13 @@ class VAL(PartFactory):
 		|	bool wen;
 		|''')
 
+
     def init(self, file):
         file.fmt('''
-		|	load_programmable(this->name(),
-		|	    state->pa010, sizeof state->pa010,
-		|	    "PA010");
-		|	load_programmable(this->name(),
-		|	    state->pa011, sizeof state->pa011,
-		|	    "PA011");
+		|	load_programmable(this->name(), pa010, sizeof pa010, "PA010");
+		|	load_programmable(this->name(), pa011, sizeof pa011, "PA011");
+		|	state->csa_hit = true;
+		|	state->csa_write = true;
 		|''')
 
     def sensitive(self):
@@ -86,6 +83,10 @@ class VAL(PartFactory):
     def priv_decl(self, file):
         file.fmt('''
 		|	unsigned rand;
+		|	uint8_t pa010[512];
+		|	uint8_t pa011[512];
+		|
+		|	void dump_state(void);
 		|	bool ovrsgn(void);
 		|	bool cond_a(unsigned csel);
 		|	bool cond_b(unsigned csel);
@@ -97,6 +98,30 @@ class VAL(PartFactory):
 
     def priv_impl(self, file):
         file.fmt('''
+		|void
+		|SCM_«mmm» ::
+		|dump_state(void)
+		|{
+		|return;
+		|ALWAYS_TRACE(
+		|	<< "STATE " << std::hex
+		|	<< " a " << state->a
+		|	<< " b " << state->b
+		|	<< " c " << state->c
+		|	<< " wdr " << state->wdr
+		|	<< " zc " << state->zerocnt
+		|	<< " ch " << state->csa_hit
+		|	<< " cw " << state->csa_write
+		|	<< " lc " << state->last_cond
+		|	<< " o.cwe " << output.cwe
+		|	<< " o.z_qf " << output.z_qf
+		|	<< " o.c_a " << output.vcnda
+		|	<< " o.c_b " << output.vcndb
+		|	<< " o.c_c " << output.vcndc
+		|	<< " o.cov " << output.cntov
+		|);
+		|}
+		|
 		|bool
 		|SCM_«mmm» ::
 		|ovrsgn(void)
@@ -285,7 +310,7 @@ class VAL(PartFactory):
 		|		BUS_FRM_READ(frm);
 		|		unsigned atos = (uira & 0xf) + state->topreg + 1;
 		|		state->aadr = 0;
-		|		if (PIN_ALOOP=>) {
+		|		if (uira == 0x2c) {
 		|			state->aadr = state->count;
 		|		} else if (uira <= 0x1f) {
 		|			state->aadr = frm << 5;
@@ -326,7 +351,7 @@ class VAL(PartFactory):
 		|		csa += state->csa_offset;
 		|	}
 		|	state->badr = 0;
-		|	if (PIN_BLOOP=>) {
+		|	if (uirb == 0x2c) {
 		|		state->badr = state->count;
 		|	} else if (uirb <= 0x1f) {
 		|		state->badr = frm << 5;
@@ -377,6 +402,7 @@ class VAL(PartFactory):
 		|	bool aclk = PIN_CCLK.posedge();
 		|
 		|	bool uirsclk = PIN_UCLK.posedge();
+		|	if (q4pos) dump_state();
 		|
 		|	unsigned uirc;
 		|	BUS_UIRC_READ(uirc);
@@ -454,19 +480,19 @@ class VAL(PartFactory):
 		|																	proma |= 0x100;
 		|																}
 		|														
-		|																tmp = state->pa011[proma];			// S0-4.LOW
+		|																tmp = pa011[proma];			// S0-4.LOW
 		|																state->isbin = (tmp >> 1) & 1;			// IS_BINARY
 		|																f181l.ctl = (tmp >> 4) & 0xf;
 		|																f181l.ctl |= ((tmp >> 3) & 1) << 4;
 		|																f181l.ctl |= 1 << 5;
-		|																f181l.ci = (state->pa011[proma] >> 2) & 1;	// ALU.C15
+		|																f181l.ci = (pa011[proma] >> 2) & 1;	// ALU.C15
 		|																f181l.a = state->a & 0xffffffff;
 		|																f181l.b = state->b & 0xffffffff;
 		|																f181_alu(&f181l);
 		|																state->carry_middle = f181l.co;
 		|																state->alu = f181l.o;
 		|														
-		|																tmp = state->pa010[proma];			// S0-4.HIGH
+		|																tmp = pa010[proma];			// S0-4.HIGH
 		|																state->ovren = (tmp >> 1) & 1;			// OVR.EN~
 		|																state->sub_else_add = (tmp >> 2) & 1;			// SUB_ELSE_ADD
 		|																f181h.ctl = (tmp >> 4) & 0xf;
@@ -684,6 +710,7 @@ class VAL(PartFactory):
 		|	default: break;
 		|	}
 		|
+		|	if (q4pos) dump_state();
 		|
 		|''')
 

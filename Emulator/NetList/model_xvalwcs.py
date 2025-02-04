@@ -44,7 +44,6 @@ class XVALWCS(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	uint64_t *ram;
-		|	unsigned addr;
 		|	uint64_t wcs, ff1, ff2, ff3, sr0, sr1, sr2, sr4;
 		|''')
 
@@ -54,8 +53,6 @@ class XVALWCS(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_DUAS"
-        yield "BUS_UAC"
         yield "BUS_UAD"
         yield "PIN_UCLK.pos()"
 
@@ -64,19 +61,11 @@ class XVALWCS(PartFactory):
 
         file.fmt('''
 		|
-		|	unsigned uad, cnt;
-		|	BUS_UAC_READ(cnt);
+		|	unsigned uad;
 		|	BUS_UAD_READ(uad);
-		|	if (!PIN_DUAS=>) {
-		|		uad ^= BUS_UAD_MASK;
-		|	} else {
-		|		uad = BUS_UAD_MASK;
-		|	}
-		|	state->addr = (uad & cnt);
-		|	state->addr ^= BUS_UAC_MASK;
 		|
 		|	if (PIN_UCLK.posedge()) {
-		|		state->wcs = state->ram[state->addr];
+		|		state->wcs = state->ram[uad];
 		|		state->wcs ^= 0xffff800000;
 		|		state->ctx.job = 1;
 		|		next_trigger(5, sc_core::SC_NS);
@@ -84,7 +73,7 @@ class XVALWCS(PartFactory):
 		|
 		|	output.uir = state->wcs;
 		|
-		|	uint64_t tmp = state->ram[state->addr];
+		|	uint64_t tmp = state->ram[uad];
 		|
 		|	unsigned aadr = (tmp >> BUS_UIR_LSB(5)) & 0x3f;
 		|	output.ald = (aadr == 0x13);
