@@ -161,6 +161,8 @@ i8052_thread(void *priv)
 			dp->ip = &dp->ram[0];
 			if (i52->address == 0x6) {
 				diagproc_turbo_typ(dp);
+			} else if (i52->address == 0x7) {
+				diagproc_turbo_val(dp);
 			} else if (i52->address == 0xc) {
 				dp->ip = &dp->ram[0];
 				diagproc_turbo_mem32(dp);

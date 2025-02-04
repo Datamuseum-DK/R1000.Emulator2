@@ -87,6 +87,7 @@ sc_boards() {
 	done
 	cli diproc dummy mem0
 	cli diproc dummy typ
+	cli diproc dummy val
 	cli 'sc watchdog -dont_bite 5' 
 }
 

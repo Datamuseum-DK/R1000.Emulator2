@@ -408,5 +408,9 @@ diagproc_turbo_val(const struct diagproc *dp)
 	    dp->dl_hash == 0x00001045) {
 		return (load_control_store_200_val(dp));
 	}
+	if (dp->dl_hash == RUN_NORMAL_VAL_HASH) {
+		sc_tracef(dp->name, "Turbo RUN_NORMAL.VAL");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 	return (0);
 }
