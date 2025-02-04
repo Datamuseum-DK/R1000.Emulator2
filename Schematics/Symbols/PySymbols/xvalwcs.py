@@ -17,8 +17,6 @@ class XVALWCS(FChip):
         self.sig_left(ChipSig("-->+", "UAD", 0, 13))
 
         self.sig_right(ChipSig("+-->", "UIR", 0, 39))
-        self.sig_right(ChipSig("+-->", "ALD"))
-        self.sig_right(ChipSig("+-->", "BLD"))
 
         self.finish()
 

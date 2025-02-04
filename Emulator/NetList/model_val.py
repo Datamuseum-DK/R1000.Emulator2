@@ -64,6 +64,18 @@ class VAL(PartFactory):
 		|	uint8_t zero;
 		|	bool coh;
 		|	bool wen;
+		|	uint64_t *wcsram;
+		|	uint64_t uir;
+		|
+		|#define UIR_A		((state->uir >> (39-5)) & 0x3f)
+		|#define UIR_B		((state->uir >> (39-11)) & 0x3f)
+		|#define UIR_FRM	((state->uir >> (39-16)) & 0x1f)
+		|#define UIR_SEL	((state->uir >> (39-18)) & 0x3)
+		|#define UIR_RAND	((state->uir >> (39-22)) & 0xf)
+		|#define UIR_C		((state->uir >> (39-28)) & 0x3f)
+		|#define UIR_MSRC	((state->uir >> (39-32)) & 0xf)
+		|#define UIR_AFNC	((state->uir >> (39-37)) & 0x1f)
+		|#define UIR_CSRC	((state->uir >> (39-38)) & 0x1)
 		|''')
 
 
@@ -71,6 +83,7 @@ class VAL(PartFactory):
         file.fmt('''
 		|	load_programmable(this->name(), pa010, sizeof pa010, "PA010");
 		|	load_programmable(this->name(), pa011, sizeof pa011, "PA011");
+		|	state->wcsram = (uint64_t*)CTX_GetRaw("VAL_WCS", sizeof(uint64_t) << 14);
 		|	state->csa_hit = true;
 		|	state->csa_write = true;
 		|''')
@@ -118,7 +131,6 @@ class VAL(PartFactory):
 		|	<< " o.c_a " << output.vcnda
 		|	<< " o.c_b " << output.vcndb
 		|	<< " o.c_c " << output.vcndc
-		|	<< " o.cov " << output.cntov
 		|);
 		|}
 		|
@@ -283,8 +295,7 @@ class VAL(PartFactory):
 		|SCM_«mmm» ::
 		|find_a(void)
 		|{
-		|	unsigned uira;
-		|	BUS_UIRA_READ(uira);
+		|	unsigned uira = UIR_A;
 		|	if (uira == 0x28) {
 		|		state->a = state->count;
 		|		state->a |= ~0x3ff;
@@ -306,8 +317,7 @@ class VAL(PartFactory):
 		|	} else if (uira == 0x2b) {
 		|		state->a = ~0ULL;
 		|	} else {
-		|		unsigned frm;
-		|		BUS_FRM_READ(frm);
+		|		unsigned frm = UIR_FRM;
 		|		unsigned atos = (uira & 0xf) + state->topreg + 1;
 		|		state->aadr = 0;
 		|		if (uira == 0x2c) {
@@ -329,10 +339,9 @@ class VAL(PartFactory):
 		|SCM_«mmm» ::
 		|find_b(void)
 		|{
-		|	unsigned uirb;
-		|	BUS_UIRB_READ(uirb);
+		|	unsigned uirb = UIR_B;
 		|	bool oe, oe7;
-		|	if (uirb != (0x16 ^ BUS_UIRB_MASK)) {
+		|	if (uirb != (0x16 ^ 0x3f)) {
 		|		oe = false;
 		|	} else if (!state->csa_hit && !PIN_QVOE=>) { 
 		|		oe = false;
@@ -343,8 +352,7 @@ class VAL(PartFactory):
 		|	bool get_literal = rand != 0x6;
 		|	oe7 = oe || !get_literal;
 		|
-		|	unsigned frm;
-		|	BUS_FRM_READ(frm);
+		|	unsigned frm = UIR_FRM;
 		|	unsigned btos = (uirb & 0xf) + state->topreg + 1;
 		|	unsigned csa = state->botreg + (uirb&1);
 		|	if (!(uirb & 2)) {
@@ -404,10 +412,9 @@ class VAL(PartFactory):
 		|	bool uirsclk = PIN_UCLK.posedge();
 		|	if (q4pos) dump_state();
 		|
-		|	unsigned uirc;
-		|	BUS_UIRC_READ(uirc);
+		|	unsigned uirc = UIR_C;
 		|
-		|	BUS_RAND_READ(rand);
+		|	rand = UIR_RAND;
 		|
 		|	bool divide = rand != 0xb;
 		|
@@ -452,7 +459,7 @@ class VAL(PartFactory):
 		|																if (output.cwe && uirc != 0x28)
 		|																	state->wen = !state->wen;
 		|														
-		|																BUS_MSRC_READ(state->msrc);
+		|																state->msrc = UIR_MSRC;
 		|																bool start_mult = rand != 0xc;
 		|																if (!start_mult) {
 		|																	state->malat = ~state->a;
@@ -462,14 +469,14 @@ class VAL(PartFactory):
 		|																struct f181 f181l, f181h;
 		|																unsigned tmp, proma, alur;
 		|														
-		|																BUS_RAND_READ(tmp);
+		|																tmp = UIR_RAND;
 		|																if (tmp < 8) {
 		|																	alur = 7;
 		|																} else {
 		|																	alur = 15 - tmp;
 		|																}
 		|														
-		|																BUS_AFNC_READ(proma);
+		|																proma = UIR_AFNC;
 		|																proma |= alur << 5;
 		|																if (
 		|																	!(
@@ -531,7 +538,7 @@ class VAL(PartFactory):
 		|															if (q2pos) {
 		|																uint64_t c2;
 		|																uint64_t fiu = 0, mux = 0;
-		|																bool c_source = PIN_CSRC=>;
+		|																bool c_source = UIR_CSRC;
 		|																bool split_c_src = rand == 0x4;
 		|																if (split_c_src || !c_source) {
 		|																	BUS_DF_READ(fiu);
@@ -542,8 +549,7 @@ class VAL(PartFactory):
 		|																	}
 		|																}
 		|																if (c_source || split_c_src) {
-		|																	unsigned sel;
-		|																	BUS_SEL_READ(sel);
+		|																	unsigned sel = UIR_SEL;
 		|																	switch (sel) {
 		|																	case 0x0:
 		|																		mux = state->alu << 1;
@@ -573,8 +579,7 @@ class VAL(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																			if (q2pos) {
-		|																				unsigned frm;
-		|																				BUS_FRM_READ(frm);
+		|																				unsigned frm = UIR_FRM;
 		|																				state->cadr = 0;
 		|																				if (uirc <= 0x1f) {
 		|																					// FRAME:REG
@@ -653,13 +658,6 @@ class VAL(PartFactory):
 		|																												bool lnan3a = !(lcmp28);
 		|																												bool lnan3b = sclken;
 		|																												bool lnan2c = !(lnan3a && lnan3b);
-		|																												if (count_en) {
-		|																													output.cntov = true;
-		|																												} else if (count_up) {
-		|																													output.cntov = state->count != 0x3ff;
-		|																												} else {
-		|																													output.cntov = state->count != 0;
-		|																												}
 		|																												if (!lnan2c) {
 		|																													state->count = state->c;
 		|																												} else if (!count_en && count_up) {
@@ -697,6 +695,11 @@ class VAL(PartFactory):
 		|																											
 		|																												if (PIN_CCLK=>.posedge()) {
 		|																													state->mbit = state->cmsb;
+		|																												}
+		|																												if (uirsclk) {
+		|																													unsigned addr;
+		|																													BUS_UAD_READ(addr);
+		|																													state->uir = state->wcsram[addr] ^ 0xffff800000ULL;
 		|																												}
 		|																											}
 		|
