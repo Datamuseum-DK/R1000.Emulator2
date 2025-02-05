@@ -158,7 +158,9 @@ i8052_thread(void *priv)
 			UPDATE_KOOPMAN32(hash, 0);
 			dp->dl_hash = hash;
 			dp->ip = &dp->ram[0x11];
-			if (i52->address == 0x6) {
+			if (i52->address == 0x4) {
+				diagproc_turbo_ioc(dp);
+			} else if (i52->address == 0x6) {
 				diagproc_turbo_typ(dp);
 			} else if (i52->address == 0x7) {
 				diagproc_turbo_val(dp);

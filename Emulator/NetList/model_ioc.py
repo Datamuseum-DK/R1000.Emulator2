@@ -97,11 +97,13 @@ class IOC(PartFactory):
 		|	struct ctx *c1 = CTX_Find("IOP.ram_space");
 		|	assert(c1 != NULL);
 		|	state->ram = (uint8_t*)(c1 + 1);
+		|	is_tracing = false;
 		|''')
 
     def priv_decl(self, file):
         ''' further private decls '''
         file.fmt('''
+		|	bool is_tracing;
 		|       void do_xact(void);
 		|''')
 
@@ -267,6 +269,15 @@ class IOC(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool sclk_pos = q4pos && !PIN_CSTP;
+		|																					if (ioc_trace && PIN_TRAEN=> && !is_tracing) {
+		|																						is_tracing = true;
+		|																						ALWAYS_TRACE(<< " IS TRACING");
+		|																					}
+		|																					if (ioc_trace && !PIN_TRAEN=> && is_tracing) {
+		|																						is_tracing = true;
+		|																						ioc_trace = 0;
+		|																						ALWAYS_TRACE(<< " STOP TRACING");
+		|																					}
 		|
 		|	unsigned rand = UIR_RAND;
 		|	uint64_t typ, val;
@@ -539,7 +550,7 @@ class IOC(PartFactory):
 		|																						tdat |= 0x4000;
 		|																					uint16_t tptr = state->tram[2048];
 		|																					state->tram[tptr] = tdat;
-		|																					if (PIN_TRAEN=>) {
+		|																					if (ioc_trace) {
 		|																						tptr += 1;
 		|																						tptr &= 0x7ff;
 		|																						state->tram[2048] = tptr;
