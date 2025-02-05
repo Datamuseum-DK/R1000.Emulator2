@@ -426,10 +426,12 @@ class TYP(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	//bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	bool aclk = PIN_CCLK.posedge();
+		|	bool csa_clk = PIN_CCLK.posedge();
 		|
 		|	bool uirsclk = PIN_UCLK.posedge();
-		|	bool sclke = !PIN_SCLKE=>;
+		|	uirsclk = q4pos && !PIN_SFS=>;
+		|	bool sclke = (PIN_STS=> && PIN_RMS=> && !PIN_FREZE=>);
+		|	csa_clk = q4pos && sclke;
 		|
 		|	unsigned uirc, condsel;
 		|	uirc = UIR_C;
@@ -690,7 +692,8 @@ class TYP(PartFactory):
 		|																												if (!chi && clo)
 		|																													c |= 0xffffffffULL << 32;
 		|																										
-		|																												if (PIN_WE.posedge() && !state->wen) {
+		|																												bool awe = (!(PIN_FREZE=>) && PIN_RMS=>);
+		|																												if (awe && !state->wen) {
 		|																													state->rfram[state->cadr] = c;
 		|																												}
 		|																												if (sclke && !PIN_LDWDR=>) {
@@ -715,7 +718,7 @@ class TYP(PartFactory):
 		|																												if (uirsclk) {
 		|																													state->csa_offset = csmux3;
 		|																												}
-		|																												if (aclk) {
+		|																												if (csa_clk) {
 		|																													bool bot_mux_sel, top_mux_sel, add_mux_sel;
 		|																													bot_mux_sel = PIN_LBOT=>;
 		|																													add_mux_sel = PIN_LTOP=>;

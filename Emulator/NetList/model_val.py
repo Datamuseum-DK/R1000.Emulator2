@@ -98,6 +98,7 @@ class VAL(PartFactory):
 		|	unsigned rand;
 		|	uint8_t pa010[512];
 		|	uint8_t pa011[512];
+		|	bool csa_clk;
 		|
 		|	void dump_state(void);
 		|	bool ovrsgn(void);
@@ -177,7 +178,7 @@ class VAL(PartFactory):
 		|		break;
 		|	}
 		|	output.vcnda = !cond;
-		|	if (PIN_CCLK.posedge()) {
+		|	if (csa_clk) {
 		|		state->last_cond = cond;
 		|	}
 		|	return (cond);
@@ -212,7 +213,7 @@ class VAL(PartFactory):
 		|		break;
 		|	}
 		|	output.vcndb = !cond;
-		|	if (PIN_CCLK.posedge()) {
+		|	if (csa_clk) {
 		|		state->last_cond = cond;
 		|	}
 		|	return (cond);
@@ -248,7 +249,7 @@ class VAL(PartFactory):
 		|		break;
 		|	}
 		|	output.vcndc = !cond;
-		|	if (PIN_CCLK.posedge()) {
+		|	if (csa_clk) {
 		|		state->last_cond = cond;
 		|	}
 		|	return (cond);
@@ -406,10 +407,12 @@ class VAL(PartFactory):
 		|	bool q4pos = PIN_Q4.posedge();
 		|	//bool h2 = PIN_H2=>;
 		|	bool h1pos = PIN_H2.negedge();
-		|	bool sclken = !PIN_SCLKE=>;
-		|	bool aclk = PIN_CCLK.posedge();
+		|	bool sclken = (PIN_STS=> && PIN_RMS=> && !PIN_FREZE=>);
+		|	//csa_clk = PIN_CCLK.posedge();
+		|	csa_clk = q4pos && sclken;
 		|
-		|	bool uirsclk = PIN_UCLK.posedge();
+		|	//bool uirsclk = PIN_UCLK.posedge();
+		|	bool uirsclk = q4pos && !PIN_SFS=>;
 		|	if (q4pos) dump_state();
 		|
 		|	unsigned uirc = UIR_C;
@@ -419,7 +422,7 @@ class VAL(PartFactory):
 		|	bool divide = rand != 0xb;
 		|
 		|
-		|																											if (aclk) {
+		|																											if (csa_clk) {
 		|																												bool xor0c = state->mbit ^ (!state->coh);
 		|																												bool xor0d = state->output.qbit ^ xor0c;
 		|																												bool caoi0b = !(
@@ -623,10 +626,11 @@ class VAL(PartFactory):
 		|																				}
 		|																			}
 		|																											if (q4pos) {
-		|																												if (PIN_AWE.posedge() && !state->wen) {
+		|																												bool awe = (!(PIN_FREZE=>) && PIN_RMS=>);
+		|																												if (awe && !state->wen) {
 		|																													state->rfram[state->cadr] = state->c;
 		|																												}
-		|																												if (aclk && rand == 0x5) {
+		|																												if (csa_clk && rand == 0x5) {
 		|																													uint64_t count2 = 0x40 - flsll(~state->alu);
 		|																													state->zerocnt = ~count2;
 		|																												}
@@ -673,7 +677,7 @@ class VAL(PartFactory):
 		|																												if (uirsclk) {
 		|																													state->csa_offset = csmux3;
 		|																												}
-		|																												if (aclk) {
+		|																												if (csa_clk) {
 		|																													bool bot_mux_sel, top_mux_sel, add_mux_sel;
 		|																													bot_mux_sel = PIN_LBOT=>;
 		|																													add_mux_sel = PIN_LTOP=>;
@@ -693,7 +697,7 @@ class VAL(PartFactory):
 		|																														state->topreg = csalu0;
 		|																												}
 		|																											
-		|																												if (PIN_CCLK=>.posedge()) {
+		|																												if (csa_clk) {
 		|																													state->mbit = state->cmsb;
 		|																												}
 		|																												if (uirsclk) {

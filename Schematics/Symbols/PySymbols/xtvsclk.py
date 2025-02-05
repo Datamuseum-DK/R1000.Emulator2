@@ -14,7 +14,6 @@ class XTVSCLK(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "Q4E"))
-        self.sig_left(ChipSig("-->+", "SCE"))
         self.sig_left(ChipSig("-->+", "SFS"))
         self.sig_left(ChipSig("-->+", "STS"))
         self.sig_left(ChipSig("-->+", "RMS"))

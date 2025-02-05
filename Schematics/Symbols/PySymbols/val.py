@@ -19,9 +19,6 @@ class VAL(FChip):
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
-        self.sig_left(ChipSig("-->+", "SCLKE"))
-        self.sig_left(ChipSig("-->+", "UCLK"))
-        self.sig_left(ChipSig("-->+", "CCLK"))
         self.sig_left(ChipSig("-->+", "LDWDR"))
         self.sig_left(ChipSig("-->+", "LBOT"))
         self.sig_left(ChipSig("-->+", "LTOP"))
@@ -30,8 +27,11 @@ class VAL(FChip):
         self.sig_left(ChipSig("-->+", "CSAH"))
         self.sig_left(ChipSig("-->+", "CSAW"))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
-        self.sig_left(ChipSig("-->+", "AWE"))
         self.sig_left(ChipSig("-->+", "UAD", 0, 13))
+        self.sig_left(ChipSig("-->+", "STS"))
+        self.sig_left(ChipSig("-->+", "RMS"))
+        self.sig_left(ChipSig("-->+", "FREZE"))
+        self.sig_left(ChipSig("-->+", "SFS"))
 
 
         self.sig_right(ChipSig("+<--", "QVOE"))
