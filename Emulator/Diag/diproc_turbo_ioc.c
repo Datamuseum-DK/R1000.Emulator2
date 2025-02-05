@@ -13,38 +13,25 @@
 #include "Infra/context.h"
 #include "Infra/vend.h"
 
-#if defined(HAS_Z023)
 static uint64_t *ioc_wcs;
-#endif
 static unsigned ioc_ptr;
 
 static int
 read_last_pc(const struct diagproc *dp)
 {
-#if !defined(HAS_Z023)
-	fprintf(stderr, "NO Z023\n");
-	(void)dp;
-	return (0);
-#else
 	struct ctx *ctx;
-	uint8_t *ptr;
 	uint16_t *tram;
-	unsigned *ctr;
 	unsigned ctr1;
 
 	(void)dp;
-	ctx = CTX_Find(COMP_Z023);
+	ctx = CTX_Find("IOC_TRAM");
 	AN(ctx);
-	ptr = (uint8_t *)(void*)(ctx + 1);
-	tram = (uint16_t *)(void*)ptr;
-	ctr = (unsigned *)(void*)(ptr + (2 << 11));
-	ctr1 = *ctr;
-	ctr1 -= 4;
-	ctr1 &= (1<<11) - 1;
+	tram = (uint16_t *)(void*)(ctx + 1);
+	ctr1 = tram[2048] + 2046;
+	ctr1 &= 0x7ff;
 	vbe16enc(dp->ram + 0x18, tram[ctr1] & 0x3fff);
-	sc_tracef(dp->name, "Turbo READ_LAST_PC.IOC");
+	sc_tracef(dp->name, "Turbo READ_LAST_PC.IOC (0x%x 0x%x 0x%x)", tram[2048], ctr1, tram[ctr1]);
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
 

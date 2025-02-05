@@ -74,12 +74,25 @@ class IOC(PartFactory):
 		|	bool sen, den, ten;
 		|	uint8_t pb011[32];
 		|	bool pfr;
+		|	bool dumen;
+		|	bool csa_hit;
+		|	uint16_t *tram;
+		|	uint64_t *wcsram;
+		|	uint64_t uir;
+		|
+		|#define UIR_ULWDR	((state->uir >> 13) & 0x1)
+		|#define UIR_RAND	((state->uir >>  8) & 0x1f)
+		|#define UIR_AEN	((state->uir >>  6) & 0x3)
+		|#define UIR_FEN	((state->uir >>  4) & 0x3)
+		|#define UIR_TVBS	((state->uir >>  0) & 0xf)
 		|''');
 
 
     def init(self, file):
         file.fmt('''
 		|	load_programmable(this->name(), state->pb011, sizeof state->pb011, "PB011");
+		|	state->wcsram = (uint64_t*)CTX_GetRaw("IOC_WCS", sizeof(uint64_t) << 14);
+		|	state->tram = (uint16_t*)CTX_GetRaw("IOC_TRAM", sizeof(uint16_t) * 2049);
 		|
 		|	struct ctx *c1 = CTX_Find("IOP.ram_space");
 		|	assert(c1 != NULL);
@@ -229,17 +242,10 @@ class IOC(PartFactory):
 		|''')
 
     def sensitive(self):
-        #yield "BUS_CONDS"
-        #yield "PIN_DUMEN"
         yield "PIN_H2.neg()"
         yield "PIN_Q2.pos()"
         yield "PIN_Q4.pos()"
-        #yield "PIN_QTYPOE"
-        #yield "PIN_QVALOE"
-        #yield "BUS_RAND"
         yield "PIN_SCLKST"
-        #yield "BUS_TVBS"
-        #yield "PIN_ULWDR"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -262,134 +268,132 @@ class IOC(PartFactory):
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool sclk_pos = q4pos && !PIN_CSTP;
 		|
-		|	unsigned rand;
-		|	BUS_RAND_READ(rand);
-		|
+		|	unsigned rand = UIR_RAND;
 		|	uint64_t typ, val;
 		|	typ = typ_bus;
 		|	val = val_bus;
 		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|															if (q2pos) {
-		|																//if (val != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << val << " " << val_bus);
-		|																if (state->slice_ev && !state->ten) {
-		|																	output.sme = false;
-		|																}
-		|																if (rand == 0x0a) {
-		|																	output.sme = true;
-		|																}
-		|																if (state->delay_ev && !state->ten) {
-		|																	output.dme = false;
-		|																}
-		|																if (rand == 0x0b) {
-		|																	output.dme = true;
-		|																}
-		|															}
+		|//	ALWAYS						Q2				H2				Q3				Q4
+		|							if (q2pos) {
+		|								//if (val != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << val << " " << val_bus);
+		|								if (state->slice_ev && !state->ten) {
+		|									output.sme = false;
+		|								}
+		|								if (rand == 0x0a) {
+		|									output.sme = true;
+		|								}
+		|								if (state->delay_ev && !state->ten) {
+		|									output.dme = false;
+		|								}
+		|								if (rand == 0x0b) {
+		|									output.dme = true;
+		|								}
+		|							}
 		|{
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																											if (q4pos) {
+		|//	ALWAYS						Q2				H2				Q3				Q4
+		|																			if (q4pos) {
 		|
-		|																												if (sclk_pos) {
-		|																													if (rand == 0x23)
-		|																														state->cpu_running = true;
-		|																													if (rand == 0x24)
-		|																														state->cpu_running = false;
-		|																												}
+		|																				if (sclk_pos) {
+		|																					if (rand == 0x23)
+		|																						state->cpu_running = true;
+		|																					if (rand == 0x24)
+		|																						state->cpu_running = false;
+		|																				}
 		|
-		|																												if (q4pos && (state->request_int_en &&
-		|																												    state->reqrdp != state->reqwrp) && state->iack != 6) {
-		|																													state->iack = 6;
-		|																													ioc_sc_bus_start_iack(6);
-		|																												}
-		|																												if (q4pos && (!state->request_int_en ||
-		|																												    state->reqrdp == state->reqwrp) && state->iack != 7) {
-		|																													state->iack = 7;
-		|																													ioc_sc_bus_start_iack(7);
-		|																												}
+		|																				if (q4pos && (state->request_int_en &&
+		|																				    state->reqrdp != state->reqwrp) && state->iack != 6) {
+		|																					state->iack = 6;
+		|																					ioc_sc_bus_start_iack(6);
+		|																				}
+		|																				if (q4pos && (!state->request_int_en ||
+		|																				    state->reqrdp == state->reqwrp) && state->iack != 7) {
+		|																					state->iack = 7;
+		|																					ioc_sc_bus_start_iack(7);
+		|																				}
 		|
-		|																												if (q4pos)
-		|																													do_xact();
+		|																				if (q4pos)
+		|																					do_xact();
 		|
-		|																												if (sclk_pos && rand == 0x04) {
-		|																													state->reqfifo[state->reqwrp++] = typ & 0xffff;
-		|																													state->reqwrp &= 0x3ff;
-		|																												}
+		|																				if (sclk_pos && rand == 0x04) {
+		|																					state->reqfifo[state->reqwrp++] = typ & 0xffff;
+		|																					state->reqwrp &= 0x3ff;
+		|																				}
 		|
 		|
-		|																												if (sclk_pos && rand == 0x05) {
-		|																													state->rsprdp++;
-		|																													state->rsprdp &= 0x3ff;
-		|																												}
+		|																				if (sclk_pos && rand == 0x05) {
+		|																					state->rsprdp++;
+		|																					state->rsprdp &= 0x3ff;
+		|																				}
 		|
-		|																												if (sclk_pos) {
-		|																													unsigned adr = (state->areg | state->acnt) << 2;
-		|																													assert(adr < (512<<10));
+		|																				if (sclk_pos) {
+		|																					unsigned adr = (state->areg | state->acnt) << 2;
+		|																					assert(adr < (512<<10));
+		|																			
+		|																					if ((rand == 0x1c) || (rand == 0x1d)) {
+		|																						state->rdata = vbe32dec(state->ram + adr);
+		|																					}
+		|											
+		|																					if ((rand == 0x1e) || (rand == 0x1f)) {
+		|																						uint32_t data = typ >> 32;
+		|																						vbe32enc(state->ram + adr, data);
+		|																					}
+		|																			
+		|																					if (rand == 0x01) {
+		|																						state->acnt = (typ >> 2) & 0x00fff;
+		|																						state->areg = (typ >> 2) & 0x1f000;
+		|																					}
+		|																			
+		|																					if ((rand == 0x1c) || (rand == 0x1e)) {
+		|																						state->acnt += 1;
+		|																						state->acnt &= 0xfff;
+		|																					}
+		|																				}
+		|																			
+		|																				if (sclk_pos && rand == 0x08) {
+		|																					state->rtc = 0;
+		|																				}
+		|																				if (q4pos && !PIN_RTCEN=> && rand != 0x08) {
+		|																					state->rtc++;
+		|																					state->rtc &= 0xffff;
+		|																				}
 		|																											
-		|																													if ((rand == 0x1c) || (rand == 0x1d)) {
-		|																														state->rdata = vbe32dec(state->ram + adr);
-		|																													}
-		|																											
-		|																													if ((rand == 0x1e) || (rand == 0x1f)) {
-		|																														uint32_t data = typ >> 32;
-		|																														vbe32enc(state->ram + adr, data);
-		|																													}
-		|																											
-		|																													if (rand == 0x01) {
-		|																														state->acnt = (typ >> 2) & 0x00fff;
-		|																														state->areg = (typ >> 2) & 0x1f000;
-		|																													}
-		|																											
-		|																													if ((rand == 0x1c) || (rand == 0x1e)) {
-		|																														state->acnt += 1;
-		|																														state->acnt &= 0xfff;
-		|																													}
-		|																												}
-		|																											
-		|																												if (sclk_pos && rand == 0x08) {
-		|																													state->rtc = 0;
-		|																												}
-		|																												if (q4pos && !PIN_RTCEN=> && rand != 0x08) {
-		|																													state->rtc++;
-		|																													state->rtc &= 0xffff;
-		|																												}
-		|																											
-		|																												state->prescaler++;
-		|																												state->ten = state->prescaler != 0xf;
-		|																												state->prescaler &= 0xf;
-		|																												if (!PIN_CSTP=>) {
-		|																													if (rand == 0x0c) {
-		|																														state->sen = false;
-		|																													}
-		|																													if (rand == 0x0d) {
-		|																														state->sen = true;
-		|																													}
-		|																													if (rand == 0x0e) {
-		|																														state->den = false;
-		|																													}
-		|																													if (rand == 0x0f) {
-		|																														state->den = true;
-		|																													}
-		|																												}
-		|																										
-		|																												state->slice_ev= state->slice == 0xffff;
-		|																												if (rand == 0x06) {
-		|																													uint64_t tmp = typ;
-		|																													tmp >>= 32;
-		|																													state->slice = tmp >> 16;
-		|																													TRACE(<< " LD " << std::hex << state->slice);
-		|																												} else 	if (!state->sen && !state->ten) {
-		|																													state->slice++;
-		|																												}
-		|																										
-		|																												state->delay_ev= state->delay == 0xffff;
-		|																												if (rand == 0x07) {
-		|																													uint64_t tmp = typ;
-		|																													tmp >>= 32;
-		|																													state->delay = tmp;
-		|																												} else if (!state->den && !state->ten) {
-		|																													state->delay++;
-		|																												}
-		|																											}
+		|																				state->prescaler++;
+		|																				state->ten = state->prescaler != 0xf;
+		|																				state->prescaler &= 0xf;
+		|																				if (!PIN_CSTP=>) {
+		|																					if (rand == 0x0c) {
+		|																						state->sen = false;
+		|																					}
+		|																					if (rand == 0x0d) {
+		|																						state->sen = true;
+		|																					}
+		|																					if (rand == 0x0e) {
+		|																						state->den = false;
+		|																					}
+		|																					if (rand == 0x0f) {
+		|																						state->den = true;
+		|																					}
+		|																				}
+		|																		
+		|																				state->slice_ev= state->slice == 0xffff;
+		|																				if (rand == 0x06) {
+		|																					uint64_t tmp = typ;
+		|																					tmp >>= 32;
+		|																					state->slice = tmp >> 16;
+		|																					TRACE(<< " LD " << std::hex << state->slice);
+		|																				} else 	if (!state->sen && !state->ten) {
+		|																					state->slice++;
+		|																				}
+		|																		
+		|																				state->delay_ev= state->delay == 0xffff;
+		|																				if (rand == 0x07) {
+		|																					uint64_t tmp = typ;
+		|																					tmp >>= 32;
+		|																					state->delay = tmp;
+		|																				} else if (!state->den && !state->ten) {
+		|																					state->delay++;
+		|																				}
+		|																			}
 		|}
 		|
 		|	if (!q4pos) {
@@ -397,8 +401,7 @@ class IOC(PartFactory):
 		|	}
 		|
 		|{
-		|	unsigned tvbs;
-		|	BUS_TVBS_READ(tvbs);
+		|	unsigned tvbs = UIR_TVBS;
 		|
 		|	bool rddum = true;
 		|	bool ioctv = true;
@@ -417,7 +420,7 @@ class IOC(PartFactory):
 		|	case 0xd:
 		|	case 0xe:
 		|	case 0xf:
-		|		if (PIN_DUMEN=>) {
+		|		if (state->dumen) {
 		|			rddum = false;
 		|			ioctv = false;
 		|		}
@@ -426,7 +429,7 @@ class IOC(PartFactory):
 		|		break;
 		|	}
 		|	
-		|	bool load_wdr = PIN_ULWDR=>;
+		|	bool load_wdr = UIR_ULWDR;
 		|
 		|	bool uir_load_wdr = !load_wdr;
 		|
@@ -516,6 +519,72 @@ class IOC(PartFactory):
 		|		output.cond = true;
 		|		break;
 		|	}
+		|//	ALWAYS						Q2				H2				Q3				Q4
+		|																			if (q4pos) {
+		|																				if (!PIN_RTCEN=>) {
+		|																					unsigned addr;
+		|																					BUS_UAD_READ(addr);
+		|																					state->uir = state->wcsram[addr];
+		|																					assert (state->uir <= 0xffff);
+		|																					output.aen = (1 << UIR_AEN) ^ 0xf;
+		|																					output.fen = (1 << UIR_FEN) ^ 0xf;
+		|																					state->dumen = !PIN_DUMNXT=>;
+		|																					state->csa_hit = !PIN_ICSAH=>;
+		|																					unsigned tvbs = UIR_TVBS;
+		|
+		|																					uint16_t tdat = addr;
+		|																					if (PIN_CSTP=>)
+		|																						tdat |= 0x8000;
+		|																					if (state->csa_hit)
+		|																						tdat |= 0x4000;
+		|																					uint16_t tptr = state->tram[2048];
+		|																					state->tram[tptr] = tdat;
+		|																					if (PIN_TRAEN=>) {
+		|																						tptr += 1;
+		|																						tptr &= 0x7ff;
+		|																						state->tram[2048] = tptr;
+		|																					}
+		|
+		|																					output.seqtv = true;
+		|																					output.fiuv = true;
+		|																					output.fiut = true;
+		|																					output.memv = true;
+		|																					output.memtv = true;
+		|																					output.ioctv = true;
+		|																					output.valv = true;
+		|																					output.typt = true;
+		|																					switch (tvbs) {
+		|																					case 0x0: output.valv = false; output.typt = false; break;
+		|																					case 0x1: output.fiuv = false; output.typt = false; break;
+		|																					case 0x2: output.valv = false; output.fiut = false; break;
+		|																					case 0x3: output.fiuv = false; output.fiut = false; break;
+		|																					case 0x4: output.ioctv = false; break;
+		|																					case 0x5: output.seqtv = false; break;
+		|																					case 0x8:
+		|																					case 0x9:
+		|																						output.memv = false; output.typt = false; break;
+		|																					case 0xa:
+		|																					case 0xb:
+		|																						output.memv = false; output.fiut = false; break;
+		|																					case 0xc:
+		|																					case 0xd:
+		|																					case 0xe:
+		|																					case 0xf:
+		|																						if (state->dumen) {
+		|																							output.ioctv = false;
+		|																						} else if (state->csa_hit) {
+		|																							output.typt = false;
+		|																							output.valv = false;
+		|																						} else {
+		|																							output.memtv = false;
+		|																							output.memv = false;
+		|																						}
+		|																						break;
+		|																					default:
+		|																						break;
+		|																					}
+		|																				}
+		|																			}
 		|''')
 
 

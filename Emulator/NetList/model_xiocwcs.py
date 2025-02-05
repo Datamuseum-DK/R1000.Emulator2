@@ -47,16 +47,16 @@ class XIOCWCS(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint16_t tram[1<<11];	// Z023
-		|	unsigned tracnt;	// Z023
+		|	unsigned tracnt;
+		|	uint16_t *tram;
 		|	uint64_t *ram;
-		|	unsigned sr0, sr1;
 		|	unsigned aen;
 		|''')
 
     def init(self, file):
         file.fmt('''
 		|	state->ram = (uint64_t*)CTX_GetRaw("IOC_WCS", sizeof(uint64_t) << 14);
+		|	state->tram = (uint16_t*)CTX_GetRaw("IOC_TRAM", sizeof(uint16_t) * 2049);
 		|''')
 
     def sensitive(self):
@@ -71,7 +71,7 @@ class XIOCWCS(PartFactory):
 		|	if (q4_pos) {
 		|		unsigned uadr;
 		|		BUS_UADR_READ(uadr);
-		|		output.dumen = !PIN_DUMNXT=>;
+		|		//output.dumen = !PIN_DUMNXT=>;
 		|		bool csa_hit = !PIN_ICSAH=>;
 		|
 		|		unsigned tmp = 0;
@@ -85,24 +85,14 @@ class XIOCWCS(PartFactory):
 		|		if (PIN_TRAEN=>) {
 		|			state->tracnt += 1;
 		|			state->tracnt &= 0x7ff;
+		|			state->tram[2048] = state->tracnt;
 		|		}
 		|
+		|#if 0
 		|		if (!PIN_SFSTOP=>) {
-		|			state->sr0 = state->ram[uadr] >> 8;
-		|			state->sr0 &= 0xff;
-		|			state->sr1 = state->ram[uadr] & 0xff;
-		|			state->sr1 &= 0xff;
 		|
-		|			unsigned uir = (state->sr0 << 8) | state->sr1;
+		|			unsigned uir = state->ram[uadr];
 		|			assert(uir <= 0xffff);
-		|
-		|			output.uir = uir;
-		|
-		|			state->aen = (uir >> 6) & 3;
-		|
-		|			unsigned fen = (uir >> 4) & 3;
-		|			output.fen = (1 << fen) ^ 0xf;
-		|			output.aen = (1 << state->aen) ^ 0xf;
 		|
 		|			unsigned tvbs = uir & 0xf;
 		|
@@ -145,6 +135,7 @@ class XIOCWCS(PartFactory):
 		|				break;
 		|			}
 		|		}
+		|#endif
 		|	}
 		|
 		|''')

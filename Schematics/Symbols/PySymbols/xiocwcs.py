@@ -21,19 +21,15 @@ class XIOCWCS(FChip):
         self.sig_left(ChipSig("-->+", "DUMNXT"))
         self.sig_left(ChipSig("-->+", "ICSAH"))
 
-        self.sig_right(ChipSig("+-->", "UIR", 0, 13))
         self.sig_right(ChipSig("+-->", "DUMEN"))
-        self.sig_right(ChipSig("+-->", "AEN", 0, 3))
-        self.sig_right(ChipSig("+-->", "FEN", 0, 3))
-
-        self.sig_right(ChipSig("+-->", "SEQTV"))
-        self.sig_right(ChipSig("+-->", "FIUV"))
-        self.sig_right(ChipSig("+-->", "FIUT"))
-        self.sig_right(ChipSig("+-->", "MEMTV"))
-        self.sig_right(ChipSig("+-->", "MEMV"))
-        self.sig_right(ChipSig("+-->", "VALV"))
-        self.sig_right(ChipSig("+-->", "TYPT"))
-        self.sig_right(ChipSig("+-->", "IOCTV"))
+        #self.sig_right(ChipSig("+-->", "SEQTV"))
+        #self.sig_right(ChipSig("+-->", "FIUV"))
+        #self.sig_right(ChipSig("+-->", "FIUT"))
+        #self.sig_right(ChipSig("+-->", "MEMTV"))
+        #self.sig_right(ChipSig("+-->", "MEMV"))
+        #self.sig_right(ChipSig("+-->", "VALV"))
+        #self.sig_right(ChipSig("+-->", "TYPT"))
+        #self.sig_right(ChipSig("+-->", "IOCTV"))
 
         self.finish()
 

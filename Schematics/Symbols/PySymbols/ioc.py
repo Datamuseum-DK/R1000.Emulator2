@@ -28,14 +28,15 @@ class IOC(FChip):
 
         self.sig_left(ChipSig("-->+", "RTCEN"))
 
-        self.sig_left(ChipSig("-->+", "TVBS", 0, 3))
-        self.sig_left(ChipSig("-->+", "DUMEN"))
-        self.sig_left(ChipSig("-->+", "ULWDR"))
-        self.sig_left(ChipSig("-->+", "RAND", 0, 4))
         self.sig_left(ChipSig("-->+", "SCLKST"))
         self.sig_left(ChipSig("-->+", "RSTRDR"))
 
         self.sig_left(ChipSig("-->+", "CONDS", 0, 6))
+        self.sig_left(ChipSig("-->+", "UAD", 0, 13))
+        self.sig_left(ChipSig("-->+", "TRAEN"))
+        
+        self.sig_left(ChipSig("-->+", "DUMNXT"))
+        self.sig_left(ChipSig("-->+", "ICSAH"))
 
         self.sig_right(ChipSig("+<--", "QVALOE"))
 
@@ -53,6 +54,16 @@ class IOC(FChip):
         self.sig_right(ChipSig("+-->", "COND"))
         self.sig_right(ChipSig("+-->", "BLTCP"))
 
+        self.sig_right(ChipSig("+-->", "AEN", 0, 3))
+        self.sig_right(ChipSig("+-->", "FEN", 0, 3))
+        self.sig_right(ChipSig("+-->", "SEQTV"))
+        self.sig_right(ChipSig("+-->", "FIUV"))
+        self.sig_right(ChipSig("+-->", "FIUT"))
+        self.sig_right(ChipSig("+-->", "MEMTV"))
+        self.sig_right(ChipSig("+-->", "MEMV"))
+        self.sig_right(ChipSig("+-->", "VALV"))
+        self.sig_right(ChipSig("+-->", "TYPT"))
+        self.sig_right(ChipSig("+-->", "IOCTV"))
 
         self.finish()
 
