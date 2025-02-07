@@ -6226,31 +6226,6 @@
     )
   )
 
-  (symbol (lib_id "r1000:GB") (at 27.94 160.02 90) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid cc318659-4bef-432a-8c8b-527599056445)
-    (property "Reference" "GB12" (at 27.94 156.21 0)
-      (effects (font (size 2.54 2.54)) (justify left))
-    )
-    (property "Value" "GB" (at 27.94 160.02 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Footprint" "" (at 27.94 160.02 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 27.94 160.02 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 7e8728bf-9f41-4328-a7e7-7b3a91f6824a))
-    (instances
-      (project "TYP"
-        (path "/20011966-7b12-533f-4d20-457d979e0ec9"
-          (reference "GB12") (unit 1)
-        )
-      )
-    )
-  )
-
   (symbol (lib_id "r1000:GF") (at 68.58 121.92 90) (mirror x) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid cdaa2262-c96d-4061-bb59-1734bce35ed7)

@@ -120,7 +120,9 @@ class FIU(PartFactory):
 		|	bool csaht;
 		|	bool csa_oor_next;
 		|	uint64_t *wcsram;
+		|	uint64_t *typwcsram;
 		|	uint64_t uir;
+		|	uint64_t typuir;
 		|
 		|#define UIR_OL		((state->uir >> 40) & 0x7f)
 		|#define UIR_LFL	((state->uir >> 32) & 0x7f)
@@ -148,6 +150,7 @@ class FIU(PartFactory):
 		|	load_programmable(this->name(), state->pa027, sizeof state->pa027, "PA027-01");
 		|	load_programmable(this->name(), state->pa028, sizeof state->pa028, "PA028-02");
 		|	state->wcsram = (uint64_t*)CTX_GetRaw("FIU_WCS", sizeof(uint64_t) << 14);
+		|	state->typwcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 		|''')
 
     def sensitive(self):
@@ -781,7 +784,18 @@ class FIU(PartFactory):
 		|																					if (state->lfreg != 0x7f)
 		|																						state->lfreg |= 1<<7;
 		|																			
+		|{
+		|																					unsigned addr;
+		|																					BUS_UAD_READ(addr);
+		|																					unsigned csacntl0 = (state->typwcsram[addr] >> 1) & 7;
+		|																					unsigned csacntl1 = (state->typuir >> 1) & 6;
+		|																					bool pred = !((csacntl0 == 7) && (csacntl1 == 0));
+		|#if 0
+		|																					if (pred != PIN_PRED=>) ALWAYS_TRACE( << "BAD_PRED " << std::hex << PIN_PRED=> << " < " << pred << " addr " << addr << " tuir " << state->typuir << " " << state->typwcsram[addr]);
 		|																					state->pdt = !PIN_PRED=>;
+		|#endif
+		|																					state->pdt = !pred;
+		|}
 		|																					BUS_CNV_READ(state->nve);
 		|																					if (!(csa >> 2)) {
 		|																						state->pdreg = state->ctopo;
@@ -940,6 +954,7 @@ class FIU(PartFactory):
 		|																					unsigned addr;
 		|																					BUS_UAD_READ(addr);
 		|																					state->uir = state->wcsram[addr];
+		|																					state->typuir = state->typwcsram[addr];
 		|																				}
 		|																			}
 		|
