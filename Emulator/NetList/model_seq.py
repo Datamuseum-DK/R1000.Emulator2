@@ -213,6 +213,18 @@ class SEQ(PartFactory):
 		|	bool foo9;
 		|	bool q3cond;
 		|	bool stop;
+		|	uint64_t *wcsram;
+		|	uint64_t uir;
+		|
+		|#define UIR_BRN	((state->uir >> (41-13)) & 0x3fff)	// OK
+		|#define UIR_LUIR	((state->uir >> (41-15)) & 0x1)		// OK
+		|#define UIR_BRTYP	((state->uir >> (41-19)) & 0xf)		// BAD
+		|#define UIR_BRTIM	((state->uir >> (41-21)) & 0x3)		// -
+		|#define UIR_CSEL	((state->uir >> (41-28)) & 0x7f)	// OK
+		|#define UIR_LAUIR	((state->uir >> (41-30)) & 0x3)		// OK
+		|#define UIR_ENMIC	((state->uir >> (41-31)) & 0x1)
+		|#define UIR_IRD	((state->uir >> (41-34)) & 0x7)
+		|#define UIR_URAND	((state->uir >> (41-41)) & 0x7f)
 		|''')
 
     def init(self, file):
@@ -226,6 +238,7 @@ class SEQ(PartFactory):
 		|	load_programmable(this->name(), state->pa046, sizeof state->pa046, "PA046-02");
 		|	load_programmable(this->name(), state->pa047, sizeof state->pa047, "PA047-02");
 		|	load_programmable(this->name(), state->pa048, sizeof state->pa048, "PA048-02");
+		|	state->wcsram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << BUS_NU_WIDTH);
 		|''')
 
     def priv_decl(self, file):
@@ -540,9 +553,7 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|condition(void)
 		|{
-		|	unsigned condsel;
-		|	BUS_CSEL_READ(condsel);
-		|	condsel ^= BUS_CSEL_MASK;
+		|	unsigned condsel = UIR_CSEL ^ 0x7f;
 		|	switch (condsel >> 3) {
 		|	case 0x0: return(PIN_CNDX0=>);
 		|	case 0x2: return(PIN_CNDX2=>);
@@ -629,15 +640,15 @@ class SEQ(PartFactory):
 		|
 		|//	ALWAYS		UIR				H1				Q1				Q2				Q3				Q4
 		|							if (h1pos) {
-		|								BUS_IRD_READ(internal_reads);
+		|								internal_reads = UIR_IRD;
 		|
-		|								BUS_URAND_READ(urand);
+		|								urand = UIR_URAND;
 		|								rndx = state->pa048[urand | (state->bad_hint ? 0x100 : 0)] << 24;
 		|								rndx |= state->pa046[urand | (state->bad_hint ? 0x100 : 0)] << 16;
 		|								rndx |=  state->pa045[urand | 0x100] << 8;
 		|								rndx |= state->pa047[urand | 0x100];
 		|
-		|								BUS_BRTYP_READ(br_type);
+		|								br_type = UIR_BRTYP;
 		|								maybe_dispatch = 0xb < br_type && br_type < 0xf;
 		|
 		|								output.z_qf = PIN_QFOE=>;
@@ -664,8 +675,7 @@ class SEQ(PartFactory):
 		|//+if (h1pos || q1pos || q3pos || q4pos) {
 		|//+if (h1pos || q1pos || q3pos         ) {
 		|if (h1pos || q1pos) {
-		|	unsigned lex_adr;
-		|	BUS_LAUIR_READ(lex_adr);
+		|	unsigned lex_adr = UIR_LAUIR;
 		|
 		|	if (maybe_dispatch && !(state->display >> 15)) {
 		|		switch (lex_adr) {
@@ -811,7 +821,7 @@ class SEQ(PartFactory):
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|											if (q1pos) {
 		|
-		|												BUS_BRTIM_READ(br_tim);
+		|												br_tim = UIR_BRTIM;
 		|												unsigned bhow;
 		|												bool brtm3;
 		|												if (state->bad_hint) {
@@ -846,7 +856,7 @@ class SEQ(PartFactory):
 		|													        !(((rom >> 2) & 1) || !state->uadr_mux));
 		|												state->stop = !(!state->bad_hint && (state->uei == 0) && !PIN_LMAC=>);
 		|												output.seqsn = !state->stop;
-		|												bool evnan0d = !(PIN_ENMIC=> && (state->uei == 0));
+		|												bool evnan0d = !(UIR_ENMIC && (state->uei == 0));
 		|												output.ueven = !(evnan0d || state->stop);
 		|											}
 		|
@@ -888,7 +898,7 @@ class SEQ(PartFactory):
 		|																	unsigned sel = group_sel();
 		|																	switch (sel) {
 		|																	case 0:
-		|																		BUS_BRN_READ(nua);
+		|																		nua = UIR_BRN;
 		|																		nua += state->fiu;
 		|																		break;
 		|																	case 1:
@@ -906,7 +916,7 @@ class SEQ(PartFactory):
 		|																	case 5:
 		|																	case 6:
 		|																	case 7:
-		|																		BUS_BRN_READ(nua);
+		|																		nua = UIR_BRN;
 		|																		break;
 		|																	default:
 		|																		nua = 0;
@@ -914,7 +924,7 @@ class SEQ(PartFactory):
 		|																		break;
 		|																	}
 		|																}
-		|																output.nu = nua;
+		|																output.nu = nua & 0x3fff;
 		|																output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
 		|																output.sfive = (state->check_exit_ue && state->ferr);
 		|																output.qstp7 = !state->bad_hint && state->l_macro_hic;
@@ -1237,7 +1247,7 @@ class SEQ(PartFactory):
 		|																									if (xwrite) {
 		|																										switch(stkinpsel) {
 		|																										case 0:
-		|																											BUS_BRN_READ(state->topu);
+		|																											state->topu = UIR_BRN;
 		|																											if (state->q3cond)	 state->topu |= (1<<15);
 		|																											if (state->latched_cond) state->topu |= (1<<14);
 		|																											state->topu ^= 0xffff;
@@ -1300,10 +1310,10 @@ class SEQ(PartFactory):
 		|																									case 1:
 		|																									case 2:
 		|																									case 3:
-		|																										BUS_BRN_READ(state->other);
+		|																										state->other = UIR_BRN;
 		|																										break;
 		|																									case 4:
-		|																										BUS_BRN_READ(state->other);
+		|																										state->other = UIR_BRN;
 		|																										state->other += state->fiu;
 		|																										break;
 		|																									case 5:
@@ -1395,12 +1405,11 @@ class SEQ(PartFactory):
 		|																							
 		|																									unsigned lin = 0;
 		|																									lin |= state->latched_cond << 3;
-		|																									unsigned condsel;
-		|																									BUS_CSEL_READ(condsel);
+		|																									unsigned condsel = UIR_CSEL;
 		|																									uint8_t pa042 = state->pa042[condsel << 2];
 		|																									bool is_e_ml = (pa042 >> 7) & 1;
 		|																									lin |= is_e_ml << 2;
-		|																									lin |= PIN_LUIR=> << 1;
+		|																									lin |= UIR_LUIR << 1;
 		|																									lin |= state->q3cond << 0;
 		|																							
 		|																									if (!sclke) {
@@ -1471,6 +1480,14 @@ class SEQ(PartFactory):
 		|																									state->foo9 = !RNDX(RND_TOS_VLB);
 		|																								}
 		|																								output.qstp7 = !state->bad_hint && state->l_macro_hic;
+		|																								if (!PIN_SFSTP=>) {
+		|																									unsigned um;
+		|																									BUS_UM_READ(um);
+		|																									if (um == 3) {
+		|																										state->uir = state->wcsram[output.nu] ^ (0x7fULL << 13);	// Invert condsel
+		|																										output.csel = UIR_CSEL;
+		|																									}
+		|																								}
 		|																							}
 		|
 		|''')

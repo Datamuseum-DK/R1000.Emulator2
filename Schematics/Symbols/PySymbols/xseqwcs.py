@@ -18,7 +18,7 @@ class XSEQWCS(FChip):
         self.sig_left(ChipSig("-->+", "CLK"))
         self.sig_left(ChipSig("-->+", "SFSTP"))
 
-        self.sig_right(ChipSig("+-->", "UIR", 0, 41))
+        self.sig_right(ChipSig("+-->", "UIR", 0, 26))
 
         self.finish()
 
