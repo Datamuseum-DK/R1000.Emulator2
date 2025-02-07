@@ -426,12 +426,10 @@ class TYP(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	//bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	bool csa_clk = PIN_CCLK.posedge();
 		|
-		|	bool uirsclk = PIN_UCLK.posedge();
-		|	uirsclk = q4pos && !PIN_SFS=>;
+		|	bool uirsclk = q4pos && !PIN_SFS=>;
 		|	bool sclke = (PIN_STS=> && PIN_RMS=> && !PIN_FREZE=>);
-		|	csa_clk = q4pos && sclke;
+		|	bool csa_clk = q4pos && sclke;
 		|
 		|	unsigned uirc, condsel;
 		|	uirc = UIR_C;

@@ -28,8 +28,6 @@ class TYP(FChip):
 
         # CLOCKS
         self.sig_left(ChipSig("-->+", "Q2"))
-        self.sig_left(ChipSig("-->+", "UCLK"))
-        self.sig_left(ChipSig("-->+", "CCLK"))
         self.sig_left(ChipSig("-->+", "LBOT"))
         self.sig_left(ChipSig("-->+", "LTOP"))
         self.sig_left(ChipSig("-->+", "LPOP"))
@@ -38,7 +36,6 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "CSAW"))
 
         self.sig_left(ChipSig("-->+", "H2"))
-        self.sig_left(ChipSig("-->+", "WE"))
         self.sig_left(ChipSig("-->+", "LDWDR"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))

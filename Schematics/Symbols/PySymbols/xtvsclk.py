@@ -18,11 +18,9 @@ class XTVSCLK(FChip):
         self.sig_left(ChipSig("-->+", "STS"))
         self.sig_left(ChipSig("-->+", "RMS"))
         self.sig_left(ChipSig("-->+", "WEL"))
-        self.sig_left(ChipSig("-->+", "DSTOP"))
 
         self.sig_right(ChipSig("+-->", "ACLK"))
         self.sig_right(ChipSig("+-->", "UCLK"))
-        self.sig_right(ChipSig("+-->", "ARFWE"))
 
         self.finish(20)
 
