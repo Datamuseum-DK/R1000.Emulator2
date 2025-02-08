@@ -86,6 +86,7 @@ class FIU(PartFactory):
 		|	uint8_t pa026[512];
 		|	uint8_t pa027[512];
 		|	uint8_t pa028[512];
+		|	uint8_t pa060[512];
 		|	uint8_t pcntl_d;
 		|	uint8_t lcntl;
 		|	uint8_t mcntl;
@@ -149,6 +150,7 @@ class FIU(PartFactory):
 		|	load_programmable(this->name(), state->pa026, sizeof state->pa026, "PA026-02");
 		|	load_programmable(this->name(), state->pa027, sizeof state->pa027, "PA027-01");
 		|	load_programmable(this->name(), state->pa028, sizeof state->pa028, "PA028-02");
+		|	load_programmable(this->name(), state->pa060, sizeof state->pa060, "PA060");
 		|	state->wcsram = (uint64_t*)CTX_GetRaw("FIU_WCS", sizeof(uint64_t) << 14);
 		|	state->typwcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 		|''')
@@ -562,7 +564,7 @@ class FIU(PartFactory):
 		|											
 		|												state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
 		|											
-		|												output.hofs = 0xf + state->nve - (dif & 0xf);
+		|												output.hofs = (0xf + state->nve - (dif & 0xf)) & 0xf;
 		|											
 		|												output.chit = !(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
 		|
@@ -819,9 +821,7 @@ class FIU(PartFactory):
 		|																			
 		|																				state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
 		|																			
-		|																				output.hofs = 0xf + state->nve - (dif & 0xf);
-		|																			
-		|																				output.chit = !(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
+		|																				output.hofs = (0xf + state->nve - (dif & 0xf)) & 0xf;
 		|
 		|																				uint64_t adr = 0;
 		|																				adr = adr_bus;
