@@ -59,9 +59,9 @@ class TYP(PartFactory):
         file.fmt('''
 		|	uint64_t rfram[1<<10];
 		|	uint8_t pa010[512], pa068[512], pa059[512];
-		|	uint64_t a, b, c, alu;
+		|	uint64_t a, b, c, nalu, alu;
 		|	uint64_t wdr;
-		|	unsigned count;
+		|	uint64_t count;
 		|	unsigned csa_offset;
 		|	unsigned topreg;
 		|	unsigned botreg;
@@ -74,7 +74,6 @@ class TYP(PartFactory):
 		|	bool almsb;
 		|	bool coh;
 		|	bool com;
-		|	uint8_t zero;
 		|	uint32_t ofreg;
 		|	bool ppriv;
 		|	bool last_cond;
@@ -203,10 +202,10 @@ class TYP(PartFactory):
 		|
 		|	switch(condsel) {
 		|	case 0x18:	// L - TYP_ALU_ZERO
-		|		cond_a(state->zero != 0xff);
+		|		cond_a(state->nalu != 0);
 		|		break;
 		|	case 0x19:	// L - TYP_ALU_NONZERO
-		|		cond_a(state->zero == 0xff);
+		|		cond_a(state->nalu == 0);
 		|		break;
 		|	case 0x1a:	// L - TYP_ALU_A_GT_OR_GE_B
 		|		{
@@ -227,7 +226,7 @@ class TYP(PartFactory):
 		|		cond_a(true);
 		|		break;
 		|	case 0x1e:	// L - TYP_ALU_ZERO - COMBO with VAL_ALU_NONZERO
-		|		cond_a(state->zero != 0xff);
+		|		cond_a(state->nalu != 0);
 		|		break;
 		|	case 0x1f:	// L - TYP_ALU_32_CO - ALU 32 BIT CARRY OUT
 		|		cond_a(state->com);
@@ -247,7 +246,7 @@ class TYP(PartFactory):
 		|		cond_b(state->almsb);
 		|		break;
 		|	case 0x23:	// L - TYP_ALU_LE_ZERO
-		|		cond_b(!(state->almsb && (state->zero != 0xff)));
+		|		cond_b(!(state->almsb && (state->nalu != 0)));
 		|		break;
 		|	case 0x24:	// ML - TYP_SIGN_BITS_EQUAL
 		|		cond_b((A_BIT(0) != B_BIT(0)));
@@ -352,7 +351,15 @@ class TYP(PartFactory):
 		|find_a(void)
 		|{
 		|	unsigned uira = UIR_A;
-		|	unsigned atos = (uira & 0xf) + state->topreg + 1;
+		|	if (uira == 0x28) {
+		|		state->a = ~0ULL << 10;
+		|		state->a |= state->count;
+		|		return;
+		|	}
+		|	if ((uira & 0x3c) == 0x28) {
+		|		state->a = ~0ULL;
+		|		return;
+		|	}
 		|	state->aadr = 0;
 		|	if (uira == 0x2c) {
 		|		state->aadr = state->count;
@@ -360,19 +367,11 @@ class TYP(PartFactory):
 		|		state->aadr = frm << 5;
 		|		state->aadr |= uira & 0x1f;
 		|	} else if (uira <= 0x2f) {
-		|		state->aadr |= atos & 0xf;
+		|		state->aadr |= (uira + state->topreg + 1) & 0xf;
 		|	} else {
 		|		state->aadr |= uira & 0x1f;
 		|	}
-		|	if ((uira & 0x3c) != 0x28) {
-		|		state->a = state->rfram[state->aadr];
-		|	} else if (uira == 0x28) {
-		|		state->a = BUS_QF_MASK;
-		|		state->a ^= 0x3ff;
-		|		state->a |= state->count;
-		|	} else {
-		|		state->a = BUS_QF_MASK;
-		|	}
+		|	state->a = state->rfram[state->aadr];
 		|}
 		|
 		|void
@@ -380,12 +379,6 @@ class TYP(PartFactory):
 		|find_b(void)
 		|{
 		|	unsigned uirb = UIR_B;
-		|	//BUS_UIRB_READ(uirb);
-		|	unsigned btos = (uirb & 0xf) + state->topreg + 1;
-		|	unsigned csa = state->botreg + (uirb&1);
-		|	if (!(uirb & 2)) {
-		|		csa += state->csa_offset;
-		|	}
 		|
 		|	state->badr = 0;
 		|	if (uirb == 0x2c) {
@@ -394,11 +387,15 @@ class TYP(PartFactory):
 		|		state->badr = frm << 5;
 		|		state->badr |= uirb & 0x1f;
 		|	} else if (uirb <= 0x27) {
-		|		state->badr |= btos & 0xf;
+		|		state->badr |= (uirb + state->topreg + 1) & 0xf;
 		|	} else if (uirb <= 0x2b) {
+		|		unsigned csa = state->botreg + (uirb&1);
+		|		if (!(uirb & 2)) {
+		|			csa += state->csa_offset;
+		|		}
 		|		state->badr |= csa & 0xf;
 		|	} else if (uirb <= 0x2f) {
-		|		state->badr |= btos & 0xf;
+		|		state->badr |= (uirb + state->topreg + 1) & 0xf;
 		|	} else {
 		|		state->badr |= uirb & 0x1f;
 		|	}
@@ -429,7 +426,6 @@ class TYP(PartFactory):
 		|
 		|	bool uirsclk = q4pos && !PIN_SFS=>;
 		|	bool sclke = (PIN_STS=> && PIN_RMS=> && !PIN_FREZE=>);
-		|	bool csa_clk = q4pos && sclke;
 		|
 		|	unsigned uirc, condsel;
 		|	uirc = UIR_C;
@@ -438,27 +434,22 @@ class TYP(PartFactory):
 		|	frm = UIR_FRM;
 		|
 		|	unsigned priv_check = UIR_UPVC;
-		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|
-		|																											if (uirsclk) {
-		|																												state->csa_hit = PIN_CSAH=>;
-		|																												state->csa_write = PIN_CSAW=>;
-		|																												output.cwe = !(state->csa_hit || state->csa_write);
-		|																											}
-		|
+		|	unsigned marctl = UIR_MCTL;
+		|	bool foo1 = marctl >= 4;
+		|	output.ldmar = !(foo1 && PIN_BHSTP=>);
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	output.z_qf = PIN_QFOE=>;
-		|											if (h1pos && !output.z_qf) {
-		|												find_a();
-		|												output.qf = state->a ^ BUS_QF_MASK;
-		|												fiu_bus = ~state->a;
-		|											}
-		|											if (h1pos && !PIN_QTOE=>) {
-		|												find_b();
-		|												typ_bus = ~state->b;
+		|											if (h1pos) {
+		|												if (!output.z_qf) {
+		|													find_a();
+		|													output.qf = state->a ^ BUS_QF_MASK;
+		|													fiu_bus = ~state->a;
+		|												}
+		|												if (!PIN_QTOE=>) {
+		|													find_b();
+		|													typ_bus = ~state->b;
+		|												}
 		|											}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
@@ -503,7 +494,7 @@ class TYP(PartFactory):
 		|																f181l.b = state->b & 0xffffffff;
 		|																f181_alu(&f181l);
 		|																state->com = f181l.co;
-		|																state->alu = f181l.o;
+		|																state->nalu = f181l.o;
 		|														
 		|																tmp = state->pa010[idx];
 		|																state->sub_else_add = (tmp >> 2) & 1;
@@ -518,17 +509,8 @@ class TYP(PartFactory):
 		|																f181h.b = state->b >> 32;
 		|																f181_alu(&f181h);
 		|																state->coh = f181h.co;
-		|																state->alu |= ((uint64_t)f181h.o) << 32;
-		|																state->zero = 0;
-		|																if (!(state->alu & (0xffULL) <<  0)) state->zero |= 0x01;
-		|																if (!(state->alu & (0xffULL) <<  8)) state->zero |= 0x02;
-		|																if (!(state->alu & (0xffULL) << 16)) state->zero |= 0x04;
-		|																if (!(state->alu & (0xffULL) << 24)) state->zero |= 0x08;
-		|																if (!(state->alu & (0xffULL) << 32)) state->zero |= 0x10;
-		|																if (!(state->alu & (0xffULL) << 40)) state->zero |= 0x20;
-		|																if (!(state->alu & (0xffULL) << 48)) state->zero |= 0x40;
-		|																if (!(state->alu & (0xffULL) << 56)) state->zero |= 0x80;
-		|																state->alu = ~state->alu;
+		|																state->nalu |= ((uint64_t)f181h.o) << 32;
+		|																state->alu = ~state->nalu;
 		|																state->almsb = state->alu >> 63ULL;
 		|														
 		|																if (q2pos && !PIN_ADROE=>) {
@@ -542,9 +524,6 @@ class TYP(PartFactory):
 		|																	adr_bus = alu ^ ~0ULL;
 		|																}
 		|														
-		|															}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|															if (q2pos) {
 		|																state->cadr = 0;
 		|																if (uirc <= 0x1f) {
 		|																	// FRAME:REG
@@ -586,59 +565,60 @@ class TYP(PartFactory):
 		|																} else {
 		|																	assert(uirc <= 0x3f);
 		|																}
-		|															}
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
-		|															if (q2pos) {
 		|																bool micros_en = PIN_UEN=>;
-		|																unsigned selcond = 0xff;
-		|																if (state->ppriv && micros_en) {
-		|																	selcond = 0x80 >> priv_check;
-		|																	selcond ^= 0xff;
-		|																}
 		|																output.ue = BUS_UE_MASK;
-		|																if (micros_en && selcond == 0xbf && bin_op_pass())
-		|																	output.ue &= ~0x20;	// T.BIN_OP.UE~
-		|														
-		|																if (micros_en && selcond == 0x7f && priv_path_eq() && bin_op_pass())
-		|																	output.ue &= ~0x10;	// T.BIN_EQ.UE~
-		|														
-		|																if (micros_en && (0x3 < rand && rand < 0x8) && clev())
-		|																	output.ue &= ~0x08;	// T.CLASS.UE~
-		|														
-		|																if (micros_en && selcond == 0xef && a_op_pass())
-		|																	output.ue &= ~0x04;	// T.TOS1_OP.UE~
-		|																if (micros_en && selcond == 0xfb && b_op_pass())
-		|																	output.ue &= ~0x04;	// T.TOS1_OP.UE~
-		|														
-		|																if (micros_en && selcond == 0xdf && a_op_pass())
-		|																	output.ue &= ~0x02;	// T.TOS_OP.UE~
-		|																if (micros_en && selcond == 0xf7 && b_op_pass())
-		|																	output.ue &= ~0x02;	// T.TOS_OP.UE~
-		|														
-		|																if (micros_en && (!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
-		|																	output.ue &= ~0x01;	// T.CHK_SYS.UE~
 		|																output.t0stp = true;
-		|																if (micros_en && (!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
-		|																	output.t0stp = false;
-		|																if (micros_en && (0x3 < rand && rand < 0x8) && clev())
-		|																	output.t0stp = false;
-		|																if (micros_en && priv_path_eq() && bin_op_pass() && selcond == 0x7f)
-		|																	output.t0stp = false;
-		|
 		|																output.t1stp = true;
-		|																if (selcond == 0xbf && bin_op_pass())
-		|																	output.t1stp = false;
-		|																if ((selcond == 0xef || selcond == 0xdf) && a_op_pass())
-		|																	output.t1stp = false;
-		|																if ((selcond == 0xf7 || selcond == 0xfb) && b_op_pass())
-		|																	output.t1stp = false;
-		|															}
+		|																unsigned selcond = 0x00;
+		|																if (state->ppriv) {
+		|																	selcond = 0x80 >> priv_check;
+		|																}
+		|																if (micros_en) {
+		|																	if (selcond == 0x40 && bin_op_pass())
+		|																		output.ue &= ~0x20;	// T.BIN_OP.UE~
+		|															
+		|																	if (selcond == 0x80 && priv_path_eq() && bin_op_pass())
+		|																		output.ue &= ~0x10;	// T.BIN_EQ.UE~
+		|															
+		|																	if ((0x3 < rand && rand < 0x8) && clev())
+		|																		output.ue &= ~0x08;	// T.CLASS.UE~
+		|														
+		|																	if (selcond == 0x10 && a_op_pass())
+		|																		output.ue &= ~0x04;	// T.TOS1_OP.UE~
 		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	unsigned marctl = UIR_MCTL;
-		|	bool foo1 = marctl >= 4;
-		|	output.ldmar = !(foo1 && PIN_BHSTP=>);
+		|																	if (selcond == 0x04 && b_op_pass())
+		|																		output.ue &= ~0x04;	// T.TOS1_OP.UE~
+		|														
+		|																	if (selcond == 0x20 && a_op_pass())
+		|																		output.ue &= ~0x02;	// T.TOS_OP.UE~
+		|
+		|																	if (selcond == 0x08 && b_op_pass())
+		|																		output.ue &= ~0x02;	// T.TOS_OP.UE~
+		|														
+		|																	if ((!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
+		|																		output.ue &= ~0x01;	// T.CHK_SYS.UE~
+		|
+		|																	if ((!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
+		|																		output.t0stp = false;
+		|
+		|																	if ((0x3 < rand && rand < 0x8) && clev())
+		|																		output.t0stp = false;
+		|
+		|																	if (priv_path_eq() && bin_op_pass() && selcond == 0x80)
+		|																		output.t0stp = false;
+		|																}
+		|
+		|																if (selcond == 0x40 && bin_op_pass())
+		|																	output.t1stp = false;
+		|
+		|																if ((selcond & 0x30) && a_op_pass())
+		|																	output.t1stp = false;
+		|
+		|																if ((selcond & 0x0c) && b_op_pass())
+		|																	output.t1stp = false;
+		|
+		|															}
 		|															if (q2pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
 		|																if (marctl & 0x8) {
 		|																	spc_bus = (marctl & 0x7) ^ 0x7;
@@ -647,9 +627,13 @@ class TYP(PartFactory):
 		|																}
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|
-		|
 		|																											if (q4pos) {
+		|																												if (uirsclk) {
+		|																													state->csa_hit = PIN_CSAH=>;
+		|																													state->csa_write = PIN_CSAW=>;
+		|																													output.cwe = !(state->csa_hit || state->csa_write);
+		|																												}
+		|
 		|																												bool c_source = UIR_CSRC;
 		|																												fiu0 = c_source;
 		|																												fiu1 = c_source == (rand != 0x3);
@@ -694,12 +678,16 @@ class TYP(PartFactory):
 		|																												if (awe && !state->wen) {
 		|																													state->rfram[state->cadr] = c;
 		|																												}
-		|																												if (sclke && !PIN_LDWDR=>) {
-		|																													//BUS_DT_READ(state->wdr);
-		|																													//state->wdr ^= BUS_DT_MASK;
-		|																													state->wdr = ~typ_bus;
+		|																												unsigned csmux3;
+		|																												BUS_CSAO_READ(csmux3);
+		|																												csmux3 ^= BUS_CSAO_MASK;
+		|																												if (uirsclk) {
+		|																													state->csa_offset = csmux3;
 		|																												}
 		|																												if (sclke) {
+		|																													if (!PIN_LDWDR=>) {
+		|																														state->wdr = ~typ_bus;
+		|																													}
 		|																													if (uirc == 0x28) {
 		|																														state->count = c;
 		|																													} else if (rand == 0x2) {
@@ -708,41 +696,28 @@ class TYP(PartFactory):
 		|																														state->count += 0x3ff;
 		|																													}
 		|																													state->count &= 0x3ff;
-		|																												}
 		|
-		|																												unsigned csmux3;
-		|																												BUS_CSAO_READ(csmux3);
-		|																												csmux3 ^= BUS_CSAO_MASK;
-		|																												if (uirsclk) {
-		|																													state->csa_offset = csmux3;
-		|																												}
-		|																												if (csa_clk) {
-		|																													bool bot_mux_sel, top_mux_sel, add_mux_sel;
-		|																													bot_mux_sel = PIN_LBOT=>;
-		|																													add_mux_sel = PIN_LTOP=>;
-		|																													top_mux_sel = !(add_mux_sel && PIN_LPOP=>);
-		|																										
 		|																													unsigned csmux0;
-		|																													if (add_mux_sel)
+		|																													if (PIN_LTOP=>)
 		|																														csmux0 = state->botreg;
 		|																													else
 		|																														csmux0 = state->topreg;
 		|																											
 		|																													unsigned csalu0 = csmux3 + csmux0 + 1;
 		|																											
-		|																													if (!bot_mux_sel)
+		|																													if (!PIN_LBOT=>)
 		|																														state->botreg = csalu0;
-		|																													if (top_mux_sel)
+		|																													if (!(PIN_LTOP=> && PIN_LPOP=>))
 		|																														state->topreg = csalu0;
 		|																													state->last_cond = state->cond;
 		|																													if (rand == 0xc) {
 		|																														state->ofreg = state->b >> 32;
 		|																													}
-		|																												}
 		|
-		|																												if (sclke && priv_check != 7) {
-		|																													bool set_pass_priv = rand != 0xd;
-		|																													state->ppriv = set_pass_priv;
+		|																													if (priv_check != 7) {
+		|																														bool set_pass_priv = rand != 0xd;
+		|																														state->ppriv = set_pass_priv;
+		|																													}
 		|																												}
 		|																												if (uirsclk) {
 		|																													unsigned addr;
