@@ -311,19 +311,18 @@ class IOC(PartFactory):
 		|																						state->cpu_running = false;
 		|																				}
 		|
-		|																				if (q4pos && (state->request_int_en &&
+		|																				if ((state->request_int_en &&
 		|																				    state->reqrdp != state->reqwrp) && state->iack != 6) {
 		|																					state->iack = 6;
 		|																					ioc_sc_bus_start_iack(6);
 		|																				}
-		|																				if (q4pos && (!state->request_int_en ||
+		|																				if ((!state->request_int_en ||
 		|																				    state->reqrdp == state->reqwrp) && state->iack != 7) {
 		|																					state->iack = 7;
 		|																					ioc_sc_bus_start_iack(7);
 		|																				}
 		|
-		|																				if (q4pos)
-		|																					do_xact();
+		|																				do_xact();
 		|
 		|																				if (sclk_pos && rand == 0x04) {
 		|																					state->reqfifo[state->reqwrp++] = typ & 0xffff;
@@ -363,7 +362,7 @@ class IOC(PartFactory):
 		|																				if (sclk_pos && rand == 0x08) {
 		|																					state->rtc = 0;
 		|																				}
-		|																				if (q4pos && !PIN_RTCEN=> && rand != 0x08) {
+		|																				if (!PIN_RTCEN=> && rand != 0x08) {
 		|																					state->rtc++;
 		|																					state->rtc &= 0xffff;
 		|																				}
@@ -404,6 +403,11 @@ class IOC(PartFactory):
 		|																				} else if (!state->den && !state->ten) {
 		|																					state->delay++;
 		|																				}
+		|																				bool rddum = (UIR_TVBS < 0xc) || !state->dumen;
+		|																				if (rddum && !PIN_RSTRDR=>) {
+		|																					state->dummy_typ = typ;
+		|																					state->dummy_val = val;
+		|																				}
 		|																			}
 		|}
 		|
@@ -411,47 +415,9 @@ class IOC(PartFactory):
 		|		output.rspemn = state->rspwrp == state->rsprdp;
 		|	}
 		|
-		|{
-		|	unsigned tvbs = UIR_TVBS;
-		|
-		|	bool rddum = true;
-		|	bool ioctv = true;
-		|	switch (tvbs) {
-		|	case 0x0: break;
-		|	case 0x1: break;
-		|	case 0x2: break;
-		|	case 0x3: break;
-		|	case 0x4: ioctv = false; break;
-		|	case 0x5: break;
-		|	case 0x8:
-		|	case 0x9: break;
-		|	case 0xa:
-		|	case 0xb: break;
-		|	case 0xc:
-		|	case 0xd:
-		|	case 0xe:
-		|	case 0xf:
-		|		if (state->dumen) {
-		|			rddum = false;
-		|			ioctv = false;
-		|		}
-		|		break;
-		|	default:
-		|		break;
-		|	}
 		|	
-		|	bool load_wdr = UIR_ULWDR;
+		|	output.ldwdr = UIR_ULWDR || !PIN_SCLKST=>;
 		|
-		|	bool uir_load_wdr = !load_wdr;
-		|
-		|	output.ldwdr = !(uir_load_wdr && PIN_SCLKST=>);
-		|
-		|																											if (q4pos && rddum && !PIN_RSTRDR=>) {
-		|																												//if (val != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << val << " " << val_bus);
-		|																												state->dummy_typ = typ;
-		|																												state->dummy_val = val;
-		|																											}
-		|}
 		|{
 		|	uint64_t tmp;
 		|
@@ -459,11 +425,6 @@ class IOC(PartFactory):
 		|	bool below = (tmp >= 0xc);
 		|	bool exit_proc = rand != 0x12;
 		|	output.bltcp = !(below || exit_proc);
-		|	tmp = typ & 0x80000047;
-		|	state->pfr = 
-		|	    tmp == 0x80000000 ||
-		|	    tmp == 0x80000040 ||
-		|	    tmp == 0x80000044;
 		|
 		|}
 		|
@@ -485,16 +446,12 @@ class IOC(PartFactory):
 		|			typ_bus = (uint64_t)(state->slice) << 48;
 		|			typ_bus |= (uint64_t)(state->delay) << 32;
 		|			typ_bus |= ((uint64_t)state->rtc) << 16;
-		|			// output.qtyp |= state->eidrg >> 1;
-		|			// output.qtyp |= state->cbreg1 << 7;
 		|			break;
 		|		case 0x16:
 		|		case 0x1c:
 		|		case 0x1d:
 		|			typ_bus = ((uint64_t)state->rdata) << 32;
 		|			typ_bus |= ((uint64_t)state->rtc) << 16;
-		|			// output.qtyp |= state->eidrg >> 1;
-		|			// output.qtyp |= state->cbreg1 << 7;
 		|			break;
 		|		default:
 		|			typ_bus = state->dummy_typ;
@@ -509,7 +466,14 @@ class IOC(PartFactory):
 		|		output.cond = true; // state->multibit_error;
 		|		break;
 		|	case 0x79:
-		|		output.cond = state->pfr;
+		|		{
+		|		uint64_t tmp;
+		|		tmp = typ & 0x80000047;
+		|		output.cond = 
+		|		    tmp == 0x80000000 ||
+		|		    tmp == 0x80000040 ||
+		|		    tmp == 0x80000044;
+		|		}
 		|		break;
 		|	case 0x7a:
 		|		output.cond = true; // state->checkbit_error;
