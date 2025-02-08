@@ -247,7 +247,6 @@ class SEQ(PartFactory):
 		|	unsigned rndx;
 		|	unsigned br_type;
 		|	unsigned br_tim;
-		|	unsigned internal_reads;
 		|	bool macro_event;
 		|	unsigned lmp;
 		|	bool early_macro_pending;
@@ -275,6 +274,7 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|int_reads()
 		|{
+		|	unsigned internal_reads = UIR_IRD;
 		|	switch (urand & 3) {
 		|	case 3:	state->coff = state->retrn_pc_ofs; break;
 		|	case 2: state->coff = branch_offset(); break;
@@ -283,15 +283,7 @@ class SEQ(PartFactory):
 		|	}
 		|	state->coff ^= 0x7fff;
 		|	if (internal_reads == 0) {
-		|
-		|		//BUS_DT_READ(state->typ_bus);
-		|		//if (state->typ_bus != typ_bus) ALWAYS_TRACE(<<"TYPBUS " << std::hex << state->typ_bus << " " << typ_bus);
-		|		//state->typ_bus ^= BUS_DT_MASK;
 		|		state->typ_bus = ~typ_bus;
-		|
-		|		//BUS_DV_READ(state->val_bus);
-		|		//if (state->val_bus != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << state->val_bus << " " << val_bus);
-		|		//state->val_bus ^= BUS_DV_MASK;
 		|		state->val_bus = ~val_bus;
 		|		return;
 		|	}		
@@ -339,26 +331,9 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|group_sel(void)
 		|{
+		|	static uint8_t tbl[16] = {3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 0, 1, 1, 1, 0};
 		|
-		|	unsigned retval;
-		|	switch(br_type) {
-		|	case 0x0: retval = 3; break;
-		|	case 0x1: retval = 3; break;
-		|	case 0x2: retval = 3; break;
-		|	case 0x3: retval = 3; break;
-		|	case 0x4: retval = 3; break;
-		|	case 0x5: retval = 3; break;
-		|	case 0x6: retval = 3; break;
-		|	case 0x7: retval = 3; break;
-		|	case 0x8: retval = 2; break;
-		|	case 0x9: retval = 2; break;
-		|	case 0xa: retval = 2; break;
-		|	case 0xb: retval = 0; break;
-		|	case 0xc: retval = 1; break;
-		|	case 0xd: retval = 1; break;
-		|	case 0xe: retval = 1; break;
-		|	case 0xf: retval = 0; break;
-		|	}
+		|	unsigned retval = tbl[br_type];
 		|	if (state->uadr_mux) {
 		|		retval |= 4;
 		|	}
@@ -640,7 +615,6 @@ class SEQ(PartFactory):
 		|
 		|//	ALWAYS		UIR				H1				Q1				Q2				Q3				Q4
 		|							if (h1pos) {
-		|								internal_reads = UIR_IRD;
 		|
 		|								urand = UIR_URAND;
 		|								rndx = state->pa048[urand | (state->bad_hint ? 0x100 : 0)] << 24;
@@ -664,123 +638,103 @@ class SEQ(PartFactory):
 		|							}
 		|
 		|//	ALWAYS		UIR				H1				Q1				Q2				Q3				Q4
-		|//+if (h1pos || q1pos || q3pos || q4pos) {
-		|//+if (h1pos || q1pos || q3pos         ) {
-		|//-if (h1pos || q1pos                  ) {
-		|//-if (h1pos ||          q3pos         ) {
-		|//-if (         q1pos || q3pos         ) {
-		|if (h1pos || q1pos || q3pos         ) {
-		|	int_reads();
-		|}
-		|//+if (h1pos || q1pos || q3pos || q4pos) {
-		|//+if (h1pos || q1pos || q3pos         ) {
-		|if (h1pos || q1pos) {
-		|	unsigned lex_adr = UIR_LAUIR;
 		|
-		|	if (maybe_dispatch && !(state->display >> 15)) {
-		|		switch (lex_adr) {
-		|		case 0:	state->resolve_address = (state->display >> 9) & 0xf; break;
-		|		case 1: state->resolve_address = 0xf; break;
-		|		case 2: state->resolve_address = 0xf; break;
-		|		case 3: state->resolve_address = 0xe; break;
-		|		}
-		|	} else {
-		|		switch (lex_adr) {
-		|		case 0:	state->resolve_address = state->curr_lex ^ 0xf; break;
-		|		case 1:
-		|			state->resolve_address = (state->val_bus & 0xf) + 1; 
-		|			break;
-		|		case 2: state->resolve_address = 0xf; break;
-		|		case 3: state->resolve_address = 0xe; break;
-		|		}
-		|	}
-		|	
-		|	state->resolve_address &= 0xf;
-		|	if (lex_adr == 1) {
-		|		state->import_condition = true;
-		|		sign_extend = true;
-		|	} else {
-		|		state->import_condition = state->resolve_address != 0xf;
-		|		sign_extend = state->resolve_address <= 0xd;
-		|	}
-		|
-		|	state->lxval = !((state->lex_valid >> (15 - state->resolve_address)) & 1);
-		|}
-		|
-		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
-		|//+ if (h1pos || q1pos || q2pos || q3pos ) {
-		|//+ if (h1pos || q1pos ||          q3pos ) {
-		|//-if (h1pos ||                   q3pos ) {
-		|//-if (         q1pos ||          q3pos ) {
-		|if (h1pos || q1pos                   ) {
-		|	if (!maybe_dispatch) {
-		|		uses_tos = false;
-		|		mem_start = 7;
-		|		intreads = internal_reads & 3;
-		|	} else {
-		|		uses_tos = state->uses_tos;
-		|		mem_start = state->decode & 0x7;
-		|		if (mem_start == 0 || mem_start == 4) {
-		|			intreads = 3;
-		|		} else {
-		|			intreads = 1;
-		|		}
-		|	}
-		|}
-		|//+	if (h1pos || q1pos) {
-		|	if (h1pos || q1pos) {
-		|	unsigned offs;
-		|	if (uses_tos) {
-		|		if (RNDX(RND_TOS_VLB)) {
-		|			offs = (state->typ_bus >> 7) & 0xfffff;
-		|		} else {
-		|			offs = state->tosof;
-		|		}
-		|	} else {
-		|		offs = state->tosram[state->resolve_address];
-		|	}
-		|	offs ^= 0xfffff;
-		|       offs &= 0xfffff;
-		|
-		|       bool d7 = (state->display & 0x8100) == 0;
-		|       unsigned sgdisp = state->display & 0xff;
-		|       if (!d7)
-		|               sgdisp |= 0x100;
-		|       if (!(sign_extend && d7))
-		|               sgdisp |= 0xffe00;
-		|
-		|	bool acin = ((mem_start & 1) != 0);
-		|       sgdisp &= 0xfffff;
-		|       state->resolve_offset = 0;
-		|
-		|	switch(mem_start) {
-		|	case 0:
-		|	case 2:
-		|               state->resolve_offset = offs + sgdisp + 1;
-		|               carry_out = (state->resolve_offset >> 20) == 0;
-		|		break;
-		|	case 1:
-		|	case 3:
-		|               state->resolve_offset = (1<<20) + offs - (sgdisp + 1);
-		|               carry_out = acin && (offs == 0);
-		|		break;
-		|	case 4:
-		|	case 6:
-		|               state->resolve_offset = sgdisp ^ 0xfffff;
-		|               // Carry is probably "undefined" here.
-		|		break;
-		|	case 5:
-		|	case 7:
-		|               state->resolve_offset = offs;
-		|               carry_out = acin && (offs == 0);
-		|		break;
-		|	}
-		|
-		|	state->resolve_offset &= 0xfffff;
-		|	}
-		|
-		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|							if (h1pos || q1pos) {
+		|								int_reads();
+		|								unsigned lex_adr = UIR_LAUIR;
+		|							
+		|								if (maybe_dispatch && !(state->display >> 15)) {
+		|									switch (lex_adr) {
+		|									case 0:	state->resolve_address = (state->display >> 9) & 0xf; break;
+		|									case 1: state->resolve_address = 0xf; break;
+		|									case 2: state->resolve_address = 0xf; break;
+		|									case 3: state->resolve_address = 0xe; break;
+		|									}
+		|								} else {
+		|									switch (lex_adr) {
+		|									case 0:	state->resolve_address = state->curr_lex ^ 0xf; break;
+		|									case 1:
+		|										state->resolve_address = (state->val_bus & 0xf) + 1; 
+		|										break;
+		|									case 2: state->resolve_address = 0xf; break;
+		|									case 3: state->resolve_address = 0xe; break;
+		|									}
+		|								}
+		|								
+		|								state->resolve_address &= 0xf;
+		|								if (lex_adr == 1) {
+		|									state->import_condition = true;
+		|									sign_extend = true;
+		|								} else {
+		|									state->import_condition = state->resolve_address != 0xf;
+		|									sign_extend = state->resolve_address <= 0xd;
+		|								}
+		|							
+		|								state->lxval = !((state->lex_valid >> (15 - state->resolve_address)) & 1);
+		|
+		|								if (!maybe_dispatch) {
+		|									uses_tos = false;
+		|									mem_start = 7;
+		|									intreads = UIR_IRD & 3;
+		|								} else {
+		|									uses_tos = state->uses_tos;
+		|									mem_start = state->decode & 0x7;
+		|									if (mem_start == 0 || mem_start == 4) {
+		|										intreads = 3;
+		|									} else {
+		|										intreads = 1;
+		|									}
+		|								}
+		|							
+		|								unsigned offs;
+		|								if (uses_tos) {
+		|									if (RNDX(RND_TOS_VLB)) {
+		|										offs = (state->typ_bus >> 7) & 0xfffff;
+		|									} else {
+		|										offs = state->tosof;
+		|									}
+		|								} else {
+		|									offs = state->tosram[state->resolve_address];
+		|								}
+		|								offs ^= 0xfffff;
+		|								offs &= 0xfffff;
+		|							
+		|								bool d7 = (state->display & 0x8100) == 0;
+		|								unsigned sgdisp = state->display & 0xff;
+		|								if (!d7)
+		|									sgdisp |= 0x100;
+		|								if (!(sign_extend && d7))
+		|									sgdisp |= 0xffe00;
+		|							
+		|								bool acin = ((mem_start & 1) != 0);
+		|								sgdisp &= 0xfffff;
+		|								state->resolve_offset = 0;
+		|							
+		|								switch(mem_start) {
+		|								case 0:
+		|								case 2:
+		|									state->resolve_offset = offs + sgdisp + 1;
+		|									carry_out = (state->resolve_offset >> 20) == 0;
+		|									break;
+		|								case 1:
+		|								case 3:
+		|									state->resolve_offset = (1<<20) + offs - (sgdisp + 1);
+		|									carry_out = acin && (offs == 0);
+		|									break;
+		|								case 4:
+		|								case 6:
+		|									state->resolve_offset = sgdisp ^ 0xfffff;
+		|									// Carry is probably "undefined" here.
+		|									break;
+		|								case 5:
+		|								case 7:
+		|									state->resolve_offset = offs;
+		|									carry_out = acin && (offs == 0);
+		|									break;
+		|								}
+		|							
+		|								state->resolve_offset &= 0xfffff;
+		|
 		|								if (intreads == 3) {
 		|									state->output_ob = state->pred;
 		|								} else if (intreads == 2) {
@@ -798,20 +752,15 @@ class SEQ(PartFactory):
 		|								} else {
 		|									state->name_bus = 0xffffffff;
 		|								}
-		|								state->cload = !(condition() || !(!state->bad_hint && RNDX(RND_CIB_PC_L)));			// q4
+		|								//state->cload = !(condition() || !(!state->bad_hint && RNDX(RND_CIB_PC_L)));			// q4
+		|								state->cload = RNDX(RND_CIB_PC_L) && (!state->bad_hint) && (!condition());
 		|								bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
 		|								state->ibld = !ibuff_ld;								// q4
 		|								bool ibemp = !(ibuff_ld || (state->word != 0));
 		|								state->m_ibuff_mt = !(ibemp && state->ibuf_fill);					// lmp, cond, branch_off
 		|
-		|}
-		|#if 0
-		|								output.z_qt = PIN_QTOE=>;
-		|								output.z_qv = PIN_QVOE=>;
-		|								assert(output.z_qt == output.z_qv);
-		|								if (!output.z_qt) {
-		|#endif
-		|							if (h1pos) {
+		|							}
+		|							if (h1pos) {	// NB See above for early termination of h1pos on no OE signal.
 		|									int_reads();	// Necessary
 		|
 		|									typ_bus = ~state->typ_bus;
@@ -853,7 +802,7 @@ class SEQ(PartFactory):
 		|												state->preturn = !(((rom >> 3) & 1) ||  state->uadr_mux);
 		|												state->push_br =    (rom >> 1) & 1;
 		|												state->push   = !(((rom >> 0) & 1) ||
-		|													        !(((rom >> 2) & 1) || !state->uadr_mux));
+		|														!(((rom >> 2) & 1) || !state->uadr_mux));
 		|												state->stop = !(!state->bad_hint && (state->uei == 0) && !PIN_LMAC=>);
 		|												output.seqsn = !state->stop;
 		|												bool evnan0d = !(UIR_ENMIC && (state->uei == 0));
@@ -931,6 +880,7 @@ class SEQ(PartFactory):
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|																			if (q3pos) {
+		|																				int_reads();
 		|																				state->q3cond = condition();
 		|																				state->bad_hint_enable = !(output.u_event || (PIN_LMAC=> && !state->bad_hint));
 		|																				unsigned pa040a = 0;
@@ -1248,7 +1198,7 @@ class SEQ(PartFactory):
 		|																										switch(stkinpsel) {
 		|																										case 0:
 		|																											state->topu = UIR_BRN;
-		|																											if (state->q3cond)	 state->topu |= (1<<15);
+		|																											if (state->q3cond) state->topu |= (1<<15);
 		|																											if (state->latched_cond) state->topu |= (1<<14);
 		|																											state->topu ^= 0xffff;
 		|																											break;
@@ -1258,14 +1208,14 @@ class SEQ(PartFactory):
 		|																											break;
 		|																										case 2:
 		|																											state->topu = state->curuadr;
-		|																											if (state->q3cond)	 state->topu |= (1<<15);
+		|																											if (state->q3cond) state->topu |= (1<<15);
 		|																											if (state->latched_cond) state->topu |= (1<<14);
 		|																											state->topu += 1;
 		|																											state->topu ^= 0xffff;
 		|																											break;
 		|																										case 3:
 		|																											state->topu = state->curuadr;
-		|																											if (state->q3cond)	 state->topu |= (1<<15);
+		|																											if (state->q3cond) state->topu |= (1<<15);
 		|																											if (state->latched_cond) state->topu |= (1<<14);
 		|																											state->topu ^= 0xffff;;
 		|																											break;
@@ -1297,7 +1247,7 @@ class SEQ(PartFactory):
 		|																									if (!maybe_dispatch) {
 		|																										state->late_u = 7;
 		|																									} else {
-		|																										state->late_u = late_macro_pending();
+		|																										state->late_u = lmp;
 		|																										if (state->late_u == 8)
 		|																											state->late_u = 7;
 		|																									}
