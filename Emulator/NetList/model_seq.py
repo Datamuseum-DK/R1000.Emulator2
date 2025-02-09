@@ -606,7 +606,7 @@ class SEQ(PartFactory):
 		|	bool h1pos = PIN_H2.negedge();
 		|	//bool h2pos = PIN_H2.posedge();
 		|	bool aclk = q4pos && !PIN_SFSTP=>;
-		|	bool lclk = aclk && !PIN_DSTOP=>;
+		|	bool lclk = aclk && !PIN_SFSTP=>;
 		|	bool sclke = PIN_SCLKE=>;
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = q4pos && !sclke;
@@ -874,7 +874,7 @@ class SEQ(PartFactory):
 		|																if (!PIN_SFSTP=> && mp_seq_prepped) {
 		|																	mp_nua_bus = nua & 0x3fff;
 		|																}
-		|																output.u_event = (!state->bad_hint && !PIN_LMAC=> && state->uei != 0);
+		|																output.u_event = !(!state->bad_hint && !PIN_LMAC=> && state->uei != 0);
 		|																output.sfive = (state->check_exit_ue && state->ferr);
 		|																output.qstp7 = !state->bad_hint && state->l_macro_hic;
 		|															}
@@ -882,7 +882,7 @@ class SEQ(PartFactory):
 		|																			if (q3pos) {
 		|																				int_reads();
 		|																				state->q3cond = condition();
-		|																				state->bad_hint_enable = !(output.u_event || (PIN_LMAC=> && !state->bad_hint));
+		|																				state->bad_hint_enable = !((!output.u_event) || (PIN_LMAC=> && !state->bad_hint));
 		|																				unsigned pa040a = 0;
 		|																				pa040a |= (state->decode & 0x7) << 6;
 		|																				if (state->wanna_dispatch) pa040a |= 0x20;
@@ -935,7 +935,7 @@ class SEQ(PartFactory):
 		|																				} else {
 		|																					state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
 		|																				}
-		|																				if (!(state->foo9 || !output.u_event)) {
+		|																				if (!(state->foo9 || output.u_event)) {
 		|																					state->treg = 0;
 		|																					state->foo7 = false;
 		|																				}
@@ -977,7 +977,7 @@ class SEQ(PartFactory):
 		|																			}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|																							if (q4pos) {
-		|																								bool bhen = !((output.lmaco && !state->bad_hint) || output.u_event);
+		|																								bool bhen = !((output.lmaco && !state->bad_hint) || (!output.u_event));
 		|																								bool bhcke = !(PIN_SSTOP=> && bhen);
 		|																								if (state_clock) {
 		|																									nxt_lex_valid();
@@ -1173,7 +1173,7 @@ class SEQ(PartFactory):
 		|																									bool pop;
 		|																									bool stkinpsel_0;
 		|																									bool stkinpsel_1;
-		|																									if (output.u_event) {
+		|																									if (!output.u_event) {
 		|																										xwrite = true;
 		|																										pop = true;
 		|																										stkinpsel_0 = true;
@@ -1292,13 +1292,13 @@ class SEQ(PartFactory):
 		|																									state->uei ^= 0xffff;
 		|																									state->uev = 16 - fls(state->uei);
 		|																							
-		|																									if (PIN_SSTOP=> && PIN_DMODE=>) {
+		|																									if (PIN_SSTOP=>) {
 		|																										state->curuadr = mp_nua_bus;
 		|																									}
 		|																								}
 		|																								if (aclk) {
 		|																									unsigned adr = 0;
-		|																									if (!output.u_event)
+		|																									if (output.u_event)
 		|																										adr |= 0x02;
 		|																									if (!macro_event)
 		|																										adr |= 0x04;

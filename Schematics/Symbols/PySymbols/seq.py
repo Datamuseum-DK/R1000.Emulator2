@@ -33,12 +33,10 @@ class SEQ(FChip):
         # self.sig_left(ChipSig("-->+", "BRN", 0, 13))
 
         self.sig_left(ChipSig("-->+", "SSTOP"))
-        self.sig_left(ChipSig("-->+", "DMODE"))
 
         self.sig_left(ChipSig("-->+", "MCOND"))
         self.sig_left(ChipSig("-->+", "MCPOL"))
         self.sig_left(ChipSig("-->+", "SFSTP"))
-        self.sig_left(ChipSig("-->+", "DSTOP"))
 
         self.sig_right(ChipSig("+<--", "QVOE"))
         self.sig_right(ChipSig("+<--", "ADROE"))

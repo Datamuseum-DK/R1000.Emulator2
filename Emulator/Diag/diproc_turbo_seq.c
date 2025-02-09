@@ -155,7 +155,7 @@ load_control_store_200_seq(const struct diagproc *dp)
 	return ((int)DIPROC_RESPONSE_DONE);
 }
 
-static int
+static void
 prep_run_seq(const struct diagproc *dp)
 {
 	struct ctx *ctx;
@@ -172,7 +172,6 @@ prep_run_seq(const struct diagproc *dp)
 	nxtuadr[1] = vbe16dec(dp->ram + 0x18);
 	mp_nua_bus = vbe16dec(dp->ram + 0x18);
 	sc_tracef(dp->name, "Turbo PREP_RUN.SEQ");
-	return ((int)DIPROC_RESPONSE_DONE);
 }
 
 int v_matchproto_(diagprocturbo_t)
@@ -206,10 +205,13 @@ diagproc_turbo_seq(const struct diagproc *dp)
 		return (load_control_store_200_seq(dp));
 	}
 	if (dp->dl_hash == PREP_RUN_SEQ_HASH) {
-		return (prep_run_seq(dp));
+		prep_run_seq(dp);
+	        return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == RUN_CHECK_SEQ_HASH) {
 		mp_seq_prepped = 1;
+		return (0);
+		return ((int)DIPROC_RESPONSE_DONE);
 	}
 
 	if (dp->dl_hash == PREP_LOAD_DISPATCH_RAMS_SEQ_HASH) {
