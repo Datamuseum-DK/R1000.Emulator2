@@ -873,7 +873,10 @@ class SEQ(PartFactory):
 		|																		break;
 		|																	}
 		|																}
-		|																mp_nua_bus = nua & 0x3fff;
+		|// ALWAYS_TRACE(<< " NUA " << std::hex << mp_nua_bus << " < " << nua << " " << PIN_SFSTP=> << " " << PIN_DSTOP=> << " " << BUS_UM_TRACE() << " " << PIN_DMODE=>);
+		|																if (!PIN_SFSTP=> && !PIN_DSTOP) {
+		|																	mp_nua_bus = nua & 0x3fff;
+		|																}
 		|																output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
 		|																output.sfive = (state->check_exit_ue && state->ferr);
 		|																output.qstp7 = !state->bad_hint && state->l_macro_hic;
