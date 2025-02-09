@@ -829,9 +829,7 @@ class SEQ(PartFactory):
 		|
 		|																state->l_macro_hic = true;
 		|																unsigned nua;
-		|																if (!PIN_DV_U=>) {
-		|																	nua = state->nxtuadr;
-		|																} else if (state->bad_hint) {
+		|																if (state->bad_hint) {
 		|																	nua = state->other;
 		|																} else if (PIN_LMAC=>) {
 		|																	// Not tested by expmon_test_seq ?
@@ -873,11 +871,10 @@ class SEQ(PartFactory):
 		|																		break;
 		|																	}
 		|																}
-		|// ALWAYS_TRACE(<< " NUA " << std::hex << mp_nua_bus << " < " << nua << " " << PIN_SFSTP=> << " " << PIN_DSTOP=> << " " << BUS_UM_TRACE() << " " << PIN_DMODE=>);
-		|																if (!PIN_SFSTP=> && !PIN_DSTOP) {
+		|																if (!PIN_SFSTP=> && mp_seq_prepped) {
 		|																	mp_nua_bus = nua & 0x3fff;
 		|																}
-		|																output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
+		|																output.u_event = (!state->bad_hint && !PIN_LMAC=> && state->uei != 0);
 		|																output.sfive = (state->check_exit_ue && state->ferr);
 		|																output.qstp7 = !state->bad_hint && state->l_macro_hic;
 		|															}
@@ -1433,13 +1430,9 @@ class SEQ(PartFactory):
 		|																									state->foo9 = !RNDX(RND_TOS_VLB);
 		|																								}
 		|																								output.qstp7 = !state->bad_hint && state->l_macro_hic;
-		|																								if (!PIN_SFSTP=>) {
-		|																									unsigned um;
-		|																									BUS_UM_READ(um);
-		|																									if (um == 3) {
-		|																										state->uir = state->wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
-		|																										output.csel = UIR_CSEL;
-		|																									}
+		|																								if (!PIN_SFSTP=> && mp_seq_prepped) {
+		|																									state->uir = state->wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
+		|																									output.csel = UIR_CSEL;
 		|																								}
 		|																							}
 		|

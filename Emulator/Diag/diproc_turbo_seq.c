@@ -208,6 +208,9 @@ diagproc_turbo_seq(const struct diagproc *dp)
 	if (dp->dl_hash == PREP_RUN_SEQ_HASH) {
 		return (prep_run_seq(dp));
 	}
+	if (dp->dl_hash == RUN_CHECK_SEQ_HASH) {
+		mp_seq_prepped = 1;
+	}
 
 	if (dp->dl_hash == PREP_LOAD_DISPATCH_RAMS_SEQ_HASH) {
 		sc_tracef(dp->name, "Turbo PREP_LOAD_DISPATCH_RAMS.SEQ");
