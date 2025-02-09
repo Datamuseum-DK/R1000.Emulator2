@@ -3,18 +3,18 @@
 
 // See FS_0.M200 at 0x18479
 #define BOARD_TABLE(macro) \
-	macro(IOA, seq, 0) \
-	macro(WIDGET, seq, 1) \
+	macro(IOA, ioa, 0) \
+	macro(WIDGET, widget, 1) \
 	macro(SEQ, seq, 2) \
 	macro(FIU, fiu, 3) \
 	macro(IOC, ioc, 4) \
-	macro(ALL, any, 5) \
+	macro(ALL, all, 5) \
 	macro(TYP, typ, 6) \
 	macro(VAL, val, 7) \
-	macro(ALLMEM, val, 8) \
-	macro(FIUMEM, val, 9) \
-	macro(TVSQ, val, 10) \
-	macro(NOTMEM, val, 11) \
+	macro(ALLMEM, allmem, 8) \
+	macro(FIUMEM, fiumem, 9) \
+	macro(TVSQ, tvsq, 10) \
+	macro(NOTMEM, notmem, 11) \
 	macro(MEM0, mem0, 12) \
 	macro(MEM1, mem1, 13) \
 	macro(MEM2, mem2, 14) \
