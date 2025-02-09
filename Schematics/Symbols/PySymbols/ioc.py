@@ -32,7 +32,6 @@ class IOC(FChip):
         self.sig_left(ChipSig("-->+", "RSTRDR"))
 
         self.sig_left(ChipSig("-->+", "CONDS", 0, 6))
-        self.sig_left(ChipSig("-->+", "UAD", 0, 13))
         self.sig_left(ChipSig("-->+", "TRAEN"))
         
         self.sig_left(ChipSig("-->+", "DUMNXT"))

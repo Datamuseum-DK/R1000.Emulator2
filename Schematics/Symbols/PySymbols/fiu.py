@@ -80,7 +80,6 @@ class FIU(FChip):
         self.sig_right(ChipSig("+-->", "CONDB"))
         self.sig_right(ChipSig("+-->", "PGXIN"))
         self.sig_right(ChipSig("+-->", "MEMEX"))
-        self.sig_right(ChipSig("+<--", "UAD", 0, 13))
 
         self.finish()
 

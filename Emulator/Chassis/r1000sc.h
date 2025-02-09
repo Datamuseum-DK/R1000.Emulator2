@@ -36,12 +36,19 @@ struct f181 {
 
 void f181_alu(struct f181 *);
 
-extern volatile uint64_t adr_bus;
-extern volatile uint64_t fiu_bus;
-extern volatile uint64_t val_bus;
-extern volatile uint64_t typ_bus;
-extern volatile uint64_t spc_bus;
-extern volatile unsigned ioc_trace;
+#define MIDPLANE(macro) \
+	macro(uint64_t, adr_bus, -1) \
+	macro(uint64_t, fiu_bus, -1) \
+	macro(unsigned, ioc_trace, 0) \
+	macro(unsigned, nua_bus, 0x3fff) \
+	macro(uint64_t, spc_bus, -1) \
+	macro(uint64_t, typ_bus, -1) \
+	macro(uint64_t, val_bus, -1)
+
+#define DMACRO(typ, nam, val) extern volatile typ mp_##nam;
+MIDPLANE(DMACRO)
+#undef DMACRO
+
 #define UADR_MASK 0x3fff
 #define UADR_WIDTH 14
 

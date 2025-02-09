@@ -197,8 +197,8 @@ class MEM(PartFactory):
 		|	uint64_t a;
 		|	uint32_t s;
 		|
-		|	s = spc_bus;
-		|	a = adr_bus;
+		|	s = mp_spc_bus;
+		|	a = mp_adr_bus;
 		|	state->mar_space = s;
 		|	state->mar_name = (a>>32) & 0xffffffffULL;
 		|	state->mar_page = (a>>19) & 0x1fff;
@@ -329,17 +329,17 @@ class MEM(PartFactory):
 		|							
 		|								if (!PIN_QVOE=> && PIN_QTOE=>) {
 		|									if (not_me) {
-		|										val_bus = ~0ULL;
+		|										mp_val_bus = ~0ULL;
 		|									} else {
-		|										val_bus = state->qreg;
+		|										mp_val_bus = state->qreg;
 		|									}
 		|								} else if (!PIN_QTOE=>) {
 		|									if (not_me) {
-		|										typ_bus = ~0ULL;
-		|										val_bus = ~0ULL;
+		|										mp_typ_bus = ~0ULL;
+		|										mp_val_bus = ~0ULL;
 		|									} else {
-		|										typ_bus = state->tqreg;
-		|										val_bus = state->vqreg;
+		|										mp_typ_bus = state->tqreg;
+		|										mp_val_bus = state->vqreg;
 		|									}
 		|								}
 		|							}
@@ -355,8 +355,8 @@ class MEM(PartFactory):
 		|																												state->cstop = !(diag_sync || diag_freeze);
 		|
 		|																												if (!PIN_LDWDR=>) {
-		|																													state->tdreg = typ_bus;
-		|																													state->vdreg = val_bus;
+		|																													state->tdreg = mp_typ_bus;
+		|																													state->vdreg = mp_val_bus;
 		|																												}
 		|
 		|																												if (!PIN_LDMR=> && state->cstop) {

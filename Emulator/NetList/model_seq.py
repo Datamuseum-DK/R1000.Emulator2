@@ -238,7 +238,7 @@ class SEQ(PartFactory):
 		|	load_programmable(this->name(), state->pa046, sizeof state->pa046, "PA046-02");
 		|	load_programmable(this->name(), state->pa047, sizeof state->pa047, "PA047-02");
 		|	load_programmable(this->name(), state->pa048, sizeof state->pa048, "PA048-02");
-		|	state->wcsram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << BUS_NU_WIDTH);
+		|	state->wcsram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << UADR_WIDTH);
 		|''')
 
     def priv_decl(self, file):
@@ -283,8 +283,8 @@ class SEQ(PartFactory):
 		|	}
 		|	state->coff ^= 0x7fff;
 		|	if (internal_reads == 0) {
-		|		state->typ_bus = ~typ_bus;
-		|		state->val_bus = ~val_bus;
+		|		state->typ_bus = ~mp_typ_bus;
+		|		state->val_bus = ~mp_val_bus;
 		|		return;
 		|	}		
 		|
@@ -629,7 +629,7 @@ class SEQ(PartFactory):
 		|								if (!output.z_qf) {
 		|									output.qf = state->topu ^ 0xffff;
 		|									output.qf ^= 0xffff;
-		|									fiu_bus = output.qf;
+		|									mp_fiu_bus = output.qf;
 		|								}
 		|								assert(PIN_QTOE=> == PIN_QVOE=>);
 		|								if (PIN_QTOE=>) {
@@ -763,8 +763,8 @@ class SEQ(PartFactory):
 		|							if (h1pos) {	// NB See above for early termination of h1pos on no OE signal.
 		|									int_reads();	// Necessary
 		|
-		|									typ_bus = ~state->typ_bus;
-		|									val_bus = ~state->val_bus;
+		|									mp_typ_bus = ~state->typ_bus;
+		|									mp_val_bus = ~state->val_bus;
 		|							}
 		|
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
@@ -873,7 +873,7 @@ class SEQ(PartFactory):
 		|																		break;
 		|																	}
 		|																}
-		|																output.nu = nua & 0x3fff;
+		|																mp_nua_bus = nua & 0x3fff;
 		|																output.u_event = (PIN_DV_U=> && !state->bad_hint && !PIN_LMAC=> && state->uei != 0);
 		|																output.sfive = (state->check_exit_ue && state->ferr);
 		|																output.qstp7 = !state->bad_hint && state->l_macro_hic;
@@ -941,9 +941,9 @@ class SEQ(PartFactory):
 		|																				}
 		|																				if (!PIN_ADROE=>) {
 		|																					if (macro_event) {
-		|																						spc_bus = 0x6;
+		|																						mp_spc_bus = 0x6;
 		|																					} else {
-		|																						spc_bus = (pa040d >> 3) & 0x7;
+		|																						mp_spc_bus = (pa040d >> 3) & 0x7;
 		|																					}
 		|																					bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
 		|																					bool resolve_drive;
@@ -953,23 +953,23 @@ class SEQ(PartFactory):
 		|																						resolve_drive = true;
 		|																					}
 		|																					if (!resolve_drive) {
-		|																						adr_bus = state->resolve_offset << 7;
+		|																						mp_adr_bus = state->resolve_offset << 7;
 		|																					} else if (adr_is_code) {
-		|																						adr_bus = (state->coff >> 3) << 7;
+		|																						mp_adr_bus = (state->coff >> 3) << 7;
 		|																					} else {
-		|																						adr_bus = state->output_ob << 7;
+		|																						mp_adr_bus = state->output_ob << 7;
 		|																					}
 		|															
 		|																					uint64_t branch;
 		|																					branch = branch_offset() & 7;
 		|																					branch ^= 0x7;
-		|																					adr_bus |= branch << 4;
+		|																					mp_adr_bus |= branch << 4;
 		|																					if (!adr_is_code) {
-		|																						adr_bus |= state->name_bus << 32;
+		|																						mp_adr_bus |= state->name_bus << 32;
 		|																					} else if (!(urand & 0x2)) {
-		|																						adr_bus |= state->pcseg << 32; 
+		|																						mp_adr_bus |= state->pcseg << 32; 
 		|																					} else {
-		|																						adr_bus |= state->retseg << 32;
+		|																						mp_adr_bus |= state->retseg << 32;
 		|																					}
 		|																				}
 		|																				bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
@@ -1293,7 +1293,7 @@ class SEQ(PartFactory):
 		|																									state->uev = 16 - fls(state->uei);
 		|																							
 		|																									if (PIN_SSTOP=> && PIN_DMODE=>) {
-		|																										state->curuadr = output.nu;
+		|																										state->curuadr = mp_nua_bus;
 		|																									}
 		|																								}
 		|																								if (aclk) {
@@ -1434,7 +1434,7 @@ class SEQ(PartFactory):
 		|																									unsigned um;
 		|																									BUS_UM_READ(um);
 		|																									if (um == 3) {
-		|																										state->uir = state->wcsram[output.nu] ^ (0x7fULL << 13);	// Invert condsel
+		|																										state->uir = state->wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
 		|																										output.csel = UIR_CSEL;
 		|																									}
 		|																								}

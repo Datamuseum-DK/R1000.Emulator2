@@ -255,7 +255,7 @@ class FIU(PartFactory):
 		|		vi = state->vreg;
 		|		break;
 		|	case 0x01: case 0x05: case 0x09:
-		|		vi = ~val_bus;
+		|		vi = ~mp_val_bus;
 		|		break;
 		|	case 0x02: case 0x06: case 0x0a:
 		|		BUS_DF_READ(vi);
@@ -281,7 +281,7 @@ class FIU(PartFactory):
 		|		ti ^= BUS_DF_MASK;
 		|		break;
 		|	case 0x08: case 0x09: case 0x0a: case 0x0b:
-		|		ti = ~typ_bus;
+		|		ti = ~mp_typ_bus;
 		|		break;
 		|	default:
 		|		uint64_t tmp;
@@ -463,8 +463,7 @@ class FIU(PartFactory):
 		|		break;
 		|	case 2:
 		|		//BUS_DF_READ(tii);
-		|		tii = val_bus;
-		|		//if (tii != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << tii << " " << val_bus);
+		|		tii = mp_val_bus;
 		|		tii = state->vi_bus;
 		|		break;
 		|	case 3:
@@ -487,7 +486,7 @@ class FIU(PartFactory):
 		|	output.z_qf = PIN_QFOE=>;			// (UCODE)
 		|	if (!output.z_qf && PIN_H1=>) { 
 		|		output.qf = vout ^ BUS_QF_MASK;
-		|		fiu_bus = output.qf;
+		|		mp_fiu_bus = output.qf;
 		|	}
 		|
 		|	if (sclk && UIR_LDMDR) {			// (UCODE)
@@ -698,11 +697,11 @@ class FIU(PartFactory):
 		|																	if (inc_mar && inco != 0x1f)
 		|																		inco += 1;
 		|															
-		|																	adr_bus = (uint64_t)state->srn << 32;
-		|																	adr_bus |= state->sro & 0xfffff000;
-		|																	adr_bus |= (inco & 0x1f) << 7;
-		|																	adr_bus |= state->oreg;
-		|																	spc_bus = (state->sro >> 4) & 7;
+		|																	mp_adr_bus = (uint64_t)state->srn << 32;
+		|																	mp_adr_bus |= state->sro & 0xfffff000;
+		|																	mp_adr_bus |= (inco & 0x1f) << 7;
+		|																	mp_adr_bus |= state->oreg;
+		|																	mp_spc_bus = (state->sro >> 4) & 7;
 		|																}
 		|
 		|																state->lcntl = state->mcntl;
@@ -741,7 +740,7 @@ class FIU(PartFactory):
 		|																						if (UIR_ORSR) {			// UCODE
 		|																							state->oreg = UIR_OL;
 		|																						} else {
-		|																							state->oreg = adr_bus;
+		|																							state->oreg = mp_adr_bus;
 		|																							state->oreg &= 0x7f;
 		|																						}
 		|																					}
@@ -787,9 +786,7 @@ class FIU(PartFactory):
 		|																						state->lfreg |= 1<<7;
 		|																			
 		|{
-		|																					unsigned addr;
-		|																					BUS_UAD_READ(addr);
-		|																					unsigned csacntl0 = (state->typwcsram[addr] >> 1) & 7;
+		|																					unsigned csacntl0 = (state->typwcsram[mp_nua_bus] >> 1) & 7;
 		|																					unsigned csacntl1 = (state->typuir >> 1) & 6;
 		|																					bool pred = !((csacntl0 == 7) && (csacntl1 == 0));
 		|#if 0
@@ -824,15 +821,13 @@ class FIU(PartFactory):
 		|																				output.hofs = (0xf + state->nve - (dif & 0xf)) & 0xf;
 		|
 		|																				uint64_t adr = 0;
-		|																				adr = adr_bus;
+		|																				adr = mp_adr_bus;
 		|																				bool load_mar = (state->prmt >> 4) & 1;
 		|																		
 		|																				if (sclk && load_mar) {
-		|																					uint64_t tmp;
 		|																					state->srn = adr >> 32;
 		|																					state->sro = adr & 0xffffff80;
-		|																					tmp = spc_bus;
-		|																					state->sro |= tmp << 4;
+		|																					state->sro |= mp_spc_bus << 4;
 		|																					state->sro |= 0xf;
 		|																				}
 		|																				state->moff = (state->sro >> 7) & 0xffffff;
@@ -951,10 +946,8 @@ class FIU(PartFactory):
 		|																				state->csa_oor_next = !(carry || name_match);
 		|
 		|																				if (!PIN_SFSTP=>) {
-		|																					unsigned addr;
-		|																					BUS_UAD_READ(addr);
-		|																					state->uir = state->wcsram[addr];
-		|																					state->typuir = state->typwcsram[addr];
+		|																					state->uir = state->wcsram[mp_nua_bus];
+		|																					state->typuir = state->typwcsram[mp_nua_bus];
 		|																				}
 		|																			}
 		|
@@ -963,10 +956,10 @@ class FIU(PartFactory):
 		|	if ((!PIN_QTOE=> || !PIN_QVOE=>) && !q4pos) {
 		|		do_tivi();
 		|		if (!PIN_QTOE=>) {
-		|			typ_bus = ~state->ti_bus;
+		|			mp_typ_bus = ~state->ti_bus;
 		|		}
 		|		if (!PIN_QVOE=>) {
-		|			val_bus = ~state->vi_bus;
+		|			mp_val_bus = ~state->vi_bus;
 		|		}
 		|	}
 		|

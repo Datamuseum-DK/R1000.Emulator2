@@ -86,7 +86,7 @@ diagproc_turbo_ioc(const struct diagproc *dp)
 	}
 	if (dp->dl_hash == RUN_CHECK_IOC_HASH) {
 		sc_tracef(dp->name, "START TRACING");
-		ioc_trace = 1;
+		mp_ioc_trace = 1;
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == READ_LAST_PC_IOC_HASH) {

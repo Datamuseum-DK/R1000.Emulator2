@@ -400,7 +400,7 @@ class TYP(PartFactory):
 		|		state->badr |= uirb & 0x1f;
 		|	}
 		|	if (uirb == 0x29 && PIN_QTOE=>) {
-		|		state->b = ~typ_bus;
+		|		state->b = ~mp_typ_bus;
 		|	} else {
 		|		state->b = state->rfram[state->badr];
 		|	}
@@ -444,11 +444,11 @@ class TYP(PartFactory):
 		|												if (!output.z_qf) {
 		|													find_a();
 		|													output.qf = state->a ^ BUS_QF_MASK;
-		|													fiu_bus = ~state->a;
+		|													mp_fiu_bus = ~state->a;
 		|												}
 		|												if (!PIN_QTOE=>) {
 		|													find_b();
-		|													typ_bus = ~state->b;
+		|													mp_typ_bus = ~state->b;
 		|												}
 		|											}
 		|
@@ -514,14 +514,14 @@ class TYP(PartFactory):
 		|																state->almsb = state->alu >> 63ULL;
 		|														
 		|																if (q2pos && !PIN_ADROE=>) {
-		|																	unsigned spc = spc_bus;
+		|																	unsigned spc = mp_spc_bus;
 		|																	uint64_t alu = state->alu;
 		|														
 		|																	if (spc != 4) {
 		|																		alu |=0xf8000000ULL;
 		|																	}
 		|														
-		|																	adr_bus = alu ^ ~0ULL;
+		|																	mp_adr_bus = alu ^ ~0ULL;
 		|																}
 		|														
 		|																state->cadr = 0;
@@ -621,9 +621,9 @@ class TYP(PartFactory):
 		|															}
 		|															if (q2pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
 		|																if (marctl & 0x8) {
-		|																	spc_bus = (marctl & 0x7) ^ 0x7;
+		|																	mp_spc_bus = (marctl & 0x7) ^ 0x7;
 		|																} else {
-		|																	spc_bus = (state->b & 0x7) ^ 0x7;
+		|																	mp_spc_bus = (state->b & 0x7) ^ 0x7;
 		|																}
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
@@ -686,7 +686,7 @@ class TYP(PartFactory):
 		|																												}
 		|																												if (sclke) {
 		|																													if (!PIN_LDWDR=>) {
-		|																														state->wdr = ~typ_bus;
+		|																														state->wdr = ~mp_typ_bus;
 		|																													}
 		|																													if (uirc == 0x28) {
 		|																														state->count = c;
@@ -720,9 +720,7 @@ class TYP(PartFactory):
 		|																													}
 		|																												}
 		|																												if (uirsclk) {
-		|																													unsigned addr;
-		|																													BUS_UAD_READ(addr);
-		|																													state->uir = state->wcsram[addr] ^ 0x7fffc0000000ULL;
+		|																													state->uir = state->wcsram[mp_nua_bus] ^ 0x7fffc0000000ULL;
 		|																													output.mctl = UIR_MCTL;
 		|																													output.cctl = UIR_CCTL;
 		|																												}

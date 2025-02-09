@@ -63,7 +63,6 @@ class TYP(FChip):
         self.sig_right(ChipSig("+-->", "CONDD"))
         self.sig_right(ChipSig("+-->", "CONDE"))
         self.sig_right(ChipSig("+-->", "LDMAR"))
-        self.sig_right(ChipSig("+<--", "UAD", 0, 13))
         self.sig_right(ChipSig("+-->", "MCTL", 0, 3))
         self.sig_right(ChipSig("+-->", "CCTL", 0, 2))
         self.sig_right(ChipSig("+-->", "FPDT"))

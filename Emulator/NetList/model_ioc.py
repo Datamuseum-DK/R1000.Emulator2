@@ -269,20 +269,20 @@ class IOC(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool sclk_pos = q4pos && !PIN_CSTP;
-		|																					if (ioc_trace && PIN_TRAEN=> && !is_tracing) {
+		|																					if (mp_ioc_trace && PIN_TRAEN=> && !is_tracing) {
 		|																						is_tracing = true;
 		|																						ALWAYS_TRACE(<< " IS TRACING");
 		|																					}
-		|																					if (ioc_trace && !PIN_TRAEN=> && is_tracing) {
+		|																					if (mp_ioc_trace && !PIN_TRAEN=> && is_tracing) {
 		|																						is_tracing = true;
-		|																						ioc_trace = 0;
+		|																						mp_ioc_trace = 0;
 		|																						ALWAYS_TRACE(<< " STOP TRACING");
 		|																					}
 		|
 		|	unsigned rand = UIR_RAND;
 		|	uint64_t typ, val;
-		|	typ = typ_bus;
-		|	val = val_bus;
+		|	typ = mp_typ_bus;
+		|	val = mp_val_bus;
 		|
 		|//	ALWAYS						Q2				H2				Q3				Q4
 		|							if (q2pos) {
@@ -429,32 +429,32 @@ class IOC(PartFactory):
 		|}
 		|
 		|	if (!PIN_QVALOE=> && !q4pos) {
-		|		val_bus = state->dummy_val;
+		|		mp_val_bus = state->dummy_val;
 		|	}
 		|
 		|	if (!PIN_QTYPOE=> && !q4pos) {
 		|		switch (rand) {
 		|		case 0x05:
-		|			typ_bus = (uint64_t)(state->slice) << 48;
-		|			typ_bus |= (uint64_t)(state->delay) << 32;
-		|			typ_bus |= ((uint64_t)state->rtc) << 16;
-		|			typ_bus |= state->rspfifo[state->rsprdp];
+		|			mp_typ_bus = (uint64_t)(state->slice) << 48;
+		|			mp_typ_bus |= (uint64_t)(state->delay) << 32;
+		|			mp_typ_bus |= ((uint64_t)state->rtc) << 16;
+		|			mp_typ_bus |= state->rspfifo[state->rsprdp];
 		|			break;
 		|		case 0x08:
 		|		case 0x09:
 		|		case 0x19:
-		|			typ_bus = (uint64_t)(state->slice) << 48;
-		|			typ_bus |= (uint64_t)(state->delay) << 32;
-		|			typ_bus |= ((uint64_t)state->rtc) << 16;
+		|			mp_typ_bus = (uint64_t)(state->slice) << 48;
+		|			mp_typ_bus |= (uint64_t)(state->delay) << 32;
+		|			mp_typ_bus |= ((uint64_t)state->rtc) << 16;
 		|			break;
 		|		case 0x16:
 		|		case 0x1c:
 		|		case 0x1d:
-		|			typ_bus = ((uint64_t)state->rdata) << 32;
-		|			typ_bus |= ((uint64_t)state->rtc) << 16;
+		|			mp_typ_bus = ((uint64_t)state->rdata) << 32;
+		|			mp_typ_bus |= ((uint64_t)state->rtc) << 16;
 		|			break;
 		|		default:
-		|			typ_bus = state->dummy_typ;
+		|			mp_typ_bus = state->dummy_typ;
 		|			break;
 		|		}
 		|	}
@@ -497,9 +497,7 @@ class IOC(PartFactory):
 		|//	ALWAYS						Q2				H2				Q3				Q4
 		|																			if (q4pos) {
 		|																				if (!PIN_RTCEN=>) {
-		|																					unsigned addr;
-		|																					BUS_UAD_READ(addr);
-		|																					state->uir = state->wcsram[addr];
+		|																					state->uir = state->wcsram[mp_nua_bus];
 		|																					assert (state->uir <= 0xffff);
 		|																					output.aen = (1 << UIR_AEN) ^ 0xf;
 		|																					output.fen = (1 << UIR_FEN) ^ 0xf;
@@ -507,14 +505,14 @@ class IOC(PartFactory):
 		|																					state->csa_hit = !PIN_ICSAH=>;
 		|																					unsigned tvbs = UIR_TVBS;
 		|
-		|																					uint16_t tdat = addr;
+		|																					uint16_t tdat = mp_nua_bus;
 		|																					if (PIN_CSTP=>)
 		|																						tdat |= 0x8000;
 		|																					if (state->csa_hit)
 		|																						tdat |= 0x4000;
 		|																					uint16_t tptr = state->tram[2048];
 		|																					state->tram[tptr] = tdat;
-		|																					if (ioc_trace) {
+		|																					if (mp_ioc_trace) {
 		|																						tptr += 1;
 		|																						tptr &= 0x7ff;
 		|																						state->tram[2048] = tptr;

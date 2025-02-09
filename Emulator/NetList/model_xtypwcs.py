@@ -50,27 +50,25 @@ class XTYPWCS(PartFactory):
 
     def init(self, file):
         file.fmt('''
-		|	state->ram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << BUS_UAD_WIDTH);
+		|	state->ram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << UADR_WIDTH);
 		|''')
 
-    def sensitive(self):
+    def xsensitive(self):
         yield "PIN_UCLK.pos()"
-        yield "BUS_UAD"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         file.fmt('''
 		|#define UIR_LSB(x) (46 - (x))
-		|	BUS_UAD_READ(state->addr);
 		|
 		|	if (PIN_UCLK.posedge()) {
-		|		state->wcs = state->ram[state->addr];
+		|		state->wcs = state->ram[mp_nua_bus];
 		|		state->wcs |= (1ULL << 63);
 		|		state->wcs ^= 0x7fffc0000000ULL;
 		|	}
 		|
-		|	unsigned csacntl0 = (state->ram[state->addr] >> UIR_LSB(45)) & 7;
+		|	unsigned csacntl0 = (state->ram[mp_nua_bus] >> UIR_LSB(45)) & 7;
 		|	unsigned csacntl1 = (state->wcs >> UIR_LSB(45)) & 6;
 		|	output.fpdt = !(
 		|		(csacntl0 == 7) &&

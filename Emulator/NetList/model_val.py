@@ -351,12 +351,12 @@ class VAL(PartFactory):
 		|	if (!oe) {
 		|		state->b |= state->rfram[badr] & ~0xffULL;
 		|	} else {
-		|		state->b |= ~val_bus & ~0xffULL;
+		|		state->b |= ~mp_val_bus & ~0xffULL;
 		|	}
 		|	if (!oe7) {
 		|		state->b |= state->rfram[badr] & 0xffULL;
 		|	} else {
-		|		state->b |= ~val_bus & 0xffULL;
+		|		state->b |= ~mp_val_bus & 0xffULL;
 		|	}
 		|	state->bmsb = state->b >> 63;
 		|}
@@ -389,11 +389,11 @@ class VAL(PartFactory):
 		|							if (h1pos && !output.z_qf) {
 		|								find_a();
 		|								output.qf = state->a ^ BUS_QF_MASK;
-		|								fiu_bus = output.qf;
+		|								mp_fiu_bus = output.qf;
 		|							}
 		|							if (h1pos && !PIN_QVOE=>) {
 		|								find_b();
-		|								val_bus = ~state->b;
+		|								mp_val_bus = ~state->b;
 		|							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
@@ -464,10 +464,10 @@ class VAL(PartFactory):
 		|																if (!PIN_ADROE=>) {
 		|																	uint64_t alu = state->alu;
 		|														
-		|																	if (spc_bus != 4) {
+		|																	if (mp_spc_bus != 4) {
 		|																		alu |=0xf8000000ULL;
 		|																	}
-		|																	adr_bus = alu ^ ~0ULL;
+		|																	mp_adr_bus = alu ^ ~0ULL;
 		|																}
 		|
 		|																uint64_t fiu = 0, mux = 0;
@@ -605,7 +605,7 @@ class VAL(PartFactory):
 		|																														state->zerocnt = ~count2;
 		|																													}
 		|																													if (!PIN_LDWDR=>) {
-		|																														state->wdr = ~val_bus;
+		|																														state->wdr = ~mp_val_bus;
 		|																													}
 		|																													if (uirc == 0x28) {
 		|																														state->count = state->c;
@@ -638,9 +638,7 @@ class VAL(PartFactory):
 		|																												}
 		|																												if (uirsclk) {
 		|																													state->csa_offset = csmux3;
-		|																													unsigned addr;
-		|																													BUS_UAD_READ(addr);
-		|																													state->uir = state->wcsram[addr] ^ 0xffff800000ULL;
+		|																													state->uir = state->wcsram[mp_nua_bus] ^ 0xffff800000ULL;
 		|																												}
 		|																											}
 		|

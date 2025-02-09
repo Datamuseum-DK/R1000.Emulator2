@@ -27,7 +27,6 @@ class VAL(FChip):
         self.sig_left(ChipSig("-->+", "CSAH"))
         self.sig_left(ChipSig("-->+", "CSAW"))
         self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
-        self.sig_left(ChipSig("-->+", "UAD", 0, 13))
         self.sig_left(ChipSig("-->+", "STS"))
         self.sig_left(ChipSig("-->+", "RMS"))
         self.sig_left(ChipSig("-->+", "FREZE"))
