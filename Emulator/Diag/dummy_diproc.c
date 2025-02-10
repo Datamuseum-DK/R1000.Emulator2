@@ -34,6 +34,7 @@
 #include <unistd.h>
 
 #include "Infra/r1000.h"
+#include "Chassis/r1000sc.h"
 #include "Infra/vsb.h"
 #include "Diag/diag.h"
 #include "Diag/diagproc.h"
@@ -107,15 +108,20 @@ i8052_thread(void *priv)
 			continue;
 		u8 = u & 0xff;
 		switch (u8 >> 4) {
-		case 0x0:
+		case 0x0: // STATUS
 			if (reply && i52->response != (int)DIPROC_RESPONSE_TIMEOUT) {
-				i8052_tx_diagbus(i52, reply);
+				u8 = reply;
 			} else {
-				i8052_tx_diagbus(i52, i52->response);
+				u8 = i52->response;
 			}
+			if (i52->address == 0x2) {
+				if (mp_seq_halted)
+					u8 |= 0x80;
+			}
+			i8052_tx_diagbus(i52, u8);
 			reply = 0;
 			break;
-		case 0x2:
+		case 0x2: // UPLOAD
 			pointer = i8052_rx_diagbus(i52);
 			counter = i8052_rx_diagbus(i52);
 			csum = 0;
@@ -132,10 +138,10 @@ i8052_thread(void *priv)
 			i8052_tx_diagbus(i52, csum);
 			AZ(VSB_finish(vsb));
 			break;
-		case 0x8:
+		case 0x8: // RESET
 			reply = (int)DIPROC_RESPONSE_RESET;
 			break;
-		case 0xa:
+		case 0xa: // DOWNLOAD
 			pointer = 0x10;
 			csum = 0;
 			hash = 0;
@@ -158,7 +164,9 @@ i8052_thread(void *priv)
 			UPDATE_KOOPMAN32(hash, 0);
 			dp->dl_hash = hash;
 			dp->ip = &dp->ram[0x11];
-			if (i52->address == 0x4) {
+			if (i52->address == 0x2) {
+				diagproc_turbo_seq(dp);
+			} else if (i52->address == 0x4) {
 				diagproc_turbo_ioc(dp);
 			} else if (i52->address == 0x6) {
 				diagproc_turbo_typ(dp);

@@ -989,6 +989,7 @@ class SEQ(PartFactory):
 		|																								if (aclk) {
 		|																									output.lmaco = !(sclke || !(macro_event && !early_macro_pending));
 		|																									output.halt = !(sclke || RNDX(RND_HALT));
+		|																									mp_seq_halted = output.halt;
 		|																								}
 		|																								if (!sclke && !state->ibld) {
 		|																									state->macro_ins_typ = state->typ_bus;
@@ -1436,6 +1437,7 @@ class SEQ(PartFactory):
 		|																								}
 		|																							}
 		|
+		|	output.qdfrz = output.halt && mp_seq_prepped;
 		|''')
 
 

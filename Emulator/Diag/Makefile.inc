@@ -93,6 +93,7 @@ ${OBJDIR}/dummy_diproc.o: \
     Diag/dummy_diproc.c \
     Infra/vsb.h \
     Infra/elastic.h \
+    Chassis/r1000sc.h \
     Diag/diag.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Diag/dummy_diproc.c -o ${OBJDIR}/dummy_diproc.o

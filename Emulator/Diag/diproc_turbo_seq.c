@@ -197,7 +197,8 @@ diagproc_turbo_seq(const struct diagproc *dp)
 		return (load_dispatch_rams_200_seq(dp));
 	}
 	if (dp->dl_hash == LOAD_COUNTER_SEQ_HASH) {
-		seq_ptr = 0x100;
+		sc_tracef(dp->name, "Turbo LOAD_COUNTER.SEQ");
+		seq_ptr = vbe16dec(dp->ram + 0x18);
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_SEQ_HASH ||
@@ -208,9 +209,12 @@ diagproc_turbo_seq(const struct diagproc *dp)
 		prep_run_seq(dp);
 	        return ((int)DIPROC_RESPONSE_DONE);
 	}
+	if (dp->dl_hash == RESET_SEQ_HASH) {
+		mp_seq_prepped = 0;
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 	if (dp->dl_hash == RUN_CHECK_SEQ_HASH) {
 		mp_seq_prepped = 1;
-		return (0);
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 
@@ -227,6 +231,13 @@ diagproc_turbo_seq(const struct diagproc *dp)
 		dp->ram[0x18] = 0x1f;
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
+	if (dp->dl_hash == HALT_SEQ_HASH) {
+		sc_tracef(dp->name, "Turbo HALT.SEQ");
+		*dp->ip = 0x6;
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
 
+	sc_tracef(dp->name, "Turbo *.SEQ");
+	return ((int)DIPROC_RESPONSE_DONE);
 	return (0);
 }
