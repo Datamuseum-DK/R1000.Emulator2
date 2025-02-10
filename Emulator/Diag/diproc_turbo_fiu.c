@@ -114,7 +114,7 @@ diagproc_turbo_fiu(const struct diagproc *dp)
 	if (dp->dl_hash == LOAD_COUNTER_FIU_HASH) {
 		return (load_counter(dp));
 	}
-	if (0 && dp->dl_hash == INIT_MRU_FIU_HASH) {
+	if (dp->dl_hash == INIT_MRU_FIU_HASH) {
 		sc_tracef(dp->name, "Turbo INIT_MRU.FIU");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
@@ -143,6 +143,25 @@ diagproc_turbo_fiu(const struct diagproc *dp)
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_FIU_HASH ||
 	    dp->dl_hash == 0x00001045) {
 		return (load_control_store_200_fiu(dp));
+	}
+	if (dp->dl_hash == LOAD_REFRESH_REGS_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo LOAD_REFRESH_REGS.FIU");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+
+	if (dp->dl_hash == CLEAR_EXCEPTIONS_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo CLEAR_EXCEPTIONS.FIU");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+
+	if (dp->dl_hash == LOAD_UIR_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo LOAD_UIR.FIU");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+
+	if (dp->dl_hash == PREP_RUN_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo PREP_RUN.FIU");
+		return ((int)DIPROC_RESPONSE_DONE);
 	}
 
 	return (0);
