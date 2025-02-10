@@ -573,13 +573,21 @@ class TYP(PartFactory):
 		|																if (state->ppriv) {
 		|																	selcond = 0x80 >> priv_check;
 		|																}
+		|#define TYP_UEV (UEV_CLASS|UEV_BIN_EQ|UEV_BIN_OP|UEV_TOS_OP|UEV_TOS1_OP|UEV_CHK_SYS)
+		|																mp_seq_uev &= ~TYP_UEV;
 		|																if (micros_en) {
-		|																	mp_seq_uev7_bin_op = !(selcond == 0x40 && bin_op_pass());
-		|																	mp_seq_uev6_bin_eq = !(selcond == 0x80 && priv_path_eq() && bin_op_pass());
-		|																	mp_seq_uev5_class = !((0x3 < rand && rand < 0x8) && clev());
-		|																	mp_seq_uev9_tos1_op = !(selcond == 0x10 && a_op_pass()) && !(selcond == 0x04 && b_op_pass());
-		|																	mp_seq_uev8_tos_op = !(selcond == 0x20 && a_op_pass()) && !(selcond == 0x08 && b_op_pass());
-		|																	mp_seq_uev11_chk_sys = !((!((rand != 0xe) || !(B_LIT() != UIR_CLIT))));
+		|																	if (selcond == 0x40 && bin_op_pass())
+		|																		mp_seq_uev |= UEV_BIN_OP;
+		|																	if (selcond == 0x80 && priv_path_eq() && bin_op_pass())
+		|																		mp_seq_uev |= UEV_BIN_EQ;
+		|																	if ((0x3 < rand && rand < 0x8) && clev())
+		|																		mp_seq_uev |= UEV_CLASS;
+		|																	if ((selcond == 0x10 && a_op_pass()) || (selcond == 0x04 && b_op_pass()))
+		|																		mp_seq_uev |= UEV_TOS1_OP;
+		|																	if ((selcond == 0x20 && a_op_pass()) || (selcond == 0x08 && b_op_pass()))
+		|																		mp_seq_uev |= UEV_TOS_OP;
+		|																	if ((!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
+		|																		mp_seq_uev |= UEV_CHK_SYS;
 		|
 		|																	if ((!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
 		|																		output.t0stp = false;
@@ -589,13 +597,6 @@ class TYP(PartFactory):
 		|
 		|																	if (priv_path_eq() && bin_op_pass() && selcond == 0x80)
 		|																		output.t0stp = false;
-		|																} else {
-		|																	mp_seq_uev5_class = 1;
-		|																	mp_seq_uev6_bin_eq = 1;
-		|																	mp_seq_uev7_bin_op = 1;
-		|																	mp_seq_uev8_tos_op = 1;
-		|																	mp_seq_uev9_tos1_op = 1;
-		|																	mp_seq_uev11_chk_sys = 1;
 		|																}
 		|
 		|																if (selcond == 0x40 && bin_op_pass())

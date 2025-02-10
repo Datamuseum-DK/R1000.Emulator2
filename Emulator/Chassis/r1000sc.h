@@ -36,6 +36,22 @@ struct f181 {
 
 void f181_alu(struct f181 *);
 
+#define UEV_MEMEX	(1<<(15-0))
+#define UEV_ECC		(1<<(15-1))
+#define UEV_BKPT	(1<<(15-2))
+#define UEV_CK_EXIT	(1<<(15-3))
+#define UEV_FLD_ERR	(1<<(15-4))
+#define UEV_CLASS	(1<<(15-5))
+#define UEV_BIN_EQ	(1<<(15-6))
+#define UEV_BIN_OP	(1<<(15-7))
+#define UEV_TOS_OP	(1<<(15-8))
+#define UEV_TOS1_OP	(1<<(15-9))
+#define UEV_PAGE_X	(1<<(15-10))
+#define UEV_CHK_SYS	(1<<(15-11))
+#define UEV_NEW_PAK	(1<<(15-12))
+#define UEV_NEW_STS	(1<<(15-13))
+#define UEV_XFER_CP	(1<<(15-14))
+
 #define MIDPLANE(macro) \
 	macro(uint64_t, adr_bus, -1) \
 	macro(uint64_t, fiu_bus, -1) \
@@ -46,15 +62,7 @@ void f181_alu(struct f181 *);
 	macro(uint64_t, val_bus, -1) \
 	macro(unsigned, seq_prepped, 0) \
 	macro(unsigned, seq_halted, 0) \
-	macro(unsigned, seq_uev0_memex, 1) \
-	macro(unsigned, seq_uev5_class, 1) \
-	macro(unsigned, seq_uev6_bin_eq, 1) \
-	macro(unsigned, seq_uev7_bin_op, 1) \
-	macro(unsigned, seq_uev8_tos_op, 1) \
-	macro(unsigned, seq_uev9_tos1_op, 1) \
-	macro(unsigned, seq_uev10_page_x, 1) \
-	macro(unsigned, seq_uev11_chk_sys, 1) \
-	macro(unsigned, seq_uev12_new_pak, 1) 
+	macro(unsigned, seq_uev, 0) \
 
 #define DMACRO(typ, nam, val) extern volatile typ mp_##nam;
 MIDPLANE(DMACRO)

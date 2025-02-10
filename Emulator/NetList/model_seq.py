@@ -1279,31 +1279,23 @@ class SEQ(PartFactory):
 		|																								}
 		|
 		|																								if (aclk) {
-		|																									if (!mp_seq_uev0_memex) {
-		|																										state->uev = 0;
-		|																									} else if (!state->check_exit_ue) {
-		|																										state->uev = 3;
-		|																									} else if (!state->ferr) {
-		|																										state->uev = 4;
-		|																									} else if (!mp_seq_uev5_class) {
-		|																										state->uev = 5;
-		|																									} else if (!mp_seq_uev6_bin_eq) {
-		|																										state->uev = 6;
-		|																									} else if (!mp_seq_uev7_bin_op) {
-		|																										state->uev = 7;
-		|																									} else if (!mp_seq_uev8_tos_op) {
-		|																										state->uev = 8;
-		|																									} else if (!mp_seq_uev9_tos1_op) {
-		|																										state->uev = 9;
-		|																									} else if (!mp_seq_uev10_page_x) {
-		|																										state->uev = 10;
-		|																									} else if (!mp_seq_uev11_chk_sys) {
-		|																										state->uev = 11;
-		|																									} else if (!PIN_UEI12=> || !mp_seq_uev12_new_pak) {
-		|																										state->uev = 12;
+		|																									if (state->check_exit_ue) {
+		|																										mp_seq_uev &= ~UEV_CK_EXIT;
 		|																									} else {
-		|																										state->uev = 16;
+		|																										mp_seq_uev |= UEV_CK_EXIT;
 		|																									}
+		|																									if (state->ferr) {
+		|																										mp_seq_uev &= ~UEV_FLD_ERR;
+		|																									} else {
+		|																										mp_seq_uev |= UEV_FLD_ERR;
+		|																									}
+		|																									if (PIN_UEI12=>) {
+		|																										mp_seq_uev &= ~UEV_NEW_PAK;
+		|																									} else {
+		|																										mp_seq_uev |= UEV_NEW_PAK;
+		|																									}
+		|
+		|																									state->uev = 16 - fls(mp_seq_uev);
 		|																							
 		|																									if (PIN_SSTOP=>) {
 		|																										state->curuadr = mp_nua_bus;

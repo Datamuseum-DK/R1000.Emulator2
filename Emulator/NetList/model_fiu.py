@@ -170,6 +170,8 @@ class FIU(PartFactory):
 		|	bool scav_trap_next;
 		|	bool memcyc1;
 		|	bool memstart;
+		|	bool mp_seq_uev10_page_x;
+		|	bool mp_seq_uev0_memex;
 		|
 		|	void do_tivi(void);
 		|	void rotator(bool sclk);
@@ -728,8 +730,18 @@ class FIU(PartFactory):
 		|																output.contin = !((pa025 >> 5) & 1);
 		|																output.pgxin = !(PIN_MICEN=> && state->page_xing);
 		|																mp_seq_uev10_page_x = !(PIN_MICEN=> && state->page_xing);
+		|																if (PIN_MICEN=> && state->page_xing) {
+		|																	mp_seq_uev |= UEV_PAGE_X;
+		|																} else {
+		|																	mp_seq_uev &= ~UEV_PAGE_X;
+		|																}
 		|																output.memex = !(PIN_MICEN=> && state->memex);
 		|																mp_seq_uev0_memex = !(PIN_MICEN=> && state->memex);
+		|																if (PIN_MICEN=> && state->memex) {
+		|																	mp_seq_uev |= UEV_MEMEX;
+		|																} else {
+		|																	mp_seq_uev &= ~UEV_MEMEX;
+		|																}
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|																			if (q4pos) {
