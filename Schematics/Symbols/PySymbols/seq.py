@@ -42,11 +42,10 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+<--", "ADROE"))
 
         self.sig_right(ChipSig("+<--", "EMAC", 0, 6))
-        self.sig_right(ChipSig("+<--", "UEI", 0, 14))
+        self.sig_right(ChipSig("+<--", "UEI12"))
 
 
         self.sig_right(ChipSig("+-->", "QSTP7"))
-        self.sig_right(ChipSig("+-->", "HALT"))
         self.sig_right(ChipSig("+-->", "LMACO"))
 
         self.sig_right(ChipSig("+-->", "U_EVENT"))
