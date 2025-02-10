@@ -151,7 +151,6 @@ class SEQ(PartFactory):
 		|	unsigned other;
 		|	unsigned late_u;
 		|	unsigned prev;
-		|	unsigned uei;
 		|	unsigned uev;
 		|
 		|	uint8_t pa040[512];
@@ -803,9 +802,9 @@ class SEQ(PartFactory):
 		|												state->push_br =    (rom >> 1) & 1;
 		|												state->push   = !(((rom >> 0) & 1) ||
 		|														!(((rom >> 2) & 1) || !state->uadr_mux));
-		|												state->stop = !(!state->bad_hint && (state->uei == 0) && !PIN_LMAC=>);
+		|												state->stop = !(!state->bad_hint && (state->uev == 16) && !PIN_LMAC=>);
 		|												output.seqsn = !state->stop;
-		|												bool evnan0d = !(UIR_ENMIC && (state->uei == 0));
+		|												bool evnan0d = !(UIR_ENMIC && (state->uev == 16));
 		|												output.ueven = !(evnan0d || state->stop);
 		|											}
 		|
@@ -837,7 +836,7 @@ class SEQ(PartFactory):
 		|																	nua ^= (7 << 3);
 		|																	nua |= 0x0140;
 		|																	state->l_macro_hic = false;
-		|																} else if (state->uei != 0) {
+		|																} else if (state->uev != 16) {
 		|																	nua = state->uev;
 		|																	nua <<= 3;
 		|																	nua |= 0x0180;
@@ -874,7 +873,7 @@ class SEQ(PartFactory):
 		|																if (!PIN_SFSTP=> && mp_seq_prepped) {
 		|																	mp_nua_bus = nua & 0x3fff;
 		|																}
-		|																output.u_event = !(!state->bad_hint && !PIN_LMAC=> && state->uei != 0);
+		|																output.u_event = !(!state->bad_hint && !PIN_LMAC=> && state->uev != 16);
 		|																output.sfive = (state->check_exit_ue && state->ferr);
 		|																output.qstp7 = !state->bad_hint && state->l_macro_hic;
 		|															}
@@ -988,8 +987,7 @@ class SEQ(PartFactory):
 		|																								}
 		|																								if (aclk) {
 		|																									output.lmaco = !(sclke || !(macro_event && !early_macro_pending));
-		|																									output.halt = !(sclke || RNDX(RND_HALT));
-		|																									mp_seq_halted = output.halt;
+		|																									mp_seq_halted = !(sclke || RNDX(RND_HALT));
 		|																								}
 		|																								if (!sclke && !state->ibld) {
 		|																									state->macro_ins_typ = state->typ_bus;
@@ -1281,17 +1279,31 @@ class SEQ(PartFactory):
 		|																								}
 		|
 		|																								if (aclk) {
-		|																									BUS_UEI_READ(state->uei);
-		|																									state->uei &= ~(1 << BUS_UEI_LSB(4));
-		|																									state->uei |= state->ferr << BUS_UEI_LSB(4);
-		|																									if (state->check_exit_ue)
-		|																										state->uei |= (1<<BUS_UEI_LSB(3));
-		|																									else
-		|																										state->uei &= ~(1<<BUS_UEI_LSB(3));
-		|																									state->uei <<= 1;
-		|																									state->uei |= 1;
-		|																									state->uei ^= 0xffff;
-		|																									state->uev = 16 - fls(state->uei);
+		|																									if (!mp_seq_uev0_memex) {
+		|																										state->uev = 0;
+		|																									} else if (!state->check_exit_ue) {
+		|																										state->uev = 3;
+		|																									} else if (!state->ferr) {
+		|																										state->uev = 4;
+		|																									} else if (!mp_seq_uev5_class) {
+		|																										state->uev = 5;
+		|																									} else if (!mp_seq_uev6_bin_eq) {
+		|																										state->uev = 6;
+		|																									} else if (!mp_seq_uev7_bin_op) {
+		|																										state->uev = 7;
+		|																									} else if (!mp_seq_uev8_tos_op) {
+		|																										state->uev = 8;
+		|																									} else if (!mp_seq_uev9_tos1_op) {
+		|																										state->uev = 9;
+		|																									} else if (!mp_seq_uev10_page_x) {
+		|																										state->uev = 10;
+		|																									} else if (!mp_seq_uev11_chk_sys) {
+		|																										state->uev = 11;
+		|																									} else if (!PIN_UEI12=> || !mp_seq_uev12_new_pak) {
+		|																										state->uev = 12;
+		|																									} else {
+		|																										state->uev = 16;
+		|																									}
 		|																							
 		|																									if (PIN_SSTOP=>) {
 		|																										state->curuadr = mp_nua_bus;
@@ -1437,7 +1449,7 @@ class SEQ(PartFactory):
 		|																								}
 		|																							}
 		|
-		|	output.qdfrz = output.halt && mp_seq_prepped;
+		|	output.qdfrz = mp_seq_halted && mp_seq_prepped;
 		|''')
 
 

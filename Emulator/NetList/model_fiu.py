@@ -228,10 +228,10 @@ class FIU(PartFactory):
 		|	u |= st << BUS64_LSB(27);
 		|	u |= (uint64_t)((state->omq >> 2) & 0x3) << BUS64_LSB(29);
 		|	u |= 0x3ULL << BUS64_LSB(31);
-		|	u |= (uint64_t)(output.pgxin) << BUS64_LSB(32);
+		|	u |= (uint64_t)(mp_seq_uev10_page_x) << BUS64_LSB(32);
 		|	u |= (uint64_t)((state->prmt >> 1) & 1) << BUS64_LSB(33);
 		|	u |= (uint64_t)output.rfsh << BUS64_LSB(34);
-		|	u |= (uint64_t)(output.memex) << BUS64_LSB(35);
+		|	u |= (uint64_t)(mp_seq_uev0_memex) << BUS64_LSB(35);
 		|	u |= ((line >> 0) & 1) << BUS64_LSB(48);
 		|	u |= ((line >> 1) & 1) << BUS64_LSB(50);
 		|	u |= (uint64_t)state->nmatch << BUS64_LSB(56);
@@ -727,7 +727,9 @@ class FIU(PartFactory):
 		|																);
 		|																output.contin = !((pa025 >> 5) & 1);
 		|																output.pgxin = !(PIN_MICEN=> && state->page_xing);
+		|																mp_seq_uev10_page_x = !(PIN_MICEN=> && state->page_xing);
 		|																output.memex = !(PIN_MICEN=> && state->memex);
+		|																mp_seq_uev0_memex = !(PIN_MICEN=> && state->memex);
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|																			if (q4pos) {

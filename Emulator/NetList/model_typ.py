@@ -567,7 +567,6 @@ class TYP(PartFactory):
 		|																}
 		|
 		|																bool micros_en = PIN_UEN=>;
-		|																output.ue = BUS_UE_MASK;
 		|																output.t0stp = true;
 		|																output.t1stp = true;
 		|																unsigned selcond = 0x00;
@@ -575,29 +574,12 @@ class TYP(PartFactory):
 		|																	selcond = 0x80 >> priv_check;
 		|																}
 		|																if (micros_en) {
-		|																	if (selcond == 0x40 && bin_op_pass())
-		|																		output.ue &= ~0x20;	// T.BIN_OP.UE~
-		|															
-		|																	if (selcond == 0x80 && priv_path_eq() && bin_op_pass())
-		|																		output.ue &= ~0x10;	// T.BIN_EQ.UE~
-		|															
-		|																	if ((0x3 < rand && rand < 0x8) && clev())
-		|																		output.ue &= ~0x08;	// T.CLASS.UE~
-		|														
-		|																	if (selcond == 0x10 && a_op_pass())
-		|																		output.ue &= ~0x04;	// T.TOS1_OP.UE~
-		|
-		|																	if (selcond == 0x04 && b_op_pass())
-		|																		output.ue &= ~0x04;	// T.TOS1_OP.UE~
-		|														
-		|																	if (selcond == 0x20 && a_op_pass())
-		|																		output.ue &= ~0x02;	// T.TOS_OP.UE~
-		|
-		|																	if (selcond == 0x08 && b_op_pass())
-		|																		output.ue &= ~0x02;	// T.TOS_OP.UE~
-		|														
-		|																	if ((!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
-		|																		output.ue &= ~0x01;	// T.CHK_SYS.UE~
+		|																	mp_seq_uev7_bin_op = !(selcond == 0x40 && bin_op_pass());
+		|																	mp_seq_uev6_bin_eq = !(selcond == 0x80 && priv_path_eq() && bin_op_pass());
+		|																	mp_seq_uev5_class = !((0x3 < rand && rand < 0x8) && clev());
+		|																	mp_seq_uev9_tos1_op = !(selcond == 0x10 && a_op_pass()) && !(selcond == 0x04 && b_op_pass());
+		|																	mp_seq_uev8_tos_op = !(selcond == 0x20 && a_op_pass()) && !(selcond == 0x08 && b_op_pass());
+		|																	mp_seq_uev11_chk_sys = !((!((rand != 0xe) || !(B_LIT() != UIR_CLIT))));
 		|
 		|																	if ((!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
 		|																		output.t0stp = false;
@@ -607,6 +589,13 @@ class TYP(PartFactory):
 		|
 		|																	if (priv_path_eq() && bin_op_pass() && selcond == 0x80)
 		|																		output.t0stp = false;
+		|																} else {
+		|																	mp_seq_uev5_class = 1;
+		|																	mp_seq_uev6_bin_eq = 1;
+		|																	mp_seq_uev7_bin_op = 1;
+		|																	mp_seq_uev8_tos_op = 1;
+		|																	mp_seq_uev9_tos1_op = 1;
+		|																	mp_seq_uev11_chk_sys = 1;
 		|																}
 		|
 		|																if (selcond == 0x40 && bin_op_pass())
