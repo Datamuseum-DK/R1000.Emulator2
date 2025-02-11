@@ -26,7 +26,7 @@ sc_now(void)
 SC_MODULE(PowerSequencer)
 {
 	sc_out <bool> clamp;	// CLAMP
-	sc_out <sc_logic> reset;	// RESET
+	//sc_out <sc_logic> reset;	// RESET
 	uint32_t do_trace = 0;
 
 	SC_CTOR(PowerSequencer)
@@ -37,9 +37,10 @@ SC_MODULE(PowerSequencer)
 	void thread()
 	{
 		clamp = false;
-		reset = sc_logic_0;
+		//reset = sc_logic_0;
 		wait(100, sc_core::SC_NS);
 		clamp = true;
+#if 0
 		wait(200, sc_core::SC_NS);
 		/*
 		 * When running IOC experiments without the IOP we need
@@ -51,6 +52,7 @@ SC_MODULE(PowerSequencer)
 			reset = sc_logic_1;
 		else
 			reset = sc_logic_Z;
+#endif
 	}
 };
 
@@ -111,7 +113,7 @@ sc_main(int argc, char *argv[])
 
 	PowerSequencer powseq("UNCLAMP");
 	powseq.clamp(planes->CLAMPnot);	// CLAMP
-	powseq.reset(planes->RESETnot);
+	// powseq.reset(planes->RESETnot);
 
 #if 0
 	planes->EXT_ID0 = false;

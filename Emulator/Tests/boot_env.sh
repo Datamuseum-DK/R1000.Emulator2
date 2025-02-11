@@ -33,7 +33,7 @@ make -j 7 && make -j 7
 
 sc_boards ioc fiu mem0 seq typ val
 
-cli 'sc trace DI*PROC 0x14'
+# cli 'sc trace DI*PROC 0x14'
 cli 'trace +console'
 cli 'trace +diagbus'
 cli 'iop syscall'

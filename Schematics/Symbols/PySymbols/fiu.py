@@ -40,9 +40,6 @@ class FIU(FChip):
         self.sig_left(ChipSig("-->+", "H1"))
         self.sig_left(ChipSig("-->+", "SCLKE"))
 
-
-        self.sig_left(ChipSig("-->+", "PRED"))
-
         self.sig_left(ChipSig("-->+", "LABR"))
         self.sig_left(ChipSig("-->+", "LEABR"))
         self.sig_left(ChipSig("-->+", "EABR"))
@@ -78,8 +75,10 @@ class FIU(FChip):
         self.sig_right(ChipSig("+-->", "CSAWR"))
         self.sig_right(ChipSig("+-->", "CONDA"))
         self.sig_right(ChipSig("+-->", "CONDB"))
-        self.sig_right(ChipSig("+-->", "PGXIN"))
-        self.sig_right(ChipSig("+-->", "MEMEX"))
+        self.sig_right(ChipSig("+-->", "STOP0"))
+
+        self.sig_right(ChipSig("+-->", "SYNC"))
+        self.sig_right(ChipSig("+-->", "FREZE"))
 
         self.finish()
 

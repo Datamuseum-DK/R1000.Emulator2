@@ -172,6 +172,7 @@ class FIU(PartFactory):
 		|	bool memstart;
 		|	bool mp_seq_uev10_page_x;
 		|	bool mp_seq_uev0_memex;
+		|	unsigned countdown;
 		|
 		|	void do_tivi(void);
 		|	void rotator(bool sclk);
@@ -728,20 +729,19 @@ class FIU(PartFactory):
 		|																	)
 		|																);
 		|																output.contin = !((pa025 >> 5) & 1);
-		|																output.pgxin = !(PIN_MICEN=> && state->page_xing);
 		|																mp_seq_uev10_page_x = !(PIN_MICEN=> && state->page_xing);
 		|																if (PIN_MICEN=> && state->page_xing) {
 		|																	mp_seq_uev |= UEV_PAGE_X;
 		|																} else {
 		|																	mp_seq_uev &= ~UEV_PAGE_X;
 		|																}
-		|																output.memex = !(PIN_MICEN=> && state->memex);
 		|																mp_seq_uev0_memex = !(PIN_MICEN=> && state->memex);
 		|																if (PIN_MICEN=> && state->memex) {
 		|																	mp_seq_uev |= UEV_MEMEX;
 		|																} else {
 		|																	mp_seq_uev &= ~UEV_MEMEX;
 		|																}
+		|																output.stop0 = mp_seq_uev10_page_x && mp_seq_uev0_memex;
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|																			if (q4pos) {
@@ -802,12 +802,7 @@ class FIU(PartFactory):
 		|{
 		|																					unsigned csacntl0 = (state->typwcsram[mp_nua_bus] >> 1) & 7;
 		|																					unsigned csacntl1 = (state->typuir >> 1) & 6;
-		|																					bool pred = !((csacntl0 == 7) && (csacntl1 == 0));
-		|#if 0
-		|																					if (pred != PIN_PRED=>) ALWAYS_TRACE( << "BAD_PRED " << std::hex << PIN_PRED=> << " < " << pred << " addr " << addr << " tuir " << state->typuir << " " << state->typwcsram[addr]);
-		|																					state->pdt = !PIN_PRED=>;
-		|#endif
-		|																					state->pdt = !pred;
+		|																					state->pdt = (csacntl0 == 7) && (csacntl1 == 0);
 		|}
 		|																					BUS_CNV_READ(state->nve);
 		|																					if (!(csa >> 2)) {
@@ -965,6 +960,20 @@ class FIU(PartFactory):
 		|																				}
 		|																			}
 		|
+		|//	ALWAYS						H1				Q1				Q2				Q4
+		|																			if (q4pos) {
+		|																				if (mp_fiu_freeze && !output.freze) {
+		|																					output.freze = 1;
+		|																				} else if (!mp_fiu_freeze && output.freze && !output.sync) {
+		|																					output.sync = 1;
+		|																				} else if (!mp_fiu_freeze && output.freze && output.sync) {
+		|																					output.freze = 0;
+		|																					countdown = 5;
+		|																				} else if (!mp_fiu_freeze && !output.freze && output.sync) {
+		|																					if (--countdown == 0)
+		|																						output.sync = 0;
+		|																				}
+		|																			}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|
 		|	if ((!PIN_QTOE=> || !PIN_QVOE=>) && !q4pos) {

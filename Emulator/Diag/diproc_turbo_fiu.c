@@ -164,5 +164,23 @@ diagproc_turbo_fiu(const struct diagproc *dp)
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 
+	if (dp->dl_hash == RESET_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo RESET.FIU");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+
+	if (dp->dl_hash == MF_FIU_HASH) {
+		sc_tracef(dp->name, "Turbo MF.FIU");
+		return ((int)DIPROC_RESPONSE_DONE);
+	}
+
+	if (dp->dl_hash == RUN_NORMAL_FIU_HASH) {
+		mp_fiu_freeze = 0;
+	}
+	if (dp->dl_hash == FREEZE_WORLD_FIU_HASH) {
+		mp_fiu_freeze = 1;
+	}
+
+
 	return (0);
 }

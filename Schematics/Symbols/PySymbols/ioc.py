@@ -39,8 +39,6 @@ class IOC(FChip):
 
         self.sig_right(ChipSig("+<--", "QVALOE"))
 
-        self.sig_right(ChipSig("+===", "ORST"))
-
         self.sig_right(ChipSig("+-->", "RSPEMN"))
 
 

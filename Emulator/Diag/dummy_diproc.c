@@ -166,6 +166,8 @@ i8052_thread(void *priv)
 			dp->ip = &dp->ram[0x11];
 			if (i52->address == 0x2) {
 				diagproc_turbo_seq(dp);
+			} else if (i52->address == 0x3) {
+				diagproc_turbo_fiu(dp);
 			} else if (i52->address == 0x4) {
 				diagproc_turbo_ioc(dp);
 			} else if (i52->address == 0x6) {

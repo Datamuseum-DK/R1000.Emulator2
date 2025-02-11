@@ -217,8 +217,6 @@ class IOC(PartFactory):
 		|	if (state->xact->sc_state == 100 && state->xact->address == 0xfffffe00) {
 		|		/* WRITE CPU CONTROL */
 		|		TRACE("WR CPU CONTROL " << std::hex << state->xact->data);
-		|		output.orst = 0;
-		|		output.z_orst = state->xact->data & 1;
 		|		ioc_sc_bus_done(&state->xact);
 		|		return;
 		|	}
@@ -417,14 +415,17 @@ class IOC(PartFactory):
 		|
 		|	
 		|	output.ldwdr = UIR_ULWDR || !PIN_SCLKST=>;
+		|//if (output.ldwdr != state->output.ldwdr) ALWAYS_TRACE(<< " LDWDR " << output.ldwdr << " " << UIR_ULWDR << " " << PIN_SCLKST=>);
 		|
-		|{
+		|if (q2pos) {
 		|	uint64_t tmp;
 		|
 		|	tmp = (typ >> 7) & 0xfffff;
 		|	bool below = (tmp >= 0xc);
 		|	bool exit_proc = rand != 0x12;
+		|
 		|	output.bltcp = !(below || exit_proc);
+		|if (output.bltcp != state->output.bltcp) ALWAYS_TRACE(<< " BLTCP " << output.bltcp);
 		|
 		|}
 		|
