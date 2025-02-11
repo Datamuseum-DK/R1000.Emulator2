@@ -15,7 +15,6 @@ sc_now(void)
 #include "planes.hh"
 
 #include "emu_pub.hh"
-#include "seq_pub.hh"
 #include "typ_pub.hh"
 #include "val_pub.hh"
 
@@ -37,7 +36,6 @@ sc_main_thread(void *priv)
 int
 sc_main(int argc, char *argv[])
 {
-	seq *seq;
 	typ *typ;
 	val *val;
 	emu *emu;
@@ -50,8 +48,6 @@ sc_main(int argc, char *argv[])
 	//planes->tf = sc_create_vcd_trace_file(tracepath);
 
 	// Order as seen from front L…R
-	if (sc_boards & R1K_BOARD_SEQ)
-		seq = make_seq("SEQ", planes);
 	if (sc_boards & R1K_BOARD_TYP)
 		typ = make_typ("TYP", planes);
 	if (sc_boards & R1K_BOARD_VAL)
