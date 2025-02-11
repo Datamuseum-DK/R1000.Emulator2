@@ -668,9 +668,9 @@ class TYP(PartFactory):
 		|																												if (awe && !state->wen) {
 		|																													state->rfram[state->cadr] = c;
 		|																												}
-		|																												unsigned csmux3;
-		|																												BUS_CSAO_READ(csmux3);
-		|																												csmux3 ^= BUS_CSAO_MASK;
+		|																												unsigned csmux3 = mp_csa_offs ^ 0xf;
+		|																												//BUS_CSAO_READ(csmux3);
+		|																												//csmux3 ^= 0xf;
 		|																												if (uirsclk) {
 		|																													state->csa_offset = csmux3;
 		|																												}
@@ -688,16 +688,16 @@ class TYP(PartFactory):
 		|																													state->count &= 0x3ff;
 		|
 		|																													unsigned csmux0;
-		|																													if (PIN_LTOP=>)
+		|																													if (mp_load_top)
 		|																														csmux0 = state->botreg;
 		|																													else
 		|																														csmux0 = state->topreg;
 		|																											
 		|																													unsigned csalu0 = csmux3 + csmux0 + 1;
 		|																											
-		|																													if (!PIN_LBOT=>)
+		|																													if (!mp_load_bot)
 		|																														state->botreg = csalu0;
-		|																													if (!(PIN_LTOP=> && PIN_LPOP=>))
+		|																													if (!(mp_load_top && mp_pop_down))
 		|																														state->topreg = csalu0;
 		|																													state->last_cond = state->cond;
 		|																													if (rand == 0xc) {

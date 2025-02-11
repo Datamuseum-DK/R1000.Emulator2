@@ -26,8 +26,6 @@ class SEQ(FChip):
 
         self.sig_left(ChipSig("-->+", "CTL", 0, 2))
 
-        self.sig_left(ChipSig("-->+", "CSA", 0, 3))
-
         self.sig_left(ChipSig("-->+", "LMAC"))
 
         # self.sig_left(ChipSig("-->+", "BRN", 0, 13))

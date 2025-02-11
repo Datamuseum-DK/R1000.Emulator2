@@ -503,6 +503,8 @@ class PassNetConfig():
     def ponder_bool(self, scm):
         ''' Determine if network needs hiz state '''
         for net in scm.iter_nets():
+            if not len(net):
+                print("Empty net ?", net)
             assert len(net)
             if len(net) == 1:
                 for node in net.iter_nodes():

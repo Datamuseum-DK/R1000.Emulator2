@@ -188,7 +188,6 @@ class IOC(PartFactory):
 		|
 		|	if (state->xact->sc_state == 200 && state->xact->address == 0xfffff800) {
 		|		/* READ STATUS */
-		|		unsigned tmp;
 		|		state->xact->data 			   = 0x9000ff80;
 		|		if (state->cpu_running) {
 		|			state->xact->data |= 0x40000000;
@@ -198,9 +197,8 @@ class IOC(PartFactory):
 		|		if (state->fffff400 & 4)	state->xact->data |= 0x00040000; // GOOD_PARITY
 		|		if (state->fffff400 & 2)	state->xact->data |= 0x00020000; // PERR_ENABLE
 		|		if (state->fffff400 & 1)	state->xact->data |= 0x00010000; // IOP.NEXT_CLK
-		|		BUS_EXTID_READ(tmp);
-		|		state->xact->data |= tmp << 4;
-		|		if (!PIN_KEY)			state->xact->data |= 0x00000008;
+		|		state->xact->data |= 0x7 << 4;
+		|		if (!mp_key_switch)		state->xact->data |= 0x00000008;
 		|		state->xact->data |= state->iack << 0;
 		|
 		|		TRACE("RD STATUS " << std::hex << state->xact->data);

@@ -49,7 +49,6 @@ class XCLKSTP(PartFactory):
         )
         yield from self.event_or(
             "idle_event",
-            "PIN_DFCLK",
             "BUS_DIAG",
             "BUS_STOP",
         )
@@ -72,7 +71,6 @@ class XCLKSTP(PartFactory):
 		|
 		|	bool q3 = PIN_Q3=>;
 		|	bool q3pos = PIN_Q3.posedge();
-		|	bool q3x = !PIN_DFCLK=>;
 		|
 		|	if (PIN_Q3.negedge()) {
 		|		state->sf_stop = !(diag == BUS_DIAG_MASK);
@@ -84,14 +82,12 @@ class XCLKSTP(PartFactory):
 		|		output.clkrun = true;
 		|
 		|		if (clock_stop != BUS_STOP_MASK) {
-		|			if (q3x)
-		|				output.clkrun = false;
+		|			output.clkrun = false;
 		|			event = false;
 		|		}
 		|
 		|		if (state->sf_stop) {
-		|			if (q3x)
-		|				output.clkrun = false;
+		|			output.clkrun = false;
 		|		}
 		|		if (q3pos) {
 		|			output.event = event;

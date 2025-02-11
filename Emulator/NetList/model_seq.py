@@ -343,8 +343,7 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|late_macro_pending(void)
 		|{
-		|	unsigned csa;
-		|	BUS_CSA_READ(csa);
+		|	unsigned csa = mp_csa_nve;
 		|	unsigned dec = state->decode >> 3;
 		|
 		|	if (csa < (dec & 7))
@@ -417,16 +416,14 @@ class SEQ(PartFactory):
 		|		break;
 		|	case 0x36: // M_OVERFLOW
 		|		{
-		|		unsigned csa;
-		|		BUS_CSA_READ(csa);
+		|		unsigned csa = mp_csa_nve;
 		|		unsigned dec = state->decode >> 3;
 		|		return (csa <= ((dec >> 3) | 12));
 		|		}
 		|		break;
 		|	case 0x37: // M_UNDERFLOW
 		|		{
-		|		unsigned csa;
-		|		BUS_CSA_READ(csa);
+		|		unsigned csa = mp_csa_nve;
 		|		unsigned dec = state->decode >> 3;
 		|		return (csa >= (dec & 7));
 		|		}
@@ -1429,7 +1426,7 @@ class SEQ(PartFactory):
 		|																								state->uses_tos = (state->uadr_decode >> 2) & 1;
 		|																								state->ibuf_fill = (state->uadr_decode >> 1) & 1;
 		|																								if (state_clock) {
-		|																									BUS_CSA_READ(state->n_in_csa);
+		|																									state->n_in_csa = mp_csa_nve;
 		|																								}
 		|																								if (lclk) {
 		|																									state->foo9 = !RNDX(RND_TOS_VLB);

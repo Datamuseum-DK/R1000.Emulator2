@@ -171,8 +171,8 @@ class Planes(SystemCModule):
         pusig = PlaneSignal(self.cpu, "PU", defval=True)
         self.psig["PU"] = pusig
 
-        pdsig = PlaneSignal(self.cpu, "PD", defval=False)
-        self.psig["PD"] = pdsig
+        #pdsig = PlaneSignal(self.cpu, "PD", defval=False)
+        #self.psig["PD"] = pdsig
 
         super().__init__(
             os.path.join(self.cpu.cdir, "planes"),

@@ -595,9 +595,9 @@ class VAL(PartFactory):
 		|																												case 3: b = (state->mblat >>  0) & 0xffff; break;
 		|																												}
 		|																												state->mprod = a * b;
-		|																												unsigned csmux3;
-		|																												BUS_CSAO_READ(csmux3);
-		|																												csmux3 ^= BUS_CSAO_MASK;
+		|																												unsigned csmux3 = mp_csa_offs ^ 0xf;
+		|																												// BUS_CSAO_READ(csmux3);
+		|																												// csmux3 ^= BUS_CSAO_MASK;
 		|																											
 		|																												if (sclken) {
 		|																													if (rand == 0x5) {
@@ -617,9 +617,9 @@ class VAL(PartFactory):
 		|																													state->count &= 0x3ff;
 		|
 		|																													bool bot_mux_sel, top_mux_sel, add_mux_sel;
-		|																													bot_mux_sel = PIN_LBOT=>;
-		|																													add_mux_sel = PIN_LTOP=>;
-		|																													top_mux_sel = !(add_mux_sel && PIN_LPOP=>);
+		|																													bot_mux_sel = mp_load_bot;
+		|																													add_mux_sel = mp_load_top;
+		|																													top_mux_sel = !(add_mux_sel && mp_pop_down);
 		|																										
 		|																													unsigned csmux0;
 		|																													if (add_mux_sel)

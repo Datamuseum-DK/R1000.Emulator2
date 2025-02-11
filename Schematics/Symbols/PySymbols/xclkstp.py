@@ -14,7 +14,6 @@ class XCLKSTP(FChip):
         super().__init__()
 
         self.sig_left(ChipSig("-->+", "Q3"))
-        self.sig_left(ChipSig("-->+", "DFCLK"))
 
         self.sig_left(ChipSig("-->+", "DIAG", 0, 1))
 

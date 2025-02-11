@@ -23,9 +23,6 @@ class IOC(FChip):
 
         self.sig_left(ChipSig("-->o", "RESET"))
 
-        self.sig_left(ChipSig("-->+", "EXTID", 0, 2))
-        self.sig_left(ChipSig("-->+", "KEY"))
-
         self.sig_left(ChipSig("-->+", "RTCEN"))
 
         self.sig_left(ChipSig("-->+", "SCLKST"))
