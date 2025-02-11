@@ -198,7 +198,7 @@
           (fill (type none))
         )
         (pin output line (at 35.56 48.26 180) (length 6.35)
-          (name "CLK_DIS" (effects (font (size 2.54 2.54))))
+          (name "CLAMP" (effects (font (size 2.54 2.54))))
           (number "1" (effects (font (size 2.54 2.54))))
         )
         (pin output line (at 35.56 40.64 180) (length 5.08)
@@ -275,7 +275,7 @@
     (uuid ffdea284-ed58-4b8e-8908-ef1b9e4fe3b1)
   )
 
-  (label "CLOCK_DISABLE~" (at 63.5 22.86 0) (fields_autoplaced)
+  (label "CLAMP~" (at 63.5 22.86 0) (fields_autoplaced)
     (effects (font (size 2.54 2.54)) (justify left bottom))
     (uuid 03d0f1c7-a87d-42f1-b8f9-a666284523df)
   )
@@ -411,7 +411,7 @@
   (symbol (lib_id "r1000:GB") (at 93.98 22.86 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid 6457199d-a0be-4806-a247-899e525ec3d5)
-    (property "Reference" "GB296" (at 97.79 22.86 0)
+    (property "Reference" "GB323" (at 97.79 22.86 0)
       (effects (font (size 2.54 2.54)) (justify left))
     )
     (property "Value" "GB" (at 93.98 22.86 0)
@@ -427,7 +427,7 @@
     (instances
       (project "EMU"
         (path "/20011966-7388-780e-03cc-2841463a393b"
-          (reference "GB296") (unit 1)
+          (reference "GB323") (unit 1)
         )
       )
     )

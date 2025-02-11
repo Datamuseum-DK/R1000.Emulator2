@@ -14,7 +14,7 @@ class XCLKGEN(Chip):
    +--------------+
    |              |
    |              |%
-   |       CLK_DIS+-->
+   |         CLAMP+-->
    |              |
    |              |%
    |          2XE~o-->

@@ -22,40 +22,6 @@ sc_now(void)
 #include "typ_pub.hh"
 #include "val_pub.hh"
 
-
-SC_MODULE(PowerSequencer)
-{
-	sc_out <bool> clamp;	// CLAMP
-	//sc_out <sc_logic> reset;	// RESET
-	uint32_t do_trace = 0;
-
-	SC_CTOR(PowerSequencer)
-	{
-		SC_THREAD(thread);
-	}
-
-	void thread()
-	{
-		clamp = false;
-		//reset = sc_logic_0;
-		wait(100, sc_core::SC_NS);
-		clamp = true;
-#if 0
-		wait(200, sc_core::SC_NS);
-		/*
-		 * When running IOC experiments without the IOP we need
-		 * to force the reset signal high because DREG4 pulls it
-		 * low on IOC_RESET and the IOP will not be releasing it.
-		 * (1+0 = 'X' but that is good enough for now.)
-		 */
-		if (sc_forced_reset)
-			reset = sc_logic_1;
-		else
-			reset = sc_logic_Z;
-#endif
-	}
-};
-
 extern "C"
 void *
 sc_main_thread(void *priv)
@@ -110,16 +76,7 @@ sc_main(int argc, char *argv[])
 
 	planes->PD = false;
 	planes->PU = true;
-
-	PowerSequencer powseq("UNCLAMP");
-	powseq.clamp(planes->CLAMPnot);	// CLAMP
-	// powseq.reset(planes->RESETnot);
-
-#if 0
-	planes->EXT_ID0 = false;
-	planes->EXT_ID1 = true;
-	planes->EXT_ID2 = false;
-#endif
+	planes->CLAMPnot = false;
 
 	sc_set_time_resolution(1, sc_core::SC_NS);
 

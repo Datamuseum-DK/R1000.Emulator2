@@ -46,7 +46,7 @@ class XClkGen(PartFactory):
         file.fmt('''
 		|	unsigned pit;
 		|	unsigned when;
-		|	uint64_t diag_out;
+		|	unsigned unclamp;
 		|''')
 
     def sensitive(self):
@@ -59,10 +59,13 @@ class XClkGen(PartFactory):
         file.fmt('''
 		|	unsigned now;
 		|
-		|	PIN_CLK_DIS<=(0);
 		|	now = state->when;
 		|	switch (now) {
 		|	case 0:
+		|		if (state->unclamp < 10) {
+		|			if (++state->unclamp == 10)
+		|				PIN_CLAMP<=(1);
+		|		}
 		|		state->when = 5;
 		|		break;
 		|	case 5:
@@ -87,10 +90,6 @@ class XClkGen(PartFactory):
 		|		state->when = 55;
 		|		break;
 		|	case 55:
-		|		if (diagbus_out_count() > state->diag_out) {
-		|			PIN_CLK_DIS<=(1);
-		|			state->diag_out += 2;
-		|		}
 		|		PIN_2XEnot<=(1);
 		|		state->when = 60;
 		|		break;
@@ -116,7 +115,6 @@ class XClkGen(PartFactory):
 		|		state->when = 155;
 		|		break;
 		|	case 155:
-		|		PIN_CLK_DIS<=(0);
 		|		PIN_2XEnot<=(1);
 		|		state->when = 160;
 		|		break;
