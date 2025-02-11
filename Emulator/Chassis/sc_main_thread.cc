@@ -36,7 +36,6 @@ sc_main_thread(void *priv)
 int
 sc_main(int argc, char *argv[])
 {
-	typ *typ;
 	val *val;
 	emu *emu;
 	planes *planes;
@@ -48,8 +47,6 @@ sc_main(int argc, char *argv[])
 	//planes->tf = sc_create_vcd_trace_file(tracepath);
 
 	// Order as seen from front L…R
-	if (sc_boards & R1K_BOARD_TYP)
-		typ = make_typ("TYP", planes);
 	if (sc_boards & R1K_BOARD_VAL)
 		val = make_val("VAL", planes);
 
