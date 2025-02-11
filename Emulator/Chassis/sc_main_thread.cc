@@ -15,8 +15,6 @@ sc_now(void)
 #include "planes.hh"
 
 #include "emu_pub.hh"
-#include "typ_pub.hh"
-#include "val_pub.hh"
 
 extern "C"
 void *
@@ -36,7 +34,6 @@ sc_main_thread(void *priv)
 int
 sc_main(int argc, char *argv[])
 {
-	val *val;
 	emu *emu;
 	planes *planes;
 
@@ -45,10 +42,6 @@ sc_main(int argc, char *argv[])
 
 	planes = make_planes("PLANES");
 	//planes->tf = sc_create_vcd_trace_file(tracepath);
-
-	// Order as seen from front L…R
-	if (sc_boards & R1K_BOARD_VAL)
-		val = make_val("VAL", planes);
 
 	emu = make_emu("EMU", planes);
 
