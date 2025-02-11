@@ -62,6 +62,7 @@ class PlaneSignal():
     def table_row(self):
         ''' Emit our row in the table '''
         rval = []
+        names = set()
         rval.append(self.name)
         rval.append(self.net.name)
 
@@ -71,11 +72,14 @@ class PlaneSignal():
             if net is not None:
                 nname = net.name.split('/')[-1]
                 rval.append(nname)
+                names.add(nname)
                 n += 1
             else:
                 rval.append("-")
         if n <= 1:
             print("PLANE SIGNAL UNUSED", self)
+        if len(names) > 1:
+            print("PLANE SIGNAL name differs", self, [sorted(names)])
         return "".join(x.ljust(19) for x in rval)
 
     def __lt__(self, other):
