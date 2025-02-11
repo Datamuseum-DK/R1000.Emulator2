@@ -15,9 +15,6 @@ sc_now(void)
 #include "planes.hh"
 
 #include "emu_pub.hh"
-#include "fiu_pub.hh"
-#include "ioc_pub.hh"
-#include "mem32_pub.hh"
 #include "seq_pub.hh"
 #include "typ_pub.hh"
 #include "val_pub.hh"
@@ -40,13 +37,9 @@ sc_main_thread(void *priv)
 int
 sc_main(int argc, char *argv[])
 {
-	mem32 *mem32_0;
-	mem32 *mem32_2;
 	seq *seq;
 	typ *typ;
 	val *val;
-	fiu *fiu;
-	ioc *ioc;
 	emu *emu;
 	planes *planes;
 
@@ -57,26 +50,18 @@ sc_main(int argc, char *argv[])
 	//planes->tf = sc_create_vcd_trace_file(tracepath);
 
 	// Order as seen from front L…R
-	if (sc_boards & R1K_BOARD_MEM32_2)
-		mem32_2 = make_mem32("MEM2", planes);
-	if (sc_boards & R1K_BOARD_MEM32_0)
-		mem32_0 = make_mem32("MEM0", planes);
 	if (sc_boards & R1K_BOARD_SEQ)
 		seq = make_seq("SEQ", planes);
 	if (sc_boards & R1K_BOARD_TYP)
 		typ = make_typ("TYP", planes);
 	if (sc_boards & R1K_BOARD_VAL)
 		val = make_val("VAL", planes);
-	if (sc_boards & R1K_BOARD_FIU)
-		fiu = make_fiu("FIU", planes);
-	if (sc_boards & R1K_BOARD_IOC)
-		ioc = make_ioc("IOC", planes);
 
 	emu = make_emu("EMU", planes);
 
 	planes->PD = false;
 	planes->PU = true;
-	planes->CLAMPnot = false;
+	// planes->CLAMPnot = false;
 
 	sc_set_time_resolution(1, sc_core::SC_NS);
 
