@@ -97,6 +97,6 @@ class ModelXBusMux(PartModel):
 def register(part_lib):
     ''' Register component model '''
 
-    for i in range(65):
-        for j in range(16):
+    for i in range(64,65):
+        for j in range(5):
             part_lib.add_part("XBUSMUX%dX%d" % (i, j), ModelXBusMux(i, j))

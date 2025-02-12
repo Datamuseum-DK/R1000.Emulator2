@@ -210,9 +210,9 @@ class ModelNor(Part):
 def register(part_lib):
     ''' Register component model '''
     part_lib.add_part("F02", ModelNor("NOR"))
-    part_lib.add_part("F32", ModelNor("OR"))
-    part_lib.add_part("F260", ModelNor("NOR"))
-    part_lib.add_part("NOR1", ModelNor("NOR"))
+    #part_lib.add_part("F32", ModelNor("OR"))
+    #part_lib.add_part("F260", ModelNor("NOR"))
+    #part_lib.add_part("NOR1", ModelNor("NOR"))
     part_lib.add_part("NOR2", ModelNor("NOR"))
-    part_lib.add_part("NOR3", ModelNor("NOR"))
-    part_lib.add_part("NOR4", ModelNor("NOR"))
+    #part_lib.add_part("NOR3", ModelNor("NOR"))
+    #part_lib.add_part("NOR4", ModelNor("NOR"))

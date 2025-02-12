@@ -111,7 +111,6 @@ class R1000Cpu():
         self.do_build()
         # exit(2)
         open(self.tstamp, "w").write("\n")
-        # self.report_bom()
         with open("_part_ref", "w") as file:
             for i, j in self.part_lib:
                 file.write(str(i) + " " + str(j) + " " + str(j.usecount) + " " + str(j.uses) + "\n")
@@ -214,34 +213,6 @@ class R1000Cpu():
             z_codes.write('#define COMP_' + z_code.upper() + ' "%s"\n' % comp.ctx())
 
         z_codes.commit()
-
-    def report_bom(self):
-        ''' Report component usage '''
-        with open("_bom_" + self.branch + ".txt", "w") as file:
-            file.write("-" * 40 + '\n')
-            parts = set(self.part_lib.values())
-            file.write("%6d         Total parts\n" % len(parts))
-            file.write("%6d         Total components\n" % sum(len(x.uses) for x in parts))
-            file.write("-" * 40 + '\n')
-            file.write("\n")
-            file.write("  Uses  Part\n")
-            file.write("-" * 40 + '\n')
-            for part in sorted(parts, key=lambda x: (len(x.uses))):
-                if not part.uses:
-                    continue
-                file.write("%6d " % len(part.uses))
-                file.write(" " + part.name + "\n")
-                for i, comp in enumerate(
-                    sorted(
-                        part.uses,
-                        key=lambda x: (x.board.name, x.name)
-                    )
-                ):
-                    if i == 5:
-                        file.write("\t\t    …\n")
-                        break
-                    file.write("\t\t    " + comp.board.name + "::" + comp.name + "\n")
-            file.write("-" * 40 + '\n')
 
 def main():
     ''' ... '''
