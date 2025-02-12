@@ -89,24 +89,17 @@ class XTCSA(PartFactory):
 		|	bool sel_constant = (q >> 1) & 0x1;
 		|	bool minus_one = (q >> 0) & 0x1;
 		|
-		|	//output.ldtop = !(load_top_bot && ((csacntl >> 1) & 1));
 		|	mp_load_top = !(load_top_bot && ((csacntl >> 1) & 1));
-		|	//output.ldbot = !(load_top_bot && ((csacntl >> 2) & 1));
 		|	mp_load_bot = !(load_top_bot && ((csacntl >> 2) & 1));
-		|	//output.popdn = load_ctl_top && state->tf_pred;
 		|	mp_pop_down = load_ctl_top && state->tf_pred;
 		|
 		|	if (!invalidate_csa) {
-		|		//output.csaof = 0xf;
 		|		mp_csa_offs = 0xf;
 		|	} else if (!sel_constant && !minus_one) {
-		|		//output.csaof = 0x1;
 		|		mp_csa_offs = 0x1;
 		|	} else if (!sel_constant && minus_one) {
-		|		//output.csaof = 0xf;
 		|		mp_csa_offs = 0xf;
 		|	} else {
-		|		//output.csaof = hit_offs;
 		|		mp_csa_offs = hit_offs;
 		|	}
 		|

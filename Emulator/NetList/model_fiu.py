@@ -804,7 +804,7 @@ class FIU(PartFactory):
 		|																					unsigned csacntl1 = (state->typuir >> 1) & 6;
 		|																					state->pdt = (csacntl0 == 7) && (csacntl1 == 0);
 		|}
-		|																					BUS_CNV_READ(state->nve);
+		|																					state->nve = mp_csa_nve;
 		|																					if (!(csa >> 2)) {
 		|																						state->pdreg = state->ctopo;
 		|																					}
