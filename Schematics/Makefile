@@ -1,7 +1,7 @@
 
 all:
 	(cd Symbols && python3 build_symbols.py)
-	find Optimized -name '[A-Z]*.kicad_sch' -print | \
+	find Optimized/Emu -name '[A-Z]*.kicad_sch' -print | \
 	    while read fn ; do \
 		( \
 		    set -e ; \
