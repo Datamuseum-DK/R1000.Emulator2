@@ -430,7 +430,8 @@ class TYP(PartFactory):
 		|	unsigned uirc, condsel;
 		|	uirc = UIR_C;
 		|	rand = UIR_RAND;
-		|	BUS_CSEL_READ(condsel);
+		|	//BUS_CSEL_READ(condsel);
+		|	condsel = mp_cond_sel;
 		|	frm = UIR_FRM;
 		|
 		|	unsigned priv_check = UIR_UPVC;

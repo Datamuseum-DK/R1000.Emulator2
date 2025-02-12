@@ -34,7 +34,6 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "H2"))
         self.sig_left(ChipSig("-->+", "LDWDR"))
         self.sig_left(ChipSig("-->+", "Q4"))
-        self.sig_left(ChipSig("-->+", "CSEL", 0, 6))
         self.sig_left(ChipSig("-->+", "UEN"))
         self.sig_left(ChipSig("-->+", "TQBIT"))
         self.sig_left(ChipSig("-->+", "VAEN"))

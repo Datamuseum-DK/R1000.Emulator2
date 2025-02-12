@@ -458,8 +458,8 @@ class IOC(PartFactory):
 		|		}
 		|	}
 		|
-		|	unsigned cond_sel;
-		|	BUS_CONDS_READ(cond_sel);
+		|	unsigned cond_sel = mp_cond_sel;
+		|	// BUS_CONDS_READ(cond_sel);
 		|	switch (cond_sel) {
 		|	case 0x78:
 		|		output.cond = true; // state->multibit_error;

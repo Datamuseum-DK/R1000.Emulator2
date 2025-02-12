@@ -72,6 +72,24 @@ struct timespec sc_t0;
 MIDPLANE(DMACRO)
 #undef DMACRO
 
+#define DMACRO(typ, nam, val) volatile typ mp_##nam = val;
+MIDSTATE(DMACRO)
+#undef DMACRO
+
+#define DMACRO(typ, nam, val) volatile typ mp_nxt_##nam = val;
+MIDSTATE(DMACRO)
+#undef DMACRO
+
+void
+update_state(void)
+{
+
+#define DMACRO(typ, nam, val) mp_##nam = mp_nxt_##nam;
+MIDSTATE(DMACRO)
+#undef DMACRO
+}
+
+
 void
 sysc_trace(const char *me, const char *fmt)
 {

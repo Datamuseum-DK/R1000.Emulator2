@@ -233,8 +233,8 @@ class VAL(PartFactory):
 		|SCM_«mmm» ::
 		|fiu_cond(void)
 		|{
-		|	unsigned csel;
-		|	BUS_CSEL_READ(csel);
+		|	unsigned csel = mp_cond_sel;
+		|	//BUS_CSEL_READ(csel);
 		|	bool fcond;
 		|	switch (csel) {
 		|	case 0x00:
@@ -642,8 +642,8 @@ class VAL(PartFactory):
 		|																												}
 		|																											}
 		|
-		|	unsigned csel;
-		|	BUS_CSEL_READ(csel);
+		|	unsigned csel = mp_cond_sel;
+		|	//BUS_CSEL_READ(csel);
 		|	switch (csel >> 3) {
 		|	case 0x0: cond_a(csel); break;
 		|	case 0x1: cond_b(csel); break;

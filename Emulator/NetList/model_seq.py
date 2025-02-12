@@ -1434,7 +1434,8 @@ class SEQ(PartFactory):
 		|																								output.qstp7 = !state->bad_hint && state->l_macro_hic;
 		|																								if (!PIN_SFSTP=> && mp_seq_prepped) {
 		|																									state->uir = state->wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
-		|																									output.csel = UIR_CSEL;
+		|																									//output.csel = UIR_CSEL;
+		|																									mp_nxt_cond_sel = UIR_CSEL;
 		|																								}
 		|																							}
 		|

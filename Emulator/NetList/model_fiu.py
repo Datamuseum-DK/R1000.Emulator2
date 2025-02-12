@@ -523,8 +523,8 @@ class FIU(PartFactory):
 		|	unsigned csa;
 		|	BUS_CSA_READ(csa);
 		|
-		|	unsigned condsel;
-		|	BUS_CNDSL_READ(condsel);
+		|	unsigned condsel = mp_cond_sel;
+		|	//BUS_CNDSL_READ(condsel);
 		|
 		|	unsigned mar_cntl;
 		|	BUS_MCTL_READ(mar_cntl);

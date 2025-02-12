@@ -71,12 +71,25 @@ void f181_alu(struct f181 *);
 	macro(unsigned, load_bot, 0) \
 	macro(unsigned, pop_down, 0) \
 
+#define MIDSTATE(macro) \
+	macro(unsigned, cond_sel, 0) \
+
 #define DMACRO(typ, nam, val) extern volatile typ mp_##nam;
 MIDPLANE(DMACRO)
 #undef DMACRO
 
+#define DMACRO(typ, nam, val) extern volatile typ mp_##nam;
+MIDSTATE(DMACRO)
+#undef DMACRO
+
+#define DMACRO(typ, nam, val) extern volatile typ mp_nxt_##nam;
+MIDSTATE(DMACRO)
+#undef DMACRO
+
 #define UADR_MASK 0x3fff
 #define UADR_WIDTH 14
+
+void update_state(void);
 
 #ifdef __cplusplus
 }
