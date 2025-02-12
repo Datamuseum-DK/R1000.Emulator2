@@ -32,7 +32,6 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "CSAW"))
 
         self.sig_left(ChipSig("-->+", "H2"))
-        self.sig_left(ChipSig("-->+", "LDWDR"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "UEN"))
         self.sig_left(ChipSig("-->+", "TQBIT"))
@@ -57,7 +56,6 @@ class TYP(FChip):
         self.sig_right(ChipSig("+-->", "CONDD"))
         self.sig_right(ChipSig("+-->", "CONDE"))
         self.sig_right(ChipSig("+-->", "LDMAR"))
-        self.sig_right(ChipSig("+-->", "MCTL", 0, 3))
         self.sig_right(ChipSig("+-->", "CCTL", 0, 2))
         self.sig_right(ChipSig("+-->", "FPDT"))
 

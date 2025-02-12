@@ -354,7 +354,7 @@ class MEM(PartFactory):
 		|																												bool diag_freeze = !PIN_BDIFRZ=>;
 		|																												state->cstop = !(diag_sync || diag_freeze);
 		|
-		|																												if (!PIN_LDWDR=>) {
+		|																												if (!mp_load_wdr) {
 		|																													state->tdreg = mp_typ_bus;
 		|																													state->vdreg = mp_val_bus;
 		|																												}

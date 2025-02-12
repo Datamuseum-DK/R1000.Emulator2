@@ -236,14 +236,14 @@ def register(part_lib):
     #    5    5    5   20240216  run_udiag fails @ 2.62s TYP RF RAM parity
     #    5    5    5   20240216  P2_VAL fails
     #    0    0    5   20240216  seems to work
-    #part_lib.add_part("F00", ModelNand(5, True))
+    part_lib.add_part("F00", ModelNand(5, True))
     #part_lib.add_part("F04", ModelNand(5, True))	# Inverters are juvenile NAND gates
     part_lib.add_part("F08", ModelNand(5, False))
     part_lib.add_part("F37", ModelNand(5, True))
-    part_lib.add_part("F10", ModelNand(5, True))	# RUN_UDIAG
-    part_lib.add_part("F20", ModelNand(5, True))
+    #part_lib.add_part("F10", ModelNand(5, True))	# RUN_UDIAG
+    #part_lib.add_part("F20", ModelNand(5, True))
     #part_lib.add_part("F30", ModelNand(5, True))
-    part_lib.add_part("F40", ModelNand(5, True))
+    #part_lib.add_part("F40", ModelNand(5, True))
     #part_lib.add_part("F133", ModelNand(5, True))
     #part_lib.add_part("AND4", ModelNand(5, False))
     #part_lib.add_part("AND3", ModelNand(5, False))

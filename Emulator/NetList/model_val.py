@@ -604,7 +604,7 @@ class VAL(PartFactory):
 		|																														uint64_t count2 = 0x40 - flsll(~state->alu);
 		|																														state->zerocnt = ~count2;
 		|																													}
-		|																													if (!PIN_LDWDR=>) {
+		|																													if (!mp_load_wdr) {
 		|																														state->wdr = ~mp_val_bus;
 		|																													}
 		|																													if (uirc == 0x28) {

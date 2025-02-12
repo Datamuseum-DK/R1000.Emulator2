@@ -41,9 +41,6 @@ class IOC(FChip):
         self.sig_right(ChipSig("+-->", "SME"))
         self.sig_right(ChipSig("+-->", "DME"))
 
-
-        self.sig_right(ChipSig("+-->", "LDWDR"))
-
         self.sig_right(ChipSig("+-->", "COND"))
         self.sig_right(ChipSig("+-->", "BLTCP"))
 

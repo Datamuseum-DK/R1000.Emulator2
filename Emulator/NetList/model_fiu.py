@@ -520,14 +520,11 @@ class FIU(PartFactory):
 		|	bool sclk = q4pos && !PIN_SCLKE=>;
 		|
 		|	bool carry, name_match;
-		|	unsigned csa;
-		|	BUS_CSA_READ(csa);
+		|	unsigned csa = mp_csa_cntl;
 		|
 		|	unsigned condsel = mp_cond_sel;
-		|	//BUS_CNDSL_READ(condsel);
 		|
-		|	unsigned mar_cntl;
-		|	BUS_MCTL_READ(mar_cntl);
+		|	unsigned mar_cntl = mp_mar_cntl;
 		|	bool rmarp = (mar_cntl & 0xe) == 0x4;
 		|
 		|	unsigned pa028a = mar_cntl << 5;

@@ -19,7 +19,6 @@ class VAL(FChip):
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
-        self.sig_left(ChipSig("-->+", "LDWDR"))
         self.sig_left(ChipSig("-->+", "CSAH"))
         self.sig_left(ChipSig("-->+", "CSAW"))
         self.sig_left(ChipSig("-->+", "STS"))

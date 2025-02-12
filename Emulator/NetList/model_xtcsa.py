@@ -76,8 +76,7 @@ class XTCSA(PartFactory):
 		|		BUS_HITOF_READ(adr);
 		|	}
 		|	adr ^= 0xf;
-		|	unsigned csacntl;
-		|	BUS_CSACT_READ(csacntl);
+		|	unsigned csacntl = mp_csa_cntl;
 		|	adr |= csacntl << 4;
 		|
 		|	if (state->inval_csa)

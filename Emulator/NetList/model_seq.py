@@ -1147,8 +1147,7 @@ class SEQ(PartFactory):
 		|																									if (!RNDX(RND_PRED_LD)) {
 		|																										state->pred = cnb;
 		|																									}
-		|																									unsigned csa_cntl;
-		|																									BUS_CTL_READ(csa_cntl);
+		|																									unsigned csa_cntl = mp_csa_cntl;
 		|																							
 		|																									bool ten = (csa_cntl != 2 && csa_cntl != 3);
 		|																									bool tud = !(csa_cntl & 1);

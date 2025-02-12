@@ -676,7 +676,7 @@ class TYP(PartFactory):
 		|																													state->csa_offset = csmux3;
 		|																												}
 		|																												if (sclke) {
-		|																													if (!PIN_LDWDR=>) {
+		|																													if (!mp_load_wdr) {
 		|																														state->wdr = ~mp_typ_bus;
 		|																													}
 		|																													if (uirc == 0x28) {
@@ -712,8 +712,9 @@ class TYP(PartFactory):
 		|																												}
 		|																												if (uirsclk) {
 		|																													state->uir = state->wcsram[mp_nua_bus] ^ 0x7fffc0000000ULL;
-		|																													output.mctl = UIR_MCTL;
 		|																													output.cctl = UIR_CCTL;
+		|																													mp_nxt_mar_cntl = UIR_MCTL;
+		|																													mp_nxt_csa_cntl = UIR_CCTL;
 		|																												}
 		|																											}
 		|

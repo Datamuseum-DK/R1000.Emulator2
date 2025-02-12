@@ -412,7 +412,9 @@ class IOC(PartFactory):
 		|	}
 		|
 		|	
-		|	output.ldwdr = UIR_ULWDR || !PIN_SCLKST=>;
+		|	if (!q4pos) {
+		|		mp_load_wdr = UIR_ULWDR || !PIN_SCLKST=>;
+		|	}
 		|//if (output.ldwdr != state->output.ldwdr) ALWAYS_TRACE(<< " LDWDR " << output.ldwdr << " " << UIR_ULWDR << " " << PIN_SCLKST=>);
 		|
 		|if (q2pos) {
