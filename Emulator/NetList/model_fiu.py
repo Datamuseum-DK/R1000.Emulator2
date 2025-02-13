@@ -120,6 +120,11 @@ class FIU(PartFactory):
 		|	bool miss;
 		|	bool csaht;
 		|	bool csa_oor_next;
+		|
+		|	unsigned tcsa_sr;
+		|	unsigned tcsa_inval_csa;
+		|	unsigned tcsa_tf_pred;
+		|
 		|	uint64_t *wcsram;
 		|	uint64_t *typwcsram;
 		|	uint64_t uir;
@@ -178,6 +183,7 @@ class FIU(PartFactory):
 		|	void rotator(bool sclk);
 		|	void fiu_conditions(unsigned condsel);
 		|	uint64_t frame(void);
+		|	void tcsa(bool clock);
 		|''')
 
     def priv_impl(self, file):
@@ -507,6 +513,66 @@ class FIU(PartFactory):
 		|
 		|
 		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|tcsa(bool clock)
+		|{
+		|	bool invalidate_csa = !(output.chit && !state->tcsa_tf_pred);
+		|	unsigned hit_offs = output.hofs;
+		|
+		|	unsigned adr;
+		|	if (state->tcsa_tf_pred) {
+		|		adr = state->tcsa_sr;
+		|		adr |= 0x100;
+		|	} else {
+		|		adr = hit_offs;
+		|	}
+		|	adr ^= 0xf;
+		|	unsigned csacntl = mp_csa_cntl;
+		|	adr |= csacntl << 4;
+		|
+		|	if (state->tcsa_inval_csa)
+		|		adr |= (1<<7);
+		|
+		|	unsigned q = state->pa060[adr];
+		|	bool load_ctl_top = (q >> 3) & 0x1;
+		|	bool load_top_bot = (q >> 2) & 0x1;
+		|	bool sel_constant = (q >> 1) & 0x1;
+		|	bool minus_one = (q >> 0) & 0x1;
+		|
+		|
+		|	//ALWAYS_TRACE(<< "TCSA2 " << std::hex << q << " " << adr << " " << hit_offs << " " << state->tcsa_tf_pred << " " << state->tcsa_sr << " " U);
+		|
+		|const bool me = 0;
+		|if (me) {
+		|	mp_load_top = !(load_top_bot && ((csacntl >> 1) & 1));
+		|	mp_load_bot = !(load_top_bot && ((csacntl >> 2) & 1));
+		|	mp_pop_down = load_ctl_top && state->tcsa_tf_pred;
+		|}
+		|
+		|if (me) {
+		|	if (!invalidate_csa) {
+		|		mp_csa_offs = 0xf;
+		|	} else if (!sel_constant && !minus_one) {
+		|		mp_csa_offs = 0x1;
+		|	} else if (!sel_constant && minus_one) {
+		|		mp_csa_offs = 0xf;
+		|	} else {
+		|		mp_csa_offs = hit_offs;
+		|	}
+		|
+		|	//mp_csa_nve = q >> 4;
+		|}
+		|
+		|	if (clock) {
+		|		// mp_tcsa_sr = q >> 4;
+		|		state->tcsa_inval_csa = invalidate_csa;
+		|		state->tcsa_tf_pred = !state->pdt;
+		|		// ALWAYS_TRACE(<< "TCSA2 " << std::hex << q << " " << state->tcsa_inval_csa << " " << state->tcsa_tf_pred);
+		|	}
+		|
+		|}
 		|''')
 
     def doit(self, file):
@@ -566,6 +632,7 @@ class FIU(PartFactory):
 		|												output.hofs = (0xf + state->nve - (dif & 0xf)) & 0xf;
 		|											
 		|												output.chit = !(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
+		|												// tcsa(false);
 		|
 		|												unsigned pa025a = 0;
 		|												pa025a |= mem_start;
@@ -742,6 +809,7 @@ class FIU(PartFactory):
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|																			if (q4pos) {
+		|																				tcsa(PIN_TCCLK.posedge());
 		|																				if (sclk) {
 		|																					if (UIR_LDMDR || !UIR_TCLK || !UIR_VCLK) {
 		|																						rotator(sclk);
@@ -955,10 +1023,7 @@ class FIU(PartFactory):
 		|																					state->uir = state->wcsram[mp_nua_bus];
 		|																					state->typuir = state->typwcsram[mp_nua_bus];
 		|																				}
-		|																			}
 		|
-		|//	ALWAYS						H1				Q1				Q2				Q4
-		|																			if (q4pos) {
 		|																				if (mp_fiu_freeze && !output.freze) {
 		|																					output.freze = 1;
 		|																				} else if (!mp_fiu_freeze && output.freze && !output.sync) {
@@ -995,6 +1060,9 @@ class FIU(PartFactory):
 		|		}
 		|#endif
 		|	}
+		|if (!q4pos) {
+		|	tcsa(false);
+		|}
 		|''')
 
 def register(part_lib):

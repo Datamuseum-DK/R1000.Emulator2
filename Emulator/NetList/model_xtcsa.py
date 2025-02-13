@@ -44,9 +44,6 @@ class XTCSA(PartFactory):
     def state(self, file):
         file.fmt('''
 		|	uint8_t pa060[512];
-		|	uint8_t sr;
-		|	bool inval_csa;
-		|	bool tf_pred;
 		|''')
 
     def init(self, file):
@@ -63,14 +60,13 @@ class XTCSA(PartFactory):
     def doit(self, file):
 
         file.fmt('''
-		|
-		|	bool invalidate_csa = !(PIN_CSAHIT=> && !state->tf_pred);
+		|	bool invalidate_csa = !(PIN_CSAHIT=> && !mp_tcsa_tp);
 		|	unsigned hit_offs;
 		|	BUS_HITOF_READ(hit_offs);
 		|
 		|	unsigned adr;
-		|	if (state->tf_pred) {
-		|		adr = state->sr;
+		|	if (mp_tcsa_tp) {
+		|		adr = mp_tcsa_sr;
 		|		adr |= 0x100;
 		|	} else {
 		|		BUS_HITOF_READ(adr);
@@ -79,18 +75,20 @@ class XTCSA(PartFactory):
 		|	unsigned csacntl = mp_csa_cntl;
 		|	adr |= csacntl << 4;
 		|
-		|	if (state->inval_csa)
+		|	if (mp_tcsa_ic)
 		|		adr |= (1<<7);
 		|
 		|	unsigned q = state->pa060[adr];
+		|
 		|	bool load_ctl_top = (q >> 3) & 0x1;
 		|	bool load_top_bot = (q >> 2) & 0x1;
 		|	bool sel_constant = (q >> 1) & 0x1;
 		|	bool minus_one = (q >> 0) & 0x1;
 		|
+		|if (1) {
 		|	mp_load_top = !(load_top_bot && ((csacntl >> 1) & 1));
 		|	mp_load_bot = !(load_top_bot && ((csacntl >> 2) & 1));
-		|	mp_pop_down = load_ctl_top && state->tf_pred;
+		|	mp_pop_down = load_ctl_top && mp_tcsa_tp;
 		|
 		|	if (!invalidate_csa) {
 		|		mp_csa_offs = 0xf;
@@ -101,14 +99,15 @@ class XTCSA(PartFactory):
 		|	} else {
 		|		mp_csa_offs = hit_offs;
 		|	}
+		|}
+		|	mp_csa_nve = q >> 4;
 		|
 		|	if (PIN_CSACLK.posedge()) {
-		|		state->sr = output.nve;
-		|		state->inval_csa = invalidate_csa;
-		|		state->tf_pred = PIN_TFPRED=>;
+		|		mp_tcsa_sr = q >> 4;
+		|		mp_tcsa_ic = invalidate_csa;
+		|		mp_tcsa_tp = PIN_TFPRED=>;
+		|		// ALWAYS_TRACE(<< "TCSA1 " << std::hex << q << " " << state->inval_csa << " " << state->tf_pred);
 		|	}
-		|	output.nve = q >> 4;
-		|	mp_csa_nve = q >> 4;
 		|
 		|''')
 
