@@ -49,6 +49,7 @@ class FIU(FChip):
         self.sig_left(ChipSig("-->+", "MICEN"))
 
         self.sig_left(ChipSig("-->+", "TCCLK"))
+        self.sig_left(ChipSig("-->+", "FPRED"))
 
         self.sig_right(ChipSig("+<--", "QVOE"))
 
@@ -57,7 +58,6 @@ class FIU(FChip):
         self.sig_right(ChipSig("+<--", "BDHIT", 0, 3))
         self.sig_right(ChipSig("+<--", "ST", 0, 1))
 
-        self.sig_right(ChipSig("+-->", "HOFS", 0, 3))
         self.sig_right(ChipSig("+-->", "MEMCT", 0, 3))
 
 

@@ -178,6 +178,7 @@ class FIU(PartFactory):
 		|	bool mp_seq_uev10_page_x;
 		|	bool mp_seq_uev0_memex;
 		|	unsigned countdown;
+		|	unsigned hit_offset;
 		|
 		|	void do_tivi(void);
 		|	void rotator(bool sclk);
@@ -247,7 +248,7 @@ class FIU(PartFactory):
 		|	u |= (uint64_t)state->in_range << BUS64_LSB(57);
 		|	u |= (uint64_t)state->csa_oor_next << BUS64_LSB(58);
 		|	u |= (uint64_t)output.chit << BUS64_LSB(59);
-		|	u |= (uint64_t)output.hofs;
+		|	u |= (uint64_t)hit_offset;
 		|	return (u);
 		|}
 		|
@@ -519,7 +520,7 @@ class FIU(PartFactory):
 		|tcsa(bool clock)
 		|{
 		|	bool invalidate_csa = !(output.chit && !state->tcsa_tf_pred);
-		|	unsigned hit_offs = output.hofs;
+		|	unsigned hit_offs = hit_offset;
 		|
 		|	unsigned adr;
 		|	if (state->tcsa_tf_pred) {
@@ -544,7 +545,7 @@ class FIU(PartFactory):
 		|
 		|	//ALWAYS_TRACE(<< "TCSA2 " << std::hex << q << " " << adr << " " << hit_offs << " " << state->tcsa_tf_pred << " " << state->tcsa_sr << " " U);
 		|
-		|const bool me = 0;
+		|const bool me = 1;
 		|if (me) {
 		|	mp_load_top = !(load_top_bot && ((csacntl >> 1) & 1));
 		|	mp_load_bot = !(load_top_bot && ((csacntl >> 2) & 1));
@@ -562,14 +563,13 @@ class FIU(PartFactory):
 		|		mp_csa_offs = hit_offs;
 		|	}
 		|
-		|	//mp_csa_nve = q >> 4;
+		|	mp_csa_nve = q >> 4;
 		|}
 		|
 		|	if (clock) {
-		|		// mp_tcsa_sr = q >> 4;
+		|		state->tcsa_sr = q >> 4;
+		|		state->tcsa_tf_pred = PIN_FPRED=>;
 		|		state->tcsa_inval_csa = invalidate_csa;
-		|		state->tcsa_tf_pred = !state->pdt;
-		|		// ALWAYS_TRACE(<< "TCSA2 " << std::hex << q << " " << state->tcsa_inval_csa << " " << state->tcsa_tf_pred);
 		|	}
 		|
 		|}
@@ -629,7 +629,7 @@ class FIU(PartFactory):
 		|											
 		|												state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
 		|											
-		|												output.hofs = (0xf + state->nve - (dif & 0xf)) & 0xf;
+		|												hit_offset = (0xf + state->nve - (dif & 0xf)) & 0xf;
 		|											
 		|												output.chit = !(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
 		|												// tcsa(false);
@@ -892,7 +892,7 @@ class FIU(PartFactory):
 		|																			
 		|																				state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
 		|																			
-		|																				output.hofs = (0xf + state->nve - (dif & 0xf)) & 0xf;
+		|																				hit_offset = (0xf + state->nve - (dif & 0xf)) & 0xf;
 		|
 		|																				uint64_t adr = 0;
 		|																				adr = mp_adr_bus;

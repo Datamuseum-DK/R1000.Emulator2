@@ -712,7 +712,7 @@ class TYP(PartFactory):
 		|																												}
 		|																												if (uirsclk) {
 		|																													state->uir = state->wcsram[mp_nua_bus] ^ 0x7fffc0000000ULL;
-		|																													output.cctl = UIR_CCTL;
+		|																													// output.cctl = UIR_CCTL;
 		|																													mp_nxt_mar_cntl = UIR_MCTL;
 		|																													mp_nxt_csa_cntl = UIR_CCTL;
 		|																												}

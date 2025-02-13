@@ -71,9 +71,6 @@ void f181_alu(struct f181 *);
 	macro(unsigned, load_bot, 0) \
 	macro(unsigned, pop_down, 0) \
 	macro(unsigned, load_wdr, 0) \
-	macro(unsigned, tcsa_sr, 0) \
-	macro(unsigned, tcsa_ic, 0) \
-	macro(unsigned, tcsa_tp, 0) \
 
 #define MIDSTATE(macro) \
 	macro(unsigned, cond_sel, 0) \
