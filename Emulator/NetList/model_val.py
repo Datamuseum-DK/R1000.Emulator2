@@ -571,8 +571,8 @@ class VAL(PartFactory):
 		|
 		|
 		|																												if (uirsclk) {
-		|																													state->csa_hit = PIN_CSAH=>;
-		|																													state->csa_write = PIN_CSAW=>;
+		|																													state->csa_hit = mp_csa_hit;
+		|																													state->csa_write = mp_csa_wr;
 		|																													output.cwe = !(state->csa_hit || state->csa_write);
 		|																												}
 		|

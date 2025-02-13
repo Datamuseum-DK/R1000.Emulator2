@@ -67,10 +67,23 @@ void f181_alu(struct f181 *);
 	macro(unsigned, key_switch, 1) \
 	macro(unsigned, csa_offs, 0) \
 	macro(unsigned, csa_nve, 0) \
+	macro(unsigned, csa_hit, 0) \
+	macro(unsigned, csa_wr, 0) \
 	macro(unsigned, load_top, 0) \
 	macro(unsigned, load_bot, 0) \
 	macro(unsigned, pop_down, 0) \
 	macro(unsigned, load_wdr, 0) \
+	macro(unsigned, condx0, 0) \
+	macro(unsigned, condx2, 0) \
+	macro(unsigned, condx3, 0) \
+	macro(unsigned, condx8, 0) \
+	macro(unsigned, condx9, 0) \
+	macro(unsigned, condxa, 0) \
+	macro(unsigned, condxb, 0) \
+	macro(unsigned, condxc, 0) \
+	macro(unsigned, condxd, 0) \
+	macro(unsigned, condxe, 0) \
+	macro(unsigned, condxf, 0) \
 
 #define MIDSTATE(macro) \
 	macro(unsigned, cond_sel, 0) \

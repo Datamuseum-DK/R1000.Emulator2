@@ -31,7 +31,6 @@ class IOC(FChip):
         self.sig_left(ChipSig("-->+", "TRAEN"))
         
         self.sig_left(ChipSig("-->+", "DUMNXT"))
-        self.sig_left(ChipSig("-->+", "ICSAH"))
 
         self.sig_right(ChipSig("+<--", "QVALOE"))
 
@@ -41,7 +40,6 @@ class IOC(FChip):
         self.sig_right(ChipSig("+-->", "SME"))
         self.sig_right(ChipSig("+-->", "DME"))
 
-        self.sig_right(ChipSig("+-->", "COND"))
         self.sig_right(ChipSig("+-->", "BLTCP"))
 
         self.sig_right(ChipSig("+-->", "AEN", 0, 3))

@@ -461,40 +461,40 @@ class IOC(PartFactory):
 		|	}
 		|
 		|	unsigned cond_sel = mp_cond_sel;
-		|	// BUS_CONDS_READ(cond_sel);
 		|	switch (cond_sel) {
 		|	case 0x78:
-		|		output.cond = true; // state->multibit_error;
+		|		mp_condx0 = true; // state->multibit_error;
 		|		break;
 		|	case 0x79:
 		|		{
 		|		uint64_t tmp;
 		|		tmp = typ & 0x80000047;
-		|		output.cond = 
+		|		mp_condx0 = 
 		|		    tmp == 0x80000000 ||
 		|		    tmp == 0x80000040 ||
 		|		    tmp == 0x80000044;
 		|		}
 		|		break;
 		|	case 0x7a:
-		|		output.cond = true; // state->checkbit_error;
+		|		mp_condx0 = true; // state->checkbit_error;
 		|		break;
 		|	case 0x7b:
-		|		output.cond = state->reqwrp != state->reqrdp;
+		|		mp_condx0 = state->reqwrp != state->reqrdp;
 		|		break;
 		|	case 0x7c:
-		|		output.cond = state->acnt == 0xfff;
+		|		mp_condx0 = state->acnt == 0xfff;
 		|		break;
 		|	case 0x7d:
-		|		output.cond = true;
+		|		mp_condx0 = true;
 		|		break;
 		|	case 0x7e:
-		|		output.cond = state->rspwrp != state->rsprdp;
+		|		mp_condx0 = state->rspwrp != state->rsprdp;
 		|		break;
 		|	case 0x7f:
-		|		output.cond = true;
+		|		mp_condx0 = true;
 		|		break;
 		|	}
+		|	//output.cond = mp_condx0;
 		|//	ALWAYS						Q2				H2				Q3				Q4
 		|																			if (q4pos) {
 		|																				if (!PIN_RTCEN=>) {
@@ -503,7 +503,7 @@ class IOC(PartFactory):
 		|																					output.aen = (1 << UIR_AEN) ^ 0xf;
 		|																					output.fen = (1 << UIR_FEN) ^ 0xf;
 		|																					state->dumen = !PIN_DUMNXT=>;
-		|																					state->csa_hit = !PIN_ICSAH=>;
+		|																					state->csa_hit = !mp_csa_hit;
 		|																					unsigned tvbs = UIR_TVBS;
 		|
 		|																					uint16_t tdat = mp_nua_bus;

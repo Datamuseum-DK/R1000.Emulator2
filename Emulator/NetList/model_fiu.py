@@ -199,7 +199,7 @@ class FIU(PartFactory):
 		|	case 0x60: output.conda = !state->memex; 		break;
 		|	case 0x61: output.conda = !state->phys_last; 		break;
 		|	case 0x62: output.conda = !state->write_last; 		break;
-		|	case 0x63: output.conda = !output.chit; 		break;
+		|	case 0x63: output.conda = !mp_csa_hit; 		break;
 		|	case 0x64: output.conda = !((state->oreg >> 6) & 1); 	break;
 		|	case 0x65: // Cross word shift
 		|		output.conda = (state->oreg + (state->lfreg & 0x3f) + (state->lfreg & 0x80)) <= 255;
@@ -247,7 +247,7 @@ class FIU(PartFactory):
 		|	u |= (uint64_t)state->nmatch << BUS64_LSB(56);
 		|	u |= (uint64_t)state->in_range << BUS64_LSB(57);
 		|	u |= (uint64_t)state->csa_oor_next << BUS64_LSB(58);
-		|	u |= (uint64_t)output.chit << BUS64_LSB(59);
+		|	u |= (uint64_t)mp_csa_hit << BUS64_LSB(59);
 		|	u |= (uint64_t)hit_offset;
 		|	return (u);
 		|}
@@ -519,7 +519,7 @@ class FIU(PartFactory):
 		|SCM_«mmm» ::
 		|tcsa(bool clock)
 		|{
-		|	bool invalidate_csa = !(output.chit && !state->tcsa_tf_pred);
+		|	bool invalidate_csa = !(mp_csa_hit && !state->tcsa_tf_pred);
 		|	unsigned hit_offs = hit_offset;
 		|
 		|	unsigned adr;
@@ -631,7 +631,7 @@ class FIU(PartFactory):
 		|											
 		|												hit_offset = (0xf + state->nve - (dif & 0xf)) & 0xf;
 		|											
-		|												output.chit = !(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
+		|												mp_csa_hit = (bool)!(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
 		|												// tcsa(false);
 		|
 		|												unsigned pa025a = 0;
@@ -757,7 +757,7 @@ class FIU(PartFactory):
 		|																	output.dnext = !state->dumon;
 		|																}
 		|														
-		|																output.csawr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
+		|																mp_csa_wr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
 		|																if (!PIN_QADROE=>) {
 		|																	bool inc_mar = (state->prmt >> 3) & 1;
 		|																	unsigned inco = state->moff & 0x1f;
@@ -955,7 +955,7 @@ class FIU(PartFactory):
 		|																				state->e_abort_dly = eabrt;
 		|																				state->pcntl_d = pa026 & 0xf;
 		|																				state->dumon = idum;
-		|																				state->csaht = !output.chit;
+		|																				state->csaht = !mp_csa_hit;
 		|
 		|																				if (!PIN_SFSTP=>) {
 		|																					bool cache_miss_next = state->cache_miss;

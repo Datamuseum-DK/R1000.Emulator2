@@ -28,8 +28,6 @@ class TYP(FChip):
 
         # CLOCKS
         self.sig_left(ChipSig("-->+", "Q2"))
-        self.sig_left(ChipSig("-->+", "CSAH"))
-        self.sig_left(ChipSig("-->+", "CSAW"))
 
         self.sig_left(ChipSig("-->+", "H2"))
         self.sig_left(ChipSig("-->+", "Q4"))
@@ -50,13 +48,7 @@ class TYP(FChip):
         self.sig_right(ChipSig("+-->", "T0STP"))
         self.sig_right(ChipSig("+-->", "T1STP"))
 
-        self.sig_right(ChipSig("+-->", "CONDA"))
-        self.sig_right(ChipSig("+-->", "CONDB"))
-        self.sig_right(ChipSig("+-->", "CONDC"))
-        self.sig_right(ChipSig("+-->", "CONDD"))
-        self.sig_right(ChipSig("+-->", "CONDE"))
         self.sig_right(ChipSig("+-->", "LDMAR"))
-        self.sig_right(ChipSig("+-->", "FPDT"))
 
         self.finish()
 

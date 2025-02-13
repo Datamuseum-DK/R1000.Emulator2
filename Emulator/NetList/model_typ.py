@@ -186,11 +186,11 @@ class TYP(PartFactory):
 		|	));
 		|}
 		|
-		|void SCM_«mmm» :: cond_a(bool val) { state->cond = val; output.conda = !val; };
-		|void SCM_«mmm» :: cond_b(bool val) { state->cond = val; output.condb = !val; };
-		|void SCM_«mmm» :: cond_c(bool val) { state->cond = val; output.condc = !val; };
-		|void SCM_«mmm» :: cond_d(bool val) { state->cond = val; output.condd = !val; };
-		|void SCM_«mmm» :: cond_e(bool val) { state->cond = val; output.conde = !val; };
+		|void SCM_«mmm» :: cond_a(bool val) { state->cond = val; mp_condxc = !val; };
+		|void SCM_«mmm» :: cond_b(bool val) { state->cond = val; mp_condxb = !val; };
+		|void SCM_«mmm» :: cond_c(bool val) { state->cond = val; mp_condxa = !val; };
+		|void SCM_«mmm» :: cond_d(bool val) { state->cond = val; mp_condx9 = !val; };
+		|void SCM_«mmm» :: cond_e(bool val) { state->cond = val; mp_condx8 = !val; };
 		|
 		|void
 		|SCM_«mmm» ::
@@ -620,8 +620,8 @@ class TYP(PartFactory):
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
 		|																												if (uirsclk) {
-		|																													state->csa_hit = PIN_CSAH=>;
-		|																													state->csa_write = PIN_CSAW=>;
+		|																													state->csa_hit = mp_csa_hit;
+		|																													state->csa_write = mp_csa_wr;
 		|																													output.cwe = !(state->csa_hit || state->csa_write);
 		|																												}
 		|
@@ -719,7 +719,9 @@ class TYP(PartFactory):
 		|																											}
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	typ_cond(condsel, 0);
+		|	if (!q4pos) {
+		|		typ_cond(condsel, 0);
+		|	}
 		|''')
 
 def register(part_lib):
