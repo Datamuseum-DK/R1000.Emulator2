@@ -774,9 +774,9 @@ class FIU(PartFactory):
 		|																output.cndtru = !(state->cndtru);
 		|														
 		|																if (memcyc1) {
-		|																	output.memct = state->lcntl;
+		|																	mp_mem_ctl= state->lcntl;
 		|																} else {
-		|																	output.memct = pa026 & 0xf;
+		|																	mp_mem_ctl= pa026 & 0xf;
 		|																}
 		|																bool inc_mar = (state->prmt >> 3) & 1;
 		|																state->page_crossing_next = (
@@ -787,7 +787,7 @@ class FIU(PartFactory):
 		|																		(!state->page_xing && inc_mar && (state->moff & 0x1f) == 0x1f)
 		|																	)
 		|																);
-		|																output.contin = !((pa025 >> 5) & 1);
+		|																mp_mem_continue= !((pa025 >> 5) & 1);
 		|																mp_seq_uev10_page_x = !(PIN_MICEN=> && state->page_xing);
 		|																if (PIN_MICEN=> && state->page_xing) {
 		|																	mp_seq_uev |= UEV_PAGE_X;

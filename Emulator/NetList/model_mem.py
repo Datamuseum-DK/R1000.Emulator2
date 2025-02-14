@@ -375,8 +375,8 @@ class MEM(PartFactory):
 		|																													if (is_hit(badr | 6, badr | 6, 6)) state->hits |= BSET_6;
 		|																													if (is_hit(badr | 7, badr | 7, 7)) state->hits |= BSET_7;
 		|																												}
-		|																												BUS_MCMD_READ(state->q4cmd);
-		|																												state->q4cont = PIN_CONT=>;
+		|																												state->q4cmd = mp_mem_ctl;
+		|																												state->q4cont = mp_mem_continue;
 		|																												state->labort = labort;
 		|																												state->eabort = !(PIN_EABT=> && PIN_ELABT=>);
 		|																											}
