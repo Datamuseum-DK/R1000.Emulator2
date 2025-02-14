@@ -327,13 +327,13 @@ class MEM(PartFactory):
 		|
 		|								bool not_me =  (output.hita && output.hitb);
 		|							
-		|								if (!PIN_QVOE=> && PIN_QTOE=>) {
+		|								if (!mp_memv_oe && mp_memtv_oe) {
 		|									if (not_me) {
 		|										mp_val_bus = ~0ULL;
 		|									} else {
 		|										mp_val_bus = state->qreg;
 		|									}
-		|								} else if (!PIN_QTOE=>) {
+		|								} else if (!mp_memtv_oe) {
 		|									if (not_me) {
 		|										mp_typ_bus = ~0ULL;
 		|										mp_val_bus = ~0ULL;

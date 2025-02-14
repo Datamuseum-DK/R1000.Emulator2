@@ -320,7 +320,7 @@ class VAL(PartFactory):
 		|	bool oe, oe7;
 		|	if (uirb != 0x29) {
 		|		oe = false;
-		|	} else if (!state->csa_hit && !PIN_QVOE=>) { 
+		|	} else if (!state->csa_hit && !mp_valv_oe) { 
 		|		oe = false;
 		|	} else {
 		|		oe = true;
@@ -395,7 +395,7 @@ class VAL(PartFactory):
 		|								output.qf = state->a ^ BUS_QF_MASK;
 		|								mp_fiu_bus = output.qf;
 		|							}
-		|							if (h1pos && !PIN_QVOE=>) {
+		|							if (h1pos && !mp_valv_oe) {
 		|								find_b();
 		|								mp_val_bus = ~state->b;
 		|							}
@@ -404,7 +404,7 @@ class VAL(PartFactory):
 		|																if (output.z_qf) {
 		|																	find_a();
 		|																}
-		|																if (PIN_QVOE=>) {
+		|																if (mp_valv_oe) {
 		|																	find_b();
 		|																}
 		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT

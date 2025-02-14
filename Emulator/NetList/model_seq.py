@@ -627,8 +627,7 @@ class SEQ(PartFactory):
 		|									output.qf ^= 0xffff;
 		|									mp_fiu_bus = output.qf;
 		|								}
-		|								assert(PIN_QTOE=> == PIN_QVOE=>);
-		|								if (PIN_QTOE=>) {
+		|								if (mp_seqtv_oe) {
 		|									h1pos = false;
 		|								}
 		|							}

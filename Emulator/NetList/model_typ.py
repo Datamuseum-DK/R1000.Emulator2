@@ -399,7 +399,7 @@ class TYP(PartFactory):
 		|	} else {
 		|		state->badr |= uirb & 0x1f;
 		|	}
-		|	if (uirb == 0x29 && PIN_QTOE=>) {
+		|	if (uirb == 0x29 && mp_typt_oe) {
 		|		state->b = ~mp_typ_bus;
 		|	} else {
 		|		state->b = state->rfram[state->badr];
@@ -447,7 +447,7 @@ class TYP(PartFactory):
 		|													output.qf = state->a ^ BUS_QF_MASK;
 		|													mp_fiu_bus = ~state->a;
 		|												}
-		|												if (!PIN_QTOE=>) {
+		|												if (!mp_typt_oe) {
 		|													find_b();
 		|													mp_typ_bus = ~state->b;
 		|												}
@@ -458,7 +458,7 @@ class TYP(PartFactory):
 		|																if (output.z_qf) {
 		|																	find_a();
 		|																}
-		|																if (PIN_QTOE=>) {
+		|																if (mp_typt_oe) {
 		|																	find_b();
 		|																}
 		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT

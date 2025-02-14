@@ -1034,12 +1034,12 @@ class FIU(PartFactory):
 		|																			}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|
-		|	if ((!PIN_QTOE=> || !PIN_QVOE=>) && !q4pos) {
+		|	if ((!mp_fiut_oe || !mp_fiuv_oe) && !q4pos) {
 		|		do_tivi();
-		|		if (!PIN_QTOE=>) {
+		|		if (!mp_fiut_oe) {
 		|			mp_typ_bus = ~state->ti_bus;
 		|		}
-		|		if (!PIN_QVOE=>) {
+		|		if (!mp_fiuv_oe) {
 		|			mp_val_bus = ~state->vi_bus;
 		|		}
 		|	}

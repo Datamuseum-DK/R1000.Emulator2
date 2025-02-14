@@ -40,8 +40,6 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "FREZE"))
         self.sig_left(ChipSig("-->+", "SFS"))
 
-        self.sig_right(ChipSig("+<--", "QTOE"))
-
         self.sig_right(ChipSig("+-->", "CWE"))
         self.sig_right(ChipSig("+-->", "T0STP"))
         self.sig_right(ChipSig("+-->", "T1STP"))

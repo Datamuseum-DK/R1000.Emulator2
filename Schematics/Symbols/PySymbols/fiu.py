@@ -13,8 +13,6 @@ class FIU(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "QTOE"))
-
         self.sig_left(ChipSig("<->+", "DQF", 0, 63))
         self.sig_left(ChipSig("-->+", "QFOE"))
 
@@ -49,8 +47,6 @@ class FIU(FChip):
         self.sig_left(ChipSig("-->+", "MICEN"))
 
         self.sig_left(ChipSig("-->+", "TCCLK"))
-
-        self.sig_right(ChipSig("+<--", "QVOE"))
 
         self.sig_right(ChipSig("+<--", "BDHIT", 0, 3))
         self.sig_right(ChipSig("+<--", "ST", 0, 1))

@@ -429,11 +429,9 @@ class IOC(PartFactory):
 		|
 		|}
 		|
-		|	if (!PIN_QVALOE=> && !q4pos) {
+		|	if (!mp_ioctv_oe && !q4pos) {
 		|		mp_val_bus = state->dummy_val;
-		|	}
 		|
-		|	if (!PIN_QTYPOE=> && !q4pos) {
 		|		switch (rand) {
 		|		case 0x05:
 		|			mp_typ_bus = (uint64_t)(state->slice) << 48;
@@ -518,7 +516,7 @@ class IOC(PartFactory):
 		|																						tptr &= 0x7ff;
 		|																						state->tram[2048] = tptr;
 		|																					}
-		|
+		|#if 0
 		|																					output.seqtv = true;
 		|																					output.fiuv = true;
 		|																					output.fiut = true;
@@ -552,6 +550,45 @@ class IOC(PartFactory):
 		|																						} else {
 		|																							output.memtv = false;
 		|																							output.memv = false;
+		|																						}
+		|																						break;
+		|																					default:
+		|																						break;
+		|																					}
+		|#endif
+		|																					mp_nxt_seqtv_oe = true;
+		|																					mp_nxt_fiuv_oe = true;
+		|																					mp_nxt_fiut_oe = true;
+		|																					mp_nxt_memv_oe = true;
+		|																					mp_nxt_memtv_oe = true;
+		|																					mp_nxt_ioctv_oe = true;
+		|																					mp_nxt_valv_oe = true;
+		|																					mp_nxt_typt_oe = true;
+		|																					switch (tvbs) {
+		|																					case 0x0: mp_nxt_valv_oe = false; mp_nxt_typt_oe = false; break;
+		|																					case 0x1: mp_nxt_fiuv_oe = false; mp_nxt_typt_oe = false; break;
+		|																					case 0x2: mp_nxt_valv_oe = false; mp_nxt_fiut_oe = false; break;
+		|																					case 0x3: mp_nxt_fiuv_oe = false; mp_nxt_fiut_oe = false; break;
+		|																					case 0x4: mp_nxt_ioctv_oe = false; break;
+		|																					case 0x5: mp_nxt_seqtv_oe = false; break;
+		|																					case 0x8:
+		|																					case 0x9:
+		|																						mp_nxt_memv_oe = false; mp_nxt_typt_oe = false; break;
+		|																					case 0xa:
+		|																					case 0xb:
+		|																						mp_nxt_memv_oe = false; mp_nxt_fiut_oe = false; break;
+		|																					case 0xc:
+		|																					case 0xd:
+		|																					case 0xe:
+		|																					case 0xf:
+		|																						if (state->dumen) {
+		|																							mp_nxt_ioctv_oe = false;
+		|																						} else if (state->csa_hit) {
+		|																							mp_nxt_typt_oe = false;
+		|																							mp_nxt_valv_oe = false;
+		|																						} else {
+		|																							mp_nxt_memtv_oe = false;
+		|																							mp_nxt_memv_oe = false;
 		|																						}
 		|																						break;
 		|																					default:
