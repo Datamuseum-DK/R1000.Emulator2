@@ -538,8 +538,8 @@ class SEQ(PartFactory):
 		|	case 0xa: return(mp_condxa);
 		|	case 0xb: return(mp_condxb);
 		|	case 0xc: return(mp_condxc);
-		|	case 0xd: return(PIN_CNDXD=>);
-		|	case 0xe: return(PIN_CNDXE=>);
+		|	case 0xd: return(mp_condxd);
+		|	case 0xe: return(mp_condxe);
 		|	case 0xf: return(PIN_CNDXF=>);
 		|	default: return(1);
 		|	}

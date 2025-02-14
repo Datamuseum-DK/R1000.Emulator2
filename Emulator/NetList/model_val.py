@@ -187,7 +187,7 @@ class VAL(PartFactory):
 		|		cond = true;
 		|		break;
 		|	}
-		|	output.vcndb = !cond;
+		|	//output.vcndb = !cond;
 		|	mp_condxe = !cond;
 		|	if (csa_clk) {
 		|		state->last_cond = cond;
@@ -224,7 +224,7 @@ class VAL(PartFactory):
 		|		cond = true;
 		|		break;
 		|	}
-		|	output.vcndc = !cond;
+		|	//output.vcndc = !cond;
 		|	mp_condxd = !cond;
 		|	if (csa_clk) {
 		|		state->last_cond = cond;

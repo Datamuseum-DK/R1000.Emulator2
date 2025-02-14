@@ -542,17 +542,10 @@ class FIU(PartFactory):
 		|	bool sel_constant = (q >> 1) & 0x1;
 		|	bool minus_one = (q >> 0) & 0x1;
 		|
-		|
-		|	//ALWAYS_TRACE(<< "TCSA2 " << std::hex << q << " " << adr << " " << hit_offs << " " << state->tcsa_tf_pred << " " << state->tcsa_sr << " " U);
-		|
-		|const bool me = 1;
-		|if (me) {
 		|	mp_load_top = !(load_top_bot && ((csacntl >> 1) & 1));
 		|	mp_load_bot = !(load_top_bot && ((csacntl >> 2) & 1));
 		|	mp_pop_down = load_ctl_top && state->tcsa_tf_pred;
-		|}
 		|
-		|if (me) {
 		|	if (!invalidate_csa) {
 		|		mp_csa_offs = 0xf;
 		|	} else if (!sel_constant && !minus_one) {
@@ -564,12 +557,14 @@ class FIU(PartFactory):
 		|	}
 		|
 		|	mp_csa_nve = q >> 4;
-		|}
 		|
 		|	if (clock) {
 		|		state->tcsa_sr = q >> 4;
-		|		state->tcsa_tf_pred = PIN_FPRED=>;
 		|		state->tcsa_inval_csa = invalidate_csa;
+		|		//state->tcsa_tf_pred = PIN_FPRED=>;
+		|		unsigned csacntl0 = (state->typwcsram[mp_nua_bus] >> 1) & 7;
+		|		unsigned csacntl1 = (state->typuir >> 1) & 6;
+		|		state->tcsa_tf_pred = !((csacntl0 == 7) && (csacntl1 == 0));
 		|	}
 		|
 		|}
