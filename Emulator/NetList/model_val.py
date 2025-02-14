@@ -152,6 +152,7 @@ class VAL(PartFactory):
 		|		break;
 		|	}
 		|	output.vcnda = !cond;
+		|	mp_condxf = !cond;
 		|	if (csa_clk) {
 		|		state->last_cond = cond;
 		|	}
@@ -187,6 +188,7 @@ class VAL(PartFactory):
 		|		break;
 		|	}
 		|	output.vcndb = !cond;
+		|	mp_condxe = !cond;
 		|	if (csa_clk) {
 		|		state->last_cond = cond;
 		|	}
@@ -223,6 +225,7 @@ class VAL(PartFactory):
 		|		break;
 		|	}
 		|	output.vcndc = !cond;
+		|	mp_condxd = !cond;
 		|	if (csa_clk) {
 		|		state->last_cond = cond;
 		|	}
@@ -642,14 +645,15 @@ class VAL(PartFactory):
 		|																												}
 		|																											}
 		|
-		|	unsigned csel = mp_cond_sel;
-		|	//BUS_CSEL_READ(csel);
-		|	switch (csel >> 3) {
-		|	case 0x0: cond_a(csel); break;
-		|	case 0x1: cond_b(csel); break;
-		|	case 0x2: cond_c(csel); break;
-		|	case 0xb: cond_a(csel); break;
-		|	default: break;
+		|	if (1 || !q4pos) {
+		|		unsigned csel = mp_cond_sel;
+		|		switch (csel >> 3) {
+		|		case 0x0: cond_a(csel); break;
+		|		case 0x1: cond_b(csel); break;
+		|		case 0x2: cond_c(csel); break;
+		|		case 0xb: cond_a(csel); break;
+		|		default: break;
+		|		}
 		|	}
 		|
 		|''')

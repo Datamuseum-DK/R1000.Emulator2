@@ -196,24 +196,24 @@ class FIU(PartFactory):
 		|{
 		|
 		|	switch(condsel) {
-		|	case 0x60: output.conda = !state->memex; 		break;
-		|	case 0x61: output.conda = !state->phys_last; 		break;
-		|	case 0x62: output.conda = !state->write_last; 		break;
-		|	case 0x63: output.conda = !mp_csa_hit; 		break;
-		|	case 0x64: output.conda = !((state->oreg >> 6) & 1); 	break;
+		|	case 0x60: mp_condx3 = !state->memex; 		break;
+		|	case 0x61: mp_condx3 = !state->phys_last; 		break;
+		|	case 0x62: mp_condx3 = !state->write_last; 		break;
+		|	case 0x63: mp_condx3 = !mp_csa_hit; 		break;
+		|	case 0x64: mp_condx3 = !((state->oreg >> 6) & 1); 	break;
 		|	case 0x65: // Cross word shift
-		|		output.conda = (state->oreg + (state->lfreg & 0x3f) + (state->lfreg & 0x80)) <= 255;
+		|		mp_condx3 = (state->oreg + (state->lfreg & 0x3f) + (state->lfreg & 0x80)) <= 255;
 		|		break;
-		|	case 0x66: output.conda = (state->moff & 0x3f) > 0x30; 	break;
-		|	case 0x67: output.conda = !output.rfsh; 		break;
-		|	case 0x68: output.condb = !state->csa_oor_next;		break;
-		|	case 0x69: output.condb = !false; 			break; // SCAV_HIT
-		|	case 0x6a: output.condb = !state->page_xing; 		break;
-		|	case 0x6b: output.condb = !state->miss; 		break;
-		|	case 0x6c: output.condb = !state->incmplt_mcyc; 	break;
-		|	case 0x6d: output.condb = !state->mar_modified; 	break;
-		|	case 0x6e: output.condb = !state->incmplt_mcyc; 	break;
-		|	case 0x6f: output.condb = (state->moff & 0x3f) != 0; 	break;
+		|	case 0x66: mp_condx3 = (state->moff & 0x3f) > 0x30; 	break;
+		|	case 0x67: mp_condx3 = !output.rfsh; 		break;
+		|	case 0x68: mp_condx2 = !state->csa_oor_next;		break;
+		|	case 0x69: mp_condx2 = !false; 			break; // SCAV_HIT
+		|	case 0x6a: mp_condx2 = !state->page_xing; 		break;
+		|	case 0x6b: mp_condx2 = !state->miss; 		break;
+		|	case 0x6c: mp_condx2 = !state->incmplt_mcyc; 	break;
+		|	case 0x6d: mp_condx2 = !state->mar_modified; 	break;
+		|	case 0x6e: mp_condx2 = !state->incmplt_mcyc; 	break;
+		|	case 0x6f: mp_condx2 = (state->moff & 0x3f) != 0; 	break;
 		|	};
 		|}
 		|
@@ -1054,11 +1054,6 @@ class FIU(PartFactory):
 		|		}
 		|	} else if ((h1pos||q1pos||q2pos) && (60 <= condsel && condsel <= 0x6f)) {
 		|		fiu_conditions(condsel);
-		|#if 0
-		|		if (output.conda != state->output.conda || output.condb != state->output.condb) {
-		|			ALWAYS_TRACE(<< " FIUCOND " << std::hex << condsel);
-		|		}
-		|#endif
 		|	}
 		|if (!q4pos) {
 		|	tcsa(false);

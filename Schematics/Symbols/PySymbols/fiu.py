@@ -68,8 +68,6 @@ class FIU(FChip):
         self.sig_right(ChipSig("+-->", "CNDTRU"))
         self.sig_right(ChipSig("+-->", "CONTIN"))
         self.sig_right(ChipSig("+-->", "DNEXT"))
-        self.sig_right(ChipSig("+-->", "CONDA"))
-        self.sig_right(ChipSig("+-->", "CONDB"))
         self.sig_right(ChipSig("+-->", "STOP0"))
 
         self.sig_right(ChipSig("+-->", "SYNC"))

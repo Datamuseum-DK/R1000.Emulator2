@@ -48,8 +48,6 @@ class SEQ(FChip):
         self.sig_right(ChipSig("o-->", "SFIVE"))
         self.sig_right(ChipSig("o-->", "ABORT"))
 
-        self.sig_right(ChipSig("+<--", "CNDX2"))
-        self.sig_right(ChipSig("+<--", "CNDX3"))
         self.sig_right(ChipSig("+<--", "CNDXD"))
         self.sig_right(ChipSig("+<--", "CNDXE"))
         self.sig_right(ChipSig("+<--", "CNDXF"))
