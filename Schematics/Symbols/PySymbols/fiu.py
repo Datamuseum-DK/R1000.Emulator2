@@ -52,8 +52,6 @@ class FIU(FChip):
 
         self.sig_right(ChipSig("+<--", "QVOE"))
 
-        self.sig_right(ChipSig("+<--", "QADROE"))
-
         self.sig_right(ChipSig("+<--", "BDHIT", 0, 3))
         self.sig_right(ChipSig("+<--", "ST", 0, 1))
 

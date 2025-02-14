@@ -27,9 +27,6 @@ class VAL(FChip):
 
         self.sig_right(ChipSig("+<--", "QVOE"))
 
-        self.sig_right(ChipSig("+<--", "ADROE"))
-
-        self.sig_right(ChipSig("+-->", "CWE"))
         self.sig_right(ChipSig("+-->", "VCNDA"))
         self.sig_right(ChipSig("+-->", "QBIT"))
 

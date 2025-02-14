@@ -514,7 +514,8 @@ class TYP(PartFactory):
 		|																state->alu = ~state->nalu;
 		|																state->almsb = state->alu >> 63ULL;
 		|														
-		|																if (q2pos && !PIN_ADROE=>) {
+		|																//if (q2pos && !PIN_ADROE=>) {
+		|																if (q2pos && (mp_adr_oe & 0x4)) {
 		|																	unsigned spc = mp_spc_bus;
 		|																	uint64_t alu = state->alu;
 		|														
@@ -610,7 +611,8 @@ class TYP(PartFactory):
 		|																	output.t1stp = false;
 		|
 		|															}
-		|															if (q2pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
+		|															//if (q2pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
+		|															if (q2pos || (mp_adr_oe & 0x6)) {	// XXX: && ?
 		|																if (marctl & 0x8) {
 		|																	mp_spc_bus = (marctl & 0x7) ^ 0x7;
 		|																} else {

@@ -500,7 +500,7 @@ class IOC(PartFactory):
 		|																				if (!PIN_RTCEN=>) {
 		|																					state->uir = state->wcsram[mp_nua_bus];
 		|																					assert (state->uir <= 0xffff);
-		|																					output.aen = (1 << UIR_AEN) ^ 0xf;
+		|																					mp_nxt_adr_oe = 1 << UIR_AEN;
 		|																					output.fen = (1 << UIR_FEN) ^ 0xf;
 		|																					state->dumen = !PIN_DUMNXT=>;
 		|																					state->csa_hit = !mp_csa_hit;

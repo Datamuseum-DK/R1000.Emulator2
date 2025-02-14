@@ -33,7 +33,6 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "UEN"))
         self.sig_left(ChipSig("-->+", "TQBIT"))
-        self.sig_left(ChipSig("-->+", "VAEN"))
         self.sig_left(ChipSig("-->+", "BHSTP"))
         self.sig_left(ChipSig("-->+", "STS"))
         self.sig_left(ChipSig("-->+", "RMS"))
@@ -41,7 +40,6 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "FREZE"))
         self.sig_left(ChipSig("-->+", "SFS"))
 
-        self.sig_right(ChipSig("+<--", "ADROE"))
         self.sig_right(ChipSig("+<--", "QTOE"))
 
         self.sig_right(ChipSig("+-->", "CWE"))

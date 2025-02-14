@@ -35,7 +35,6 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "SFSTP"))
 
         self.sig_right(ChipSig("+<--", "QVOE"))
-        self.sig_right(ChipSig("+<--", "ADROE"))
 
         self.sig_right(ChipSig("+<--", "EMAC", 0, 6))
         self.sig_right(ChipSig("+<--", "UEI12"))

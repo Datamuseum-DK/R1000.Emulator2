@@ -935,7 +935,8 @@ class SEQ(PartFactory):
 		|																					state->treg = 0;
 		|																					state->foo7 = false;
 		|																				}
-		|																				if (!PIN_ADROE=>) {
+		|																				//if (!PIN_ADROE=>) {
+		|																				if (mp_adr_oe & 0x8) {
 		|																					if (macro_event) {
 		|																						mp_spc_bus = 0x6;
 		|																					} else {

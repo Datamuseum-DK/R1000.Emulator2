@@ -61,6 +61,7 @@ class VAL(PartFactory):
 		|	bool isbin, sub_else_add, ovren, carry_middle;
 		|	bool coh;
 		|	bool wen;
+		|	bool cwe;
 		|	uint64_t *wcsram;
 		|	uint64_t uir;
 		|
@@ -407,7 +408,7 @@ class VAL(PartFactory):
 		|																	find_b();
 		|																}
 		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
-		|																if (output.cwe && uirc != 0x28)
+		|																if (state->cwe && uirc != 0x28)
 		|																	state->wen = !state->wen;
 		|														
 		|																state->msrc = UIR_MSRC;
@@ -464,7 +465,8 @@ class VAL(PartFactory):
 		|																state->nalu |= ((uint64_t)f181h.o) << 32;
 		|																state->alu = ~state->nalu;
 		|																state->cmsb = state->alu >> 63;
-		|																if (!PIN_ADROE=>) {
+		|																//if (!PIN_ADROE=>) {
+		|																if (mp_adr_oe & 0x2) {
 		|																	uint64_t alu = state->alu;
 		|														
 		|																	if (mp_spc_bus != 4) {
@@ -530,11 +532,11 @@ class VAL(PartFactory):
 		|																					state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
 		|																				} else if (uirc == 0x28) {
 		|																					// 0x28 LOOP COUNTER (RF write disabled)
-		|																				} else if (uirc == 0x29 && output.cwe) {
+		|																				} else if (uirc == 0x29 && state->cwe) {
 		|																					// 0x29 DEFAULT (RF write disabled)
 		|																					unsigned sum = state->botreg + state->csa_offset + 1;
 		|																					state->cadr |= sum & 0xf;
-		|																				} else if (uirc == 0x29 && !output.cwe) {
+		|																				} else if (uirc == 0x29 && !state->cwe) {
 		|																					// 0x29 DEFAULT (RF write disabled)
 		|																					state->cadr |= uirc & 0x1f;
 		|																					state->cadr |= UIR_FRM << 5;
@@ -576,7 +578,7 @@ class VAL(PartFactory):
 		|																												if (uirsclk) {
 		|																													state->csa_hit = mp_csa_hit;
 		|																													state->csa_write = mp_csa_wr;
-		|																													output.cwe = !(state->csa_hit || state->csa_write);
+		|																													state->cwe = !(state->csa_hit || state->csa_write);
 		|																												}
 		|
 		|																												bool awe = (PIN_RMS && !PIN_FREZE=>);

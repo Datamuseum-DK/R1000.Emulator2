@@ -42,7 +42,6 @@ class IOC(FChip):
 
         self.sig_right(ChipSig("+-->", "BLTCP"))
 
-        self.sig_right(ChipSig("+-->", "AEN", 0, 3))
         self.sig_right(ChipSig("+-->", "FEN", 0, 3))
         self.sig_right(ChipSig("+-->", "SEQTV"))
         self.sig_right(ChipSig("+-->", "FIUV"))

@@ -753,7 +753,8 @@ class FIU(PartFactory):
 		|																}
 		|														
 		|																mp_csa_wr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
-		|																if (!PIN_QADROE=>) {
+		|																//if (!PIN_QADROE=>) {
+		|																if (mp_adr_oe & 0x1) {
 		|																	bool inc_mar = (state->prmt >> 3) & 1;
 		|																	unsigned inco = state->moff & 0x1f;
 		|																	if (inc_mar && inco != 0x1f)
