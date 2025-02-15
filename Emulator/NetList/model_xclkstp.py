@@ -79,14 +79,24 @@ class XCLKSTP(PartFactory):
 		|	if (!PIN_Q3=> || q3pos) {
 		|		bool event = true;
 		|		output.clkrun = true;
+		|		output.iclk = true;
+		|		output.sclk = true;
 		|
-		|		if (clock_stop != BUS_STOP_MASK) {
+		|		if ((clock_stop | 0x01) != BUS_STOP_MASK) {
 		|			output.clkrun = false;
 		|			event = false;
+		|		}
+		|		if (clock_stop != BUS_STOP_MASK) {
+		|			output.iclk = false;
+		|		}
+		|		if ((clock_stop | 0x03) != BUS_STOP_MASK) {
+		|			output.sclk = false;
 		|		}
 		|
 		|		if (state->sf_stop) {
 		|			output.clkrun = false;
+		|			output.iclk = false;
+		|			output.sclk = false;
 		|		}
 		|		if (q3pos) {
 		|			output.event = event;

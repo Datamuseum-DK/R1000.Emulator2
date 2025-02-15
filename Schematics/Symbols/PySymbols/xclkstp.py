@@ -23,6 +23,8 @@ class XCLKSTP(FChip):
         self.sig_right(ChipSig("+-->", "CLKSTP"))
 
         self.sig_right(ChipSig("+-->", "EVENT"))
+        self.sig_right(ChipSig("+-->", "ICLK"))
+        self.sig_right(ChipSig("+-->", "SCLK"))
 
         self.finish()
 
