@@ -100,6 +100,7 @@ void f181_alu(struct f181 *);
 	macro(unsigned, ioctv_oe, 0) \
 	macro(unsigned, valv_oe, 0) \
 	macro(unsigned, typt_oe, 0) \
+	macro(unsigned, sync_freeze, 0) \
 
 #define DMACRO(typ, nam, val) extern volatile typ mp_##nam;
 MIDPLANE(DMACRO)

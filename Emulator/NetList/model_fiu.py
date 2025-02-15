@@ -1022,14 +1022,19 @@ class FIU(PartFactory):
 		|
 		|																				if (mp_fiu_freeze && !output.freze) {
 		|																					output.freze = 1;
+		|																					mp_nxt_sync_freeze |= 2;
 		|																				} else if (!mp_fiu_freeze && output.freze && !output.sync) {
 		|																					output.sync = 1;
+		|																					mp_nxt_sync_freeze |= 4;
 		|																				} else if (!mp_fiu_freeze && output.freze && output.sync) {
 		|																					output.freze = 0;
+		|																					mp_nxt_sync_freeze &= ~2;
 		|																					countdown = 5;
 		|																				} else if (!mp_fiu_freeze && !output.freze && output.sync) {
-		|																					if (--countdown == 0)
+		|																					if (--countdown == 0) {
 		|																						output.sync = 0;
+		|																						mp_nxt_sync_freeze &= ~4;
+		|																					}
 		|																				}
 		|																			}
 		|//	ALWAYS						H1				Q1				Q2				Q4

@@ -1438,7 +1438,14 @@ class SEQ(PartFactory):
 		|																								}
 		|																							}
 		|
+		|
 		|	output.qdfrz = mp_seq_halted && mp_seq_prepped;
+		|	if (mp_seq_halted && mp_seq_prepped) {
+		|		mp_nxt_sync_freeze |= 1;
+		|	} else {
+		|		mp_nxt_sync_freeze &= ~1;
+		|	}
+		|
 		|''')
 
 
