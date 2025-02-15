@@ -74,7 +74,6 @@ class XCLKSTP(PartFactory):
 		|
 		|	if (PIN_Q3.negedge()) {
 		|		state->sf_stop = !(diag == BUS_DIAG_MASK);
-		|		output.sfstp = state->sf_stop;
 		|	}
 		|
 		|	if (!PIN_Q3=> || q3pos) {

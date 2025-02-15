@@ -5767,7 +5767,7 @@
 				)
 			)
 			(property "Value" "TYP"
-				(at -1.27 -457.2 0)
+				(at -1.27 -447.04 0)
 				(effects
 					(font
 						(size 2.54 2.54)
@@ -5812,7 +5812,7 @@
 				)
 			)
 			(property "Name" "______"
-				(at 11.43 -464.82 0)
+				(at 11.43 -454.66 0)
 				(effects
 					(font
 						(size 2.54 2.54)
@@ -5823,7 +5823,7 @@
 			(symbol "TYP_1_1"
 				(rectangle
 					(start -3.81 3.81)
-					(end 26.67 -458.47)
+					(end 26.67 -448.31)
 					(stroke
 						(width 0)
 						(type default)
@@ -7149,7 +7149,7 @@
 				(pin input line
 					(at -10.16 -429.26 0)
 					(length 6.35)
-					(name "WEL"
+					(name "FREZE"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -7167,24 +7167,6 @@
 				(pin input line
 					(at -10.16 -439.42 0)
 					(length 6.35)
-					(name "FREZE"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "79"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -449.58 0)
-					(length 6.35)
 					(name "SFS"
 						(effects
 							(font
@@ -7192,7 +7174,7 @@
 							)
 						)
 					)
-					(number "80"
+					(number "79"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -9155,7 +9137,7 @@
 							)
 						)
 					)
-					(number "10"
+					(number "9"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -9173,7 +9155,7 @@
 							)
 						)
 					)
-					(number "11"
+					(number "10"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -9191,7 +9173,7 @@
 							)
 						)
 					)
-					(number "12"
+					(number "11"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -9209,7 +9191,7 @@
 							)
 						)
 					)
-					(number "13"
+					(number "12"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -9227,7 +9209,7 @@
 							)
 						)
 					)
-					(number "14"
+					(number "13"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -9245,7 +9227,7 @@
 							)
 						)
 					)
-					(number "15"
+					(number "14"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -9300,24 +9282,6 @@
 						)
 					)
 					(number "6"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin output line
-					(at 35.56 -38.1 180)
-					(length 6.35)
-					(name "SFSTP"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "9"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -10248,7 +10212,7 @@
 	)
 	(wire
 		(pts
-			(xy 294.64 469.9) (xy 271.78 469.9)
+			(xy 294.64 459.74) (xy 271.78 459.74)
 		)
 		(stroke
 			(width 0)
@@ -10285,16 +10249,6 @@
 			(type default)
 		)
 		(uuid "0c23a9e5-5fac-4e5d-983e-1da3934afe80")
-	)
-	(wire
-		(pts
-			(xy 99.06 287.02) (xy 119.38 287.02)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0c90b663-0c5d-4c66-8936-21da364cd88d")
 	)
 	(wire
 		(pts
@@ -12098,16 +12052,6 @@
 	)
 	(wire
 		(pts
-			(xy 294.64 449.58) (xy 281.94 449.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "72be08e2-5ba4-4e72-908b-dbbde15a245a")
-	)
-	(wire
-		(pts
 			(xy 375.92 40.64) (xy 398.78 40.64)
 		)
 		(stroke
@@ -12478,7 +12422,7 @@
 	)
 	(wire
 		(pts
-			(xy 551.18 259.08) (xy 563.88 259.08)
+			(xy 538.48 259.08) (xy 563.88 259.08)
 		)
 		(stroke
 			(width 0)
@@ -12888,7 +12832,7 @@
 	)
 	(wire
 		(pts
-			(xy 294.64 459.74) (xy 274.32 459.74)
+			(xy 294.64 449.58) (xy 274.32 449.58)
 		)
 		(stroke
 			(width 0)
@@ -13185,16 +13129,6 @@
 			(type default)
 		)
 		(uuid "b1db6299-64e8-4121-9fea-5b4fd53077be")
-	)
-	(wire
-		(pts
-			(xy 96.52 55.88) (xy 116.84 55.88)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b273f379-46a6-4bab-ae87-695f469b425a")
 	)
 	(wire
 		(pts
@@ -13635,16 +13569,6 @@
 			(type default)
 		)
 		(uuid "cd75cdba-5878-48e1-83cf-be8e3cd236fe")
-	)
-	(wire
-		(pts
-			(xy 99.06 195.58) (xy 119.38 195.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "cd838a5e-1a56-449c-9b91-5b770a7e6062")
 	)
 	(wire
 		(pts
@@ -15416,16 +15340,6 @@
 		)
 		(uuid "2d41eee9-ab7c-4be8-8eb7-1c8ea174ea0d")
 	)
-	(label "S.SF_STOP"
-		(at 104.14 287.02 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "2e3a451a-f3ac-4448-9a5e-f2d8fb8d9757")
-	)
 	(label "BELOW_TCB_UE"
 		(at 444.5 388.62 0)
 		(effects
@@ -15465,6 +15379,16 @@
 			(justify left bottom)
 		)
 		(uuid "30a8a49d-1e1f-4fce-bf46-af63da4e8804")
+	)
+	(label "WEL"
+		(at 538.48 259.08 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "30ed65ea-25ab-4ff5-a799-9a76e3676d2d")
 	)
 	(label "CLOCKSTOP~6"
 		(at 17.78 403.86 0)
@@ -15836,16 +15760,6 @@
 		)
 		(uuid "4696de3b-b7fa-4197-bb8a-d4f89a9de262")
 	)
-	(label "I.SF_STOP"
-		(at 104.14 195.58 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "46dd2342-43cd-4441-8770-2b3d6a5d0927")
-	)
 	(label "FIU.D1"
 		(at 647.7 30.48 0)
 		(effects
@@ -16165,16 +16079,6 @@
 			(justify left bottom)
 		)
 		(uuid "5ca89644-7dde-4056-9a9a-f87e8a2a530a")
-	)
-	(label "WEL"
-		(at 551.18 259.08 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "5d330706-929e-4b18-b000-e4272d3d1582")
 	)
 	(label "Q2~"
 		(at 548.64 35.56 0)
@@ -17026,16 +16930,6 @@
 		)
 		(uuid "8f338798-bc53-431a-9020-5942fbd44ea6")
 	)
-	(label "WEL"
-		(at 281.94 449.58 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "8fbc9bd1-173d-46f3-aa36-035136f97261")
-	)
 	(label "MICROS_EN"
 		(at 264.16 398.78 0)
 		(effects
@@ -17056,7 +16950,7 @@
 		)
 		(uuid "91c929cf-5be5-4bb7-9ac5-4edafe06213a")
 	)
-	(label "I.SF_STOP"
+	(label "SF_STOP"
 		(at 538.48 76.2 0)
 		(effects
 			(font
@@ -17087,7 +16981,7 @@
 		(uuid "92784c14-4ccc-4652-a357-8e67af8134ed")
 	)
 	(label "FREEZE"
-		(at 274.32 459.74 0)
+		(at 274.32 449.58 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -17096,8 +16990,8 @@
 		)
 		(uuid "943f5174-d8c9-441d-8505-c222e747ec1a")
 	)
-	(label "T.SF_STOP"
-		(at 271.78 469.9 0)
+	(label "SF_STOP"
+		(at 271.78 459.74 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -18106,7 +18000,7 @@
 		)
 		(uuid "cd69f9b5-f18e-4e37-aa54-f2a06279b7e5")
 	)
-	(label "T.SF_STOP"
+	(label "SF_STOP"
 		(at 378.46 426.72 0)
 		(effects
 			(font
@@ -18276,7 +18170,7 @@
 		)
 		(uuid "d57ceb15-fe8d-4b26-9915-e3e2cfa685dd")
 	)
-	(label "S.SF_STOP"
+	(label "SF_STOP"
 		(at 650.24 447.04 0)
 		(effects
 			(font
@@ -18586,7 +18480,7 @@
 		)
 		(uuid "e5b81411-160d-4588-88c8-b55385ca95d6")
 	)
-	(label "F.SF_STOP"
+	(label "SF_STOP"
 		(at 147.32 439.42 0)
 		(effects
 			(font
@@ -18656,7 +18550,7 @@
 		)
 		(uuid "ea0f821a-86f4-4dd3-954d-6ec0a10f0e45")
 	)
-	(label "T.SF_STOP"
+	(label "SF_STOP"
 		(at 101.6 358.14 0)
 		(effects
 			(font
@@ -18966,16 +18860,6 @@
 		)
 		(uuid "fafc3dd2-be12-4fdc-8d1a-98763e5c8ec7")
 	)
-	(label "F.SF_STOP"
-		(at 101.6 55.88 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "fbe75668-3122-4898-90fe-4056d9404d53")
-	)
 	(label "SET3"
 		(at 449.58 147.32 0)
 		(effects
@@ -19219,9 +19103,6 @@
 		)
 		(pin "14"
 			(uuid "1aae37f8-2966-4e14-9c9c-124289b105e9")
-		)
-		(pin "15"
-			(uuid "16f63466-31ee-4cd3-9ef5-4b7376c130b4")
 		)
 		(pin "2"
 			(uuid "2041661c-e753-4e00-861e-89bd51355640")
@@ -20084,9 +19965,6 @@
 		)
 		(pin "14"
 			(uuid "69064e6d-4697-4db2-92b0-ee421b627fda")
-		)
-		(pin "15"
-			(uuid "0b073c9a-acdf-4130-ac06-cfbed124ee56")
 		)
 		(pin "2"
 			(uuid "35eefc4c-834d-466c-86b5-5159815e6a18")
@@ -21446,7 +21324,7 @@
 			)
 		)
 		(property "Value" "TYP"
-			(at 303.53 477.52 0)
+			(at 303.53 467.36 0)
 			(effects
 				(font
 					(size 2.54 2.54)
@@ -21490,7 +21368,7 @@
 			)
 		)
 		(property "Name" "TYP"
-			(at 316.23 485.14 0)
+			(at 316.23 474.98 0)
 			(effects
 				(font
 					(size 2.54 2.54)
@@ -21731,9 +21609,6 @@
 		)
 		(pin "8"
 			(uuid "cab952cc-6e1d-447f-9aed-68de30486277")
-		)
-		(pin "80"
-			(uuid "23502a43-a833-491d-8a3b-db6550f7b78c")
 		)
 		(pin "9"
 			(uuid "4977f383-d67e-493b-bb3a-c1024abda09f")
@@ -22250,9 +22125,6 @@
 		)
 		(pin "14"
 			(uuid "3c9a1fbe-c4c9-4021-abcb-e0faa5600391")
-		)
-		(pin "15"
-			(uuid "444ced96-08fc-4320-ae6f-d4c2c47beb05")
 		)
 		(pin "2"
 			(uuid "2b8356be-3145-4c27-b5de-6f687b8a5714")

@@ -24,8 +24,6 @@ class XCLKSTP(FChip):
 
         self.sig_right(ChipSig("+-->", "EVENT"))
 
-        self.sig_right(ChipSig("+-->", "SFSTP"))
-
         self.finish()
 
 class XCLKSTPTV(FChip):

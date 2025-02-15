@@ -51,8 +51,7 @@ class XTVSCLK(PartFactory):
 		|	if (PIN_Q4E.negedge()) {
 		|		output.aclk = true;
 		|	} else if (PIN_Q4E.posedge()) {
-		|		bool sce = !(PIN_STS=> && PIN_RMS=> && PIN_WEL=>);
-		|		output.aclk = sce;
+		|		output.aclk = !(PIN_STS=> && PIN_RMS=> && (PIN_WEL=>));
 		|	}
 		|''')
 

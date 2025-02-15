@@ -36,7 +36,6 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "BHSTP"))
         self.sig_left(ChipSig("-->+", "STS"))
         self.sig_left(ChipSig("-->+", "RMS"))
-        self.sig_left(ChipSig("-->+", "WEL"))
         self.sig_left(ChipSig("-->+", "FREZE"))
         self.sig_left(ChipSig("-->+", "SFS"))
 
