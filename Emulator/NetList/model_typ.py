@@ -436,7 +436,7 @@ class TYP(PartFactory):
 		|	unsigned priv_check = UIR_UPVC;
 		|	unsigned marctl = UIR_MCTL;
 		|	bool foo1 = marctl >= 4;
-		|	output.ldmar = !(foo1 && PIN_BHSTP=>);
+		|	mp_load_mar = !(foo1 && PIN_BHSTP=>);
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|	output.z_qf = PIN_QFOE=>;
@@ -567,7 +567,7 @@ class TYP(PartFactory):
 		|																	assert(uirc <= 0x3f);
 		|																}
 		|
-		|																bool micros_en = PIN_UEN=>;
+		|																bool micros_en = mp_uevent_enable;
 		|																output.t0stp = true;
 		|																output.t1stp = true;
 		|																unsigned selcond = 0x00;

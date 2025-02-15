@@ -44,14 +44,11 @@ class FIU(FChip):
         self.sig_left(ChipSig("-->+", "SFSTP"))
         self.sig_left(ChipSig("-->+", "UEVSTP"))
 
-        self.sig_left(ChipSig("-->+", "MICEN"))
-
         self.sig_left(ChipSig("-->+", "TCCLK"))
 
         self.sig_right(ChipSig("+<--", "BDHIT", 0, 3))
         self.sig_right(ChipSig("+<--", "ST", 0, 1))
 
-        self.sig_right(ChipSig("+-->", "RFSH"))
         self.sig_right(ChipSig("+-->", "FRDR"))
 
 

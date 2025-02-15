@@ -357,7 +357,7 @@ class MEM(PartFactory):
 		|																													state->vdreg = mp_val_bus;
 		|																												}
 		|
-		|																												if (!PIN_LDMR=> && state->cstop) {
+		|																												if (!mp_load_mar && state->cstop) {
 		|																													load_mar();
 		|																												}
 		|

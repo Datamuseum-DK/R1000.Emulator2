@@ -32,7 +32,6 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "MCPOL"))
         self.sig_left(ChipSig("-->+", "SFSTP"))
 
-        self.sig_right(ChipSig("+<--", "EMAC", 0, 6))
         self.sig_right(ChipSig("+<--", "UEI12"))
 
 
@@ -47,7 +46,6 @@ class SEQ(FChip):
 
         self.sig_right(ChipSig("+-->", "SEQSN"))
         self.sig_right(ChipSig("+-->", "LABRT"))
-        self.sig_right(ChipSig("+-->", "UEVEN"))
 
         self.sig_right(ChipSig("+-->", "QDFRZ"))
 

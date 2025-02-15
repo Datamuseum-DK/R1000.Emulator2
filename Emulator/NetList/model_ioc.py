@@ -255,9 +255,7 @@ class IOC(PartFactory):
 		|	}
 		|
 		|	if (state->ctx.activations < 1000) {
-		|		output.sme = true;
 		|		state->sen = true;
-		|		output.dme = true;
 		|		state->den = true;
 		|	}
 		|
@@ -284,16 +282,16 @@ class IOC(PartFactory):
 		|							if (q2pos) {
 		|								//if (val != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << val << " " << val_bus);
 		|								if (state->slice_ev && !state->ten) {
-		|									output.sme = false;
+		|									mp_macro_event |= 0x2;
 		|								}
 		|								if (rand == 0x0a) {
-		|									output.sme = true;
+		|									mp_macro_event &= ~0x2;
 		|								}
 		|								if (state->delay_ev && !state->ten) {
-		|									output.dme = false;
+		|									mp_macro_event |= 0x1;
 		|								}
 		|								if (rand == 0x0b) {
-		|									output.dme = true;
+		|									mp_macro_event &= ~0x1;
 		|								}
 		|							}
 		|{
@@ -407,8 +405,12 @@ class IOC(PartFactory):
 		|																			}
 		|}
 		|
-		|	if (!q4pos) {
-		|		output.rspemn = state->rspwrp == state->rsprdp;
+		|	if (!q4pos) { 
+		|		if (state->rspwrp != state->rsprdp) {
+		|			mp_macro_event |= 0x8;
+		|		} else {
+		|			mp_macro_event &= ~0x8;
+		|		}
 		|	}
 		|
 		|	

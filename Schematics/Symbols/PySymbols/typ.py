@@ -31,7 +31,6 @@ class TYP(FChip):
 
         self.sig_left(ChipSig("-->+", "H2"))
         self.sig_left(ChipSig("-->+", "Q4"))
-        self.sig_left(ChipSig("-->+", "UEN"))
         self.sig_left(ChipSig("-->+", "TQBIT"))
         self.sig_left(ChipSig("-->+", "BHSTP"))
         self.sig_left(ChipSig("-->+", "STS"))
@@ -42,8 +41,6 @@ class TYP(FChip):
         self.sig_right(ChipSig("+-->", "CWE"))
         self.sig_right(ChipSig("+-->", "T0STP"))
         self.sig_right(ChipSig("+-->", "T1STP"))
-
-        self.sig_right(ChipSig("+-->", "LDMAR"))
 
         self.finish()
 

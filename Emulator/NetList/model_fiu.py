@@ -205,7 +205,7 @@ class FIU(PartFactory):
 		|		mp_condx3 = (state->oreg + (state->lfreg & 0x3f) + (state->lfreg & 0x80)) <= 255;
 		|		break;
 		|	case 0x66: mp_condx3 = (state->moff & 0x3f) > 0x30; 	break;
-		|	case 0x67: mp_condx3 = !output.rfsh; 		break;
+		|	case 0x67: mp_condx3 = !(state->refresh_count != 0xffff); 		break;
 		|	case 0x68: mp_condx2 = !state->csa_oor_next;		break;
 		|	case 0x69: mp_condx2 = !false; 			break; // SCAV_HIT
 		|	case 0x6a: mp_condx2 = !state->page_xing; 		break;
@@ -240,7 +240,7 @@ class FIU(PartFactory):
 		|	u |= 0x3ULL << BUS64_LSB(31);
 		|	u |= (uint64_t)(mp_seq_uev10_page_x) << BUS64_LSB(32);
 		|	u |= (uint64_t)((state->prmt >> 1) & 1) << BUS64_LSB(33);
-		|	u |= (uint64_t)output.rfsh << BUS64_LSB(34);
+		|	u |= (uint64_t)(state->refresh_count != 0xffff) << BUS64_LSB(34);
 		|	u |= (uint64_t)(mp_seq_uev0_memex) << BUS64_LSB(35);
 		|	u |= ((line >> 0) & 1) << BUS64_LSB(48);
 		|	u |= ((line >> 1) & 1) << BUS64_LSB(50);
@@ -685,6 +685,11 @@ class FIU(PartFactory):
 		|													((board_hit != 0xf) && mnan2a) ||
 		|													(state->logrw_d && state->csaht)
 		|												);
+		|												if (state->refresh_count == 0xffff) {
+		|													mp_macro_event |= 0x40;
+		|												} else {
+		|													mp_macro_event &= ~0x40;
+		|												}
 		|											}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|															if (q2pos) {
@@ -789,14 +794,14 @@ class FIU(PartFactory):
 		|																	)
 		|																);
 		|																mp_mem_continue= !((pa025 >> 5) & 1);
-		|																mp_seq_uev10_page_x = !(PIN_MICEN=> && state->page_xing);
-		|																if (PIN_MICEN=> && state->page_xing) {
+		|																mp_seq_uev10_page_x = !(mp_uevent_enable && state->page_xing);
+		|																if (mp_uevent_enable && state->page_xing) {
 		|																	mp_seq_uev |= UEV_PAGE_X;
 		|																} else {
 		|																	mp_seq_uev &= ~UEV_PAGE_X;
 		|																}
-		|																mp_seq_uev0_memex = !(PIN_MICEN=> && state->memex);
-		|																if (PIN_MICEN=> && state->memex) {
+		|																mp_seq_uev0_memex = !(mp_uevent_enable && state->memex);
+		|																if (mp_uevent_enable && state->memex) {
 		|																	mp_seq_uev |= UEV_MEMEX;
 		|																} else {
 		|																	mp_seq_uev &= ~UEV_MEMEX;
@@ -930,7 +935,6 @@ class FIU(PartFactory):
 		|																				} else if (state->refresh_count != 0xffff) {
 		|																					state->refresh_count++;
 		|																				}
-		|																				output.rfsh = state->refresh_count != 0xffff;
 		|
 		|																				bool le_abort = PIN_LEABR=>;
 		|																				bool e_abort = PIN_EABR=>;

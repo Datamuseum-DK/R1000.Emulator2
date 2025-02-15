@@ -27,12 +27,6 @@ class IOC(FChip):
 
         self.sig_left(ChipSig("-->+", "DUMNXT"))
 
-        self.sig_right(ChipSig("+-->", "RSPEMN"))
-
-
-        self.sig_right(ChipSig("+-->", "SME"))
-        self.sig_right(ChipSig("+-->", "DME"))
-
         self.sig_right(ChipSig("+-->", "BLTCP"))
 
         self.sig_right(ChipSig("+-->", "FEN", 0, 3))

@@ -801,7 +801,7 @@ class SEQ(PartFactory):
 		|												state->stop = !(!state->bad_hint && (state->uev == 16) && !PIN_LMAC=>);
 		|												output.seqsn = !state->stop;
 		|												bool evnan0d = !(UIR_ENMIC && (state->uev == 16));
-		|												output.ueven = !(evnan0d || state->stop);
+		|												mp_uevent_enable = !(evnan0d || state->stop);
 		|											}
 		|
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
@@ -809,7 +809,7 @@ class SEQ(PartFactory):
 		|																state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
 		|																state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
 		|															
-		|																state->check_exit_ue = !(output.ueven && RNDX(RND_CHK_EXIT) && state->carry_out);	// q4
+		|																state->check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->carry_out);	// q4
 		|																state->m_res_ref = !(state->lxval && !(state->display >> 15));				// lmp, cond
 		|															
 		|																uint64_t val = state->val_bus >> 32;
@@ -818,7 +818,7 @@ class SEQ(PartFactory):
 		|																unsigned tmp = (val >> 7) ^ state->curins;
 		|																tmp &= 0x3ff;
 		|																state->field_number_error = tmp != 0x3ff;
-		|																state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !output.ueven));
+		|																state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !mp_uevent_enable));
 		|
 		|																state->ram[(state->adr + 1) & 0xf] = state->topu;
 		|
@@ -1040,23 +1040,11 @@ class SEQ(PartFactory):
 		|																								}
 		|
 		|																								if (aclk) {
-		|																									BUS_EMAC_READ(state->emac);
-		|																									if (!(state->emac & 0x40)) {
-		|																										state->uadr_decode = 0x04e0;
-		|																									} else if (!(state->emac & 0x20)) {
-		|																										state->uadr_decode = 0x04c0;
-		|																									} else if (!(state->emac & 0x10)) {
-		|																										state->uadr_decode = 0x04a0;
-		|																									} else if (!(state->emac & 0x08)) {
-		|																										state->uadr_decode = 0x0480;
-		|																									} else if (!(state->emac & 0x04)) {
-		|																										state->uadr_decode = 0x0460;
-		|																									} else if (!(state->emac & 0x02)) {
-		|																										state->uadr_decode = 0x0440;
-		|																									} else if (!(state->emac & 0x01)) {
-		|																										state->uadr_decode = 0x0420;
+		|																									early_macro_pending = mp_macro_event != 0;
+		|																									state->emac = mp_macro_event ^ 0x7f;
+		|																									if (early_macro_pending) {
+		|																										state->uadr_decode = 0x0400 + 0x20 * fls(mp_macro_event);
 		|																									}
-		|																									early_macro_pending = state->emac != 0x7f;
 		|																								}
 		|																								bool crnana = !(RNDX(RND_INSTR_LD) && dispatch);
 		|
