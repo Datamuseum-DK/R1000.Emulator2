@@ -601,6 +601,9 @@ class FIU(PartFactory):
 		|	unsigned mem_start = UIR_MSTRT;
 		|	mem_start ^= 0x1e;
 		|
+		|	bool tsclken = (PIN_TSTS=> && PIN_TRMS=> && !PIN_TFRZ=>);
+		|	bool tcsa_clk = q4pos && tsclken;
+		|
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|	do_tivi();
 		|											if (q1pos) {
@@ -810,7 +813,7 @@ class FIU(PartFactory):
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|																			if (q4pos) {
-		|																				tcsa(PIN_TCCLK.posedge());
+		|																				tcsa(tcsa_clk);
 		|																				if (sclk) {
 		|																					if (UIR_LDMDR || !UIR_TCLK || !UIR_VCLK) {
 		|																						rotator(sclk);
@@ -944,10 +947,10 @@ class FIU(PartFactory):
 		|																				bool sel = !((PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
 		|																				if (sel) {
 		|																					idum = (state->prmt >> 5) & 1;
-		|																					output.dnext = !((state->prmt >> 0) & 1);
+		|																					// output.dnext = !((state->prmt >> 0) & 1);
 		|																				} else {
 		|																					idum = state->dumon;
-		|																					output.dnext = !state->dumon;
+		|																					// output.dnext = !state->dumon;
 		|																				}
 		|																				state->state0 = (pa025 >> 7) & 1;
 		|																				state->state1 = (pa025 >> 6) & 1;

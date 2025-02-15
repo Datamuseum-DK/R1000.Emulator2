@@ -262,7 +262,7 @@ class IOC(PartFactory):
 		|	//bool h1pos = PIN_H2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	bool sclk_pos = q4pos && PIN_CSTP;
+		|	bool sclk_pos = PIN_CSTP;
 		|																					if (mp_ioc_trace && ((mp_sync_freeze & 0x3) == 0) && !is_tracing) {
 		|																						is_tracing = true;
 		|																						ALWAYS_TRACE(<< " IS TRACING");
@@ -364,7 +364,7 @@ class IOC(PartFactory):
 		|																				state->prescaler++;
 		|																				state->ten = state->prescaler != 0xf;
 		|																				state->prescaler &= 0xf;
-		|																				if (PIN_CSTP=>) {
+		|																				if (sclk_pos) {
 		|																					if (rand == 0x0c) {
 		|																						state->sen = false;
 		|																					}
@@ -507,7 +507,7 @@ class IOC(PartFactory):
 		|																					unsigned tvbs = UIR_TVBS;
 		|
 		|																					uint16_t tdat = mp_nua_bus;
-		|																					if (!PIN_CSTP=>)
+		|																					if (!sclk_pos)
 		|																						tdat |= 0x8000;
 		|																					if (state->csa_hit)
 		|																						tdat |= 0x4000;

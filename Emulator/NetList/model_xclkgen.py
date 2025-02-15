@@ -71,7 +71,6 @@ class XClkGen(PartFactory):
 		|		}
 		|		PIN_2XEnot<=(0);
 		|		state->when = 10;
-		|		PIN_Q4E<=(0);
 		|		break;
 		|	case 10:
 		|		PIN_Q4<=(1);
@@ -113,7 +112,6 @@ class XClkGen(PartFactory):
 		|		break;
 		|	case 160:
 		|		PIN_Q3<=(1); PIN_Q4<=(0);
-		|		PIN_Q4E<=(1);
 		|		state->when = 205;
 		|	}
 		|	next_trigger((state->when - now) % 200, sc_core::SC_NS);

@@ -603,7 +603,7 @@ class SEQ(PartFactory):
 		|	//bool h2pos = PIN_H2.posedge();
 		|	bool aclk = q4pos && !PIN_SFSTP=>;
 		|	bool lclk = aclk && !PIN_SFSTP=>;
-		|	bool sclke = PIN_SCLKE=>;
+		|	bool sclke = !(PIN_SSTOP=> && !state->stop);
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = q4pos && !sclke;
 		|
@@ -799,7 +799,6 @@ class SEQ(PartFactory):
 		|												state->push   = !(((rom >> 0) & 1) ||
 		|														!(((rom >> 2) & 1) || !state->uadr_mux));
 		|												state->stop = !(!state->bad_hint && (state->uev == 16) && !PIN_LMAC=>);
-		|												output.seqsn = !state->stop;
 		|												bool evnan0d = !(UIR_ENMIC && (state->uev == 16));
 		|												mp_uevent_enable = !(evnan0d || state->stop);
 		|											}
@@ -872,6 +871,7 @@ class SEQ(PartFactory):
 		|																output.u_event = !(!state->bad_hint && !PIN_LMAC=> && state->uev != 16);
 		|																output.sfive = (state->check_exit_ue && state->ferr);
 		|																output.qstp7 = !state->bad_hint && state->l_macro_hic;
+		|																output.seqst = output.u_event && output.qstp7;
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|																			if (q3pos) {

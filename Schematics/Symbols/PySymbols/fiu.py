@@ -44,7 +44,9 @@ class FIU(FChip):
         self.sig_left(ChipSig("-->+", "SFSTP"))
         self.sig_left(ChipSig("-->+", "UEVSTP"))
 
-        self.sig_left(ChipSig("-->+", "TCCLK"))
+        self.sig_left(ChipSig("-->+", "TSTS"))
+        self.sig_left(ChipSig("-->+", "TRMS"))
+        self.sig_left(ChipSig("-->+", "TFRZ"))
 
         self.sig_right(ChipSig("+<--", "BDHIT", 0, 3))
         self.sig_right(ChipSig("+<--", "ST", 0, 1))

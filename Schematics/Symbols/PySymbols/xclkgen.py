@@ -31,8 +31,6 @@ class XCLKGEN(Chip):
    |              |%
    |            Q4o-->
    |              |
-   |              |%
-   |           Q4Eo-->
    |  xnn         |
    |              |
    |  _           |
