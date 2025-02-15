@@ -23,11 +23,10 @@ class MEM(FChip):
         self.sig_left(ChipSig("<--+", "HITA"))
         self.sig_left(ChipSig("<--+", "HITB"))
 
-        self.sig_left(ChipSig("-->+", "BDISYN"))
-        self.sig_left(ChipSig("-->+", "BDIFRZ"))
         self.sig_left(ChipSig("-->+", "EABT"))
         self.sig_left(ChipSig("-->+", "ELABT"))
         self.sig_left(ChipSig("-->+", "LABT"))
+        self.sig_left(ChipSig("-->+", "DIAG", 0, 2))
 
         self.sig_right(ChipSig("+<--", "XXX"))
 

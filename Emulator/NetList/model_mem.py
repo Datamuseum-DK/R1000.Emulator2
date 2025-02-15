@@ -350,9 +350,9 @@ class MEM(PartFactory):
 		|																												state->cl = state->hash;
 		|																												state->wd = state->word;
 		|
-		|																												bool diag_sync = !PIN_BDISYN=>;
-		|																												bool diag_freeze = !PIN_BDIFRZ=>;
-		|																												state->cstop = !(diag_sync || diag_freeze);
+		|																												unsigned diag;
+		|																												BUS_DIAG_READ(diag);
+		|																												state->cstop = diag == 0;
 		|
 		|																												if (!mp_load_wdr) {
 		|																													state->tdreg = mp_typ_bus;

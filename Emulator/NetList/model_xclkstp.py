@@ -73,7 +73,7 @@ class XCLKSTP(PartFactory):
 		|	bool q3pos = PIN_Q3.posedge();
 		|
 		|	if (PIN_Q3.negedge()) {
-		|		state->sf_stop = !(diag == BUS_DIAG_MASK);
+		|		state->sf_stop = !(diag == 0);
 		|	}
 		|
 		|	if (!PIN_Q3=> || q3pos) {
@@ -97,7 +97,7 @@ class XCLKSTP(PartFactory):
 		|		idle_next = &q3neg_event;
 		|	}
 		|
-		|	if (state->idle > 5 && diag == 3 && clock_stop == 0xff) {
+		|	if (state->idle > 5 && !diag && clock_stop == 0xff) {
 		|		idle_next = &idle_event;
 		|	}
 		|
@@ -141,9 +141,9 @@ class XCLKSTPTV(PartFactory):
 		|	bool csa_write_en = PIN_CSAWR=>;
 		|
 		|	if (PIN_Q3.negedge()) {
-		|		state->sf_stop = !(diag == BUS_DIAG_MASK);
+		|		state->sf_stop = !(diag == 0);
 		|		output.sfstp = state->sf_stop;
-		|		output.freez = !(diag & 1);
+		|		output.freez = (diag & 3) != 0;
 		|	}
 		|
 		|	if (!q3 || q3pos) {
@@ -166,7 +166,7 @@ class XCLKSTPTV(PartFactory):
 		|	if (q3) {
 		|		idle_next = &q3neg_event;
 		|	}
-		|	if (state->idle > 5 && diag == 3 && clock_stop == 0xff) {
+		|	if (state->idle > 5 && !diag && clock_stop == 0xff) {
 		|		idle_next = &idle_event;
 		|	}
 		|

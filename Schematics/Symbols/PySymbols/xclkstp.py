@@ -15,7 +15,7 @@ class XCLKSTP(FChip):
 
         self.sig_left(ChipSig("-->+", "Q3"))
 
-        self.sig_left(ChipSig("-->+", "DIAG", 0, 1))
+        self.sig_left(ChipSig("-->+", "DIAG", 0, 2))
 
         self.sig_left(ChipSig("-->+", "STOP", 0, 7))
 
@@ -37,7 +37,7 @@ class XCLKSTPTV(FChip):
 
         self.sig_left(ChipSig("-->+", "Q3"))
 
-        self.sig_left(ChipSig("-->+", "DIAG", 0, 1))
+        self.sig_left(ChipSig("-->+", "DIAG", 0, 2))
 
         self.sig_left(ChipSig("-->+", "STOP", 0, 7))
         self.sig_left(ChipSig("-->+", "CSAWR"))

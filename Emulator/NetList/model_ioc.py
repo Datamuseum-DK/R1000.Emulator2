@@ -265,11 +265,13 @@ class IOC(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool sclk_pos = q4pos && !PIN_CSTP;
-		|																					if (mp_ioc_trace && PIN_TRAEN=> && !is_tracing) {
+		|																					unsigned diag;
+		|																					BUS_DIAG_READ(diag);
+		|																					if (mp_ioc_trace && ((diag & 0x3) == 0) && !is_tracing) {
 		|																						is_tracing = true;
 		|																						ALWAYS_TRACE(<< " IS TRACING");
 		|																					}
-		|																					if (mp_ioc_trace && !PIN_TRAEN=> && is_tracing) {
+		|																					if (mp_ioc_trace && (diag & 0x3) && is_tracing) {
 		|																						is_tracing = true;
 		|																						mp_ioc_trace = 0;
 		|																						ALWAYS_TRACE(<< " STOP TRACING");
