@@ -1943,7 +1943,7 @@
 				(pin input line
 					(at -10.16 -368.3 0)
 					(length 6.35)
-					(name "H1"
+					(name "H2"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -2788,7 +2788,7 @@
 				(pin input line
 					(at -10.16 -7.62 0)
 					(length 6.35)
-					(name "H1"
+					(name "H2"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -7701,7 +7701,7 @@
 			)
 			(symbol "XCLKGEN_1_1"
 				(rectangle
-					(start -6.35 49.53)
+					(start -6.35 44.45)
 					(end 29.21 -6.35)
 					(stroke
 						(width 0)
@@ -7712,7 +7712,7 @@
 					)
 				)
 				(circle
-					(center 29.845 35.56)
+					(center 29.845 30.48)
 					(radius 0.635)
 					(stroke
 						(width 0)
@@ -7756,7 +7756,7 @@
 					)
 				)
 				(pin output line
-					(at 35.56 43.18 180)
+					(at 35.56 38.1 180)
 					(length 6.35)
 					(name "CLAMP"
 						(effects
@@ -7774,7 +7774,7 @@
 					)
 				)
 				(pin output line
-					(at 35.56 35.56 180)
+					(at 35.56 30.48 180)
 					(length 5.08)
 					(name "2XE~"
 						(effects
@@ -7792,24 +7792,6 @@
 					)
 				)
 				(pin output line
-					(at 35.56 27.94 180)
-					(length 6.35)
-					(name "H1"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin output line
 					(at 35.56 22.86 180)
 					(length 6.35)
 					(name "H2"
@@ -7819,7 +7801,7 @@
 							)
 						)
 					)
-					(number "4"
+					(number "3"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -7837,7 +7819,7 @@
 							)
 						)
 					)
-					(number "5"
+					(number "4"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -7855,7 +7837,7 @@
 							)
 						)
 					)
-					(number "6"
+					(number "5"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -7873,7 +7855,7 @@
 							)
 						)
 					)
-					(number "7"
+					(number "6"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -10692,7 +10674,7 @@
 	)
 	(wire
 		(pts
-			(xy 599.44 142.24) (xy 622.3 142.24)
+			(xy 599.44 147.32) (xy 622.3 147.32)
 		)
 		(stroke
 			(width 0)
@@ -11342,7 +11324,7 @@
 	)
 	(wire
 		(pts
-			(xy 599.44 149.86) (xy 622.3 149.86)
+			(xy 599.44 154.94) (xy 622.3 154.94)
 		)
 		(stroke
 			(width 0)
@@ -12880,16 +12862,6 @@
 		)
 		(uuid "fd4bd309-5c68-4a93-9874-6fb4655de379")
 	)
-	(wire
-		(pts
-			(xy 599.44 157.48) (xy 614.68 157.48)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ffdea284-ed58-4b8e-8908-ef1b9e4fe3b1")
-	)
 	(label "FIU.D20"
 		(at 144.78 129.54 0)
 		(effects
@@ -12961,7 +12933,7 @@
 		(uuid "02d6015c-f130-47d5-ae32-5d28440de7a2")
 	)
 	(label "CLAMP~"
-		(at 604.52 142.24 0)
+		(at 604.52 147.32 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -13220,7 +13192,7 @@
 		)
 		(uuid "13635f75-4ba4-4402-8927-57ee7b3619d9")
 	)
-	(label "H1"
+	(label "H2"
 		(at 457.2 106.68 0)
 		(effects
 			(font
@@ -14420,7 +14392,7 @@
 		)
 		(uuid "5d9e8d48-3a7a-493d-988b-5ece04caa416")
 	)
-	(label "H1"
+	(label "H2"
 		(at 154.94 388.62 0)
 		(effects
 			(font
@@ -16170,16 +16142,6 @@
 		)
 		(uuid "cba78805-0457-45c0-9bc1-98bceebac1e4")
 	)
-	(label "H1"
-		(at 604.52 157.48 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "cbcccf7c-191c-4898-bf27-dbcc9551b897")
-	)
 	(label "SFREZ"
 		(at 723.9 106.68 0)
 		(effects
@@ -16871,7 +16833,7 @@
 		(uuid "f1a3d9d6-9708-428b-91d7-580bc493c6ce")
 	)
 	(label "CLK.2XE~"
-		(at 604.52 149.86 0)
+		(at 604.52 154.94 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -19221,9 +19183,6 @@
 		)
 		(pin "6"
 			(uuid "7890a705-00e4-48a3-9e76-e416a6b89109")
-		)
-		(pin "7"
-			(uuid "86f67b7b-e82c-405f-9b9c-8cf62a2f4e6a")
 		)
 		(instances
 			(project "EMU"

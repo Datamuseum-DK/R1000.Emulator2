@@ -81,7 +81,6 @@ class XClkGen(PartFactory):
 		|		state->when = 30;
 		|		break;
 		|	case 30:
-		|		PIN_H1<=(1);
 		|		PIN_H2<=(0);
 		|		state->when = 55;
 		|		break;
@@ -102,7 +101,6 @@ class XClkGen(PartFactory):
 		|		state->when = 130;
 		|		break;
 		|	case 130:
-		|		PIN_H1<=(0);
 		|		PIN_H2<=(1);
 		|		state->when = 155;
 		|		break;

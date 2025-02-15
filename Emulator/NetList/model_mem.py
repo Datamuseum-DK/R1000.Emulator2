@@ -214,7 +214,7 @@ class MEM(PartFactory):
 
     def sensitive(self):
         yield "PIN_Q4.pos()"
-        yield "PIN_H1.pos()"
+        yield "PIN_H2.neg()"
 
     def init(self, file):
         file.fmt('''
@@ -228,7 +228,7 @@ class MEM(PartFactory):
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|	bool q4pos = PIN_Q4.posedge();
-		|	bool h1pos = PIN_H1.posedge();
+		|	bool h1pos = PIN_H2.negedge();
 		|
 		|	bool labort = !(PIN_LABT=> && PIN_ELABT=>);
 		|

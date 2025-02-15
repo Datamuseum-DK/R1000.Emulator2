@@ -161,7 +161,7 @@ class FIU(PartFactory):
 		|''')
 
     def sensitive(self):
-        yield "PIN_H1.pos()"
+        yield "PIN_H2.neg()"
         yield "PIN_Q2"
         yield "PIN_Q4.pos()"
 
@@ -494,7 +494,7 @@ class FIU(PartFactory):
 		|	vout |= (tii & (vmsk ^ BUS_DF_MASK));
 		|
 		|	output.z_qf = PIN_QFOE=>;			// (UCODE)
-		|	if (!output.z_qf && PIN_H1=>) { 
+		|	if (!output.z_qf && !PIN_H2=>) { 
 		|		output.qf = vout ^ BUS_QF_MASK;
 		|		mp_fiu_bus = output.qf;
 		|	}
@@ -577,7 +577,7 @@ class FIU(PartFactory):
 		|	bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	bool h1pos = PIN_H1.posedge();
+		|	bool h1pos = PIN_H2.negedge();
 		|	bool sclk = q4pos && !PIN_SCLKE=>;
 		|
 		|	bool carry, name_match;

@@ -47,6 +47,8 @@ class Net():
         self.on_plane = None
         self.sc_type = "sc_logic"
         self.default = True
+        if name == "H2":
+            self.default = False
         self.sortkey = util.sortkey(self.name)
         self.cname = None
         self.bare_cname = None
