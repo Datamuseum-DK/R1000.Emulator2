@@ -16,8 +16,6 @@ class XCLKGEN(Chip):
    |              |%
    |         CLAMP+-->
    |              |
-   |              |%
-   |          2XE~o-->
    |              |
    |              |%
    |            H2+-->

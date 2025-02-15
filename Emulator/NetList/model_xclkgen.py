@@ -62,14 +62,6 @@ class XClkGen(PartFactory):
 		|	now = state->when;
 		|	switch (now) {
 		|	case 0:
-		|		state->when = 5;
-		|		break;
-		|	case 5:
-		|		if (++state->pit == 256) {
-		|			pit_clock();
-		|			state->pit = 0;
-		|		}
-		|		PIN_2XEnot<=(0);
 		|		state->when = 10;
 		|		break;
 		|	case 10:
@@ -77,23 +69,19 @@ class XClkGen(PartFactory):
 		|		state->when = 15;
 		|		break;
 		|	case 15:
+		|		if (++state->pit == 256) {
+		|			pit_clock();
+		|			state->pit = 0;
+		|		}
 		|		update_state();
 		|		state->when = 30;
 		|		break;
 		|	case 30:
 		|		PIN_H2<=(0);
-		|		state->when = 55;
-		|		break;
-		|	case 55:
-		|		PIN_2XEnot<=(1);
 		|		state->when = 60;
 		|		break;
 		|	case 60:
 		|		PIN_Q2<=(0);
-		|		state->when = 105;
-		|		break;
-		|	case 105:
-		|		PIN_2XEnot<=(0);
 		|		state->when = 110;
 		|		break;
 		|	case 110:
@@ -102,15 +90,11 @@ class XClkGen(PartFactory):
 		|		break;
 		|	case 130:
 		|		PIN_H2<=(1);
-		|		state->when = 155;
-		|		break;
-		|	case 155:
-		|		PIN_2XEnot<=(1);
 		|		state->when = 160;
 		|		break;
 		|	case 160:
 		|		PIN_Q3<=(1); PIN_Q4<=(0);
-		|		state->when = 205;
+		|		state->when = 210;
 		|	}
 		|	next_trigger((state->when - now) % 200, sc_core::SC_NS);
 		|	state->when = state->when % 200;
