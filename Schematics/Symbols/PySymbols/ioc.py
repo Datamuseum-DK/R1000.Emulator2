@@ -13,8 +13,8 @@ class IOC(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "Q2"))
+        self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
         self.sig_left(ChipSig("-->+", "CSTP"))
 
@@ -28,8 +28,6 @@ class IOC(FChip):
         self.sig_left(ChipSig("-->+", "DUMNXT"))
 
         self.sig_right(ChipSig("+-->", "BLTCP"))
-
-        self.sig_right(ChipSig("+-->", "FEN", 0, 3))
 
         self.finish()
 

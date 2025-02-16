@@ -13,8 +13,8 @@ class MEM(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("-->+", "H2"))
         self.sig_left(ChipSig("-->+", "Q4"))
+        self.sig_left(ChipSig("-->+", "H2"))
 
         self.sig_left(ChipSig("<--+", "SETA"))
         self.sig_left(ChipSig("<--+", "SETB"))
@@ -24,8 +24,6 @@ class MEM(FChip):
         self.sig_left(ChipSig("-->+", "EABT"))
         self.sig_left(ChipSig("-->+", "ELABT"))
         self.sig_left(ChipSig("-->+", "LABT"))
-
-        self.sig_right(ChipSig("+<--", "XXX"))
 
         self.finish(21)
 

@@ -501,7 +501,6 @@ class IOC(PartFactory):
 		|																					state->uir = state->wcsram[mp_nua_bus];
 		|																					assert (state->uir <= 0xffff);
 		|																					mp_nxt_adr_oe = 1 << UIR_AEN;
-		|																					output.fen = (1 << UIR_FEN) ^ 0xf;
 		|																					mp_nxt_fiu_oe = 1 << UIR_FEN;
 		|																					state->dumen = !PIN_DUMNXT=>;
 		|																					state->csa_hit = !mp_csa_hit;

@@ -585,7 +585,9 @@ class FChip(Chip):
                 right.append(nm + arrow)
             space = True
 
-        minwidth = max(len(x) for x in left) + max(len(x) for x in right) + 2
+        width_l = max(len(x) for x in left + [""])
+        width_r = max(len(x) for x in right + [""])
+        minwidth = width_l + width_r + 2
         if width == 0:
             #print(self.symbol_name, "W", width, "MW", minwidth)
             width = minwidth
