@@ -13,9 +13,6 @@ class VAL(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("===+", "QF", 0, 63))
-        self.sig_left(ChipSig("-->+", "QFOE"))
-
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))

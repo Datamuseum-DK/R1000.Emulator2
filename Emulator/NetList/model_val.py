@@ -388,11 +388,11 @@ class VAL(PartFactory):
 		|
 		|	bool divide = rand != 0xb;
 		|
-		|	output.z_qf = PIN_QFOE=>;
+		|	//output.z_qf = PIN_QFOE=>;
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|							if (h1pos && !output.z_qf) {
+		|							if (h1pos && (mp_fiu_oe == 0x2)) {
 		|								find_a();
-		|								output.qf = ~state->a;
+		|								//output.qf = ~state->a;
 		|								mp_fiu_bus = ~state->a;
 		|//ALWAYS_TRACE(<< " V2FIU " << std::hex << mp_fiu_bus);
 		|							}
@@ -402,7 +402,7 @@ class VAL(PartFactory):
 		|							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
-		|																if (output.z_qf) {
+		|																if (mp_fiu_oe != 0x02) {
 		|																	find_a();
 		|																}
 		|																if (mp_valv_oe) {

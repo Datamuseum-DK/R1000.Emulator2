@@ -621,12 +621,16 @@ class SEQ(PartFactory):
 		|								br_type = UIR_BRTYP;
 		|								maybe_dispatch = 0xb < br_type && br_type < 0xf;
 		|
+		|#if 0
 		|								output.z_qf = PIN_QFOE=>;
 		|								if (!output.z_qf) {
 		|									output.qf = state->topu ^ 0xffff;
 		|									output.qf ^= 0xffff;
 		|									mp_fiu_bus = output.qf;
 		|								}
+		|#endif
+		|								if (mp_fiu_oe == 0x8)
+		|									mp_fiu_bus = state->topu;
 		|								if (mp_seqtv_oe) {
 		|									h1pos = false;
 		|								}
