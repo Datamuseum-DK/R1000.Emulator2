@@ -436,11 +436,10 @@ class TYP(PartFactory):
 		|	mp_load_mar = !(foo1 && PIN_BHSTP=>);
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	output.z_qf = PIN_QFOE=>;
+		|	//output.z_qf = PIN_QFOE=>;
 		|											if (h1pos) {
-		|												if (!output.z_qf) {
+		|												if (mp_fiu_oe == 0x4) {
 		|													find_a();
-		|													output.qf = ~state->a;
 		|													mp_fiu_bus = ~state->a;
 		|												}
 		|												if (!mp_typt_oe) {
@@ -451,7 +450,7 @@ class TYP(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
-		|																if (output.z_qf) {
+		|																if (mp_fiu_oe != 0x4) {
 		|																	find_a();
 		|																}
 		|																if (mp_typt_oe) {

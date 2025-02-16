@@ -165,8 +165,6 @@ class FIU(PartFactory):
         yield "PIN_Q2"
         yield "PIN_Q4.pos()"
 
-        # yield "BUS_DF"
-
     def priv_decl(self, file):
         file.fmt('''
 		|	unsigned pa025, pa026, pa027;
@@ -194,13 +192,7 @@ class FIU(PartFactory):
 		|SCM_«mmm» ::
 		|read_fiu_bus(unsigned line)
 		|{
-		|	uint64_t fiu;
-		|	BUS_DF_READ(fiu);
-		|if (0 && fiu != mp_fiu_bus) {
-		|	ALWAYS_TRACE(<< "FFIU " << std::hex << fiu << " < " << mp_fiu_bus << " " << " " << mp_fiu_oe << " " << line);
-		|}
 		|	return (~mp_fiu_bus);
-		|	return (~fiu);
 		|}
 		|
 		|void
@@ -284,13 +276,13 @@ class FIU(PartFactory):
 		|		vi = read_fiu_bus(tivi);
 		|		break;
 		|	case 0x03: case 0x07: case 0x0b:
-		|		vi = frame() ^ BUS_DF_MASK;
+		|		vi = frame() ^ ~0ULL;
 		|		break;
 		|	default:
 		|		vi = (uint64_t)state->srn << 32;
 		|		vi |= state->sro & 0xffffff80;
 		|		vi |= state->oreg;
-		|		vi ^= BUS_DF_MASK;
+		|		vi = ~vi;
 		|		break;
 		|	}
 		|	uint64_t ti;
@@ -480,7 +472,7 @@ class FIU(PartFactory):
 		|	case 0:
 		|	case 1:
 		|		if (sgnbit)
-		|			tii = BUS_DF_MASK;
+		|			tii = ~0ULL;
 		|		break;
 		|	case 2:
 		|		tii = mp_val_bus;
@@ -499,12 +491,10 @@ class FIU(PartFactory):
 		|	}
 		|
 		|	uint64_t vout = 0;
-		|	vout = (rdq & vmsk);
-		|	vout |= (tii & (vmsk ^ BUS_DF_MASK));
+		|	vout = rdq & vmsk;
+		|	vout |= tii & ~vmsk;
 		|
-		|	output.z_qf = PIN_QFOE=>;			// (UCODE)
-		|	if (!output.z_qf && !PIN_H2=>) { 
-		|		output.qf = vout ^ BUS_QF_MASK;
+		|	if (mp_fiu_oe == 0x1 && !PIN_H2=>) { 
 		|		mp_fiu_bus = ~vout;
 		|	}
 		|
@@ -513,8 +503,8 @@ class FIU(PartFactory):
 		|	}
 		|
 		|	if (sclk && !UIR_TCLK) {			// Q4~^
-		|		state->treg = (rdq & tmsk);
-		|		state->treg |= (state->ti_bus & (tmsk ^ BUS_DF_MASK));
+		|		state->treg = rdq & tmsk;
+		|		state->treg |= state->ti_bus & ~tmsk;
 		|	}
 		|
 		|	if (sclk && !UIR_VCLK) {			// Q4~^
@@ -616,7 +606,7 @@ class FIU(PartFactory):
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|											if (q1pos) {
 		|												do_tivi();
-		|												if (!PIN_QFOE=>) {
+		|												if (mp_fiu_oe == 0x1) {
 		|													rotator(sclk);
 		|												}
 		|												unsigned dif;

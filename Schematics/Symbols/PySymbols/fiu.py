@@ -13,9 +13,6 @@ class FIU(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("<->+", "DQF", 0, 63))
-        self.sig_left(ChipSig("-->+", "QFOE"))
-
         #self.sig_left(ChipSig("-->+", "OL", 0, 6))
         #self.sig_left(ChipSig("-->+", "LFL", 0, 6))
         #self.sig_left(ChipSig("-->+", "LFRC", 0, 1))

@@ -13,20 +13,6 @@ class TYP(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("===+", "QF", 0, 63))
-        self.sig_left(ChipSig("-->+", "QFOE"))
-
-        # UWORD order 
-        #self.sig_left(ChipSig("-->+", "UIRA", 0, 5))
-        #self.sig_left(ChipSig("-->+", "UIRB", 0, 5))
-        #self.sig_left(ChipSig("-->+", "FRM", 0, 4))
-        #self.sig_left(ChipSig("-->+", "RAND", 0, 3))
-        #self.sig_left(ChipSig("-->+", "UIRC", 0, 5))
-        #self.sig_left(ChipSig("-->+", "SEL"))
-        #self.sig_left(ChipSig("-->+", "AFNC", 0, 4))
-        #self.sig_left(ChipSig("-->+", "CSRC"))
-
-        # CLOCKS
         self.sig_left(ChipSig("-->+", "Q2"))
 
         self.sig_left(ChipSig("-->+", "H2"))
