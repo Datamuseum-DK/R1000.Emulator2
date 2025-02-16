@@ -128,7 +128,7 @@ def main():
         if delta:
             i -= delta
         if ucycles is None and "CLKGEN" in ctx.ident:
-            ucycles = i / 10
+            ucycles = i / 7
         nact += i
         lines.append((i, ctx.wastage, str(ctx)))
         j = "board " + ctx.ident.split(".")[1].split('_')[0]
