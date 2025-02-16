@@ -165,7 +165,7 @@ class FIU(PartFactory):
         yield "PIN_Q2"
         yield "PIN_Q4.pos()"
 
-        yield "BUS_DF"
+        # yield "BUS_DF"
 
     def priv_decl(self, file):
         file.fmt('''
@@ -180,6 +180,7 @@ class FIU(PartFactory):
 		|	unsigned countdown;
 		|	unsigned hit_offset;
 		|
+		|	uint64_t read_fiu_bus(unsigned line);
 		|	void do_tivi(void);
 		|	void rotator(bool sclk);
 		|	void fiu_conditions(unsigned condsel);
@@ -189,6 +190,18 @@ class FIU(PartFactory):
 
     def priv_impl(self, file):
         file.fmt('''
+		|uint64_t
+		|SCM_«mmm» ::
+		|read_fiu_bus(unsigned line)
+		|{
+		|	uint64_t fiu;
+		|	BUS_DF_READ(fiu);
+		|if (0 && fiu != mp_fiu_bus) {
+		|	ALWAYS_TRACE(<< "FFIU " << std::hex << fiu << " < " << mp_fiu_bus << " " << " " << mp_fiu_oe << " " << line);
+		|}
+		|	return (~mp_fiu_bus);
+		|	return (~fiu);
+		|}
 		|
 		|void
 		|SCM_«mmm» ::
@@ -268,8 +281,7 @@ class FIU(PartFactory):
 		|		vi = ~mp_val_bus;
 		|		break;
 		|	case 0x02: case 0x06: case 0x0a:
-		|		BUS_DF_READ(vi);
-		|		vi ^= BUS_DF_MASK;
+		|		vi = read_fiu_bus(tivi);
 		|		break;
 		|	case 0x03: case 0x07: case 0x0b:
 		|		vi = frame() ^ BUS_DF_MASK;
@@ -287,8 +299,7 @@ class FIU(PartFactory):
 		|		ti = state->treg;
 		|		break;
 		|	case 0x04: case 0x05: case 0x06: case 0x07:
-		|		BUS_DF_READ(ti);
-		|		ti ^= BUS_DF_MASK;
+		|		ti = read_fiu_bus(tivi);
 		|		break;
 		|	case 0x08: case 0x09: case 0x0a: case 0x0b:
 		|		ti = ~mp_typ_bus;
@@ -472,13 +483,11 @@ class FIU(PartFactory):
 		|			tii = BUS_DF_MASK;
 		|		break;
 		|	case 2:
-		|		//BUS_DF_READ(tii);
 		|		tii = mp_val_bus;
 		|		tii = state->vi_bus;
 		|		break;
 		|	case 3:
-		|		BUS_DF_READ(tii);
-		|		tii ^= BUS_DF_MASK;
+		|		tii = read_fiu_bus(0x20);
 		|		break;
 		|	}
 		|
@@ -496,7 +505,7 @@ class FIU(PartFactory):
 		|	output.z_qf = PIN_QFOE=>;			// (UCODE)
 		|	if (!output.z_qf && !PIN_H2=>) { 
 		|		output.qf = vout ^ BUS_QF_MASK;
-		|		mp_fiu_bus = output.qf;
+		|		mp_fiu_bus = ~vout;
 		|	}
 		|
 		|	if (sclk && UIR_LDMDR) {			// (UCODE)
@@ -605,8 +614,8 @@ class FIU(PartFactory):
 		|	bool tcsa_clk = q4pos && tsclken;
 		|
 		|//	ALWAYS						H1				Q1				Q2				Q4
-		|	do_tivi();
 		|											if (q1pos) {
+		|												do_tivi();
 		|												if (!PIN_QFOE=>) {
 		|													rotator(sclk);
 		|												}
@@ -696,6 +705,7 @@ class FIU(PartFactory):
 		|											}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|															if (q2pos) {
+		|																do_tivi();
 		|																unsigned pa025a = 0;
 		|																pa025a |= mem_start;
 		|																pa025a |= state->state0 << 8;
@@ -813,6 +823,7 @@ class FIU(PartFactory):
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|																			if (q4pos) {
+		|																				do_tivi();
 		|																				tcsa(tcsa_clk);
 		|																				if (sclk) {
 		|																					if (UIR_LDMDR || !UIR_TCLK || !UIR_VCLK) {

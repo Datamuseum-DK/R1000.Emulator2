@@ -13,7 +13,7 @@ class TYP(FChip):
     def __init__(self):
         super().__init__()
 
-        self.sig_left(ChipSig("<->+", "DQF", 0, 63))
+        self.sig_left(ChipSig("===+", "QF", 0, 63))
         self.sig_left(ChipSig("-->+", "QFOE"))
 
         # UWORD order 

@@ -502,6 +502,7 @@ class IOC(PartFactory):
 		|																					assert (state->uir <= 0xffff);
 		|																					mp_nxt_adr_oe = 1 << UIR_AEN;
 		|																					output.fen = (1 << UIR_FEN) ^ 0xf;
+		|																					mp_nxt_fiu_oe = 1 << UIR_FEN;
 		|																					state->dumen = !PIN_DUMNXT=>;
 		|																					state->csa_hit = !mp_csa_hit;
 		|																					unsigned tvbs = UIR_TVBS;
@@ -518,46 +519,6 @@ class IOC(PartFactory):
 		|																						tptr &= 0x7ff;
 		|																						state->tram[2048] = tptr;
 		|																					}
-		|#if 0
-		|																					output.seqtv = true;
-		|																					output.fiuv = true;
-		|																					output.fiut = true;
-		|																					output.memv = true;
-		|																					output.memtv = true;
-		|																					output.ioctv = true;
-		|																					output.valv = true;
-		|																					output.typt = true;
-		|																					switch (tvbs) {
-		|																					case 0x0: output.valv = false; output.typt = false; break;
-		|																					case 0x1: output.fiuv = false; output.typt = false; break;
-		|																					case 0x2: output.valv = false; output.fiut = false; break;
-		|																					case 0x3: output.fiuv = false; output.fiut = false; break;
-		|																					case 0x4: output.ioctv = false; break;
-		|																					case 0x5: output.seqtv = false; break;
-		|																					case 0x8:
-		|																					case 0x9:
-		|																						output.memv = false; output.typt = false; break;
-		|																					case 0xa:
-		|																					case 0xb:
-		|																						output.memv = false; output.fiut = false; break;
-		|																					case 0xc:
-		|																					case 0xd:
-		|																					case 0xe:
-		|																					case 0xf:
-		|																						if (state->dumen) {
-		|																							output.ioctv = false;
-		|																						} else if (state->csa_hit) {
-		|																							output.typt = false;
-		|																							output.valv = false;
-		|																						} else {
-		|																							output.memtv = false;
-		|																							output.memv = false;
-		|																						}
-		|																						break;
-		|																					default:
-		|																						break;
-		|																					}
-		|#endif
 		|																					mp_nxt_seqtv_oe = true;
 		|																					mp_nxt_fiuv_oe = true;
 		|																					mp_nxt_fiut_oe = true;

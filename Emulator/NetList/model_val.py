@@ -392,8 +392,9 @@ class VAL(PartFactory):
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|							if (h1pos && !output.z_qf) {
 		|								find_a();
-		|								output.qf = state->a ^ BUS_QF_MASK;
-		|								mp_fiu_bus = output.qf;
+		|								output.qf = ~state->a;
+		|								mp_fiu_bus = ~state->a;
+		|//ALWAYS_TRACE(<< " V2FIU " << std::hex << mp_fiu_bus);
 		|							}
 		|							if (h1pos && !mp_valv_oe) {
 		|								find_b();
@@ -479,8 +480,14 @@ class VAL(PartFactory):
 		|																bool c_source = UIR_CSRC;
 		|																bool split_c_src = rand == 0x4;
 		|																if (split_c_src || !c_source) {
+		|#if 0
 		|																	BUS_DF_READ(fiu);
 		|																	fiu ^= BUS_DF_MASK;
+		|if (fiu != ~mp_fiu_bus) {
+		|	ALWAYS_TRACE(<< "VFIU " << std::hex << fiu << " < " << ~mp_fiu_bus);
+		|}
+		|#endif
+		|																	fiu = ~mp_fiu_bus;
 		|																}
 		|																if (!c_source && (rand == 3 || rand == 6)) {
 		|																	fiu &= ~1ULL;

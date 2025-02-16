@@ -412,9 +412,6 @@ class TYP(PartFactory):
 
         file.fmt('''
 		|	uint64_t c = 0;
-		|	uint64_t fiu = 0;
-		|	bool fiu_valid = false;
-		|	bool fiu0, fiu1;
 		|	bool chi = false;
 		|	bool clo = false;
 		|	//bool h2 = PIN_H2=>;
@@ -443,7 +440,7 @@ class TYP(PartFactory):
 		|											if (h1pos) {
 		|												if (!output.z_qf) {
 		|													find_a();
-		|													output.qf = state->a ^ BUS_QF_MASK;
+		|													output.qf = ~state->a;
 		|													mp_fiu_bus = ~state->a;
 		|												}
 		|												if (!mp_typt_oe) {
@@ -627,15 +624,24 @@ class TYP(PartFactory):
 		|																												}
 		|
 		|																												bool c_source = UIR_CSRC;
+		|																												uint64_t fiu = 0;
+		|																												bool fiu0, fiu1;
 		|																												fiu0 = c_source;
 		|																												fiu1 = c_source == (rand != 0x3);
 		|																										
 		|																												bool sel = UIR_SEL;
 		|																										
-		|																												if (!fiu0) {
+		|																												if (!fiu0 || !fiu1) {
+		|#if 0
 		|																													BUS_DF_READ(fiu);
 		|																													fiu ^= BUS_DF_MASK;
-		|																													fiu_valid = true;
+		|if (fiu != ~mp_fiu_bus) {
+		|	ALWAYS_TRACE(<< "TFIU " << std::hex << fiu << " < " << ~mp_fiu_bus);
+		|}
+		|#endif
+		|																													fiu = ~mp_fiu_bus;
+		|																												}
+		|																												if (!fiu0) {
 		|																													c |= fiu & 0xffffffff00000000ULL;
 		|																													chi = true;
 		|																												} else {
@@ -647,10 +653,6 @@ class TYP(PartFactory):
 		|																													chi = true;
 		|																												}
 		|																												if (!fiu1) {
-		|																													if (!fiu_valid) {
-		|																														BUS_DF_READ(fiu);
-		|																														fiu ^= BUS_DF_MASK;
-		|																													}
 		|																													c |= fiu & 0xffffffffULL;
 		|																													clo = true;
 		|																												} else {

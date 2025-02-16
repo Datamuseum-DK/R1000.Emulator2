@@ -95,6 +95,7 @@ void f181_alu(struct f181 *);
 	macro(unsigned, csa_cntl, 0) \
 	macro(unsigned, mar_cntl, 0) \
 	macro(unsigned, adr_oe, 0) \
+	macro(unsigned, fiu_oe, 0) \
 	macro(unsigned, seqtv_oe, 0) \
 	macro(unsigned, fiuv_oe, 0) \
 	macro(unsigned, fiut_oe, 0) \
