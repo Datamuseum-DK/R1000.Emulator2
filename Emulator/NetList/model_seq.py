@@ -259,9 +259,9 @@ class SEQ(PartFactory):
 		|	void int_reads(void);
 		|	unsigned group_sel(void);
 		|	unsigned late_macro_pending(void);
-		|	bool seq_cond5(unsigned condsel);
-		|	bool seq_cond6(unsigned condsel);
-		|	bool seq_cond7(unsigned condsel);
+		|	bool seq_conda(unsigned condsel);
+		|	bool seq_cond9(unsigned condsel);
+		|	bool seq_cond8(unsigned condsel);
 		|       void nxt_lex_valid(void);
 		|       bool condition(void);
 		|	unsigned branch_offset(void);
@@ -365,25 +365,25 @@ class SEQ(PartFactory):
 		|
 		|bool
 		|SCM_«mmm» ::
-		|seq_cond5(unsigned condsel)
+		|seq_conda(unsigned condsel)
 		|{
 		|
 		|	switch (condsel) {
-		|	case 0x28: // FIELD_NUM_ERR
+		|	case 0x57: // FIELD_NUM_ERR
 		|		return (!state->field_number_error);
-		|	case 0x29: // LATCHED_COND
+		|	case 0x56: // LATCHED_COND
 		|		return (!state->latched_cond);
-		|	case 0x2a: // E_MACRO_PEND
+		|	case 0x55: // E_MACRO_PEND
 		|		return (!early_macro_pending);
-		|	case 0x2b: // E_MACRO_EVNT~6
+		|	case 0x54: // E_MACRO_EVNT~6
 		|		return (!((state->emac >> 0) & 1));
-		|	case 0x2c: // E_MACRO_EVNT~5
+		|	case 0x53: // E_MACRO_EVNT~5
 		|		return (!((state->emac >> 1) & 1));
-		|	case 0x2d: // E_MACRO_EVNT~3
+		|	case 0x52: // E_MACRO_EVNT~3
 		|		return (!((state->emac >> 3) & 1));
-		|	case 0x2e: // E_MACRO_EVNT~2
+		|	case 0x51: // E_MACRO_EVNT~2
 		|		return (!((state->emac >> 4) & 1));
-		|	case 0x2f: // E_MACRO_EVNT~0
+		|	case 0x50: // E_MACRO_EVNT~0
 		|		return (!((state->emac >> 6) & 1));
 		|	default:
 		|		return (false);
@@ -392,36 +392,36 @@ class SEQ(PartFactory):
 		|
 		|bool
 		|SCM_«mmm» ::
-		|seq_cond6(unsigned condsel)
+		|seq_cond9(unsigned condsel)
 		|{
 		|
 		|	switch (condsel) {
-		|	case 0x30: // DISP_COND0
+		|	case 0x4f: // DISP_COND0
 		|		return ((state->decode & 0x7) == 0);
 		|		break;
-		|	case 0x31: // True
+		|	case 0x4e: // True
 		|		return (true);
 		|		break;
-		|	case 0x32: // M_IBUFF_MT
+		|	case 0x4d: // M_IBUFF_MT
 		|		return (state->m_ibuff_mt);
 		|		break;
-		|	case 0x33: // M_BRK_CLASS
+		|	case 0x4c: // M_BRK_CLASS
 		|		return (state->m_break_class);
 		|		break;
-		|	case 0x34: // M_TOS_INVLD
+		|	case 0x4b: // M_TOS_INVLD
 		|		return (state->m_tos_invld);
 		|		break;
-		|	case 0x35: // M_RES_REF
+		|	case 0x4a: // M_RES_REF
 		|		return (state->m_res_ref);
 		|		break;
-		|	case 0x36: // M_OVERFLOW
+		|	case 0x49: // M_OVERFLOW
 		|		{
 		|		unsigned csa = mp_csa_nve;
 		|		unsigned dec = state->decode >> 3;
 		|		return (csa <= ((dec >> 3) | 12));
 		|		}
 		|		break;
-		|	case 0x37: // M_UNDERFLOW
+		|	case 0x48: // M_UNDERFLOW
 		|		{
 		|		unsigned csa = mp_csa_nve;
 		|		unsigned dec = state->decode >> 3;
@@ -435,32 +435,32 @@ class SEQ(PartFactory):
 		|
 		|bool
 		|SCM_«mmm» ::
-		|seq_cond7(unsigned condsel)
+		|seq_cond8(unsigned condsel)
 		|{
 		|
 		|	switch (condsel) {
-		|	case 0x38: // STACK_SIZE
+		|	case 0x47: // STACK_SIZE
 		|		return (state->stack_size_zero);
 		|		break;
-		|	case 0x39: // LATCHED_COND
+		|	case 0x46: // LATCHED_COND
 		|		return (state->latched_cond);
 		|		break;
-		|	case 0x3a: // SAVED_LATCHED
+		|	case 0x45: // SAVED_LATCHED
 		|		return (state->saved_latched);
 		|		break;
-		|	case 0x3b: // TOS_VLD.COND
+		|	case 0x44: // TOS_VLD.COND
 		|		return (state->tos_vld_cond);
 		|		break;
-		|	case 0x3c: // LEX_VLD.COND
+		|	case 0x43: // LEX_VLD.COND
 		|		return (state->lxval);
 		|		break;
-		|	case 0x3d: // IMPORT.COND
+		|	case 0x42: // IMPORT.COND
 		|		return (state->import_condition);
 		|		break;
-		|	case 0x3e: // REST_PC_DEC
+		|	case 0x41: // REST_PC_DEC
 		|		return ((state->rq >> 1) & 1);
 		|		break;
-		|	case 0x3f: // RESTARTABLE
+		|	case 0x40: // RESTARTABLE
 		|		return ((state->rq >> 3) & 1);
 		|		break;
 		|	default:
@@ -524,23 +524,23 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|condition(void)
 		|{
-		|	unsigned condsel = UIR_CSEL ^ 0x7f;
+		|	unsigned condsel = UIR_CSEL;
 		|	switch (condsel >> 3) {
-		|	case 0x0: return(mp_condx0);
-		|	case 0x2: return(mp_condx2);
-		|	case 0x3: return(mp_condx3);
-		|	case 0x4: return(!(mp_condxc && PIN_CNDXF=>));
-		|	case 0x5: return(seq_cond5(condsel));
-		|	case 0x6: return(seq_cond6(condsel));
-		|	case 0x7: return(seq_cond7(condsel));
-		|	case 0x8: return(mp_condx8);
-		|	case 0x9: return(mp_condx9);
-		|	case 0xa: return(mp_condxa);
-		|	case 0xb: return(mp_condxb);
-		|	case 0xc: return(mp_condxc);
-		|	case 0xd: return(mp_condxd);
-		|	case 0xe: return(mp_condxe);
-		|	case 0xf: return(PIN_CNDXF=>);
+		|	case 0x0: return(PIN_CNDXF=>);
+		|	case 0x1: return(mp_condxe);
+		|	case 0x2: return(mp_condxd);
+		|	case 0x3: return(mp_condxc);
+		|	case 0x4: return(mp_condxb);
+		|	case 0x5: return(mp_condxa);
+		|	case 0x6: return(mp_condx9);
+		|	case 0x7: return(mp_condx8);
+		|	case 0x8: return(seq_cond8(condsel));
+		|	case 0x9: return(seq_cond9(condsel));
+		|	case 0xa: return(seq_conda(condsel));
+		|	case 0xb: return(!(mp_condxc && PIN_CNDXF=>));
+		|	case 0xc: return(mp_condx3);
+		|	case 0xd: return(mp_condx2);
+		|	case 0xf: return(mp_condx0);
 		|	default: return(1);
 		|	}
 		|}
