@@ -337,322 +337,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "r1000:F74"
-			(pin_names
-				(offset 1.016)
-				(hide yes)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "U"
-				(at 12.7 -2.54 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "F74"
-				(at -1.27 -5.08 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Location" "___"
-				(at -1.27 0 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Name" "______"
-				(at 11.43 -19.685 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify bottom)
-				)
-			)
-			(symbol "F74_0_1"
-				(rectangle
-					(start -3.81 8.255)
-					(end 8.89 -13.335)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 10.16) (xy 2.54 9.525)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(polyline
-					(pts
-						(xy 2.54 -15.24) (xy 2.54 -14.605)
-					)
-					(stroke
-						(width 0.1524)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "F74_1_1"
-				(circle
-					(center 2.54 8.89)
-					(radius 0.635)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(circle
-					(center 2.54 -13.97)
-					(radius 0.635)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(circle
-					(center 9.525 -7.62)
-					(radius 0.635)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(text "D"
-					(at -2.54 2.54 0)
-					(effects
-						(font
-							(size 2.54 2.54)
-						)
-					)
-				)
-				(text ">"
-					(at -2.54 -7.62 0)
-					(effects
-						(font
-							(size 2.54 2.54)
-						)
-					)
-				)
-				(text "P"
-					(at 2.54 5.08 0)
-					(effects
-						(font
-							(size 2.54 2.54)
-						)
-					)
-				)
-				(text "C"
-					(at 2.54 -10.16 0)
-					(effects
-						(font
-							(size 2.54 2.54)
-						)
-					)
-				)
-				(text "R"
-					(at 5.08 5.08 0)
-					(effects
-						(font
-							(size 2.54 2.54)
-						)
-					)
-				)
-				(text "L"
-					(at 5.08 -10.16 0)
-					(effects
-						(font
-							(size 2.54 2.54)
-						)
-					)
-				)
-				(text "Q"
-					(at 7.62 2.54 0)
-					(effects
-						(font
-							(size 2.54 2.54)
-						)
-					)
-				)
-				(text "Q"
-					(at 7.62 -7.62 0)
-					(effects
-						(font
-							(size 2.54 2.54)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 2.54 0)
-					(length 6.35)
-					(name "D"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -7.62 0)
-					(length 6.35)
-					(name "CLK"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at 2.54 15.24 270)
-					(length 5.08)
-					(name "PR_"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "4"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at 2.54 -20.32 90)
-					(length 5.08)
-					(name "CL_"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin output line
-					(at 15.24 2.54 180)
-					(length 6.35)
-					(name "Q"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "5"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin output line
-					(at 15.24 -7.62 180)
-					(length 5.08)
-					(name "Q_"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "6"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "r1000:FIU"
 			(pin_names
 				(offset 1.016)
@@ -8646,20 +8330,8 @@
 		(uuid "624b24a2-89a8-4e4d-9a12-cf77d83c05e5")
 	)
 	(no_connect
-		(at 505.46 360.68)
-		(uuid "74c19895-2053-4191-8fc1-c4f747c48798")
-	)
-	(no_connect
 		(at 215.9 33.02)
 		(uuid "762952f5-26b1-4751-9adc-c14c47ff382d")
-	)
-	(no_connect
-		(at 492.76 373.38)
-		(uuid "b5c10fe9-242f-444f-a3aa-86b96e5d1b26")
-	)
-	(no_connect
-		(at 492.76 337.82)
-		(uuid "d6f72fc1-6a3a-48ca-b95d-f397164193ed")
 	)
 	(wire
 		(pts
@@ -10663,16 +10335,6 @@
 	)
 	(wire
 		(pts
-			(xy 467.36 360.68) (xy 480.06 360.68)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7e37a808-d331-4cb8-92db-41af7234efea")
-	)
-	(wire
-		(pts
 			(xy 454.66 271.78) (xy 482.6 271.78)
 		)
 		(stroke
@@ -11783,16 +11445,6 @@
 	)
 	(wire
 		(pts
-			(xy 447.04 350.52) (xy 480.06 350.52)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c8c2a093-2b75-4f05-9ac3-4029d98fa0b6")
-	)
-	(wire
-		(pts
 			(xy 233.68 119.38) (xy 215.9 119.38)
 		)
 		(stroke
@@ -12702,7 +12354,7 @@
 		(uuid "04d94843-3d24-44bd-92e2-ea5371371668")
 	)
 	(label "BELOW_TCB_UE"
-		(at 447.04 350.52 0)
+		(at 510.54 350.52 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -13840,16 +13492,6 @@
 			(justify left bottom)
 		)
 		(uuid "4f1c5504-26bf-42be-b2af-c1d1d8fea4f7")
-	)
-	(label "POP_BELOW_TCB"
-		(at 510.54 350.52 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "4fc6e38d-a624-4bc5-a6c6-5c0a95085bbc")
 	)
 	(label "CLOCKSTOP~0"
 		(at 220.98 109.22 0)
@@ -15100,16 +14742,6 @@
 			(justify left bottom)
 		)
 		(uuid "9ea348c0-f5f9-49b7-97de-ed86027bc818")
-	)
-	(label "Q3~"
-		(at 467.36 360.68 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "9ec71051-8b13-431e-a8c2-5c0c38d76f69")
 	)
 	(label "FIU.D4"
 		(at 612.14 45.72 0)
@@ -16612,103 +16244,6 @@
 			(project "EMU"
 				(path "/20011966-7388-780e-03cc-2841463a393b"
 					(reference "U106")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "r1000:F74")
-		(at 490.22 353.06 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "07ab02da-32fa-436c-8dc9-cc0498bd2cc9")
-		(property "Reference" "U6103"
-			(at 502.92 355.6 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "F74"
-			(at 488.95 358.14 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 491.49 354.33 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 491.49 354.33 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 490.22 353.06 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Location" "F16"
-			(at 488.95 353.06 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Name" "IFFF0B"
-			(at 501.65 372.745 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify bottom)
-			)
-		)
-		(pin "1"
-			(uuid "efcb0de7-f9fb-4fe7-ad3a-0ef26cb97370")
-		)
-		(pin "2"
-			(uuid "bcab677a-1a3c-4d39-8ca3-82a0cc692653")
-		)
-		(pin "3"
-			(uuid "3d2b6ed6-c259-4a8f-9656-32886e58e1b5")
-		)
-		(pin "4"
-			(uuid "604edf22-752e-4bf9-ba91-674df975afc1")
-		)
-		(pin "5"
-			(uuid "74f08afa-d459-4310-a3dd-329b1fcc100a")
-		)
-		(pin "6"
-			(uuid "b3ea87b4-8b9f-4312-a7fb-6fc11e26e983")
-		)
-		(instances
-			(project "EMU"
-				(path "/20011966-7388-780e-03cc-2841463a393b"
-					(reference "U6103")
 					(unit 1)
 				)
 			)
