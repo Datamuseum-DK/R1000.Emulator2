@@ -1126,7 +1126,7 @@ class SEQ(PartFactory):
 		|																									if (!RNDX(RND_CNTL_MUX)) {
 		|																										cnb = state->typ_bus ^ 0xffffffffULL;
 		|																									} else {
-		|																										BUS_DF_READ(cnb);
+		|																										cnb = mp_fiu_bus;
 		|																									}
 		|																									cnb &= 0xffffffffULL;
 		|																									cnb >>= 7;
@@ -1186,7 +1186,7 @@ class SEQ(PartFactory):
 		|																											state->topu ^= 0xffff;
 		|																											break;
 		|																										case 1:
-		|																											BUS_DF_READ(state->topu);
+		|																											state->topu = mp_fiu_bus;
 		|																											state->topu &= 0xffff;
 		|																											break;
 		|																										case 2:
@@ -1222,7 +1222,7 @@ class SEQ(PartFactory):
 		|
 		|
 		|																								if (sclk && aclk) {
-		|																									BUS_DF_READ(state->fiu);
+		|																									state->fiu = mp_fiu_bus;
 		|																									state->fiu &= 0x3fff;
 		|																								}
 		|																							
