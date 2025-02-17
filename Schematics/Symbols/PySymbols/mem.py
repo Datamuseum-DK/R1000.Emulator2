@@ -16,11 +16,6 @@ class MEM(FChip):
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
 
-        self.sig_left(ChipSig("<--+", "SETA"))
-        self.sig_left(ChipSig("<--+", "SETB"))
-        self.sig_left(ChipSig("<--+", "HITA"))
-        self.sig_left(ChipSig("<--+", "HITB"))
-
         self.sig_left(ChipSig("-->+", "EABT"))
         self.sig_left(ChipSig("-->+", "ELABT"))
         self.sig_left(ChipSig("-->+", "LABT"))

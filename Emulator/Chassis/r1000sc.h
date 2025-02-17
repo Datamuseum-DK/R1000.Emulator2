@@ -89,6 +89,8 @@ void f181_alu(struct f181 *);
 	macro(unsigned, macro_event, 0) \
 	macro(unsigned, uevent_enable, 0) \
 	macro(unsigned, load_mar, 0) \
+	macro(unsigned, mem_set, 0) \
+	macro(unsigned, mem_hit, 0) \
 
 #define MIDSTATE(macro) \
 	macro(unsigned, cond_sel, 0) \

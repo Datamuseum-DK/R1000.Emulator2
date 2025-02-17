@@ -13,23 +13,6 @@ class FIU(FChip):
     def __init__(self):
         super().__init__()
 
-        #self.sig_left(ChipSig("-->+", "OL", 0, 6))
-        #self.sig_left(ChipSig("-->+", "LFL", 0, 6))
-        #self.sig_left(ChipSig("-->+", "LFRC", 0, 1))
-        #self.sig_left(ChipSig("-->+", "OP", 0, 1))
-        #self.sig_left(ChipSig("-->+", "SEL", 0, 1))
-        #self.sig_left(ChipSig("-->+", "FSRC"))
-        #self.sig_left(ChipSig("-->+", "ORSR"))
-        #self.sig_left(ChipSig("-->+", "OCLK"))
-        #self.sig_left(ChipSig("-->+", "VCLK"))
-        #self.sig_left(ChipSig("-->+", "TCLK"))
-        #self.sig_left(ChipSig("-->+", "LDMDR"))
-        #self.sig_left(ChipSig("-->+", "MSTRT", 0, 4))
-        #self.sig_left(ChipSig("-->+", "RDSRC"))
-        #self.sig_left(ChipSig("-->+", "LSRC"))
-        #self.sig_left(ChipSig("-->+", "OSRC"))
-        #self.sig_left(ChipSig("-->+", "TIVI", 0, 3))
-
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
@@ -45,11 +28,7 @@ class FIU(FChip):
         self.sig_left(ChipSig("-->+", "TRMS"))
         self.sig_left(ChipSig("-->+", "TFRZ"))
 
-        self.sig_right(ChipSig("+<--", "BDHIT", 0, 3))
-        self.sig_right(ChipSig("+<--", "ST", 0, 1))
-
         self.sig_right(ChipSig("+-->", "FRDR"))
-
 
         self.sig_right(ChipSig("+-->", "MEMCND"))
         self.sig_right(ChipSig("+-->", "CNDTRU"))

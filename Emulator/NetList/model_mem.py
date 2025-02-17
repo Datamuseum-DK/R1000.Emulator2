@@ -250,22 +250,21 @@ class MEM(PartFactory):
 		|								state->cyt = p_mcyc2_next_hd;
 		|
 		|								if (state->cyo) {
-		|									if        (state->hits & BSET_4) { output.seta = 0; output.setb = 0;
-		|									} else if (state->hits & BSET_5) { output.seta = 0; output.setb = 1;
-		|									} else if (state->hits & BSET_6) { output.seta = 1; output.setb = 0;
-		|									} else if (state->hits & BSET_7) { output.seta = 1; output.setb = 1;
-		|									} else if (state->hits & BSET_0) { output.seta = 0; output.setb = 0;
-		|									} else if (state->hits & BSET_1) { output.seta = 0; output.setb = 1;
-		|									} else if (state->hits & BSET_2) { output.seta = 1; output.setb = 0;
-		|									} else                           { output.seta = 1; output.setb = 1;
+		|									if        (state->hits & BSET_4) { mp_mem_set = 0;
+		|									} else if (state->hits & BSET_5) { mp_mem_set = 1;
+		|									} else if (state->hits & BSET_6) { mp_mem_set = 2;
+		|									} else if (state->hits & BSET_7) { mp_mem_set = 3;
+		|									} else if (state->hits & BSET_0) { mp_mem_set = 0;
+		|									} else if (state->hits & BSET_1) { mp_mem_set = 1;
+		|									} else if (state->hits & BSET_2) { mp_mem_set = 2;
+		|									} else                           { mp_mem_set = 3;
 		|									}
 		|
-		|			 						output.hita = true;
-		|									output.hitb = true;
+		|									mp_mem_hit = 0xf;
 		|									if (state->hits & (BSET_0|BSET_1|BSET_2|BSET_3))
-		|										output.hita = false;
+		|										mp_mem_hit &= ~1;
 		|									if (state->hits & (BSET_4|BSET_5|BSET_6|BSET_7))
-		|									output.hitb = false;
+		|										mp_mem_hit &= ~8;
 		|									if (state->hits) {
 		|										unsigned tadr = state->hash << 3;
 		|										     if (state->hits & BSET_0)	state->hit_lru = state->rame[tadr | 0];
@@ -301,7 +300,7 @@ class MEM(PartFactory):
 		|								}
 		|	
 		|								if (!state->cyt) {
-		|									bool ihit = output.hita && output.hitb;
+		|									bool ihit = mp_mem_hit == 0xf;
 		|									if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->labort) {
 		|										unsigned set = find_set(state->cmd);
 		|										uint32_t radr = (set << 18) | (state->cl << 6) | state->wd;
@@ -325,7 +324,7 @@ class MEM(PartFactory):
 		|									}
 		|								}
 		|
-		|								bool not_me =  (output.hita && output.hitb);
+		|								bool not_me = mp_mem_hit == 0xf;
 		|							
 		|								if (!mp_memv_oe && mp_memtv_oe) {
 		|									if (not_me) {

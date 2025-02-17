@@ -233,14 +233,11 @@ class FIU(PartFactory):
 		|	line ^= cache_line_tbl_l[(state->moff >> (13 - 7)) & 0xfff];
 		|	line ^= cache_line_tbl_s[(state->sro >> 4) & 0x7];
 		|
-		|	uint64_t st;
-		|	BUS_ST_READ(st);
-		|
 		|	u |= (uint64_t)output.cndtru << BUS64_LSB(9);
 		|	u |= (uint64_t)output.memcnd << BUS64_LSB(10);
 		|	u |= line << BUS64_LSB(23);
 		|	u |= (uint64_t)state->setq << BUS64_LSB(25);
-		|	u |= st << BUS64_LSB(27);
+		|	u |= (uint64_t)mp_mem_set << BUS64_LSB(27);
 		|	u |= (uint64_t)((state->omq >> 2) & 0x3) << BUS64_LSB(29);
 		|	u |= 0x3ULL << BUS64_LSB(31);
 		|	u |= (uint64_t)(mp_seq_uev10_page_x) << BUS64_LSB(32);
@@ -670,8 +667,7 @@ class FIU(PartFactory):
 		|												}
 		|
 		|												bool pgmod = (state->omq >> 1) & 1;
-		|												unsigned board_hit;
-		|												BUS_BDHIT_READ(board_hit);
+		|												unsigned board_hit = mp_mem_hit;
 		|												unsigned pa027a = 0;
 		|												pa027a |= board_hit << 5;
 		|												pa027a |= state->init_mru_d << 4;
