@@ -213,7 +213,7 @@ class VAL(PartFactory):
 		|		cond = (state->nalu & 0xffff0000ULL);
 		|		break;
 		|	case 3:
-		|		cond = output.qbit;
+		|		cond = mp_q_bit;
 		|		break;
 		|	case 5:
 		|		cond = state->mbit;
@@ -434,7 +434,7 @@ class VAL(PartFactory):
 		|																if (
 		|																	!(
 		|																		(state->last_cond && divide) ||
-		|																		(output.qbit && !divide)
+		|																		(mp_q_bit && !divide)
 		|																	)
 		|																) {
 		|																	proma |= 0x100;
@@ -573,12 +573,12 @@ class VAL(PartFactory):
 		|																											if (q4pos) {
 		|																												if (csa_clk) {
 		|																													bool xor0c = state->mbit ^ (!state->coh);
-		|																													bool xor0d = state->output.qbit ^ xor0c;
+		|																													bool xor0d = mp_q_bit ^ xor0c;
 		|																													bool caoi0b = !(
 		|																														((!divide) && xor0d) ||
 		|																														(divide && state->coh)
 		|																													);
-		|																													output.qbit = caoi0b;
+		|																													mp_nxt_q_bit = caoi0b;
 		|																												}
 		|
 		|

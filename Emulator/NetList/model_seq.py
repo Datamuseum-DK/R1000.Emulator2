@@ -204,6 +204,7 @@ class SEQ(PartFactory):
 		|	bool m_res_ref;
 		|	bool bad_hint_enable;
 		|	bool ferr;
+		|	bool late_macro_event;
 		|
 		|	uint16_t lex_valid;
 		|	bool lxval;
@@ -802,7 +803,7 @@ class SEQ(PartFactory):
 		|												state->push_br =    (rom >> 1) & 1;
 		|												state->push   = !(((rom >> 0) & 1) ||
 		|														!(((rom >> 2) & 1) || !state->uadr_mux));
-		|												state->stop = !(!state->bad_hint && (state->uev == 16) && !PIN_LMAC=>);
+		|												state->stop = !(!state->bad_hint && (state->uev == 16) && !state->late_macro_event);
 		|												bool evnan0d = !(UIR_ENMIC && (state->uev == 16));
 		|												mp_uevent_enable = !(evnan0d || state->stop);
 		|											}
@@ -829,7 +830,7 @@ class SEQ(PartFactory):
 		|																unsigned nua;
 		|																if (state->bad_hint) {
 		|																	nua = state->other;
-		|																} else if (PIN_LMAC=>) {
+		|																} else if (state->late_macro_event) {
 		|																	// Not tested by expmon_test_seq ?
 		|																	nua = state->late_u << 3;
 		|																	nua ^= (7 << 3);
@@ -872,7 +873,7 @@ class SEQ(PartFactory):
 		|																if (!PIN_SFSTP=> && mp_seq_prepped) {
 		|																	mp_nua_bus = nua & 0x3fff;
 		|																}
-		|																output.u_event = !(!state->bad_hint && !PIN_LMAC=> && state->uev != 16);
+		|																output.u_event = !(!state->bad_hint && !state->late_macro_event && state->uev != 16);
 		|																output.sfive = (state->check_exit_ue && state->ferr);
 		|																output.qstp7 = !state->bad_hint && state->l_macro_hic;
 		|																output.seqst = output.u_event && output.qstp7;
@@ -881,7 +882,7 @@ class SEQ(PartFactory):
 		|																			if (q3pos) {
 		|																				int_reads();
 		|																				state->q3cond = condition();
-		|																				state->bad_hint_enable = !((!output.u_event) || (PIN_LMAC=> && !state->bad_hint));
+		|																				state->bad_hint_enable = !((!output.u_event) || (state->late_macro_event && !state->bad_hint));
 		|																				unsigned pa040a = 0;
 		|																				pa040a |= (state->decode & 0x7) << 6;
 		|																				if (state->wanna_dispatch) pa040a |= 0x20;
@@ -977,7 +978,7 @@ class SEQ(PartFactory):
 		|																			}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|																							if (q4pos) {
-		|																								bool bhen = !((output.lmaco && !state->bad_hint) || (!output.u_event));
+		|																								bool bhen = !((state->late_macro_event && !state->bad_hint) || (!output.u_event));
 		|																								bool bhcke = !(PIN_SSTOP=> && bhen);
 		|																								if (state_clock) {
 		|																									nxt_lex_valid();
@@ -987,7 +988,7 @@ class SEQ(PartFactory):
 		|																									state->tosram[state->resolve_address] = (state->typ_bus >> 7) & 0xfffff;
 		|																								}
 		|																								if (aclk) {
-		|																									output.lmaco = !(sclke || !(macro_event && !early_macro_pending));
+		|																									state->late_macro_event = !(sclke || !(macro_event && !early_macro_pending));
 		|																									mp_seq_halted = !(sclke || RNDX(RND_HALT));
 		|																								}
 		|																								if (!sclke && !state->ibld) {

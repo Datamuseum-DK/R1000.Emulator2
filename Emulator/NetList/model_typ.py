@@ -464,7 +464,7 @@ class TYP(PartFactory):
 		|																bool acond = true;
 		|																if (divide && state->last_cond)
 		|																	acond = false;
-		|																if (!divide && PIN_TQBIT=>)
+		|																if (!divide && mp_q_bit) 
 		|																	acond = false;
 		|																struct f181 f181l, f181h;
 		|																unsigned tmp, idx, alurand, alufunc = UIR_AFNC;

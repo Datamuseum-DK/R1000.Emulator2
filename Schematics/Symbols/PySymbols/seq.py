@@ -20,8 +20,6 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
 
-        self.sig_left(ChipSig("-->+", "LMAC"))
-
         # self.sig_left(ChipSig("-->+", "BRN", 0, 13))
 
         self.sig_left(ChipSig("-->+", "SSTOP"))
@@ -34,7 +32,6 @@ class SEQ(FChip):
 
 
         self.sig_right(ChipSig("+-->", "QSTP7"))
-        self.sig_right(ChipSig("+-->", "LMACO"))
 
         self.sig_right(ChipSig("+-->", "U_EVENT"))
         self.sig_right(ChipSig("o-->", "SFIVE"))

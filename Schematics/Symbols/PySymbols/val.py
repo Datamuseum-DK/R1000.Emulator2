@@ -23,7 +23,6 @@ class VAL(FChip):
 
 
         self.sig_right(ChipSig("+-->", "VCNDA"))
-        self.sig_right(ChipSig("+-->", "QBIT"))
 
         self.finish()
 

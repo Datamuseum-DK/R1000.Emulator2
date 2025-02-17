@@ -16,7 +16,6 @@ class TYP(FChip):
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
-        self.sig_left(ChipSig("-->+", "TQBIT"))
         self.sig_left(ChipSig("-->+", "BHSTP"))
         self.sig_left(ChipSig("-->+", "STS"))
         self.sig_left(ChipSig("-->+", "RMS"))
