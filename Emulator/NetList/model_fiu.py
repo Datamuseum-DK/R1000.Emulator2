@@ -748,12 +748,12 @@ class FIU(PartFactory):
 		|																} else {
 		|																	state->memex = !(!state->cache_miss && !state->csa_oor && !state->scav_trap);
 		|																}
-		|																output.frdr = (state->prmt >> 1) & 1;
+		|																mp_restore_rdr = (state->prmt >> 1) & 1;
 		|																bool sel = !((PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
 		|																if (sel) {
-		|																	output.dnext = !((state->prmt >> 0) & 1);
+		|																	mp_dummy_next = !((state->prmt >> 0) & 1);
 		|																} else {
-		|																	output.dnext = !state->dumon;
+		|																	mp_dummy_next = !state->dumon;
 		|																}
 		|														
 		|																mp_csa_wr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
@@ -944,10 +944,8 @@ class FIU(PartFactory):
 		|																				bool sel = !((PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
 		|																				if (sel) {
 		|																					idum = (state->prmt >> 5) & 1;
-		|																					// output.dnext = !((state->prmt >> 0) & 1);
 		|																				} else {
 		|																					idum = state->dumon;
-		|																					// output.dnext = !state->dumon;
 		|																				}
 		|																				state->state0 = (pa025 >> 7) & 1;
 		|																				state->state1 = (pa025 >> 6) & 1;

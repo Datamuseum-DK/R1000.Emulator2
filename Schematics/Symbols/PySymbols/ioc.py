@@ -23,9 +23,6 @@ class IOC(FChip):
         self.sig_left(ChipSig("-->+", "RTCEN"))
 
         self.sig_left(ChipSig("-->+", "SCLKST"))
-        self.sig_left(ChipSig("-->+", "RSTRDR"))
-
-        self.sig_left(ChipSig("-->+", "DUMNXT"))
 
         self.sig_right(ChipSig("+-->", "BLTCP"))
 

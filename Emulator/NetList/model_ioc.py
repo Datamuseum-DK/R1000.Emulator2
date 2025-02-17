@@ -398,7 +398,7 @@ class IOC(PartFactory):
 		|																					state->delay++;
 		|																				}
 		|																				bool rddum = (UIR_TVBS < 0xc) || !state->dumen;
-		|																				if (rddum && !PIN_RSTRDR=>) {
+		|																				if (rddum && !mp_restore_rdr) {
 		|																					state->dummy_typ = typ;
 		|																					state->dummy_val = val;
 		|																				}
@@ -502,7 +502,7 @@ class IOC(PartFactory):
 		|																					assert (state->uir <= 0xffff);
 		|																					mp_nxt_adr_oe = 1 << UIR_AEN;
 		|																					mp_nxt_fiu_oe = 1 << UIR_FEN;
-		|																					state->dumen = !PIN_DUMNXT=>;
+		|																					state->dumen = !mp_dummy_next;
 		|																					state->csa_hit = !mp_csa_hit;
 		|																					unsigned tvbs = UIR_TVBS;
 		|
