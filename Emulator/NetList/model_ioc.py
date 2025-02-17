@@ -280,7 +280,6 @@ class IOC(PartFactory):
 		|
 		|//	ALWAYS						Q2				H2				Q3				Q4
 		|							if (q2pos) {
-		|								//if (val != val_bus) ALWAYS_TRACE(<<"VALBUS " << std::hex << val << " " << val_bus);
 		|								if (state->slice_ev && !state->ten) {
 		|									mp_macro_event |= 0x2;
 		|								}
@@ -494,7 +493,7 @@ class IOC(PartFactory):
 		|		mp_condx0 = true;
 		|		break;
 		|	}
-		|	//output.cond = mp_condx0;
+		|
 		|//	ALWAYS						Q2				H2				Q3				Q4
 		|																			if (q4pos) {
 		|																				if (!PIN_RTCEN=>) {

@@ -188,7 +188,6 @@ class VAL(PartFactory):
 		|		cond = true;
 		|		break;
 		|	}
-		|	//output.vcndb = !cond;
 		|	mp_condxe = !cond;
 		|	if (csa_clk) {
 		|		state->last_cond = cond;
@@ -225,7 +224,6 @@ class VAL(PartFactory):
 		|		cond = true;
 		|		break;
 		|	}
-		|	//output.vcndc = !cond;
 		|	mp_condxd = !cond;
 		|	if (csa_clk) {
 		|		state->last_cond = cond;
@@ -238,7 +236,6 @@ class VAL(PartFactory):
 		|fiu_cond(void)
 		|{
 		|	unsigned csel = mp_cond_sel;
-		|	//BUS_CSEL_READ(csel);
 		|	bool fcond;
 		|	switch (csel) {
 		|	case 0x00:
@@ -388,13 +385,10 @@ class VAL(PartFactory):
 		|
 		|	bool divide = rand != 0xb;
 		|
-		|	//output.z_qf = PIN_QFOE=>;
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|							if (h1pos && (mp_fiu_oe == 0x2)) {
 		|								find_a();
-		|								//output.qf = ~state->a;
 		|								mp_fiu_bus = ~state->a;
-		|//ALWAYS_TRACE(<< " V2FIU " << std::hex << mp_fiu_bus);
 		|							}
 		|							if (h1pos && !mp_valv_oe) {
 		|								find_b();
@@ -466,7 +460,6 @@ class VAL(PartFactory):
 		|																state->nalu |= ((uint64_t)f181h.o) << 32;
 		|																state->alu = ~state->nalu;
 		|																state->cmsb = state->alu >> 63;
-		|																//if (!PIN_ADROE=>) {
 		|																if (mp_adr_oe & 0x2) {
 		|																	uint64_t alu = state->alu;
 		|														
@@ -608,8 +601,6 @@ class VAL(PartFactory):
 		|																												}
 		|																												state->mprod = a * b;
 		|																												unsigned csmux3 = mp_csa_offs ^ 0xf;
-		|																												// BUS_CSAO_READ(csmux3);
-		|																												// csmux3 ^= BUS_CSAO_MASK;
 		|																											
 		|																												if (sclken) {
 		|																													if (rand == 0x5) {

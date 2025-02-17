@@ -132,7 +132,6 @@ class SEQ(PartFactory):
 		|	unsigned retrn_pc_ofs;
 		|	unsigned break_mask;
 		|
-		|	// SEQNAM
 		|	uint64_t tost, vost, cur_name;
 		|	uint64_t namram[1<<4];
 		|	uint64_t pcseg, retseg;
@@ -143,7 +142,6 @@ class SEQ(PartFactory):
 		|	uint32_t pred;
 		|	uint32_t topcnt;
 		|
-		|	// XUSTK
 		|	uint16_t ram[16];
 		|	uint16_t topu;
 		|	uint16_t adr;
@@ -216,12 +214,12 @@ class SEQ(PartFactory):
 		|	uint64_t *wcsram;
 		|	uint64_t uir;
 		|
-		|#define UIR_BRN	((state->uir >> (41-13)) & 0x3fff)	// OK
-		|#define UIR_LUIR	((state->uir >> (41-15)) & 0x1)		// OK
-		|#define UIR_BRTYP	((state->uir >> (41-19)) & 0xf)		// BAD
-		|#define UIR_BRTIM	((state->uir >> (41-21)) & 0x3)		// -
-		|#define UIR_CSEL	((state->uir >> (41-28)) & 0x7f)	// OK
-		|#define UIR_LAUIR	((state->uir >> (41-30)) & 0x3)		// OK
+		|#define UIR_BRN	((state->uir >> (41-13)) & 0x3fff)
+		|#define UIR_LUIR	((state->uir >> (41-15)) & 0x1)
+		|#define UIR_BRTYP	((state->uir >> (41-19)) & 0xf)
+		|#define UIR_BRTIM	((state->uir >> (41-21)) & 0x3)
+		|#define UIR_CSEL	((state->uir >> (41-28)) & 0x7f)
+		|#define UIR_LAUIR	((state->uir >> (41-30)) & 0x3)
 		|#define UIR_ENMIC	((state->uir >> (41-31)) & 0x1)
 		|#define UIR_IRD	((state->uir >> (41-34)) & 0x7)
 		|#define UIR_URAND	((state->uir >> (41-41)) & 0x7f)
@@ -622,14 +620,6 @@ class SEQ(PartFactory):
 		|								br_type = UIR_BRTYP;
 		|								maybe_dispatch = 0xb < br_type && br_type < 0xf;
 		|
-		|#if 0
-		|								output.z_qf = PIN_QFOE=>;
-		|								if (!output.z_qf) {
-		|									output.qf = state->topu ^ 0xffff;
-		|									output.qf ^= 0xffff;
-		|									mp_fiu_bus = output.qf;
-		|								}
-		|#endif
 		|								if (mp_fiu_oe == 0x8)
 		|									mp_fiu_bus = state->topu;
 		|								if (mp_seqtv_oe) {
@@ -752,12 +742,11 @@ class SEQ(PartFactory):
 		|								} else {
 		|									state->name_bus = 0xffffffff;
 		|								}
-		|								//state->cload = !(condition() || !(!state->bad_hint && RNDX(RND_CIB_PC_L)));			// q4
 		|								state->cload = RNDX(RND_CIB_PC_L) && (!state->bad_hint) && (!condition());
 		|								bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
-		|								state->ibld = !ibuff_ld;								// q4
+		|								state->ibld = !ibuff_ld;
 		|								bool ibemp = !(ibuff_ld || (state->word != 0));
-		|								state->m_ibuff_mt = !(ibemp && state->ibuf_fill);					// lmp, cond, branch_off
+		|								state->m_ibuff_mt = !(ibemp && state->ibuf_fill);
 		|
 		|							}
 		|							if (h1pos) {	// NB See above for early termination of h1pos on no OE signal.
@@ -903,16 +892,12 @@ class SEQ(PartFactory):
 		|																				}
 		|
 		|																				if (!bar8) {
-		|																					// output.abort = false;
 		|																					mp_mem_abort_e = false;
 		|																				} else if (mp_mem_cond) {
-		|																					// output.abort = true;
 		|																					mp_mem_abort_e = true;
 		|																				} else if (mp_mem_cond_pol ^ state->q3cond) {
-		|																					// output.abort = true;
 		|																					mp_mem_abort_e = true;
 		|																				} else {
-		|																					// output.abort = false;
 		|																					mp_mem_abort_e = false;
 		|																				}
 		|
@@ -943,7 +928,6 @@ class SEQ(PartFactory):
 		|																					state->treg = 0;
 		|																					state->foo7 = false;
 		|																				}
-		|																				//if (!PIN_ADROE=>) {
 		|																				if (mp_adr_oe & 0x8) {
 		|																					if (macro_event) {
 		|																						mp_spc_bus = 0x6;
@@ -978,7 +962,6 @@ class SEQ(PartFactory):
 		|																					}
 		|																				}
 		|																				bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
-		|																				// output.labrt = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->stop);
 		|																				mp_mem_abort_l = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->stop);
 		|																			}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
@@ -1431,7 +1414,6 @@ class SEQ(PartFactory):
 		|																								output.qstp7 = !state->bad_hint && state->l_macro_hic;
 		|																								if (!PIN_SFSTP=> && mp_seq_prepped) {
 		|																									state->uir = state->wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
-		|																									//output.csel = UIR_CSEL;
 		|																									mp_nxt_cond_sel = UIR_CSEL;
 		|																								}
 		|																							}

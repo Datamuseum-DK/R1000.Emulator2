@@ -557,7 +557,6 @@ class FIU(PartFactory):
 		|	if (clock) {
 		|		state->tcsa_sr = q >> 4;
 		|		state->tcsa_inval_csa = invalidate_csa;
-		|		//state->tcsa_tf_pred = PIN_FPRED=>;
 		|		unsigned csacntl0 = (state->typwcsram[mp_nua_bus] >> 1) & 7;
 		|		unsigned csacntl1 = (state->typuir >> 1) & 6;
 		|		state->tcsa_tf_pred = !((csacntl0 == 7) && (csacntl1 == 0));
@@ -626,7 +625,6 @@ class FIU(PartFactory):
 		|												hit_offset = (0xf + state->nve - (dif & 0xf)) & 0xf;
 		|											
 		|												mp_csa_hit = (bool)!(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
-		|												// tcsa(false);
 		|
 		|												unsigned pa025a = 0;
 		|												pa025a |= mem_start;
@@ -757,7 +755,6 @@ class FIU(PartFactory):
 		|																}
 		|														
 		|																mp_csa_wr = !(mp_mem_abort_l && mp_mem_abort_el && !(state->logrwn || (state->mcntl & 1)));
-		|																//if (!PIN_QADROE=>) {
 		|																if (mp_adr_oe & 0x1) {
 		|																	bool inc_mar = (state->prmt >> 3) & 1;
 		|																	unsigned inco = state->moff & 0x1f;
@@ -825,7 +822,6 @@ class FIU(PartFactory):
 		|																						}
 		|																					}
 		|
-		|																					//if (!(state->prmt & 0x40)) {
 		|																					if (mar_cntl == 5) {
 		|																						state->refresh_reg = state->ti_bus;
 		|																						state->marh &= 0xffffffffULL;

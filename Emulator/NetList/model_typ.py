@@ -436,7 +436,6 @@ class TYP(PartFactory):
 		|	mp_load_mar = !(foo1 && PIN_BHSTP=>);
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	//output.z_qf = PIN_QFOE=>;
 		|											if (h1pos) {
 		|												if (mp_fiu_oe == 0x4) {
 		|													find_a();
@@ -509,7 +508,6 @@ class TYP(PartFactory):
 		|																state->alu = ~state->nalu;
 		|																state->almsb = state->alu >> 63ULL;
 		|														
-		|																//if (q2pos && !PIN_ADROE=>) {
 		|																if (q2pos && (mp_adr_oe & 0x4)) {
 		|																	unsigned spc = mp_spc_bus;
 		|																	uint64_t alu = state->alu;
@@ -606,7 +604,6 @@ class TYP(PartFactory):
 		|																	output.t1stp = false;
 		|
 		|															}
-		|															//if (q2pos || !(PIN_ADROE=> && PIN_VAEN=>)) {
 		|															if (q2pos || (mp_adr_oe & 0x6)) {	// XXX: && ?
 		|																if (marctl & 0x8) {
 		|																	mp_spc_bus = (marctl & 0x7) ^ 0x7;
@@ -672,8 +669,6 @@ class TYP(PartFactory):
 		|																													state->rfram[state->cadr] = c;
 		|																												}
 		|																												unsigned csmux3 = mp_csa_offs ^ 0xf;
-		|																												//BUS_CSAO_READ(csmux3);
-		|																												//csmux3 ^= 0xf;
 		|																												if (uirsclk) {
 		|																													state->csa_offset = csmux3;
 		|																												}
@@ -714,7 +709,6 @@ class TYP(PartFactory):
 		|																												}
 		|																												if (uirsclk) {
 		|																													state->uir = state->wcsram[mp_nua_bus] ^ 0x7fffc0000000ULL;
-		|																													// output.cctl = UIR_CCTL;
 		|																													mp_nxt_mar_cntl = UIR_MCTL;
 		|																													mp_nxt_csa_cntl = UIR_CCTL;
 		|																												}
