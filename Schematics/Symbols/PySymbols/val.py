@@ -22,9 +22,7 @@ class VAL(FChip):
         self.sig_left(ChipSig("-->+", "SFS"))
 
 
-        self.sig_right(ChipSig("+-->", "VCNDA"))
-
-        self.finish()
+        self.finish(19)
 
 def register():
     yield VAL()

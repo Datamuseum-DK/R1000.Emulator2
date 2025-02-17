@@ -152,7 +152,6 @@ class VAL(PartFactory):
 		|		cond = true;
 		|		break;
 		|	}
-		|	output.vcnda = !cond;
 		|	mp_condxf = !cond;
 		|	if (csa_clk) {
 		|		state->last_cond = cond;
@@ -647,12 +646,16 @@ class VAL(PartFactory):
 		|
 		|	if (1 || !q4pos) {
 		|		unsigned csel = mp_cond_sel;
-		|		switch (csel >> 3) {
-		|		case 0x0: cond_a(csel); break;
-		|		case 0x1: cond_b(csel); break;
-		|		case 0x2: cond_c(csel); break;
-		|		case 0xb: cond_a(csel); break;
-		|		default: break;
+		|		if ((csel == 4 || csel == 0x5c) && q4pos) {
+		|			// should reflect counter before increment
+		|		} else {
+		|			switch (csel >> 3) {
+		|			case 0x0: cond_a(csel); break;
+		|			case 0x1: cond_b(csel); break;
+		|			case 0x2: cond_c(csel); break;
+		|			case 0xb: cond_a(csel); break;
+		|			default: break;
+		|			}
 		|		}
 		|	}
 		|

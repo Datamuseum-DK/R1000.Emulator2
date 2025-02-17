@@ -34,8 +34,6 @@ class SEQ(FChip):
         self.sig_right(ChipSig("+-->", "U_EVENT"))
         self.sig_right(ChipSig("o-->", "SFIVE"))
 
-        self.sig_right(ChipSig("+<--", "CNDXF"))
-
         self.sig_right(ChipSig("+-->", "QDFRZ"))
         self.sig_right(ChipSig("+-->", "SEQST"))
 

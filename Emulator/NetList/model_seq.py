@@ -524,8 +524,9 @@ class SEQ(PartFactory):
 		|condition(void)
 		|{
 		|	unsigned condsel = UIR_CSEL;
+		|
 		|	switch (condsel >> 3) {
-		|	case 0x0: return(PIN_CNDXF=>);
+		|	case 0x0: return(mp_condxf);
 		|	case 0x1: return(mp_condxe);
 		|	case 0x2: return(mp_condxd);
 		|	case 0x3: return(mp_condxc);
@@ -536,7 +537,7 @@ class SEQ(PartFactory):
 		|	case 0x8: return(seq_cond8(condsel));
 		|	case 0x9: return(seq_cond9(condsel));
 		|	case 0xa: return(seq_conda(condsel));
-		|	case 0xb: return(!(mp_condxc && PIN_CNDXF=>));
+		|	case 0xb: return(!(mp_condxc && mp_condxf));
 		|	case 0xc: return(mp_condx3);
 		|	case 0xd: return(mp_condx2);
 		|	case 0xf: return(mp_condx0);
