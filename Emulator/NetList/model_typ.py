@@ -114,7 +114,7 @@ class TYP(PartFactory):
 
     def priv_decl(self, file):
         file.fmt('''
-		|	unsigned rand, frm;
+		|	unsigned rand = 0, frm = 0;
 		|
 		|	bool bin_op_pass(void);
 		|	bool priv_path_eq(void);

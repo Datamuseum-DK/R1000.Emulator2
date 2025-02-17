@@ -167,16 +167,16 @@ class FIU(PartFactory):
 
     def priv_decl(self, file):
         file.fmt('''
-		|	unsigned pa025, pa026, pa027;
-		|	unsigned tivi;
-		|	bool csa_oor_next;
-		|	bool scav_trap_next;
-		|	bool memcyc1;
-		|	bool memstart;
-		|	bool mp_seq_uev10_page_x;
-		|	bool mp_seq_uev0_memex;
-		|	unsigned countdown;
-		|	unsigned hit_offset;
+		|	unsigned pa025 = 0, pa026 = 0, pa027 = 0;
+		|	unsigned tivi = 0;
+		|	bool csa_oor_next = 0;
+		|	bool scav_trap_next = 0;
+		|	bool memcyc1 = 0;
+		|	bool memstart = 0;
+		|	bool mp_seq_uev10_page_x = 0;
+		|	bool mp_seq_uev0_memex = 0;
+		|	unsigned countdown = 0;
+		|	unsigned hit_offset = 0;
 		|
 		|	uint64_t read_fiu_bus(unsigned line);
 		|	void do_tivi(void);

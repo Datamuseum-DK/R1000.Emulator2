@@ -93,10 +93,10 @@ class VAL(PartFactory):
 
     def priv_decl(self, file):
         file.fmt('''
-		|	unsigned rand;
+		|	unsigned rand = 0;
 		|	uint8_t pa010[512];
 		|	uint8_t pa011[512];
-		|	bool csa_clk;
+		|	bool csa_clk = 0;
 		|
 		|	bool ovrsgn(void);
 		|	bool cond_a(unsigned csel);

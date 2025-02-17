@@ -103,7 +103,7 @@ class IOC(PartFactory):
     def priv_decl(self, file):
         ''' further private decls '''
         file.fmt('''
-		|	bool is_tracing;
+		|	bool is_tracing = 0;
 		|       void do_xact(void);
 		|''')
 

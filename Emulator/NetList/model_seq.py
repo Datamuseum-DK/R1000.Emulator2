@@ -243,19 +243,19 @@ class SEQ(PartFactory):
 
     def priv_decl(self, file):
         file.fmt('''
-		|	unsigned urand;
-		|	unsigned rndx;
-		|	unsigned br_type;
-		|	unsigned br_tim;
-		|	bool macro_event;
-		|	unsigned lmp;
-		|	bool early_macro_pending;
-		|	bool maybe_dispatch;
-		|	bool sign_extend;
-		|	unsigned intreads;
-		|       bool carry_out;
-		|	bool uses_tos;
-		|	unsigned mem_start;
+		|	unsigned urand = 0;
+		|	unsigned rndx = 0;
+		|	unsigned br_type = 0;
+		|	unsigned br_tim = 0;
+		|	bool macro_event = 0;
+		|	unsigned lmp = 0;
+		|	bool early_macro_pending = 0;
+		|	bool maybe_dispatch = 0;
+		|	bool sign_extend = 0;
+		|	unsigned intreads = 0;
+		|       bool carry_out = 0;
+		|	bool uses_tos = 0;
+		|	unsigned mem_start = 0;
 		|
 		|	void int_reads(void);
 		|	unsigned group_sel(void);
