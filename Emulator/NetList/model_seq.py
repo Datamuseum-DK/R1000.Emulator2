@@ -903,13 +903,17 @@ class SEQ(PartFactory):
 		|																				}
 		|
 		|																				if (!bar8) {
-		|																					output.abort = false;
-		|																				} else if (PIN_MCOND=>) {
-		|																					output.abort = true;
-		|																				} else if (PIN_MCPOL=> ^ state->q3cond) {
-		|																					output.abort = true;
+		|																					// output.abort = false;
+		|																					mp_mem_abort_e = false;
+		|																				} else if (mp_mem_cond) {
+		|																					// output.abort = true;
+		|																					mp_mem_abort_e = true;
+		|																				} else if (mp_mem_cond_pol ^ state->q3cond) {
+		|																					// output.abort = true;
+		|																					mp_mem_abort_e = true;
 		|																				} else {
-		|																					output.abort = false;
+		|																					// output.abort = false;
+		|																					mp_mem_abort_e = false;
 		|																				}
 		|
 		|																				if (RNDX(RND_TOS_VLB) && !state->stop) {
@@ -974,7 +978,8 @@ class SEQ(PartFactory):
 		|																					}
 		|																				}
 		|																				bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
-		|																				output.labrt = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->stop);
+		|																				// output.labrt = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->stop);
+		|																				mp_mem_abort_l = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->stop);
 		|																			}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|																							if (q4pos) {

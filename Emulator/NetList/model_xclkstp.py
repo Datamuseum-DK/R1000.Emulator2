@@ -99,7 +99,7 @@ class XCLKSTP(PartFactory):
 		|			output.sclk = false;
 		|		}
 		|		if (q3pos) {
-		|			output.event = event;
+		|			mp_mem_abort_el = event;
 		|		}
 		|	}
 		|	output.clkstp = !output.clkrun;

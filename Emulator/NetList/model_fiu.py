@@ -233,8 +233,8 @@ class FIU(PartFactory):
 		|	line ^= cache_line_tbl_l[(state->moff >> (13 - 7)) & 0xfff];
 		|	line ^= cache_line_tbl_s[(state->sro >> 4) & 0x7];
 		|
-		|	u |= (uint64_t)output.cndtru << BUS64_LSB(9);
-		|	u |= (uint64_t)output.memcnd << BUS64_LSB(10);
+		|	u |= (uint64_t)mp_mem_cond_pol << BUS64_LSB(9);
+		|	u |= (uint64_t)mp_mem_cond << BUS64_LSB(10);
 		|	u |= line << BUS64_LSB(23);
 		|	u |= (uint64_t)state->setq << BUS64_LSB(25);
 		|	u |= (uint64_t)mp_mem_set << BUS64_LSB(27);
@@ -756,7 +756,7 @@ class FIU(PartFactory):
 		|																	mp_dummy_next = !state->dumon;
 		|																}
 		|														
-		|																mp_csa_wr = !(PIN_LABR=> && PIN_LEABR=> && !(state->logrwn || (state->mcntl & 1)));
+		|																mp_csa_wr = !(mp_mem_abort_l && mp_mem_abort_el && !(state->logrwn || (state->mcntl & 1)));
 		|																//if (!PIN_QADROE=>) {
 		|																if (mp_adr_oe & 0x1) {
 		|																	bool inc_mar = (state->prmt >> 3) & 1;
@@ -775,8 +775,8 @@ class FIU(PartFactory):
 		|																state->drive_mru = state->init_mru_d;
 		|																state->memcnd = (pa025 >> 4) & 1;	// CM_CTL0
 		|																state->cndtru = (pa025 >> 3) & 1;	// CM_CTL1
-		|																output.memcnd = !(state->memcnd);
-		|																output.cndtru = !(state->cndtru);
+		|																mp_mem_cond= !(state->memcnd);
+		|																mp_mem_cond_pol = !(state->cndtru);
 		|														
 		|																if (memcyc1) {
 		|																	mp_mem_ctl= state->lcntl;
@@ -936,10 +936,10 @@ class FIU(PartFactory):
 		|																					state->refresh_count++;
 		|																				}
 		|
-		|																				bool le_abort = PIN_LEABR=>;
-		|																				bool e_abort = PIN_EABR=>;
+		|																				bool le_abort = mp_mem_abort_el;
+		|																				bool e_abort = mp_mem_abort_e;
 		|																				bool eabrt = !(e_abort && le_abort);
-		|																				bool l_abort = PIN_LABR=>;
+		|																				bool l_abort = mp_mem_abort_l;
 		|																				bool idum;
 		|																				bool sel = !((PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
 		|																				if (sel) {

@@ -230,7 +230,7 @@ class MEM(PartFactory):
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool h1pos = PIN_H2.negedge();
 		|
-		|	bool labort = !(PIN_LABT=> && PIN_ELABT=>);
+		|	bool labort = !(mp_mem_abort_l && mp_mem_abort_el);
 		|
 		|							if (h1pos) {
 		|								bool p_early_abort = state->eabort;
@@ -375,7 +375,7 @@ class MEM(PartFactory):
 		|																												state->q4cmd = mp_mem_ctl;
 		|																												state->q4cont = mp_mem_continue;
 		|																												state->labort = labort;
-		|																												state->eabort = !(PIN_EABT=> && PIN_ELABT=>);
+		|																												state->eabort = !(mp_mem_abort_e && mp_mem_abort_el);
 		|																											}
 		|''')
 
