@@ -44,7 +44,6 @@ class Net():
         self.nnodes = []
         self.netbus = None
         self.is_supply = False
-        self.on_plane = None
         self.sc_type = "sc_logic"
         self.default = True
         if name == "H2":
@@ -171,7 +170,3 @@ class Net():
                 self.remove()
                 scms[0].add_net(self)
             return
-        dscm = scms[0].cpu.plane
-        if dscm != self.scm:
-            self.remove()
-            dscm.add_net(self)

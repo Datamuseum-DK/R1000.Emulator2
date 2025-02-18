@@ -11,9 +11,6 @@ sc_now(void)
 	return (sc_time_stamp().to_double());
 }
 
-#include "planes_pub.hh"
-#include "planes.hh"
-
 #include "emu_pub.hh"
 
 extern "C"
@@ -35,16 +32,11 @@ int
 sc_main(int argc, char *argv[])
 {
 	emu *emu;
-	planes *planes;
 
 	(void)argc;
 	(void)argv;
 
-	planes = make_planes("PLANES");
-
-	emu = make_emu("EMU", planes);
-
-	planes->PU = true;
+	emu = make_emu("EMU");
 
 	sc_set_time_resolution(1, sc_core::SC_NS);
 

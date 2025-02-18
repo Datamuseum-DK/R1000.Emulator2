@@ -13,7 +13,6 @@ ${OBJDIR}/sc_main_thread.o: \
     Chassis/sc_main_thread.cc \
     Chassis/r1000sc.h \
     Chassis/r1000sc_priv.h \
-    ${WORKDIR}/Chassis/planes.hh \
     ${WORKDIR}/Emu/emu_pub.hh
 	${SC_CC} \
 		-I${WORKDIR}/Emu/ \

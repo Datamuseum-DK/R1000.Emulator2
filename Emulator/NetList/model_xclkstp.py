@@ -102,12 +102,11 @@ class XCLKSTP(PartFactory):
 		|			mp_mem_abort_el = event;
 		|		}
 		|	}
-		|	output.clkstp = !output.clkrun;
 		|	if (q3) {
 		|		idle_next = &q3neg_event;
 		|	}
 		|
-		|	if (state->idle > 5 && !diag && clock_stop == 0xff) {
+		|	if (state->idle > 5 && !diag && clock_stop == 0x7f) {
 		|		idle_next = &idle_event;
 		|	}
 		|
@@ -157,17 +156,17 @@ class XCLKSTPTV(PartFactory):
 		|	}
 		|
 		|	if (!q3 || q3pos) {
-		|		output.clkrun = true;
+		|		//output.clkrun = true;
 		|		output.ramrun = true;
 		|
 		|		if (clock_stop != BUS_STOP_MASK) {
-		|			output.clkrun = false;
+		|			//output.clkrun = false;
 		|			if (!csa_write_en)
 		|				output.ramrun = false;
 		|		}
 		|
 		|		if (state->sf_stop) {
-		|			output.clkrun = false;
+		|			//output.clkrun = false;
 		|			if (!csa_write_en)
 		|				output.ramrun = false;
 		|		}
@@ -176,7 +175,7 @@ class XCLKSTPTV(PartFactory):
 		|	if (q3) {
 		|		idle_next = &q3neg_event;
 		|	}
-		|	if (state->idle > 5 && !diag && clock_stop == 0xff) {
+		|	if (state->idle > 5 && !diag && clock_stop == 0x7f) {
 		|		idle_next = &idle_event;
 		|	}
 		|

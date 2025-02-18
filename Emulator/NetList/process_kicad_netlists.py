@@ -43,8 +43,6 @@ from scmod import SystemCModule
 from part import NoPart
 from kicad_netlist import KiCadNetList
 
-import planes
-
 from pass_assign_part import PassAssignPart
 from pass_net_config import PassNetConfig
 from pass_part_config import PassPartConfig
@@ -82,7 +80,6 @@ class R1000Cpu():
         self.boards = []
         self.chassis_makefile = None
         self.nets = {}
-        self.plane = None
         self.z_codes = []
 
         self.cdir = os.path.join(workdir, "Chassis")
@@ -107,7 +104,6 @@ class R1000Cpu():
 
         self.chassis_makefile = Makefile(os.path.join(self.cdir, "Makefile.inc"))
 
-        self.plane = planes.Planes(self)
         self.do_build()
         # exit(2)
         open(self.tstamp, "w").write("\n")
@@ -177,17 +173,13 @@ class R1000Cpu():
         # Establish canonical order
         self.boards.sort()
 
-        self.plane.scm_cname_pfx = "planes->"
 
-        self.plane.build_planes(self)
 
         PassAssignPart(self)
 
         PassNetConfig(self)
 
         PassPartConfig(self)
-
-        self.plane.produce()
 
         for board in self.boards:
             board.produce()

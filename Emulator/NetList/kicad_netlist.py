@@ -59,7 +59,6 @@ class KiCadNetList():
         bname = self.find_board_name()
         self.board = Board(cpu, bname)
         cpu.add_board(self.board)
-        # self.board.add_ctor_arg("struct planes", "planes", is_ptr=True)
 
         self.build_sheets(cpu)
         self.build_components(cpu)

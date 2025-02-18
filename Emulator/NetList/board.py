@@ -54,7 +54,6 @@ class Board(SystemCModule):
 
         super().__init__(self.sc_path(name), self.makefile)
         self.sc_fixup(self)
-        self.add_ctor_arg("struct planes", "planes", is_ptr=True)
         self.scm_cname_pfx = self.scm_lname + "->"
 
     def add_sheet(self, sheet_name):
@@ -63,9 +62,7 @@ class Board(SystemCModule):
             self.makefile,
         )
         self.sc_fixup(sheet)
-        sheet.add_ctor_arg("struct planes", "planes", is_ptr=True)
         sheet.add_ctor_arg("struct «bbb»", "«bbb»", srcname="this", is_ptr=True)
-        sheet.include(self.cpu.plane.sf_hh)
         sheet.include(self.sf_hh)
         self.add_child(sheet)
         sheet.cpu = self.cpu			# XXX: for parts factories
