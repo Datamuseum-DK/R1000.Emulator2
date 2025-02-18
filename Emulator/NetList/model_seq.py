@@ -204,6 +204,12 @@ class SEQ(PartFactory):
 		|	bool ferr;
 		|	bool late_macro_event;
 		|	bool sf_stop;
+		|	bool s_state_stop;
+		|	bool clock_stop_1;
+		|	bool clock_stop_5;
+		|	bool clock_stop_6;
+		|	bool clock_stop_7;
+		|	unsigned clock_stop;
 		|
 		|	uint16_t lex_valid;
 		|	bool lxval;
@@ -606,32 +612,56 @@ class SEQ(PartFactory):
 		|	output.clkrun = true;
 		|	output.ramrun = true;
 		|	output.iclk = true;
-		|	output.sclk = true;
+		|	state->s_state_stop = true;
 		|
 		|	unsigned clock_stop;
 		|	BUS_STOP_READ(clock_stop);
+		|	clock_stop <<= 3;
+		|	if (state->clock_stop_7) {
+		|		clock_stop |= 0x01;
+		|	} else {
+		|		clock_stop &= ~0x01;
+		|	}
+		|	if (state->clock_stop_6) {
+		|		clock_stop |= 0x02;
+		|	} else {
+		|		clock_stop &= ~0x02;
+		|	}
+		|	if (state->clock_stop_5) {
+		|		clock_stop |= 0x04;
+		|	} else {
+		|		clock_stop &= ~0x04;
+		|	}
+		|	state->clock_stop_1 = !(output.seqst && PIN_BLTCP=>);
+		|	if (state->clock_stop_1) {
+		|		clock_stop |= 0x40;
+		|	} else {
+		|		clock_stop &= ~0x40;
+		|	}
+		|	
 		|	bool csa_write_en = PIN_CSAWR=>;
 		|
-		|	if ((clock_stop | 0x01) != BUS_STOP_MASK) {
+		|	if ((clock_stop | 0x01) != 0x7f) {
 		|		output.clkrun = false;
 		|		event = false;
 		|	}
-		|	if (clock_stop != BUS_STOP_MASK) {
+		|	if (clock_stop != 0x7f) {
 		|		output.iclk = false;
 		|		if (!csa_write_en)
 		|			output.ramrun = false;
 		|	}
-		|	if ((clock_stop | 0x03) != BUS_STOP_MASK) {
-		|		output.sclk = false;
+		|	if ((clock_stop | 0x03) != 0x7f) {
+		|		state->s_state_stop = false;
 		|	}
 		|
 		|	if (state->sf_stop) {
 		|		output.iclk = false;
 		|		output.clkrun = false;
-		|		output.sclk = false;
+		|		state->s_state_stop = false;
 		|		if (!csa_write_en)
 		|			output.ramrun = false;
 		|	}
+		|	output.sclke = !(output.clkrun && output.qstp7);
 		|	mp_mem_abort_el = event;
 		|}
 		|''')
@@ -654,7 +684,7 @@ class SEQ(PartFactory):
 		|	//bool h2pos = PIN_H2.posedge();
 		|	bool aclk = q4pos && !PIN_SFSTP=>;
 		|	bool lclk = aclk && !PIN_SFSTP=>;
-		|	bool sclke = !(PIN_SSTOP=> && !state->stop);
+		|	bool sclke = !(state->s_state_stop && !state->stop);
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = q4pos && !sclke;
 		|
@@ -915,17 +945,19 @@ class SEQ(PartFactory):
 		|																if (!PIN_SFSTP=> && mp_seq_prepped) {
 		|																	mp_nua_bus = nua & 0x3fff;
 		|																}
-		|																output.u_event = !(!state->bad_hint && !state->late_macro_event && state->uev != 16);
-		|																output.sfive = (state->check_exit_ue && state->ferr);
-		|																output.qstp7 = !state->bad_hint && state->l_macro_hic;
-		|																output.seqst = output.u_event && output.qstp7;
+		|																state->clock_stop_5 = (state->check_exit_ue && state->ferr);
+		|																state->clock_stop_6 = !(!state->bad_hint && !state->late_macro_event && state->uev != 16);
+		|																state->clock_stop_7 = !state->bad_hint && state->l_macro_hic;
+		|																output.qstp7 = state->clock_stop_7;
+		|																output.sclke = !(output.clkrun && state->clock_stop_7);
+		|																output.seqst = state->clock_stop_6 && state->clock_stop_7;
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|																			if (q3pos) {
 		|																				q3clockstop();
 		|																				int_reads();
 		|																				state->q3cond = condition();
-		|																				state->bad_hint_enable = !((!output.u_event) || (state->late_macro_event && !state->bad_hint));
+		|																				state->bad_hint_enable = !((!state->clock_stop_6) || (state->late_macro_event && !state->bad_hint));
 		|																				unsigned pa040a = 0;
 		|																				pa040a |= (state->decode & 0x7) << 6;
 		|																				if (state->wanna_dispatch) pa040a |= 0x20;
@@ -978,7 +1010,7 @@ class SEQ(PartFactory):
 		|																				} else {
 		|																					state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
 		|																				}
-		|																				if (!(state->foo9 || output.u_event)) {
+		|																				if (!(state->foo9 || state->clock_stop_6)) {
 		|																					state->treg = 0;
 		|																					state->foo7 = false;
 		|																				}
@@ -1020,8 +1052,8 @@ class SEQ(PartFactory):
 		|																			}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|																							if (q4pos) {
-		|																								bool bhen = !((state->late_macro_event && !state->bad_hint) || (!output.u_event));
-		|																								bool bhcke = !(PIN_SSTOP=> && bhen);
+		|																								bool bhen = !((state->late_macro_event && !state->bad_hint) || (!state->clock_stop_6));
+		|																								bool bhcke = !(state->s_state_stop && bhen);
 		|																								if (state_clock) {
 		|																									nxt_lex_valid();
 		|																								}
@@ -1198,12 +1230,12 @@ class SEQ(PartFactory):
 		|																									state->topcnt &= 0xfffff;
 		|																								}
 		|
-		|																								if (PIN_SSTOP=> && state->l_macro_hic) {
+		|																								if (state->s_state_stop && state->l_macro_hic) {
 		|																									bool xwrite;
 		|																									bool pop;
 		|																									bool stkinpsel_0;
 		|																									bool stkinpsel_1;
-		|																									if (!output.u_event) {
+		|																									if (!state->clock_stop_6) {
 		|																										xwrite = true;
 		|																										pop = true;
 		|																										stkinpsel_0 = true;
@@ -1320,7 +1352,8 @@ class SEQ(PartFactory):
 		|																									} else {
 		|																										mp_seq_uev |= UEV_FLD_ERR;
 		|																									}
-		|																									if (PIN_UEI12=>) {
+		|																									//if (PIN_UEI12=>) {
+		|																									if (state->clock_stop_1) {
 		|																										mp_seq_uev &= ~UEV_NEW_PAK;
 		|																									} else {
 		|																										mp_seq_uev |= UEV_NEW_PAK;
@@ -1328,13 +1361,13 @@ class SEQ(PartFactory):
 		|
 		|																									state->uev = 16 - fls(mp_seq_uev);
 		|																							
-		|																									if (PIN_SSTOP=>) {
+		|																									if (state->s_state_stop) {
 		|																										state->curuadr = mp_nua_bus;
 		|																									}
 		|																								}
 		|																								if (aclk) {
 		|																									unsigned adr = 0;
-		|																									if (output.u_event)
+		|																									if (state->clock_stop_6)
 		|																										adr |= 0x02;
 		|																									if (!macro_event)
 		|																										adr |= 0x04;
@@ -1357,7 +1390,7 @@ class SEQ(PartFactory):
 		|																									state->hint_t_last = (state->bhreg >> 0) & 1;
 		|
 		|																									bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
-		|																									if (PIN_SSTOP=> && state->bad_hint_enable && bad_hint_disp) {
+		|																									if (state->s_state_stop && state->bad_hint_enable && bad_hint_disp) {
 		|																										unsigned restrt_rnd = 0;
 		|																										restrt_rnd |= RNDX(RND_RESTRT0) ? 2 : 0;
 		|																										restrt_rnd |= RNDX(RND_RESTRT1) ? 1 : 0;
@@ -1378,7 +1411,7 @@ class SEQ(PartFactory):
 		|																											state->treg |= 0x8;
 		|																										if (!state->tos_vld_cond)
 		|																											state->treg |= 0x4;
-		|																									} else if (PIN_SSTOP=> && state->bad_hint_enable) {
+		|																									} else if (state->s_state_stop && state->bad_hint_enable) {
 		|																										state->rreg <<= 1;
 		|																										state->rreg &= 0xe;
 		|																										state->rreg |= 0x1;
@@ -1466,6 +1499,7 @@ class SEQ(PartFactory):
 		|																									state->foo9 = !RNDX(RND_TOS_VLB);
 		|																								}
 		|																								output.qstp7 = !state->bad_hint && state->l_macro_hic;
+		|																								output.sclke = !(output.clkrun && output.qstp7);
 		|																								if (!PIN_SFSTP=> && mp_seq_prepped) {
 		|																									state->uir = state->wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
 		|																									mp_nxt_cond_sel = UIR_CSEL;

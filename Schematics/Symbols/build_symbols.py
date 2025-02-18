@@ -43,16 +43,6 @@ class Symbol():
     def __lt__(self, other):
         return self.name < other.name
 
-class RawSymbol(Symbol):
-    ''' A raw KiCad symbol '''
-
-    def __init__(self, filename):
-        self.filename = filename
-        self.name = filename
-
-    def __iter__(self):
-        yield from open(self.filename)
-  
 class PySymbol(Symbol):
     ''' A Python KiCad symbol '''
 
@@ -68,9 +58,6 @@ def main():
 
     sym_list = []
 
-    for filename in glob.glob("RawSymbols/*.txt"):
-        sym_list.append(RawSymbol(filename))
-   
     for filename in glob.glob("PySymbols/*.py"):
         bn = os.path.basename(filename)[:-3]
         if bn == "chip":
