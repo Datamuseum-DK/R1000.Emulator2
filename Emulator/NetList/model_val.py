@@ -42,7 +42,7 @@ class VAL(PartFactory):
     autopin = True
 
     def state(self, file):
- 
+
         file.fmt('''
 		|	uint64_t rfram[1<<10];		// Z013
 		|	uint64_t a, b, c;
@@ -96,12 +96,10 @@ class VAL(PartFactory):
 		|	unsigned rand = 0;
 		|	uint8_t pa010[512];
 		|	uint8_t pa011[512];
-		|	bool csa_clk = 0;
+		|	bool thiscond = false;
 		|
 		|	bool ovrsgn(void);
-		|	bool cond_a(unsigned csel);
-		|	bool cond_b(unsigned csel);
-		|	bool cond_c(unsigned csel);
+		|	void val_cond(void);
 		|	bool fiu_cond(void);
 		|	void find_a(void);
 		|	void find_b(void);
@@ -123,111 +121,105 @@ class VAL(PartFactory):
 		|	));
 		|}
 		|
-		|bool
+		|void
 		|SCM_«mmm» ::
-		|cond_a(unsigned csel)
+		|val_cond(void)
 		|{
-		|	bool cond;
-		|	switch (csel & 0x7) {
-		|	case 0:
-		|		cond = (state->nalu != 0);
+		|	unsigned csel = mp_cond_sel;
+		|	if ((csel & 0x78) == 0x58)
+		|		csel ^= 0x58;
+		|	switch(csel) {
+		|	case 0x00:	// L VAL_ALU_ZERO
+		|		thiscond = (state->nalu != 0);
 		|		break;
-		|	case 1:
-		|	case 6:
-		|		cond = (state->nalu == 0);
+		|	case 0x01:	// L VAL_ALU_NONZERO
+		|		thiscond = (state->nalu == 0);
 		|		break;
-		|	case 2:
-		|		cond = !(
+		|	case 0x02:	// L VAL_ALU_A_LT_OR_LE_B
+		|		thiscond = !(
 		|			(state->bmsb && (state->amsb ^ state->bmsb)) ||
 		|			(!state->coh && (ovrsgn() ^ state->sub_else_add))
 		|		);
 		|		break;
-		|	case 4:
-		|		cond = state->count != 0x3ff;
+		|	case 0x03:	// SPARE
+		|		thiscond = true;
 		|		break;
-		|	case 7:
-		|		cond = state->carry_middle;
+		|	case 0x04:	// E VAL_LOOP_COUNTER_ZERO
+		|		thiscond = state->count != 0x3ff;
 		|		break;
-		|	default:
-		|		cond = true;
+		|	case 0x05:	// SPARE
+		|		thiscond = true;
 		|		break;
-		|	}
-		|	mp_condxf = !cond;
-		|	if (csa_clk) {
-		|		state->last_cond = cond;
-		|	}
-		|	return (cond);
-		|}
-		|
-		|bool
-		|SCM_«mmm» ::
-		|cond_b(unsigned csel)
-		|{
-		|	bool cond;
-		|	switch (csel & 0x7) {
-		|	case 0:
-		|		cond = !state->coh;
+		|	case 0x06:	// L VAL_ALU_NONZERO
+		|		thiscond = (state->nalu == 0);
 		|		break;
-		|	case 1:
-		|		cond = state->ovren || !(ovrsgn() ^ state->sub_else_add ^ (!state->coh) ^ state->cmsb);
+		|	case 0x07:	// L VAL_ALU_32_CO
+		|		thiscond = state->carry_middle;
 		|		break;
-		|	case 2:
-		|		cond = state->cmsb;
+		|	case 0x08:	// L VAL_ALU_CARRY
+		|		thiscond = !state->coh;
 		|		break;
-		|	case 3:
-		|		cond = !state->cmsb || (state->nalu == 0);
+		|	case 0x09:	// L VAL_ALU_OVERFLOW
+		|		thiscond = state->ovren || !(ovrsgn() ^ state->sub_else_add ^ (!state->coh) ^ state->cmsb);
 		|		break;
-		|	case 4:
-		|		cond = (state->amsb ^ state->bmsb);
+		|	case 0x0a:	// L VAL_ALU_LT_ZERO
+		|		thiscond = state->cmsb;
 		|		break;
-		|	case 7:
-		|		cond = state->last_cond;
+		|	case 0x0b:	// L VAL_ALU_LE_ZERO
+		|		thiscond = !state->cmsb || (state->nalu == 0);
 		|		break;
-		|	default:
-		|		cond = true;
+		|	case 0x0c:	// ML VAL_SIGN_BITS_EQUAL
+		|		thiscond = (state->amsb ^ state->bmsb);
 		|		break;
-		|	}
-		|	mp_condxe = !cond;
-		|	if (csa_clk) {
-		|		state->last_cond = cond;
-		|	}
-		|	return (cond);
-		|}
-		|
-		|bool
-		|SCM_«mmm» ::
-		|cond_c(unsigned csel)
-		|{
-		|	bool cond;
-		|	
-		|	switch (csel & 7) {
-		|	case 0:
-		|		cond = (state->nalu >> 32);
+		|	case 0x0d:	// SPARE
+		|		thiscond = true;
 		|		break;
-		|	case 1:
-		|		cond = (state->nalu >> 16);
+		|	case 0x0e:	// SPARE
+		|		thiscond = true;
 		|		break;
-		|	case 2:
-		|		cond = (state->nalu & 0xffff0000ULL);
+		|	case 0x0f:	// E VAL_PREVIOUS
+		|		thiscond = state->last_cond;
 		|		break;
-		|	case 3:
-		|		cond = mp_q_bit;
+		|	case 0x10:	// L VAL_ALU_32_ZERO
+		|		thiscond = (state->nalu >> 32);
 		|		break;
-		|	case 5:
-		|		cond = state->mbit;
+		|	case 0x11:	// L VAL_ALU_40_ZERO
+		|		thiscond = (state->nalu >> 16);
 		|		break;
-		|	case 6:
-		|		cond = false;
+		|	case 0x12:	// L VAL_ALU_MIDDLE_ZERO
+		|		thiscond = (state->nalu & 0xffff0000ULL);
+		|		break;
+		|	case 0x13:	// E VAL_Q_BIT
+		|		thiscond = mp_q_bit;
+		|		break;
+		|	case 0x14:	// SPARE
+		|		thiscond = true;
+		|		break;
+		|	case 0x15:	// E VAL_M_BIT
+		|		thiscond = state->mbit;
+		|		break;
+		|	case 0x16:	// E VAL_TRUE
+		|		thiscond = false;
+		|		break;
+		|	case 0x17:	// E VAL_FALSE
+		|		thiscond = true;
 		|		break;
 		|	default:
-		|		cond = true;
 		|		break;
 		|	}
-		|	mp_condxd = !cond;
-		|	if (csa_clk) {
-		|		state->last_cond = cond;
+		|	switch (csel >> 3) {
+		|	case 0x0:
+		|		mp_condxf = !thiscond;
+		|		break;
+		|	case 0x1:
+		|		mp_condxe = !thiscond;
+		|		break;
+		|	case 0x2:
+		|		mp_condxd = !thiscond;
+		|		break;
+		|	default:
+		|		break;
 		|	}
-		|	return (cond);
 		|}
 		|
 		|bool
@@ -367,16 +359,10 @@ class VAL(PartFactory):
 
         file.fmt('''
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|	//bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
-		|	//bool q3pos = PIN_Q4.negedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	//bool h2 = PIN_H2=>;
 		|	bool h1pos = PIN_H2.negedge();
-		|	bool sclken = (PIN_STS=> && PIN_RMS=> && !PIN_FREZE=>);
-		|	csa_clk = q4pos && sclken;
 		|
-		|	bool uirsclk = q4pos && !PIN_SFS=>;
 		|
 		|	unsigned uirc = UIR_C;
 		|
@@ -385,13 +371,16 @@ class VAL(PartFactory):
 		|	bool divide = rand != 0xb;
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|							if (h1pos && (mp_fiu_oe == 0x2)) {
-		|								find_a();
-		|								mp_fiu_bus = ~state->a;
-		|							}
-		|							if (h1pos && !mp_valv_oe) {
-		|								find_b();
-		|								mp_val_bus = ~state->b;
+		|							if (h1pos) {
+		|								if (mp_fiu_oe == 0x2) {
+		|									find_a();
+		|									mp_fiu_bus = ~state->a;
+		|								}
+		|								if (!mp_valv_oe) {
+		|									find_b();
+		|									mp_val_bus = ~state->b;
+		|								}
+		|								val_cond();
 		|							}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|															if (q2pos) {
@@ -404,7 +393,7 @@ class VAL(PartFactory):
 		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
 		|																if (state->cwe && uirc != 0x28)
 		|																	state->wen = !state->wen;
-		|														
+		|
 		|																state->msrc = UIR_MSRC;
 		|																bool start_mult = rand != 0xc;
 		|																if (!start_mult) {
@@ -414,14 +403,14 @@ class VAL(PartFactory):
 		|
 		|																struct f181 f181l, f181h;
 		|																unsigned tmp, proma, alur;
-		|														
+		|
 		|																tmp = UIR_RAND;
 		|																if (tmp < 8) {
 		|																	alur = 7;
 		|																} else {
 		|																	alur = 15 - tmp;
 		|																}
-		|														
+		|
 		|																proma = UIR_AFNC;
 		|																proma |= alur << 5;
 		|																if (
@@ -432,7 +421,7 @@ class VAL(PartFactory):
 		|																) {
 		|																	proma |= 0x100;
 		|																}
-		|														
+		|
 		|																tmp = pa011[proma];			// S0-4.LOW
 		|																state->isbin = (tmp >> 1) & 1;			// IS_BINARY
 		|																f181l.ctl = (tmp >> 4) & 0xf;
@@ -444,7 +433,7 @@ class VAL(PartFactory):
 		|																f181_alu(&f181l);
 		|																state->carry_middle = f181l.co;
 		|																state->nalu = f181l.o;
-		|														
+		|
 		|																tmp = pa010[proma];			// S0-4.HIGH
 		|																state->ovren = (tmp >> 1) & 1;			// OVR.EN~
 		|																state->sub_else_add = (tmp >> 2) & 1;			// SUB_ELSE_ADD
@@ -461,7 +450,7 @@ class VAL(PartFactory):
 		|																state->cmsb = state->alu >> 63;
 		|																if (mp_adr_oe & 0x2) {
 		|																	uint64_t alu = state->alu;
-		|														
+		|
 		|																	if (mp_spc_bus != 4) {
 		|																		alu |=0xf8000000ULL;
 		|																	}
@@ -472,13 +461,6 @@ class VAL(PartFactory):
 		|																bool c_source = UIR_CSRC;
 		|																bool split_c_src = rand == 0x4;
 		|																if (split_c_src || !c_source) {
-		|#if 0
-		|																	BUS_DF_READ(fiu);
-		|																	fiu ^= BUS_DF_MASK;
-		|if (fiu != ~mp_fiu_bus) {
-		|	ALWAYS_TRACE(<< "VFIU " << std::hex << fiu << " < " << ~mp_fiu_bus);
-		|}
-		|#endif
 		|																	fiu = ~mp_fiu_bus;
 		|																}
 		|																if (!c_source && (rand == 3 || rand == 6)) {
@@ -515,54 +497,55 @@ class VAL(PartFactory):
 		|																	state->c = mux & 0xffffffffULL;
 		|																	state->c |= fiu & 0xffffffffULL << 32;
 		|																}
-		|															}
 		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
-		|																			if (q2pos) {
-		|																				state->cadr = 0;
-		|																				if (uirc <= 0x1f) {
-		|																					// FRAME:REG
-		|																					state->cadr |= uirc & 0x1f;
-		|																					state->cadr |= UIR_FRM << 5;
-		|																				} else if (uirc <= 0x27) {
-		|																					// 0x20 = TOP-1
-		|																					// …
-		|																					// 0x27 = TOP-8
-		|																					state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
-		|																				} else if (uirc == 0x28) {
-		|																					// 0x28 LOOP COUNTER (RF write disabled)
-		|																				} else if (uirc == 0x29 && state->cwe) {
-		|																					// 0x29 DEFAULT (RF write disabled)
-		|																					unsigned sum = state->botreg + state->csa_offset + 1;
-		|																					state->cadr |= sum & 0xf;
-		|																				} else if (uirc == 0x29 && !state->cwe) {
-		|																					// 0x29 DEFAULT (RF write disabled)
-		|																					state->cadr |= uirc & 0x1f;
-		|																					state->cadr |= UIR_FRM << 5;
-		|																				} else if (uirc <= 0x2b) {
-		|																					// 0x2a BOT
-		|																					// 0x2b BOT-1
-		|																					state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
-		|																					state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
-		|																				} else if (uirc == 0x2c) {
-		|																					// 0x28 = LOOP_REG
-		|																					state->cadr = state->count;
-		|																				} else if (uirc == 0x2d) {
-		|																					// 0x2d SPARE
-		|																					assert (uirc != 0x2d);
-		|																				} else if (uirc <= 0x2f) {
-		|																					// 0x2e = TOP+1
-		|																					// 0x2f = TOP
-		|																					state->cadr = (state->topreg + (uirc & 0x1) + 0xf) & 0xf;
-		|																				} else if (uirc <= 0x3f) {
-		|																					// GP[0…F]
-		|																					state->cadr |= 0x10 | (uirc & 0x0f);
-		|																				} else {
-		|																					assert(uirc <= 0x3f);
-		|																				}
-		|																			}
+		|																state->cadr = 0;
+		|																if (uirc <= 0x1f) {
+		|																	// FRAME:REG
+		|																	state->cadr |= uirc & 0x1f;
+		|																	state->cadr |= UIR_FRM << 5;
+		|																} else if (uirc <= 0x27) {
+		|																	// 0x20 = TOP-1
+		|																	// …
+		|																	// 0x27 = TOP-8
+		|																	state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
+		|																} else if (uirc == 0x28) {
+		|																	// 0x28 LOOP COUNTER (RF write disabled)
+		|																} else if (uirc == 0x29 && state->cwe) {
+		|																	// 0x29 DEFAULT (RF write disabled)
+		|																	unsigned sum = state->botreg + state->csa_offset + 1;
+		|																	state->cadr |= sum & 0xf;
+		|																} else if (uirc == 0x29 && !state->cwe) {
+		|																	// 0x29 DEFAULT (RF write disabled)
+		|																	state->cadr |= uirc & 0x1f;
+		|																	state->cadr |= UIR_FRM << 5;
+		|																} else if (uirc <= 0x2b) {
+		|																	// 0x2a BOT
+		|																	// 0x2b BOT-1
+		|																	state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|																	state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|																} else if (uirc == 0x2c) {
+		|																	// 0x28 = LOOP_REG
+		|																	state->cadr = state->count;
+		|																} else if (uirc == 0x2d) {
+		|																	// 0x2d SPARE
+		|																	assert (uirc != 0x2d);
+		|																} else if (uirc <= 0x2f) {
+		|																	// 0x2e = TOP+1
+		|																	// 0x2f = TOP
+		|																	state->cadr = (state->topreg + (uirc & 0x1) + 0xf) & 0xf;
+		|																} else if (uirc <= 0x3f) {
+		|																	// GP[0…F]
+		|																	state->cadr |= 0x10 | (uirc & 0x0f);
+		|																} else {
+		|																	assert(uirc <= 0x3f);
+		|																}
+		|																val_cond();
+		|															}
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|																											if (q4pos) {
+		|																												bool sclken = (PIN_STS=> && PIN_RMS=> && !PIN_FREZE=>);
+		|																												bool csa_clk = q4pos && sclken;
+		|																												bool uirsclk = q4pos && !PIN_SFS=>;
 		|																												if (csa_clk) {
 		|																													bool xor0c = state->mbit ^ (!state->coh);
 		|																													bool xor0d = mp_q_bit ^ xor0c;
@@ -600,7 +583,7 @@ class VAL(PartFactory):
 		|																												}
 		|																												state->mprod = a * b;
 		|																												unsigned csmux3 = mp_csa_offs ^ 0xf;
-		|																											
+		|
 		|																												if (sclken) {
 		|																													if (rand == 0x5) {
 		|																														uint64_t count2 = 0x40 - flsll(~state->alu);
@@ -622,15 +605,15 @@ class VAL(PartFactory):
 		|																													bot_mux_sel = mp_load_bot;
 		|																													add_mux_sel = mp_load_top;
 		|																													top_mux_sel = !(add_mux_sel && mp_pop_down);
-		|																										
+		|
 		|																													unsigned csmux0;
 		|																													if (add_mux_sel)
 		|																														csmux0 = state->botreg;
 		|																													else
 		|																														csmux0 = state->topreg;
-		|																											
+		|
 		|																													unsigned csalu0 = csmux3 + csmux0 + 1;
-		|																											
+		|
 		|																													if (!bot_mux_sel)
 		|																														state->botreg = csalu0;
 		|																													if (top_mux_sel)
@@ -642,22 +625,10 @@ class VAL(PartFactory):
 		|																													state->csa_offset = csmux3;
 		|																													state->uir = state->wcsram[mp_nua_bus] ^ 0xffff800000ULL;
 		|																												}
+		|																												if (csa_clk)
+		|																													state->last_cond = thiscond;
 		|																											}
 		|
-		|	if (1 || !q4pos) {
-		|		unsigned csel = mp_cond_sel;
-		|		if ((csel == 4 || csel == 0x5c) && q4pos) {
-		|			// should reflect counter before increment
-		|		} else {
-		|			switch (csel >> 3) {
-		|			case 0x0: cond_a(csel); break;
-		|			case 0x1: cond_b(csel); break;
-		|			case 0x2: cond_c(csel); break;
-		|			case 0xb: cond_a(csel); break;
-		|			default: break;
-		|			}
-		|		}
-		|	}
 		|
 		|''')
 
