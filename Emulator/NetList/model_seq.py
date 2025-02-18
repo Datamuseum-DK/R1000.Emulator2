@@ -203,6 +203,7 @@ class SEQ(PartFactory):
 		|	bool bad_hint_enable;
 		|	bool ferr;
 		|	bool late_macro_event;
+		|	bool sf_stop;
 		|
 		|	uint16_t lex_valid;
 		|	bool lxval;
@@ -264,6 +265,8 @@ class SEQ(PartFactory):
 		|       void nxt_lex_valid(void);
 		|       bool condition(void);
 		|	unsigned branch_offset(void);
+		|	void q2clockstop(void);
+		|	void q3clockstop(void);
 		|''')
 
     def priv_impl(self, file):
@@ -583,6 +586,54 @@ class SEQ(PartFactory):
 		|	retval &= 0x7fff;
 		|	return (retval);
 		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|q2clockstop(void)
+		|{
+		|	unsigned diag;
+		|	BUS_DIAG_READ(diag);
+		|	state->sf_stop = !(diag == 0);
+		|	output.sfstpo = state->sf_stop;
+		|	output.freez = (diag & 3) != 0;
+		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|q3clockstop(void)
+		|{
+		|	bool event = true;
+		|	output.clkrun = true;
+		|	output.ramrun = true;
+		|	output.iclk = true;
+		|	output.sclk = true;
+		|
+		|	unsigned clock_stop;
+		|	BUS_STOP_READ(clock_stop);
+		|	bool csa_write_en = PIN_CSAWR=>;
+		|
+		|	if ((clock_stop | 0x01) != BUS_STOP_MASK) {
+		|		output.clkrun = false;
+		|		event = false;
+		|	}
+		|	if (clock_stop != BUS_STOP_MASK) {
+		|		output.iclk = false;
+		|		if (!csa_write_en)
+		|			output.ramrun = false;
+		|	}
+		|	if ((clock_stop | 0x03) != BUS_STOP_MASK) {
+		|		output.sclk = false;
+		|	}
+		|
+		|	if (state->sf_stop) {
+		|		output.iclk = false;
+		|		output.clkrun = false;
+		|		output.sclk = false;
+		|		if (!csa_write_en)
+		|			output.ramrun = false;
+		|	}
+		|	mp_mem_abort_el = event;
+		|}
 		|''')
 
     def sensitive(self):
@@ -800,6 +851,7 @@ class SEQ(PartFactory):
 		|
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|															if (q2pos) {
+		|																q2clockstop();
 		|																state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
 		|																state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
 		|															
@@ -870,6 +922,7 @@ class SEQ(PartFactory):
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|																			if (q3pos) {
+		|																				q3clockstop();
 		|																				int_reads();
 		|																				state->q3cond = condition();
 		|																				state->bad_hint_enable = !((!output.u_event) || (state->late_macro_event && !state->bad_hint));
