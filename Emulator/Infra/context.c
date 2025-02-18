@@ -43,7 +43,7 @@
 #  define MAP_NOSYNC 0
 #endif
 
-static const ssize_t context_size = 50<<20;
+static const ssize_t context_size = 36<<20;
 
 static int context_fd = -1;
 static uint8_t *context_start = NULL;
