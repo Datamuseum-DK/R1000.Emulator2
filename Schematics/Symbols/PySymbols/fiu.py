@@ -25,8 +25,6 @@ class FIU(FChip):
         self.sig_left(ChipSig("-->+", "TRMS"))
         self.sig_left(ChipSig("-->+", "TFRZ"))
 
-        self.sig_right(ChipSig("+-->", "STOP0"))
-
         self.sig_right(ChipSig("+-->", "SYNC"))
         self.sig_right(ChipSig("+-->", "FREZE"))
 

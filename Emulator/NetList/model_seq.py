@@ -614,40 +614,25 @@ class SEQ(PartFactory):
 		|	output.iclk = true;
 		|	state->s_state_stop = true;
 		|
-		|	unsigned clock_stop;
-		|	BUS_STOP_READ(clock_stop);
-		|	clock_stop <<= 3;
-		|	if (state->clock_stop_7) {
-		|		clock_stop |= 0x01;
-		|	} else {
-		|		clock_stop &= ~0x01;
-		|	}
-		|	if (state->clock_stop_6) {
-		|		clock_stop |= 0x02;
-		|	} else {
-		|		clock_stop &= ~0x02;
-		|	}
-		|	if (state->clock_stop_5) {
-		|		clock_stop |= 0x04;
-		|	} else {
-		|		clock_stop &= ~0x04;
-		|	}
+		|	unsigned clock_stop = 0;
+		|	//BUS_STOP_READ(clock_stop);
+		|	//clock_stop <<= 3;
 		|	state->clock_stop_1 = !(output.seqst && PIN_BLTCP=>);
-		|	if (state->clock_stop_1) {
-		|		clock_stop |= 0x40;
-		|	} else {
-		|		clock_stop &= ~0x40;
-		|	}
+		|	if (    mp_clock_stop_0) { clock_stop |= 0x40; } else { clock_stop &= ~0x40; }
+		|	if (state->clock_stop_1) { clock_stop |= 0x20; } else { clock_stop &= ~0x20; }
+		|	if (    mp_clock_stop_3) { clock_stop |= 0x10; } else { clock_stop &= ~0x10; }
+		|	if (    mp_clock_stop_4) { clock_stop |= 0x08; } else { clock_stop &= ~0x08; }
+		|	if (state->clock_stop_5) { clock_stop |= 0x04; } else {	clock_stop &= ~0x04; }
+		|	if (state->clock_stop_6) { clock_stop |= 0x02; } else { clock_stop &= ~0x02; }
+		|	if (state->clock_stop_7) { clock_stop |= 0x01; } else { clock_stop &= ~0x01; }
 		|	
-		|	bool csa_write_en = PIN_CSAWR=>;
-		|
 		|	if ((clock_stop | 0x01) != 0x7f) {
 		|		output.clkrun = false;
 		|		event = false;
 		|	}
 		|	if (clock_stop != 0x7f) {
 		|		output.iclk = false;
-		|		if (!csa_write_en)
+		|		if (!mp_csa_write_enable)
 		|			output.ramrun = false;
 		|	}
 		|	if ((clock_stop | 0x03) != 0x7f) {
@@ -658,7 +643,7 @@ class SEQ(PartFactory):
 		|		output.iclk = false;
 		|		output.clkrun = false;
 		|		state->s_state_stop = false;
-		|		if (!csa_write_en)
+		|		if (!mp_csa_write_enable)
 		|			output.ramrun = false;
 		|	}
 		|	output.sclke = !(output.clkrun && output.qstp7);
@@ -949,6 +934,7 @@ class SEQ(PartFactory):
 		|																state->clock_stop_6 = !(!state->bad_hint && !state->late_macro_event && state->uev != 16);
 		|																state->clock_stop_7 = !state->bad_hint && state->l_macro_hic;
 		|																output.qstp7 = state->clock_stop_7;
+		|																mp_clock_stop_7 = state->clock_stop_7;
 		|																output.sclke = !(output.clkrun && state->clock_stop_7);
 		|																output.seqst = state->clock_stop_6 && state->clock_stop_7;
 		|															}
@@ -1499,6 +1485,7 @@ class SEQ(PartFactory):
 		|																									state->foo9 = !RNDX(RND_TOS_VLB);
 		|																								}
 		|																								output.qstp7 = !state->bad_hint && state->l_macro_hic;
+		|																								mp_clock_stop_7 = !state->bad_hint && state->l_macro_hic;
 		|																								output.sclke = !(output.clkrun && output.qstp7);
 		|																								if (!PIN_SFSTP=> && mp_seq_prepped) {
 		|																									state->uir = state->wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel

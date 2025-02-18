@@ -802,7 +802,7 @@ class FIU(PartFactory):
 		|																} else {
 		|																	mp_seq_uev &= ~UEV_MEMEX;
 		|																}
-		|																output.stop0 = mp_seq_uev10_page_x && mp_seq_uev0_memex;
+		|																mp_clock_stop_0 = mp_seq_uev10_page_x && mp_seq_uev0_memex;
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|																			if (q4pos) {

@@ -433,7 +433,7 @@ class TYP(PartFactory):
 		|	unsigned priv_check = UIR_UPVC;
 		|	unsigned marctl = UIR_MCTL;
 		|	bool foo1 = marctl >= 4;
-		|	mp_load_mar = !(foo1 && PIN_BHSTP=>);
+		|	mp_load_mar = !(foo1 && mp_clock_stop_7);
 		|
 		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|											if (h1pos) {
@@ -456,7 +456,7 @@ class TYP(PartFactory):
 		|																	find_b();
 		|																}
 		|																state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
-		|																if (output.cwe && uirc != 0x28)
+		|																if (mp_csa_write_enable && uirc != 0x28)
 		|																state->wen = !state->wen;
 		|														
 		|																bool divide = rand != 0xb;
@@ -531,11 +531,11 @@ class TYP(PartFactory):
 		|																	state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
 		|																} else if (uirc == 0x28) {
 		|																	// 0x28 LOOP COUNTER (RF write disabled)
-		|																} else if (uirc == 0x29 && output.cwe) {
+		|																} else if (uirc == 0x29 && mp_csa_write_enable) {
 		|																	// 0x29 DEFAULT (RF write disabled)
 		|																	unsigned sum = state->botreg + state->csa_offset + 1;
 		|																	state->cadr |= sum & 0xf;
-		|																} else if (uirc == 0x29 && !output.cwe) {
+		|																} else if (uirc == 0x29 && !mp_csa_write_enable) {
 		|																	// 0x29 DEFAULT (RF write disabled)
 		|																	state->cadr |= uirc & 0x1f;
 		|																	state->cadr |= frm << 5;
@@ -562,8 +562,8 @@ class TYP(PartFactory):
 		|																}
 		|
 		|																bool micros_en = mp_uevent_enable;
-		|																output.t0stp = true;
-		|																output.t1stp = true;
+		|																mp_clock_stop_3 = true;
+		|																mp_clock_stop_4 = true;
 		|																unsigned selcond = 0x00;
 		|																if (state->ppriv) {
 		|																	selcond = 0x80 >> priv_check;
@@ -584,24 +584,30 @@ class TYP(PartFactory):
 		|																	if ((!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
 		|																		mp_seq_uev |= UEV_CHK_SYS;
 		|
-		|																	if ((!((rand != 0xe) || !(B_LIT() != UIR_CLIT))))
-		|																		output.t0stp = false;
+		|																	if ((!((rand != 0xe) || !(B_LIT() != UIR_CLIT)))) {
+		|																		mp_clock_stop_3 = false;
+		|																	}
 		|
-		|																	if ((0x3 < rand && rand < 0x8) && clev())
-		|																		output.t0stp = false;
+		|																	if ((0x3 < rand && rand < 0x8) && clev()) {
+		|																		mp_clock_stop_3 = false;
+		|																	}
 		|
-		|																	if (priv_path_eq() && bin_op_pass() && selcond == 0x80)
-		|																		output.t0stp = false;
+		|																	if (priv_path_eq() && bin_op_pass() && selcond == 0x80) {
+		|																		mp_clock_stop_3 = false;
+		|																	}
 		|																}
 		|
-		|																if (selcond == 0x40 && bin_op_pass())
-		|																	output.t1stp = false;
+		|																if (selcond == 0x40 && bin_op_pass()) {
+		|																	mp_clock_stop_4 = false;
+		|																}
 		|
-		|																if ((selcond & 0x30) && a_op_pass())
-		|																	output.t1stp = false;
+		|																if ((selcond & 0x30) && a_op_pass()) {
+		|																	mp_clock_stop_4 = false;
+		|																}
 		|
-		|																if ((selcond & 0x0c) && b_op_pass())
-		|																	output.t1stp = false;
+		|																if ((selcond & 0x0c) && b_op_pass()) {
+		|																	mp_clock_stop_4 = false;
+		|																}
 		|
 		|															}
 		|															if (q2pos || (mp_adr_oe & 0x6)) {	// XXX: && ?
@@ -616,7 +622,7 @@ class TYP(PartFactory):
 		|																												if (uirsclk) {
 		|																													state->csa_hit = mp_csa_hit;
 		|																													state->csa_write = mp_csa_wr;
-		|																													output.cwe = !(state->csa_hit || state->csa_write);
+		|																													mp_csa_write_enable = !(state->csa_hit || state->csa_write);
 		|																												}
 		|
 		|																												bool c_source = UIR_CSRC;
@@ -628,13 +634,6 @@ class TYP(PartFactory):
 		|																												bool sel = UIR_SEL;
 		|																										
 		|																												if (!fiu0 || !fiu1) {
-		|#if 0
-		|																													BUS_DF_READ(fiu);
-		|																													fiu ^= BUS_DF_MASK;
-		|if (fiu != ~mp_fiu_bus) {
-		|	ALWAYS_TRACE(<< "TFIU " << std::hex << fiu << " < " << ~mp_fiu_bus);
-		|}
-		|#endif
 		|																													fiu = ~mp_fiu_bus;
 		|																												}
 		|																												if (!fiu0) {

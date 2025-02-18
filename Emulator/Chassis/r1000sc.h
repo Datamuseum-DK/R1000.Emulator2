@@ -98,6 +98,11 @@ void f181_alu(struct f181 *);
 	macro(unsigned, mem_abort_e, 0) \
 	macro(unsigned, mem_abort_el, 0) \
 	macro(unsigned, mem_abort_l, 0) \
+	macro(unsigned, clock_stop_0, 0) \
+	macro(unsigned, clock_stop_3, 0) \
+	macro(unsigned, clock_stop_4, 0) \
+	macro(unsigned, clock_stop_7, 0) \
+	macro(unsigned, csa_write_enable, 0) \
 
 #define MIDSTATE(macro) \
 	macro(unsigned, cond_sel, 0) \
