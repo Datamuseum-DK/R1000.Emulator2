@@ -573,7 +573,7 @@ class FIU(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool h1pos = PIN_H2.negedge();
-		|	bool sclk = q4pos && !PIN_SCLKE=>;
+		|	bool sclk = q4pos && !mp_state_clk_en;
 		|
 		|	bool carry, name_match;
 		|	unsigned csa = mp_csa_cntl;
@@ -747,7 +747,7 @@ class FIU(PartFactory):
 		|																	state->memex = !(!state->cache_miss && !state->csa_oor && !state->scav_trap);
 		|																}
 		|																mp_restore_rdr = (state->prmt >> 1) & 1;
-		|																bool sel = !((!PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
+		|																bool sel = !((!mp_state_clk_stop && memcyc1) || (mp_state_clk_en && !memcyc1));
 		|																if (sel) {
 		|																	mp_dummy_next = !((state->prmt >> 0) & 1);
 		|																} else {
@@ -937,7 +937,7 @@ class FIU(PartFactory):
 		|																				bool eabrt = !(e_abort && le_abort);
 		|																				bool l_abort = mp_mem_abort_l;
 		|																				bool idum;
-		|																				bool sel = !((!PIN_UEVSTP=> && memcyc1) || (PIN_SCLKE=> && !memcyc1));
+		|																				bool sel = !((!mp_state_clk_stop && memcyc1) || (mp_state_clk_en && !memcyc1));
 		|																				if (sel) {
 		|																					idum = (state->prmt >> 5) & 1;
 		|																				} else {
@@ -990,7 +990,7 @@ class FIU(PartFactory):
 		|																											
 		|																					state->log_query = !(state->labort || state->logrwn);
 		|																													
-		|																					state->omf20 = (memcyc1 && ((state->prmt >> 3) & 1) && !PIN_SCLKE=>);
+		|																					state->omf20 = (memcyc1 && ((state->prmt >> 3) & 1) && !mp_state_clk_en);
 		|																					
 		|																					if (memcyc1)
 		|																						state->mctl_is_read = !(state->lcntl & 1);
@@ -1000,7 +1000,7 @@ class FIU(PartFactory):
 		|																					state->logrw_d = state->logrw;
 		|																				}
 		|
-		|																				if (!PIN_SCLKE=>) {
+		|																				if (!mp_state_clk_en) {
 		|																					state->omq = 0;
 		|																					state->omq |= (pa027 & 3) << 2;
 		|																					state->omq |= ((pa027 >> 5) & 1) << 1;
