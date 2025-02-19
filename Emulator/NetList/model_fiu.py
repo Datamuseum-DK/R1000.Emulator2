@@ -184,6 +184,9 @@ class FIU(PartFactory):
 		|	void fiu_conditions(unsigned condsel);
 		|	uint64_t frame(void);
 		|	void tcsa(bool clock);
+		|	void fiu_q1(void);
+		|	void fiu_q2(void);
+		|	void fiu_q4(void);
 		|''')
 
     def priv_impl(self, file):
@@ -563,6 +566,264 @@ class FIU(PartFactory):
 		|	}
 		|
 		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|fiu_q1(void)
+		|{
+		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|fiu_q2(void)
+		|{
+		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|fiu_q4(void)
+		|{
+		|	bool sclk = !mp_state_clk_en;
+		|	bool tsclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
+		|	bool tcsa_clk = tsclken;
+		|	unsigned mar_cntl = mp_mar_cntl;
+		|	bool rmarp = (mar_cntl & 0xe) == 0x4;
+		|	bool carry, name_match;
+		|
+		|	unsigned mem_start = UIR_MSTRT;
+		|	mem_start ^= 0x1e;
+		|	unsigned csa = mp_csa_cntl;
+		|	unsigned condsel = mp_cond_sel;
+		|
+		|	do_tivi();
+		|	tcsa(tcsa_clk);
+		|	if (sclk) {
+		|		if (UIR_LDMDR || !UIR_TCLK || !UIR_VCLK) {
+		|			rotator(sclk);
+		|		}
+		|
+		|		if (!UIR_OCLK) {			// Q4~^
+		|			if (UIR_ORSR) {			// UCODE
+		|				state->oreg = UIR_OL;
+		|			} else {
+		|				state->oreg = mp_adr_bus;
+		|				state->oreg &= 0x7f;
+		|			}
+		|		}
+		|
+		|		if (mar_cntl == 5) {
+		|			state->refresh_reg = state->ti_bus;
+		|			state->marh &= 0xffffffffULL;
+		|			state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
+		|			state->marh ^= 0xffffffff00000000ULL;
+		|		}
+		|
+		|		unsigned lfrc;
+		|		lfrc = UIR_LFRC;
+		|
+		|		switch(lfrc) {
+		|		case 0:
+		|			state->lfreg = (((state->vi_bus >> BUS64_LSB(31)) & 0x3f) + 1) & 0x3f;
+		|			if ((state->ti_bus >> BUS64_LSB(36)) & 1)
+		|				state->lfreg |= (1 << 6);
+		|			else if (!((state->vi_bus >> BUS64_LSB(25)) & 1))
+		|				state->lfreg |= (1 << 6);
+		|			state->lfreg ^= 0x7f;
+		|			break;
+		|		case 1:
+		|			state->lfreg = UIR_LFL;
+		|			break;
+		|		case 2:
+		|			state->lfreg = (state->ti_bus >> BUS64_LSB(48)) & 0x3f;
+		|			if ((state->ti_bus >> BUS64_LSB(36)) & 1)
+		|				state->lfreg |= (1 << 6);
+		|			state->lfreg = state->lfreg ^ 0x7f;
+		|			break;
+		|		case 3:	// No load
+		|			break;
+		|		}
+		|
+		|		state->marh &= ~(0x3fULL << 15);
+		|		state->marh |= (state->lfreg & 0x3f) << 15;
+		|		state->marh &= ~(1ULL << 27);
+		|		state->marh |= ((state->lfreg >> 6) & 1) << 27;
+		|		if (state->lfreg != 0x7f)
+		|			state->lfreg |= 1<<7;
+		|
+		|{
+		|		unsigned csacntl0 = (state->typwcsram[mp_nua_bus] >> 1) & 7;
+		|		unsigned csacntl1 = (state->typuir >> 1) & 6;
+		|		state->pdt = (csacntl0 == 7) && (csacntl1 == 0);
+		|}
+		|		state->nve = mp_csa_nve;
+		|		if (!(csa >> 2)) {
+		|			state->pdreg = state->ctopo;
+		|		}
+		|	}
+		|
+		|	unsigned dif;
+		|
+		|	if (state->pdt) {
+		|		carry = state->ctopo <= state->pdreg;
+		|		dif = ~0xfffff + state->pdreg - state->ctopo;
+		|	} else {
+		|		carry = state->moff <= state->ctopo;
+		|		dif = ~0xfffff + state->ctopo - state->moff;
+		|	}
+		|	dif &= 0xfffff;
+		|
+		|	name_match = 
+		|		    (state->ctopn != state->srn) ||
+		|		    ((state->sro & 0xf8000070 ) != 0x10);
+		|
+		|	state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
+		|
+		|	hit_offset = (0xf + state->nve - (dif & 0xf)) & 0xf;
+		|
+		|	uint64_t adr = 0;
+		|	adr = mp_adr_bus;
+		|	bool load_mar = (state->prmt >> 4) & 1;
+		|																		
+		|	if (sclk && load_mar) {
+		|		state->srn = adr >> 32;
+		|		state->sro = adr & 0xffffff80;
+		|		state->sro |= mp_spc_bus << 4;
+		|		state->sro |= 0xf;
+		|	}
+		|	state->moff = (state->sro >> 7) & 0xffffff;
+		|																		
+		|	state->nmatch =
+		|	    (state->ctopn != state->srn) ||
+		|	    ((state->sro & 0xf8000070 ) != 0x10);
+		|																		
+		|	if (sclk && (csa == 0)) {
+		|		state->ctopn = adr >> 32;
+		|		state->nmatch =
+		|		    (state->ctopn != state->srn) ||
+		|		    ((state->sro & 0xf8000070 ) != 0x10);
+		|	}
+		|																		
+		|	if (sclk && !(csa >> 2)) {
+		|		if (csa <= 1) {
+		|			state->ctopo = adr >> 7;
+		|		} else if (!(csa & 1)) {
+		|			state->ctopo += 1;
+		|		} else {
+		|			state->ctopo += 0xfffff;
+		|		}
+		|		state->ctopo &= 0xfffff;
+		|																		
+		|	}
+		|																		
+		|	if (mem_start == 0x06) {
+		|		state->refresh_count = state->ti_bus >> 48;
+		|	} else if (state->refresh_count != 0xffff) {
+		|		state->refresh_count++;
+		|	}
+		|
+		|	bool le_abort = mp_mem_abort_el;
+		|	bool e_abort = mp_mem_abort_e;
+		|	bool eabrt = !(e_abort && le_abort);
+		|	bool l_abort = mp_mem_abort_l;
+		|	bool idum;
+		|	bool sel = !((!mp_state_clk_stop && memcyc1) || (mp_state_clk_en && !memcyc1));
+		|	if (sel) {
+		|		idum = (state->prmt >> 5) & 1;
+		|	} else {
+		|		idum = state->dumon;
+		|	}
+		|	state->state0 = (pa025 >> 7) & 1;
+		|	state->state1 = (pa025 >> 6) & 1;
+		|	state->labort = !(l_abort && le_abort);
+		|	state->e_abort_dly = eabrt;
+		|	state->pcntl_d = pa026 & 0xf;
+		|	state->dumon = idum;
+		|	state->csaht = !mp_csa_hit;
+		|
+		|	if (!mp_sf_stop) {
+		|		bool cache_miss_next = state->cache_miss;
+		|		if (condsel == 0x6b) {		// CACHE_MISS
+		|			cache_miss_next = false;
+		|		} else if (rmarp) {
+		|			cache_miss_next = (state->ti_bus >> BUS64_LSB(35)) & 1;
+		|		} else if (state->log_query) {
+		|			cache_miss_next = state->miss;
+		|		}
+		|		state->scav_trap = scav_trap_next;
+		|		state->cache_miss = cache_miss_next;
+		|		state->csa_oor = csa_oor_next;
+		|								
+		|		if (rmarp) {
+		|			state->mar_modified = (state->ti_bus >> BUS64_LSB(39)) & 1;
+		|		} else if (condsel == 0x6d) {
+		|			state->mar_modified = 1;
+		|		} else if (state->omf20) {
+		|			state->mar_modified = le_abort;
+		|		} else if (!memstart && le_abort) {
+		|			state->mar_modified = le_abort;
+		|		}
+		|		if (rmarp) {
+		|			state->incmplt_mcyc = (state->ti_bus >> BUS64_LSB(40)) & 1;
+		|		} else if (mem_start == 0x12) {
+		|			state->incmplt_mcyc = true;
+		|		} else if (memcyc1) {
+		|			state->incmplt_mcyc = le_abort;
+		|		}
+		|		if (rmarp) {
+		|			state->phys_last = (state->ti_bus >> BUS64_LSB(37)) & 1;
+		|			state->write_last = (state->ti_bus >> BUS64_LSB(38)) & 1;
+		|		} else if (memcyc1) {
+		|			state->phys_last = state->phys_ref;
+		|			state->write_last = (state->mcntl & 1);
+		|		}
+		|								
+		|		state->log_query = !(state->labort || state->logrwn);
+		|										
+		|		state->omf20 = (memcyc1 && ((state->prmt >> 3) & 1) && !mp_state_clk_en);
+		|		
+		|		if (memcyc1)
+		|			state->mctl_is_read = !(state->lcntl & 1);
+		|		else
+		|			state->mctl_is_read = !(pa026 & 1);
+		|								
+		|		state->logrw_d = state->logrw;
+		|	}
+		|
+		|	if (!mp_state_clk_en) {
+		|		state->omq = 0;
+		|		state->omq |= (pa027 & 3) << 2;
+		|		state->omq |= ((pa027 >> 5) & 1) << 1;
+		|		if (rmarp) {
+		|			state->page_xing = (state->ti_bus >> BUS64_LSB(34)) & 1;
+		|		} else {
+		|			state->page_xing = (state->page_crossing_next);
+		|		}
+		|		state->init_mru_d = (pa026 >> 7) & 1;
+		|	}
+		|	state->csa_oor_next = !(carry || name_match);
+		|
+		|	if (!mp_sf_stop) {
+		|		state->uir = state->wcsram[mp_nua_bus];
+		|		state->typuir = state->typwcsram[mp_nua_bus];
+		|	}
+		|
+		|	if (mp_fiu_freeze && !output.freze) {
+		|		output.freze = 1;
+		|		mp_nxt_sync_freeze |= 2;
+		|	} else if (!mp_fiu_freeze && output.freze && !output.sync) {
+		|		output.sync = 1;
+		|		mp_nxt_sync_freeze |= 4;
+		|	} else if (!mp_fiu_freeze && output.freze && output.sync) {
+		|		output.freze = 0;
+		|		mp_nxt_sync_freeze &= ~2;
+		|		countdown = 5;
+		|	} else if (!mp_fiu_freeze && !output.freze && output.sync) {
+		|		if (--countdown == 0) {
+		|			output.sync = 0;
+		|			mp_nxt_sync_freeze &= ~4;
+		|		}
+		|	}
+		|}
 		|''')
 
     def doit(self, file):
@@ -576,7 +837,6 @@ class FIU(PartFactory):
 		|	bool sclk = q4pos && !mp_state_clk_en;
 		|
 		|	bool carry, name_match;
-		|	unsigned csa = mp_csa_cntl;
 		|
 		|	unsigned condsel = mp_cond_sel;
 		|
@@ -596,8 +856,6 @@ class FIU(PartFactory):
 		|	unsigned mem_start = UIR_MSTRT;
 		|	mem_start ^= 0x1e;
 		|
-		|	bool tsclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
-		|	bool tcsa_clk = q4pos && tsclken;
 		|
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|											if (q1pos) {
@@ -805,236 +1063,9 @@ class FIU(PartFactory):
 		|																mp_clock_stop_0 = mp_seq_uev10_page_x && mp_seq_uev0_memex;
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q4
-		|																			if (q4pos) {
-		|																				do_tivi();
-		|																				tcsa(tcsa_clk);
-		|																				if (sclk) {
-		|																					if (UIR_LDMDR || !UIR_TCLK || !UIR_VCLK) {
-		|																						rotator(sclk);
-		|																					}
-		|																			
-		|																					if (!UIR_OCLK) {			// Q4~^
-		|																						if (UIR_ORSR) {			// UCODE
-		|																							state->oreg = UIR_OL;
-		|																						} else {
-		|																							state->oreg = mp_adr_bus;
-		|																							state->oreg &= 0x7f;
-		|																						}
-		|																					}
-		|
-		|																					if (mar_cntl == 5) {
-		|																						state->refresh_reg = state->ti_bus;
-		|																						state->marh &= 0xffffffffULL;
-		|																						state->marh |= (state->refresh_reg & 0xffffffff00000000ULL);
-		|																						state->marh ^= 0xffffffff00000000ULL;
-		|																					}
-		|																			
-		|																					unsigned lfrc;
-		|																					lfrc = UIR_LFRC;
-		|																			
-		|																					switch(lfrc) {
-		|																					case 0:
-		|																						state->lfreg = (((state->vi_bus >> BUS64_LSB(31)) & 0x3f) + 1) & 0x3f;
-		|																						if ((state->ti_bus >> BUS64_LSB(36)) & 1)
-		|																							state->lfreg |= (1 << 6);
-		|																						else if (!((state->vi_bus >> BUS64_LSB(25)) & 1))
-		|																							state->lfreg |= (1 << 6);
-		|																						state->lfreg ^= 0x7f;
-		|																						break;
-		|																					case 1:
-		|																						state->lfreg = UIR_LFL;
-		|																						break;
-		|																					case 2:
-		|																						state->lfreg = (state->ti_bus >> BUS64_LSB(48)) & 0x3f;
-		|																						if ((state->ti_bus >> BUS64_LSB(36)) & 1)
-		|																							state->lfreg |= (1 << 6);
-		|																						state->lfreg = state->lfreg ^ 0x7f;
-		|																						break;
-		|																					case 3:	// No load
-		|																						break;
-		|																					}
-		|																			
-		|																					state->marh &= ~(0x3fULL << 15);
-		|																					state->marh |= (state->lfreg & 0x3f) << 15;
-		|																					state->marh &= ~(1ULL << 27);
-		|																					state->marh |= ((state->lfreg >> 6) & 1) << 27;
-		|																					if (state->lfreg != 0x7f)
-		|																						state->lfreg |= 1<<7;
-		|																			
-		|{
-		|																					unsigned csacntl0 = (state->typwcsram[mp_nua_bus] >> 1) & 7;
-		|																					unsigned csacntl1 = (state->typuir >> 1) & 6;
-		|																					state->pdt = (csacntl0 == 7) && (csacntl1 == 0);
-		|}
-		|																					state->nve = mp_csa_nve;
-		|																					if (!(csa >> 2)) {
-		|																						state->pdreg = state->ctopo;
-		|																					}
-		|																				}
-		|
-		|																				unsigned dif;
-		|																			
-		|																				if (state->pdt) {
-		|																					carry = state->ctopo <= state->pdreg;
-		|																					dif = ~0xfffff + state->pdreg - state->ctopo;
-		|																				} else {
-		|																					carry = state->moff <= state->ctopo;
-		|																					dif = ~0xfffff + state->ctopo - state->moff;
-		|																				}
-		|																				dif &= 0xfffff;
-		|																			
-		|																				name_match = 
-		|																					    (state->ctopn != state->srn) ||
-		|																					    ((state->sro & 0xf8000070 ) != 0x10);
-		|																			
-		|																				state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
-		|																			
-		|																				hit_offset = (0xf + state->nve - (dif & 0xf)) & 0xf;
-		|
-		|																				uint64_t adr = 0;
-		|																				adr = mp_adr_bus;
-		|																				bool load_mar = (state->prmt >> 4) & 1;
-		|																		
-		|																				if (sclk && load_mar) {
-		|																					state->srn = adr >> 32;
-		|																					state->sro = adr & 0xffffff80;
-		|																					state->sro |= mp_spc_bus << 4;
-		|																					state->sro |= 0xf;
-		|																				}
-		|																				state->moff = (state->sro >> 7) & 0xffffff;
-		|																		
-		|																				state->nmatch =
-		|																				    (state->ctopn != state->srn) ||
-		|																				    ((state->sro & 0xf8000070 ) != 0x10);
-		|																		
-		|																				if (sclk && (csa == 0)) {
-		|																					state->ctopn = adr >> 32;
-		|																					state->nmatch =
-		|																					    (state->ctopn != state->srn) ||
-		|																					    ((state->sro & 0xf8000070 ) != 0x10);
-		|																				}
-		|																		
-		|																				if (sclk && !(csa >> 2)) {
-		|																					if (csa <= 1) {
-		|																						state->ctopo = adr >> 7;
-		|																					} else if (!(csa & 1)) {
-		|																						state->ctopo += 1;
-		|																					} else {
-		|																						state->ctopo += 0xfffff;
-		|																					}
-		|																					state->ctopo &= 0xfffff;
-		|																		
-		|																				}
-		|																		
-		|																				if (mem_start == 0x06) {
-		|																					state->refresh_count = state->ti_bus >> 48;
-		|																				} else if (state->refresh_count != 0xffff) {
-		|																					state->refresh_count++;
-		|																				}
-		|
-		|																				bool le_abort = mp_mem_abort_el;
-		|																				bool e_abort = mp_mem_abort_e;
-		|																				bool eabrt = !(e_abort && le_abort);
-		|																				bool l_abort = mp_mem_abort_l;
-		|																				bool idum;
-		|																				bool sel = !((!mp_state_clk_stop && memcyc1) || (mp_state_clk_en && !memcyc1));
-		|																				if (sel) {
-		|																					idum = (state->prmt >> 5) & 1;
-		|																				} else {
-		|																					idum = state->dumon;
-		|																				}
-		|																				state->state0 = (pa025 >> 7) & 1;
-		|																				state->state1 = (pa025 >> 6) & 1;
-		|																				state->labort = !(l_abort && le_abort);
-		|																				state->e_abort_dly = eabrt;
-		|																				state->pcntl_d = pa026 & 0xf;
-		|																				state->dumon = idum;
-		|																				state->csaht = !mp_csa_hit;
-		|
-		|																				if (!mp_sf_stop) {
-		|																					bool cache_miss_next = state->cache_miss;
-		|																					if (condsel == 0x6b) {		// CACHE_MISS
-		|																						cache_miss_next = false;
-		|																					} else if (rmarp) {
-		|																						cache_miss_next = (state->ti_bus >> BUS64_LSB(35)) & 1;
-		|																					} else if (state->log_query) {
-		|																						cache_miss_next = state->miss;
-		|																					}
-		|																					state->scav_trap = scav_trap_next;
-		|																					state->cache_miss = cache_miss_next;
-		|																					state->csa_oor = csa_oor_next;
-		|																											
-		|																					if (rmarp) {
-		|																						state->mar_modified = (state->ti_bus >> BUS64_LSB(39)) & 1;
-		|																					} else if (condsel == 0x6d) {
-		|																						state->mar_modified = 1;
-		|																					} else if (state->omf20) {
-		|																						state->mar_modified = le_abort;
-		|																					} else if (!memstart && le_abort) {
-		|																						state->mar_modified = le_abort;
-		|																					}
-		|																					if (rmarp) {
-		|																						state->incmplt_mcyc = (state->ti_bus >> BUS64_LSB(40)) & 1;
-		|																					} else if (mem_start == 0x12) {
-		|																						state->incmplt_mcyc = true;
-		|																					} else if (memcyc1) {
-		|																						state->incmplt_mcyc = le_abort;
-		|																					}
-		|																					if (rmarp) {
-		|																						state->phys_last = (state->ti_bus >> BUS64_LSB(37)) & 1;
-		|																						state->write_last = (state->ti_bus >> BUS64_LSB(38)) & 1;
-		|																					} else if (memcyc1) {
-		|																						state->phys_last = state->phys_ref;
-		|																						state->write_last = (state->mcntl & 1);
-		|																					}
-		|																											
-		|																					state->log_query = !(state->labort || state->logrwn);
-		|																													
-		|																					state->omf20 = (memcyc1 && ((state->prmt >> 3) & 1) && !mp_state_clk_en);
-		|																					
-		|																					if (memcyc1)
-		|																						state->mctl_is_read = !(state->lcntl & 1);
-		|																					else
-		|																						state->mctl_is_read = !(pa026 & 1);
-		|																											
-		|																					state->logrw_d = state->logrw;
-		|																				}
-		|
-		|																				if (!mp_state_clk_en) {
-		|																					state->omq = 0;
-		|																					state->omq |= (pa027 & 3) << 2;
-		|																					state->omq |= ((pa027 >> 5) & 1) << 1;
-		|																					if (rmarp) {
-		|																						state->page_xing = (state->ti_bus >> BUS64_LSB(34)) & 1;
-		|																					} else {
-		|																						state->page_xing = (state->page_crossing_next);
-		|																					}
-		|																					state->init_mru_d = (pa026 >> 7) & 1;
-		|																				}
-		|																				state->csa_oor_next = !(carry || name_match);
-		|
-		|																				if (!mp_sf_stop) {
-		|																					state->uir = state->wcsram[mp_nua_bus];
-		|																					state->typuir = state->typwcsram[mp_nua_bus];
-		|																				}
-		|
-		|																				if (mp_fiu_freeze && !output.freze) {
-		|																					output.freze = 1;
-		|																					mp_nxt_sync_freeze |= 2;
-		|																				} else if (!mp_fiu_freeze && output.freze && !output.sync) {
-		|																					output.sync = 1;
-		|																					mp_nxt_sync_freeze |= 4;
-		|																				} else if (!mp_fiu_freeze && output.freze && output.sync) {
-		|																					output.freze = 0;
-		|																					mp_nxt_sync_freeze &= ~2;
-		|																					countdown = 5;
-		|																				} else if (!mp_fiu_freeze && !output.freze && output.sync) {
-		|																					if (--countdown == 0) {
-		|																						output.sync = 0;
-		|																						mp_nxt_sync_freeze &= ~4;
-		|																					}
-		|																				}
-		|																			}
+		|	if (q4pos) {
+		|		fiu_q4();
+		|	}
 		|//	ALWAYS						H1				Q1				Q2				Q4
 		|
 		|	if ((!mp_fiut_oe || !mp_fiuv_oe) && !q4pos) {
