@@ -160,11 +160,6 @@ class FIU(PartFactory):
 		|	state->typwcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 		|''')
 
-    def sensitive(self):
-        yield "PIN_H2.neg()"
-        yield "PIN_Q2"
-        yield "PIN_Q4.pos()"
-
     def priv_decl(self, file):
         file.fmt('''
 		|	unsigned pa025 = 0, pa026 = 0, pa027 = 0;
@@ -573,6 +568,97 @@ class FIU(PartFactory):
 		|SCM_«mmm» ::
 		|fiu_q1(void)
 		|{
+		|	bool sclk = false;
+		|	bool carry, name_match;
+		|
+		|	unsigned mar_cntl = mp_mar_cntl;
+		|	bool rmarp = (mar_cntl & 0xe) == 0x4;
+		|
+		|	do_tivi();
+		|	if (mp_fiu_oe == 0x1) {
+		|		rotator(sclk);
+		|	}
+		|	unsigned dif;
+		|
+		|	if (state->pdt) {
+		|		carry = state->ctopo <= state->pdreg;
+		|		dif = ~0xfffff + state->pdreg - state->ctopo;
+		|	} else {
+		|		carry = state->moff <= state->ctopo;
+		|		dif = ~0xfffff + state->ctopo - state->moff;
+		|	}
+		|	dif &= 0xfffff;
+		|
+		|	name_match = 
+		|		    (state->ctopn != state->srn) ||
+		|		    ((state->sro & 0xf8000070 ) != 0x10);
+		|
+		|	state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
+		|
+		|	hit_offset = (0xf + state->nve - (dif & 0xf)) & 0xf;
+		|
+		|	mp_csa_hit = (bool)!(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
+		|
+		|	unsigned pa025a = 0;
+		|	pa025a |= mem_start;
+		|	pa025a |= state->state0 << 8;
+		|	pa025a |= state->state1 << 7;
+		|	pa025a |= state->labort << 6;
+		|	pa025a |= state->e_abort_dly << 5;
+		|	pa025 = state->pa025[pa025a];
+		|	memcyc1 = (pa025 >> 1) & 1;
+		|	memstart = (pa025 >> 0) & 1;
+		|
+		|	if (memstart) {
+		|		state->mcntl = state->lcntl;
+		|	} else {
+		|		state->mcntl = state->pcntl_d;
+		|	}
+		|	state->phys_ref = !(state->mcntl & 0x6);
+		|	state->logrwn = !(state->logrw && memcyc1);
+		|	state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
+		|
+		|	scav_trap_next = state->scav_trap;
+		|	if (condsel == 0x69) {		// SCAVENGER_HIT
+		|		scav_trap_next = false;
+		|	} else if (rmarp) {
+		|		scav_trap_next = (state->ti_bus >> BUS64_LSB(32)) & 1;
+		|	} else if (state->log_query) {
+		|		scav_trap_next = false;
+		|	}
+		|
+		|
+		|	csa_oor_next = state->csa_oor;
+		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
+		|		csa_oor_next = false;
+		|	} else if (rmarp) {
+		|		csa_oor_next = (state->ti_bus >> BUS64_LSB(33)) & 1;
+		|	} else if (state->log_query) {
+		|		csa_oor_next = state->csa_oor_next;
+		|	}
+		|
+		|	bool pgmod = (state->omq >> 1) & 1;
+		|	unsigned board_hit = mp_mem_hit;
+		|	unsigned pa027a = 0;
+		|	pa027a |= board_hit << 5;
+		|	pa027a |= state->init_mru_d << 4;
+		|	pa027a |= (state->omq & 0xc);
+		|	pa027a |= 1 << 1;
+		|	pa027a |= pgmod << 0;
+		|	pa027 = state->pa027[pa027a];
+		|	state->setq = (pa027 >> 3) & 3;
+		|
+		|	bool mnor0b = state->drive_mru || ((pa027 & 3) == 0);
+		|	bool mnan2a = !(mnor0b && state->logrw_d);
+		|	state->miss = !(
+		|		((board_hit != 0xf) && mnan2a) ||
+		|		(state->logrw_d && state->csaht)
+		|	);
+		|	if (state->refresh_count == 0xffff) {
+		|		mp_macro_event |= 0x40;
+		|	} else {
+		|		mp_macro_event &= ~0x40;
+		|	}
 		|}
 		|
 		|void
@@ -646,7 +732,7 @@ class FIU(PartFactory):
 		|	} else {
 		|		mp_dummy_next = !state->dumon;
 		|	}
-		|														
+		|			
 		|	mp_csa_wr = !(mp_mem_abort_l && mp_mem_abort_el && !(state->logrwn || (state->mcntl & 1)));
 		|	if (mp_adr_oe & 0x1) {
 		|		bool inc_mar = (state->prmt >> 3) & 1;
@@ -667,7 +753,7 @@ class FIU(PartFactory):
 		|	state->cndtru = (pa025 >> 3) & 1;	// CM_CTL1
 		|	mp_mem_cond= !(state->memcnd);
 		|	mp_mem_cond_pol = !(state->cndtru);
-		|														
+		|			
 		|	if (memcyc1) {
 		|		mp_mem_ctl= state->lcntl;
 		|	} else {
@@ -942,6 +1028,11 @@ class FIU(PartFactory):
 		|}
 		|''')
 
+    def sensitive(self):
+        # yield "PIN_H2.neg()"
+        yield "PIN_Q2"
+        yield "PIN_Q4.pos()"
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
@@ -949,15 +1040,10 @@ class FIU(PartFactory):
 		|	bool q1pos = PIN_Q2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	bool h1pos = PIN_H2.negedge();
-		|	bool sclk = q4pos && !mp_state_clk_en;
-		|
-		|	bool carry, name_match;
 		|
 		|	condsel = mp_cond_sel;
 		|
 		|	unsigned mar_cntl = mp_mar_cntl;
-		|	bool rmarp = (mar_cntl & 0xe) == 0x4;
 		|
 		|	unsigned pa028a = mar_cntl << 5;
 		|	pa028a |= state->incmplt_mcyc << 4;
@@ -971,96 +1057,9 @@ class FIU(PartFactory):
 		|
 		|	mem_start = UIR_MSTRT ^ 0x1e;
 		|
-		|
-		|//	ALWAYS						H1				Q1				Q2				Q4
-		|											if (q1pos) {
-		|												do_tivi();
-		|												if (mp_fiu_oe == 0x1) {
-		|													rotator(sclk);
-		|												}
-		|												unsigned dif;
-		|											
-		|												if (state->pdt) {
-		|													carry = state->ctopo <= state->pdreg;
-		|													dif = ~0xfffff + state->pdreg - state->ctopo;
-		|												} else {
-		|													carry = state->moff <= state->ctopo;
-		|													dif = ~0xfffff + state->ctopo - state->moff;
-		|												}
-		|												dif &= 0xfffff;
-		|											
-		|												name_match = 
-		|													    (state->ctopn != state->srn) ||
-		|													    ((state->sro & 0xf8000070 ) != 0x10);
-		|											
-		|												state->in_range = (!state->pdt && name_match) || (dif & 0xffff0);
-		|											
-		|												hit_offset = (0xf + state->nve - (dif & 0xf)) & 0xf;
-		|											
-		|												mp_csa_hit = (bool)!(carry && !(state->in_range || ((dif & 0xf) >= state->nve)));
-		|
-		|												unsigned pa025a = 0;
-		|												pa025a |= mem_start;
-		|												pa025a |= state->state0 << 8;
-		|												pa025a |= state->state1 << 7;
-		|												pa025a |= state->labort << 6;
-		|												pa025a |= state->e_abort_dly << 5;
-		|												pa025 = state->pa025[pa025a];
-		|												memcyc1 = (pa025 >> 1) & 1;
-		|												memstart = (pa025 >> 0) & 1;
-		|											
-		|												if (memstart) {
-		|													state->mcntl = state->lcntl;
-		|												} else {
-		|													state->mcntl = state->pcntl_d;
-		|												}
-		|												state->phys_ref = !(state->mcntl & 0x6);
-		|												state->logrwn = !(state->logrw && memcyc1);
-		|												state->logrw = !(state->phys_ref || ((state->mcntl >> 3) & 1));
-		|											
-		|												scav_trap_next = state->scav_trap;
-		|												if (condsel == 0x69) {		// SCAVENGER_HIT
-		|													scav_trap_next = false;
-		|												} else if (rmarp) {
-		|													scav_trap_next = (state->ti_bus >> BUS64_LSB(32)) & 1;
-		|												} else if (state->log_query) {
-		|													scav_trap_next = false;
-		|												}
-		|											
-		|											
-		|												csa_oor_next = state->csa_oor;
-		|												if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
-		|													csa_oor_next = false;
-		|												} else if (rmarp) {
-		|													csa_oor_next = (state->ti_bus >> BUS64_LSB(33)) & 1;
-		|												} else if (state->log_query) {
-		|													csa_oor_next = state->csa_oor_next;
-		|												}
-		|
-		|												bool pgmod = (state->omq >> 1) & 1;
-		|												unsigned board_hit = mp_mem_hit;
-		|												unsigned pa027a = 0;
-		|												pa027a |= board_hit << 5;
-		|												pa027a |= state->init_mru_d << 4;
-		|												pa027a |= (state->omq & 0xc);
-		|												pa027a |= 1 << 1;
-		|												pa027a |= pgmod << 0;
-		|												pa027 = state->pa027[pa027a];
-		|												state->setq = (pa027 >> 3) & 3;
-		|
-		|												bool mnor0b = state->drive_mru || ((pa027 & 3) == 0);
-		|												bool mnan2a = !(mnor0b && state->logrw_d);
-		|												state->miss = !(
-		|													((board_hit != 0xf) && mnan2a) ||
-		|													(state->logrw_d && state->csaht)
-		|												);
-		|												if (state->refresh_count == 0xffff) {
-		|													mp_macro_event |= 0x40;
-		|												} else {
-		|													mp_macro_event &= ~0x40;
-		|												}
-		|											}
-		|	if (q2pos) {
+		|	if (q1pos) {
+		|		fiu_q1();
+		|	} else if (q2pos) {
 		|		fiu_q2();
 		|	} else if (q4pos) {
 		|		fiu_q4();
@@ -1080,12 +1079,12 @@ class FIU(PartFactory):
 		|		if (q2pos) {
 		|			fiu_conditions();
 		|		}
-		|	} else if ((h1pos||q1pos||q2pos) && (60 <= condsel && condsel <= 0x6f)) {
+		|	} else if (!q4pos && (60 <= condsel && condsel <= 0x6f)) {
 		|		fiu_conditions();
 		|	}
-		|if (!q4pos) {
-		|	tcsa(false);
-		|}
+		|	if (!q4pos) {
+		|		tcsa(false);
+		|	}
 		|''')
 
 def register(part_lib):
