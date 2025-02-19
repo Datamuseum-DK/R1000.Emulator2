@@ -520,9 +520,9 @@ class VAL(PartFactory):
 		|SCM_«mmm» ::
 		|val_q4(void)
 		|{
-		|	bool sclken = (PIN_STS=> && PIN_RMS=> && !PIN_FREZE=>);
+		|	bool sclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
 		|	bool csa_clk = sclken;
-		|	bool uirsclk = !PIN_SFS=>;
+		|	bool uirsclk = !mp_sf_stop;
 		|	bool divide = rand != 0xb;
 		|	unsigned uirc = VUIR_C;
 		|	if (csa_clk) {
@@ -541,7 +541,7 @@ class VAL(PartFactory):
 		|		state->cwe = !(state->csa_hit || state->csa_write);
 		|	}
 		|
-		|	bool awe = (PIN_RMS && !PIN_FREZE=>);
+		|	bool awe = (mp_ram_stop && !mp_freeze);
 		|	if (awe && !state->wen) {
 		|		state->rfram[state->cadr] = state->c;
 		|	}

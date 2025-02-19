@@ -225,159 +225,155 @@ class MEM(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
 		|
 		|	bool q4pos = PIN_Q4.posedge();
 		|	bool h1pos = PIN_H2.negedge();
 		|
 		|	bool labort = !(mp_mem_abort_l && mp_mem_abort_el);
 		|
-		|							if (h1pos) {
-		|								bool p_early_abort = state->eabort;
-		|								bool p_mcyc2_next_hd = state->p_mcyc2_next;
-		|								if (p_early_abort && p_mcyc2_next_hd) {
-		|									state->cmd = 0;
-		|								} else {
-		|									state->cmd = state->q4cmd ^ 0xf;
-		|								}
-		|								state->bcmd = 1 << state->cmd;
-		|								state->p_mcyc2_next =
-		|								    !(
-		|								        ((state->q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
-		|								        ((!state->q4cont) && (!p_early_abort) && (!p_mcyc2_next_hd))
-		|								    );
-		|								state->cyo = !((state->q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd);
-		|								state->cyt = p_mcyc2_next_hd;
+		|	if (h1pos) {
+		|		bool p_early_abort = state->eabort;
+		|		bool p_mcyc2_next_hd = state->p_mcyc2_next;
+		|		if (p_early_abort && p_mcyc2_next_hd) {
+		|			state->cmd = 0;
+		|		} else {
+		|			state->cmd = state->q4cmd ^ 0xf;
+		|		}
+		|		state->bcmd = 1 << state->cmd;
+		|		state->p_mcyc2_next =
+		|		    !(
+		|		        ((state->q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
+		|		        ((!state->q4cont) && (!p_early_abort) && (!p_mcyc2_next_hd))
+		|		    );
+		|		state->cyo = !((state->q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd);
+		|		state->cyt = p_mcyc2_next_hd;
 		|
-		|								if (state->cyo) {
-		|									if        (state->hits & BSET_4) { mp_mem_set = 0;
-		|									} else if (state->hits & BSET_5) { mp_mem_set = 1;
-		|									} else if (state->hits & BSET_6) { mp_mem_set = 2;
-		|									} else if (state->hits & BSET_7) { mp_mem_set = 3;
-		|									} else if (state->hits & BSET_0) { mp_mem_set = 0;
-		|									} else if (state->hits & BSET_1) { mp_mem_set = 1;
-		|									} else if (state->hits & BSET_2) { mp_mem_set = 2;
-		|									} else                           { mp_mem_set = 3;
-		|									}
+		|		if (state->cyo) {
+		|			if        (state->hits & BSET_4) { mp_mem_set = 0;
+		|			} else if (state->hits & BSET_5) { mp_mem_set = 1;
+		|			} else if (state->hits & BSET_6) { mp_mem_set = 2;
+		|			} else if (state->hits & BSET_7) { mp_mem_set = 3;
+		|			} else if (state->hits & BSET_0) { mp_mem_set = 0;
+		|			} else if (state->hits & BSET_1) { mp_mem_set = 1;
+		|			} else if (state->hits & BSET_2) { mp_mem_set = 2;
+		|			} else                           { mp_mem_set = 3;
+		|			}
 		|
-		|									mp_mem_hit = 0xf;
-		|									if (state->hits & (BSET_0|BSET_1|BSET_2|BSET_3))
-		|										mp_mem_hit &= ~1;
-		|									if (state->hits & (BSET_4|BSET_5|BSET_6|BSET_7))
-		|										mp_mem_hit &= ~8;
-		|									if (state->hits) {
-		|										unsigned tadr = state->hash << 3;
-		|										     if (state->hits & BSET_0)	state->hit_lru = state->rame[tadr | 0];
-		|										else if (state->hits & BSET_1)	state->hit_lru = state->rame[tadr | 1];
-		|										else if (state->hits & BSET_2)	state->hit_lru = state->rame[tadr | 2];
-		|										else if (state->hits & BSET_3)	state->hit_lru = state->rame[tadr | 3];
-		|										else if (state->hits & BSET_4)	state->hit_lru = state->rame[tadr | 4];
-		|										else if (state->hits & BSET_5)	state->hit_lru = state->rame[tadr | 5];
-		|										else if (state->hits & BSET_6)	state->hit_lru = state->rame[tadr | 6];
-		|										else if (state->hits & BSET_7)	state->hit_lru = state->rame[tadr | 7];
-		|										state->hit_lru >>= 2;
-		|										state->hit_lru &= 0xf;
-		|									} else {
-		|										state->hit_lru = 0xf;
-		|									}
-		|								}
-		|								if (!state->cyt) {
-		|									if (CMDS(CMD_PTR)) {
-		|										unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
-		|										state->qreg = state->ram[padr] & ~(0x7fULL << 6);
-		|										state->qreg |= (state->rame[padr] & 0x7f) << 6;
-		|									}
-		|								}
+		|			mp_mem_hit = 0xf;
+		|			if (state->hits & (BSET_0|BSET_1|BSET_2|BSET_3))
+		|				mp_mem_hit &= ~1;
+		|			if (state->hits & (BSET_4|BSET_5|BSET_6|BSET_7))
+		|				mp_mem_hit &= ~8;
+		|			if (state->hits) {
+		|				unsigned tadr = state->hash << 3;
+		|				     if (state->hits & BSET_0)	state->hit_lru = state->rame[tadr | 0];
+		|				else if (state->hits & BSET_1)	state->hit_lru = state->rame[tadr | 1];
+		|				else if (state->hits & BSET_2)	state->hit_lru = state->rame[tadr | 2];
+		|				else if (state->hits & BSET_3)	state->hit_lru = state->rame[tadr | 3];
+		|				else if (state->hits & BSET_4)	state->hit_lru = state->rame[tadr | 4];
+		|				else if (state->hits & BSET_5)	state->hit_lru = state->rame[tadr | 5];
+		|				else if (state->hits & BSET_6)	state->hit_lru = state->rame[tadr | 6];
+		|				else if (state->hits & BSET_7)	state->hit_lru = state->rame[tadr | 7];
+		|				state->hit_lru >>= 2;
+		|				state->hit_lru &= 0xf;
+		|			} else {
+		|				state->hit_lru = 0xf;
+		|			}
+		|		}
+		|		if (!state->cyt) {
+		|			if (CMDS(CMD_PTR)) {
+		|				unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
+		|				state->qreg = state->ram[padr] & ~(0x7fULL << 6);
+		|				state->qreg |= (state->rame[padr] & 0x7f) << 6;
+		|			}
+		|		}
 		|
-		|								if (!state->cyt) {
-		|									if (CMDS(CMD_LMR|CMD_PMR) && !labort) {
-		|										unsigned set = find_set(state->cmd);
-		|										uint32_t radr =	(set << 18) | (state->cl << 6) | state->wd;
-		|										assert(radr < (1 << 21));
-		|										state->tqreg = state->bitt[radr+radr];
-		|										state->vqreg = state->bitt[radr+radr+1];
-		|									}
-		|								}
+		|		if (!state->cyt) {
+		|			if (CMDS(CMD_LMR|CMD_PMR) && !labort) {
+		|				unsigned set = find_set(state->cmd);
+		|				uint32_t radr =	(set << 18) | (state->cl << 6) | state->wd;
+		|				assert(radr < (1 << 21));
+		|				state->tqreg = state->bitt[radr+radr];
+		|				state->vqreg = state->bitt[radr+radr+1];
+		|			}
+		|		}
 		|	
-		|								if (!state->cyt) {
-		|									bool ihit = mp_mem_hit == 0xf;
-		|									if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->labort) {
-		|										unsigned set = find_set(state->cmd);
-		|										uint32_t radr = (set << 18) | (state->cl << 6) | state->wd;
-		|										assert(radr < (1 << 21));
-		|										state->bitt[radr+radr] = state->tdreg;
-		|										state->bitt[radr+radr+1] = state->vdreg;
-		|									}
+		|		if (!state->cyt) {
+		|			bool ihit = mp_mem_hit == 0xf;
+		|			if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->labort) {
+		|				unsigned set = find_set(state->cmd);
+		|				uint32_t radr = (set << 18) | (state->cl << 6) | state->wd;
+		|				assert(radr < (1 << 21));
+		|				state->bitt[radr+radr] = state->tdreg;
+		|				state->bitt[radr+radr+1] = state->vdreg;
+		|			}
 		|
-		|									if (CMDS(CMD_PTW)) {
-		|										bool my_board = false;
-		|										bool which_board = state->mar_set >> 3;
-		|										if (which_board == my_board) {
-		|											unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
-		|											state->ram[padr] = state->vdreg & ~(0x7fULL << 6);
-		|											state->rame[padr] = (state->vdreg >> 6) & 0x7f;
-		|										}
-		|									} else if (!state->labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
-		|										unsigned padr = state->hash << 3;
-		|										for (unsigned u = 0; u < 8; u++)
-		|											state->rame[padr + u] = dolru(state->hit_lru, state->rame[padr + u], state->cmd);
-		|									}
-		|								}
+		|			if (CMDS(CMD_PTW)) {
+		|				bool my_board = false;
+		|				bool which_board = state->mar_set >> 3;
+		|				if (which_board == my_board) {
+		|					unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
+		|					state->ram[padr] = state->vdreg & ~(0x7fULL << 6);
+		|					state->rame[padr] = (state->vdreg >> 6) & 0x7f;
+		|				}
+		|			} else if (!state->labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
+		|				unsigned padr = state->hash << 3;
+		|				for (unsigned u = 0; u < 8; u++)
+		|					state->rame[padr + u] = dolru(state->hit_lru, state->rame[padr + u], state->cmd);
+		|			}
+		|		}
 		|
-		|								bool not_me = mp_mem_hit == 0xf;
-		|							
-		|								if (!mp_memv_oe && mp_memtv_oe) {
-		|									if (not_me) {
-		|										mp_val_bus = ~0ULL;
-		|									} else {
-		|										mp_val_bus = state->qreg;
-		|									}
-		|								} else if (!mp_memtv_oe) {
-		|									if (not_me) {
-		|										mp_typ_bus = ~0ULL;
-		|										mp_val_bus = ~0ULL;
-		|									} else {
-		|										mp_typ_bus = state->tqreg;
-		|										mp_val_bus = state->vqreg;
-		|									}
-		|								}
-		|							}
+		|		bool not_me = mp_mem_hit == 0xf;
+		|	
+		|		if (!mp_memv_oe && mp_memtv_oe) {
+		|			if (not_me) {
+		|				mp_val_bus = ~0ULL;
+		|			} else {
+		|				mp_val_bus = state->qreg;
+		|			}
+		|		} else if (!mp_memtv_oe) {
+		|			if (not_me) {
+		|				mp_typ_bus = ~0ULL;
+		|				mp_val_bus = ~0ULL;
+		|			} else {
+		|				mp_typ_bus = state->tqreg;
+		|				mp_val_bus = state->vqreg;
+		|			}
+		|		}
+		|	}
 		|
-		|//	ALWAYS						H1				Q1				Q2				H2				Q3				Q4
+		|	if (q4pos) {
+		|		state->cl = state->hash;
+		|		state->wd = state->word;
 		|
-		|																											if (q4pos) {
-		|																												state->cl = state->hash;
-		|																												state->wd = state->word;
+		|		state->cstop = mp_sync_freeze == 0;
 		|
-		|																												state->cstop = mp_sync_freeze == 0;
+		|		if (!mp_load_wdr) {
+		|			state->tdreg = mp_typ_bus;
+		|			state->vdreg = mp_val_bus;
+		|		}
+		|		bool loadmar = !((mp_mar_cntl >= 4) && mp_clock_stop_7);
+		|		if (!loadmar && state->cstop) {
+		|			load_mar();
+		|		}
 		|
-		|																												if (!mp_load_wdr) {
-		|																													state->tdreg = mp_typ_bus;
-		|																													state->vdreg = mp_val_bus;
-		|																												}
-		| bool xloadmar = !((mp_mar_cntl >= 4) && mp_clock_stop_7);
-		| mp_load_mar = xloadmar;
-		|																												if (!mp_load_mar && state->cstop) {
-		|																													load_mar();
-		|																												}
-		|
-		|																												if (!state->cyo) {
-		|																													state->hits = 0;
-		|																													unsigned badr = state->hash << 3;
-		|																													if (is_hit(badr | 0, badr | 0, 0)) state->hits |= BSET_0;
-		|																													if (is_hit(badr | 1, badr | 1, 1)) state->hits |= BSET_1;
-		|																													if (is_hit(badr | 2, badr | 2, 2)) state->hits |= BSET_2;
-		|																													if (is_hit(badr | 3, badr | 3, 3)) state->hits |= BSET_3;
-		|																													if (is_hit(badr | 4, badr | 4, 4)) state->hits |= BSET_4;
-		|																													if (is_hit(badr | 5, badr | 5, 5)) state->hits |= BSET_5;
-		|																													if (is_hit(badr | 6, badr | 6, 6)) state->hits |= BSET_6;
-		|																													if (is_hit(badr | 7, badr | 7, 7)) state->hits |= BSET_7;
-		|																												}
-		|																												state->q4cmd = mp_mem_ctl;
-		|																												state->q4cont = mp_mem_continue;
-		|																												state->labort = labort;
-		|																												state->eabort = !(mp_mem_abort_e && mp_mem_abort_el);
-		|																											}
+		|		if (!state->cyo) {
+		|			state->hits = 0;
+		|			unsigned badr = state->hash << 3;
+		|			if (is_hit(badr | 0, badr | 0, 0)) state->hits |= BSET_0;
+		|			if (is_hit(badr | 1, badr | 1, 1)) state->hits |= BSET_1;
+		|			if (is_hit(badr | 2, badr | 2, 2)) state->hits |= BSET_2;
+		|			if (is_hit(badr | 3, badr | 3, 3)) state->hits |= BSET_3;
+		|			if (is_hit(badr | 4, badr | 4, 4)) state->hits |= BSET_4;
+		|			if (is_hit(badr | 5, badr | 5, 5)) state->hits |= BSET_5;
+		|			if (is_hit(badr | 6, badr | 6, 6)) state->hits |= BSET_6;
+		|			if (is_hit(badr | 7, badr | 7, 7)) state->hits |= BSET_7;
+		|		}
+		|		state->q4cmd = mp_mem_ctl;
+		|		state->q4cont = mp_mem_continue;
+		|		state->labort = labort;
+		|		state->eabort = !(mp_mem_abort_e && mp_mem_abort_el);
+		|	}
 		|''')
 
 def register(part_lib):

@@ -596,7 +596,7 @@ class FIU(PartFactory):
 		|	unsigned mem_start = UIR_MSTRT;
 		|	mem_start ^= 0x1e;
 		|
-		|	bool tsclken = (PIN_TSTS=> && PIN_TRMS=> && !PIN_TFRZ=>);
+		|	bool tsclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
 		|	bool tcsa_clk = q4pos && tsclken;
 		|
 		|//	ALWAYS						H1				Q1				Q2				Q4
@@ -951,7 +951,7 @@ class FIU(PartFactory):
 		|																				state->dumon = idum;
 		|																				state->csaht = !mp_csa_hit;
 		|
-		|																				if (!PIN_SFSTP=>) {
+		|																				if (!mp_sf_stop) {
 		|																					bool cache_miss_next = state->cache_miss;
 		|																					if (condsel == 0x6b) {		// CACHE_MISS
 		|																						cache_miss_next = false;
@@ -1013,7 +1013,7 @@ class FIU(PartFactory):
 		|																				}
 		|																				state->csa_oor_next = !(carry || name_match);
 		|
-		|																				if (!PIN_SFSTP=>) {
+		|																				if (!mp_sf_stop) {
 		|																					state->uir = state->wcsram[mp_nua_bus];
 		|																					state->typuir = state->typwcsram[mp_nua_bus];
 		|																				}

@@ -600,7 +600,9 @@ class SEQ(PartFactory):
 		|	unsigned diag;
 		|	BUS_DIAG_READ(diag);
 		|	state->sf_stop = !(diag == 0);
+		|	mp_sf_stop = !(diag == 0);
 		|	output.sfstpo = state->sf_stop;
+		|	mp_freeze = (diag & 3) != 0;
 		|	output.freez = (diag & 3) != 0;
 		|}
 		|
@@ -610,41 +612,41 @@ class SEQ(PartFactory):
 		|{
 		|	bool event = true;
 		|	output.clkrun = true;
-		|	output.ramrun = true;
-		|	output.iclk = true;
 		|	state->s_state_stop = true;
+		|	mp_clock_stop = true;
+		|	mp_ram_stop = true;
 		|
 		|	unsigned clock_stop = 0;
-		|	//BUS_STOP_READ(clock_stop);
-		|	//clock_stop <<= 3;
 		|	state->clock_stop_1 = !(output.seqst && PIN_BLTCP=>);
-		|	if (    mp_clock_stop_0) { clock_stop |= 0x40; } else { clock_stop &= ~0x40; }
-		|	if (state->clock_stop_1) { clock_stop |= 0x20; } else { clock_stop &= ~0x20; }
-		|	if (    mp_clock_stop_3) { clock_stop |= 0x10; } else { clock_stop &= ~0x10; }
-		|	if (    mp_clock_stop_4) { clock_stop |= 0x08; } else { clock_stop &= ~0x08; }
-		|	if (state->clock_stop_5) { clock_stop |= 0x04; } else {	clock_stop &= ~0x04; }
-		|	if (state->clock_stop_6) { clock_stop |= 0x02; } else { clock_stop &= ~0x02; }
-		|	if (state->clock_stop_7) { clock_stop |= 0x01; } else { clock_stop &= ~0x01; }
+		|	if (    mp_clock_stop_0) { clock_stop |= 0x40; }
+		|	if (state->clock_stop_1) { clock_stop |= 0x20; }
+		|	if (    mp_clock_stop_3) { clock_stop |= 0x10; }
+		|	if (    mp_clock_stop_4) { clock_stop |= 0x08; }
+		|	if (state->clock_stop_5) { clock_stop |= 0x04; }
+		|	if (state->clock_stop_6) { clock_stop |= 0x02; }
+		|	if (state->clock_stop_7) { clock_stop |= 0x01; }
 		|	
 		|	if ((clock_stop | 0x01) != 0x7f) {
 		|		output.clkrun = false;
 		|		event = false;
 		|	}
 		|	if (clock_stop != 0x7f) {
-		|		output.iclk = false;
-		|		if (!mp_csa_write_enable)
-		|			output.ramrun = false;
+		|		mp_clock_stop = false;
+		|		if (!mp_csa_write_enable) {
+		|			mp_ram_stop = false;
+		|		}
 		|	}
 		|	if ((clock_stop | 0x03) != 0x7f) {
 		|		state->s_state_stop = false;
 		|	}
 		|
 		|	if (state->sf_stop) {
-		|		output.iclk = false;
+		|		mp_clock_stop = false;
 		|		output.clkrun = false;
 		|		state->s_state_stop = false;
-		|		if (!mp_csa_write_enable)
-		|			output.ramrun = false;
+		|		if (!mp_csa_write_enable) {
+		|			mp_ram_stop = false;
+		|		}
 		|	}
 		|	output.sclke = !(output.clkrun && mp_clock_stop_7);
 		|	mp_mem_abort_el = event;

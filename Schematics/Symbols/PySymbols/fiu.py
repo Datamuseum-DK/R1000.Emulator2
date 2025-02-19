@@ -18,12 +18,7 @@ class FIU(FChip):
         self.sig_left(ChipSig("-->+", "H2"))
         self.sig_left(ChipSig("-->+", "SCLKE"))
 
-        self.sig_left(ChipSig("-->+", "SFSTP"))
         self.sig_left(ChipSig("-->+", "UEVSTP"))
-
-        self.sig_left(ChipSig("-->+", "TSTS"))
-        self.sig_left(ChipSig("-->+", "TRMS"))
-        self.sig_left(ChipSig("-->+", "TFRZ"))
 
         self.sig_right(ChipSig("+-->", "SYNC"))
         self.sig_right(ChipSig("+-->", "FREZE"))

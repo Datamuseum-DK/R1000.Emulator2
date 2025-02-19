@@ -262,7 +262,7 @@ class IOC(PartFactory):
 		|	//bool h1pos = PIN_H2.negedge();
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
-		|	bool sclk_pos = PIN_CSTP;
+		|	bool sclk_pos = mp_clock_stop;
 		|																					if (mp_ioc_trace && ((mp_sync_freeze & 0x3) == 0) && !is_tracing) {
 		|																						is_tracing = true;
 		|																						ALWAYS_TRACE(<< " IS TRACING");
@@ -355,7 +355,7 @@ class IOC(PartFactory):
 		|																				if (sclk_pos && rand == 0x08) {
 		|																					state->rtc = 0;
 		|																				}
-		|																				if (!PIN_RTCEN=> && rand != 0x08) {
+		|																				if (!mp_sf_stop && rand != 0x08) {
 		|																					state->rtc++;
 		|																					state->rtc &= 0xffff;
 		|																				}
@@ -496,7 +496,7 @@ class IOC(PartFactory):
 		|
 		|//	ALWAYS						Q2				H2				Q3				Q4
 		|																			if (q4pos) {
-		|																				if (!PIN_RTCEN=>) {
+		|																				if (!mp_sf_stop) {
 		|																					state->uir = state->wcsram[mp_nua_bus];
 		|																					assert (state->uir <= 0xffff);
 		|																					mp_nxt_adr_oe = 1 << UIR_AEN;

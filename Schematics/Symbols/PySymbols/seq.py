@@ -27,9 +27,7 @@ class SEQ(FChip):
 
         self.sig_right(ChipSig("+-->", "SFSTPO"))
         self.sig_right(ChipSig("+-->", "FREEZ"))
-        self.sig_right(ChipSig("+-->", "RAMRUN"))
         self.sig_right(ChipSig("+-->", "CLKRUN"))
-        self.sig_right(ChipSig("+-->", "ICLK"))
         self.sig_right(ChipSig("+-->", "SCLKE"))
 
         self.finish()

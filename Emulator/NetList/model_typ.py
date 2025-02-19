@@ -578,8 +578,8 @@ class TYP(PartFactory):
 		|	uint64_t c = 0;
 		|	bool chi = false;
 		|	bool clo = false;
-		|	bool uirsclk = !PIN_SFS=>;
-		|	bool sclke = (PIN_STS=> && PIN_RMS=> && !PIN_FREZE=>);
+		|	bool uirsclk = !mp_sf_stop;
+		|	bool sclke = (mp_clock_stop && mp_ram_stop && !mp_freeze);
 		|	unsigned priv_check = TUIR_UPVC;
 		|	unsigned uirc = TUIR_C;
 		|
@@ -627,7 +627,7 @@ class TYP(PartFactory):
 		|	if (!chi && clo)
 		|		c |= 0xffffffffULL << 32;
 		|
-		|	bool awe = (!(PIN_FREZE=>) && PIN_RMS=>);
+		|	bool awe = (!(mp_freeze) && mp_ram_stop);
 		|	if (awe && !state->wen) {
 		|		state->rfram[state->cadr] = c;
 		|	}
