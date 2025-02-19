@@ -46,7 +46,6 @@ class XClkGen(PartFactory):
         file.fmt('''
 		|	unsigned pit;
 		|	unsigned when;
-		|	unsigned unclamp;
 		|''')
 
     def sensitive(self):

@@ -13,9 +13,6 @@ class XCLKGEN(Chip):
     symbol = '''
    +--------------+
    |              |
-   |              |%
-   |         CLAMP+-->
-   |              |
    |              |
    |              |%
    |            H2+-->

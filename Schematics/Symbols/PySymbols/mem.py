@@ -16,7 +16,7 @@ class MEM(FChip):
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
 
-        self.finish(21)
+        self.finish(19)
 
 def register():
     yield MEM()
