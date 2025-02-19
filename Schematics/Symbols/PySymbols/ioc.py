@@ -19,11 +19,7 @@ class IOC(FChip):
 
         self.sig_left(ChipSig("-->o", "RESET"))
 
-        self.sig_left(ChipSig("-->+", "SCLKST"))
-
-        self.sig_right(ChipSig("+-->", "BLTCP"))
-
-        self.finish()
+        self.finish(19)
 
 def register():
     yield IOC()

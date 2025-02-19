@@ -348,7 +348,7 @@ class MEM(PartFactory):
 		|
 		|		state->cstop = mp_sync_freeze == 0;
 		|
-		|		if (!mp_load_wdr) {
+		|		if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
 		|			state->tdreg = mp_typ_bus;
 		|			state->vdreg = mp_val_bus;
 		|		}

@@ -616,14 +616,14 @@ class SEQ(PartFactory):
 		|	mp_ram_stop = true;
 		|
 		|	unsigned clock_stop = 0;
-		|	state->clock_stop_1 = !(output.seqst && PIN_BLTCP=>);
+		|	state->clock_stop_1 = !(mp_clock_stop_6 && mp_clock_stop_7 && mp_below_tcp);
 		|	if (    mp_clock_stop_0) { clock_stop |= 0x40; }
 		|	if (state->clock_stop_1) { clock_stop |= 0x20; }
 		|	if (    mp_clock_stop_3) { clock_stop |= 0x10; }
 		|	if (    mp_clock_stop_4) { clock_stop |= 0x08; }
 		|	if (state->clock_stop_5) { clock_stop |= 0x04; }
-		|	if (state->clock_stop_6) { clock_stop |= 0x02; }
-		|	if (state->clock_stop_7) { clock_stop |= 0x01; }
+		|	if (mp_clock_stop_6) { clock_stop |= 0x02; }
+		|	if (mp_clock_stop_7) { clock_stop |= 0x01; }
 		|	
 		|	if ((clock_stop | 0x01) != 0x7f) {
 		|		mp_state_clk_stop = false;
@@ -932,18 +932,17 @@ class SEQ(PartFactory):
 		|																	mp_nua_bus = nua & 0x3fff;
 		|																}
 		|																state->clock_stop_5 = (state->check_exit_ue && state->ferr);
-		|																state->clock_stop_6 = !(!state->bad_hint && !state->late_macro_event && state->uev != 16);
-		|																state->clock_stop_7 = !state->bad_hint && state->l_macro_hic;
-		|																mp_clock_stop_7 = state->clock_stop_7;
-		|																mp_state_clk_en = !(mp_state_clk_stop && state->clock_stop_7);
-		|																output.seqst = state->clock_stop_6 && state->clock_stop_7;
+		|																mp_clock_stop_6 = !(!state->bad_hint && !state->late_macro_event && state->uev != 16);
+		|																mp_clock_stop_7 = !state->bad_hint && state->l_macro_hic;
+		|																mp_clock_stop_7 = mp_clock_stop_7;
+		|																mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|																			if (q3pos) {
 		|																				q3clockstop();
 		|																				int_reads();
 		|																				state->q3cond = condition();
-		|																				state->bad_hint_enable = !((!state->clock_stop_6) || (state->late_macro_event && !state->bad_hint));
+		|																				state->bad_hint_enable = !((!mp_clock_stop_6) || (state->late_macro_event && !state->bad_hint));
 		|																				unsigned pa040a = 0;
 		|																				pa040a |= (state->decode & 0x7) << 6;
 		|																				if (state->wanna_dispatch) pa040a |= 0x20;
@@ -996,7 +995,7 @@ class SEQ(PartFactory):
 		|																				} else {
 		|																					state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
 		|																				}
-		|																				if (!(state->foo9 || state->clock_stop_6)) {
+		|																				if (!(state->foo9 || mp_clock_stop_6)) {
 		|																					state->treg = 0;
 		|																					state->foo7 = false;
 		|																				}
@@ -1038,7 +1037,7 @@ class SEQ(PartFactory):
 		|																			}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
 		|																							if (q4pos) {
-		|																								bool bhen = !((state->late_macro_event && !state->bad_hint) || (!state->clock_stop_6));
+		|																								bool bhen = !((state->late_macro_event && !state->bad_hint) || (!mp_clock_stop_6));
 		|																								bool bhcke = !(state->s_state_stop && bhen);
 		|																								if (state_clock) {
 		|																									nxt_lex_valid();
@@ -1221,7 +1220,7 @@ class SEQ(PartFactory):
 		|																									bool pop;
 		|																									bool stkinpsel_0;
 		|																									bool stkinpsel_1;
-		|																									if (!state->clock_stop_6) {
+		|																									if (!mp_clock_stop_6) {
 		|																										xwrite = true;
 		|																										pop = true;
 		|																										stkinpsel_0 = true;
@@ -1353,7 +1352,7 @@ class SEQ(PartFactory):
 		|																								}
 		|																								if (aclk) {
 		|																									unsigned adr = 0;
-		|																									if (state->clock_stop_6)
+		|																									if (mp_clock_stop_6)
 		|																										adr |= 0x02;
 		|																									if (!macro_event)
 		|																										adr |= 0x04;

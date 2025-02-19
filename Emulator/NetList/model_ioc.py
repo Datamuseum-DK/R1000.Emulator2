@@ -243,7 +243,7 @@ class IOC(PartFactory):
         yield "PIN_H2.neg()"
         yield "PIN_Q2.pos()"
         yield "PIN_Q4.pos()"
-        yield "PIN_SCLKST"
+        # yield "PIN_SCLKST"
 
     def doit(self, file):
         ''' The meat of the doit() function '''
@@ -414,9 +414,8 @@ class IOC(PartFactory):
 		|
 		|	
 		|	if (!q4pos) {
-		|		mp_load_wdr = UIR_ULWDR || !PIN_SCLKST=>;
+		|		mp_load_wdr = UIR_ULWDR;
 		|	}
-		|//if (output.ldwdr != state->output.ldwdr) ALWAYS_TRACE(<< " LDWDR " << output.ldwdr << " " << UIR_ULWDR << " " << PIN_SCLKST=>);
 		|
 		|if (q2pos) {
 		|	uint64_t tmp;
@@ -425,9 +424,7 @@ class IOC(PartFactory):
 		|	bool below = (tmp >= 0xc);
 		|	bool exit_proc = rand != 0x12;
 		|
-		|	output.bltcp = !(below || exit_proc);
-		|if (output.bltcp != state->output.bltcp) ALWAYS_TRACE(<< " BLTCP " << output.bltcp);
-		|
+		|	mp_below_tcp = !(below || exit_proc);
 		|}
 		|
 		|	if (!mp_ioctv_oe && !q4pos) {

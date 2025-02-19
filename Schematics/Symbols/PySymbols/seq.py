@@ -20,10 +20,8 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "SFSTP"))
 
         self.sig_left(ChipSig("-->+", "DIAG", 0, 2))
-        self.sig_left(ChipSig("-->+", "BLTCP"))
 
         self.sig_right(ChipSig("+-->", "QDFRZ"))
-        self.sig_right(ChipSig("+-->", "SEQST"))
 
         self.sig_right(ChipSig("+-->", "SFSTPO"))
 

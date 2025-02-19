@@ -636,7 +636,7 @@ class TYP(PartFactory):
 		|		state->csa_offset = csmux3;
 		|	}
 		|	if (sclke) {
-		|		if (!mp_load_wdr) {
+		|		if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
 		|			state->wdr = ~mp_typ_bus;
 		|		}
 		|		if (uirc == 0x28) {
