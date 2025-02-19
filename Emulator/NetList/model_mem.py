@@ -355,7 +355,8 @@ class MEM(PartFactory):
 		|																													state->tdreg = mp_typ_bus;
 		|																													state->vdreg = mp_val_bus;
 		|																												}
-		|
+		| bool xloadmar = !((mp_mar_cntl >= 4) && mp_clock_stop_7);
+		| mp_load_mar = xloadmar;
 		|																												if (!mp_load_mar && state->cstop) {
 		|																													load_mar();
 		|																												}

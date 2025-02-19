@@ -38,7 +38,7 @@ cli 'trace +console'
 cli 'trace +diagbus'
 cli 'iop syscall'
 
-cli 'sc quota add 5000'
+cli 'sc quota add 10000'
 cli 'sc quota exit'
 
 cli "console > ${rundir}/_.console"

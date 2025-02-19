@@ -646,7 +646,7 @@ class SEQ(PartFactory):
 		|		if (!mp_csa_write_enable)
 		|			output.ramrun = false;
 		|	}
-		|	output.sclke = !(output.clkrun && output.qstp7);
+		|	output.sclke = !(output.clkrun && mp_clock_stop_7);
 		|	mp_mem_abort_el = event;
 		|}
 		|''')
@@ -933,7 +933,6 @@ class SEQ(PartFactory):
 		|																state->clock_stop_5 = (state->check_exit_ue && state->ferr);
 		|																state->clock_stop_6 = !(!state->bad_hint && !state->late_macro_event && state->uev != 16);
 		|																state->clock_stop_7 = !state->bad_hint && state->l_macro_hic;
-		|																output.qstp7 = state->clock_stop_7;
 		|																mp_clock_stop_7 = state->clock_stop_7;
 		|																output.sclke = !(output.clkrun && state->clock_stop_7);
 		|																output.seqst = state->clock_stop_6 && state->clock_stop_7;
@@ -1484,9 +1483,8 @@ class SEQ(PartFactory):
 		|																								if (lclk) {
 		|																									state->foo9 = !RNDX(RND_TOS_VLB);
 		|																								}
-		|																								output.qstp7 = !state->bad_hint && state->l_macro_hic;
 		|																								mp_clock_stop_7 = !state->bad_hint && state->l_macro_hic;
-		|																								output.sclke = !(output.clkrun && output.qstp7);
+		|																								output.sclke = !(output.clkrun && mp_clock_stop_7);
 		|																								if (!PIN_SFSTP=> && mp_seq_prepped) {
 		|																									state->uir = state->wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
 		|																									mp_nxt_cond_sel = UIR_CSEL;

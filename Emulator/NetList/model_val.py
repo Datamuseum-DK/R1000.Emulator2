@@ -65,15 +65,15 @@ class VAL(PartFactory):
 		|	uint64_t *wcsram;
 		|	uint64_t uir;
 		|
-		|#define UIR_A		((state->uir >> (39-5)) & 0x3f)
-		|#define UIR_B		((state->uir >> (39-11)) & 0x3f)
-		|#define UIR_FRM	((state->uir >> (39-16)) & 0x1f)
-		|#define UIR_SEL	((state->uir >> (39-18)) & 0x3)
-		|#define UIR_RAND	((state->uir >> (39-22)) & 0xf)
-		|#define UIR_C		((state->uir >> (39-28)) & 0x3f)
-		|#define UIR_MSRC	((state->uir >> (39-32)) & 0xf)
-		|#define UIR_AFNC	((state->uir >> (39-37)) & 0x1f)
-		|#define UIR_CSRC	((state->uir >> (39-38)) & 0x1)
+		|#define VUIR_A		((state->uir >> (39-5)) & 0x3f)
+		|#define VUIR_B		((state->uir >> (39-11)) & 0x3f)
+		|#define VUIR_FRM	((state->uir >> (39-16)) & 0x1f)
+		|#define VUIR_SEL	((state->uir >> (39-18)) & 0x3)
+		|#define VUIR_RAND	((state->uir >> (39-22)) & 0xf)
+		|#define VUIR_C		((state->uir >> (39-28)) & 0x3f)
+		|#define VUIR_MSRC	((state->uir >> (39-32)) & 0xf)
+		|#define VUIR_AFNC	((state->uir >> (39-37)) & 0x1f)
+		|#define VUIR_CSRC	((state->uir >> (39-38)) & 0x1)
 		|''')
 
 
@@ -85,11 +85,6 @@ class VAL(PartFactory):
 		|	state->csa_hit = true;
 		|	state->csa_write = true;
 		|''')
-
-    def sensitive(self):
-        yield "PIN_Q2.pos()"
-        yield "PIN_Q4.pos()"
-        yield "PIN_H2.neg()"
 
     def priv_decl(self, file):
         file.fmt('''
@@ -265,7 +260,7 @@ class VAL(PartFactory):
 		|SCM_«mmm» ::
 		|find_a(void)
 		|{
-		|	unsigned uira = UIR_A;
+		|	unsigned uira = VUIR_A;
 		|	if (uira == 0x28) {
 		|		state->a = state->count;
 		|		state->a |= ~0x3ff;
@@ -291,7 +286,7 @@ class VAL(PartFactory):
 		|		if (uira == 0x2c) {
 		|			aadr = state->count;
 		|		} else if (uira <= 0x1f) {
-		|			aadr = UIR_FRM << 5;
+		|			aadr = VUIR_FRM << 5;
 		|			aadr |= uira & 0x1f;
 		|		} else if (uira <= 0x2f) {
 		|			aadr |= (uira + state->topreg + 1) & 0xf;
@@ -307,7 +302,7 @@ class VAL(PartFactory):
 		|SCM_«mmm» ::
 		|find_b(void)
 		|{
-		|	unsigned uirb = UIR_B;
+		|	unsigned uirb = VUIR_B;
 		|	bool oe, oe7;
 		|	if (uirb != 0x29) {
 		|		oe = false;
@@ -324,7 +319,7 @@ class VAL(PartFactory):
 		|		if (uirb == 0x2c) {
 		|			badr = state->count;
 		|		} else if (uirb <= 0x1f) {
-		|			badr = UIR_FRM << 5;
+		|			badr = VUIR_FRM << 5;
 		|			badr |= uirb & 0x1f;
 		|		} else if (uirb <= 0x27) {
 		|			unsigned btos = (uirb & 0xf) + state->topreg + 1;
@@ -362,7 +357,7 @@ class VAL(PartFactory):
 		|{
 		|
 		|	bool divide = rand != 0xb;
-		|	unsigned uirc = UIR_C;
+		|	unsigned uirc = VUIR_C;
 		|	if (mp_fiu_oe != 0x02) {
 		|		find_a();
 		|	}
@@ -373,7 +368,7 @@ class VAL(PartFactory):
 		|	if (state->cwe && uirc != 0x28)
 		|		state->wen = !state->wen;
 		|
-		|	state->msrc = UIR_MSRC;
+		|	state->msrc = VUIR_MSRC;
 		|	bool start_mult = rand != 0xc;
 		|	if (!start_mult) {
 		|		state->malat = ~state->a;
@@ -383,14 +378,14 @@ class VAL(PartFactory):
 		|	struct f181 f181l, f181h;
 		|	unsigned tmp, proma, alur;
 		|
-		|	tmp = UIR_RAND;
+		|	tmp = VUIR_RAND;
 		|	if (tmp < 8) {
 		|		alur = 7;
 		|	} else {
 		|		alur = 15 - tmp;
 		|	}
 		|
-		|	proma = UIR_AFNC;
+		|	proma = VUIR_AFNC;
 		|	proma |= alur << 5;
 		|	if (
 		|		!(
@@ -437,7 +432,7 @@ class VAL(PartFactory):
 		|	}
 		|
 		|	uint64_t fiu = 0, mux = 0;
-		|	bool c_source = UIR_CSRC;
+		|	bool c_source = VUIR_CSRC;
 		|	bool split_c_src = rand == 0x4;
 		|	if (split_c_src || !c_source) {
 		|		fiu = ~mp_fiu_bus;
@@ -447,7 +442,7 @@ class VAL(PartFactory):
 		|		fiu |= fiu_cond();
 		|	}
 		|	if (c_source || split_c_src) {
-		|		unsigned sel = UIR_SEL;
+		|		unsigned sel = VUIR_SEL;
 		|		switch (sel) {
 		|		case 0x0:
 		|			mux = state->alu << 1;
@@ -481,7 +476,7 @@ class VAL(PartFactory):
 		|	if (uirc <= 0x1f) {
 		|		// FRAME:REG
 		|		state->cadr |= uirc & 0x1f;
-		|		state->cadr |= UIR_FRM << 5;
+		|		state->cadr |= VUIR_FRM << 5;
 		|	} else if (uirc <= 0x27) {
 		|		// 0x20 = TOP-1
 		|		// …
@@ -496,7 +491,7 @@ class VAL(PartFactory):
 		|	} else if (uirc == 0x29 && !state->cwe) {
 		|		// 0x29 DEFAULT (RF write disabled)
 		|		state->cadr |= uirc & 0x1f;
-		|		state->cadr |= UIR_FRM << 5;
+		|		state->cadr |= VUIR_FRM << 5;
 		|	} else if (uirc <= 0x2b) {
 		|		// 0x2a BOT
 		|		// 0x2b BOT-1
@@ -529,7 +524,7 @@ class VAL(PartFactory):
 		|	bool csa_clk = sclken;
 		|	bool uirsclk = !PIN_SFS=>;
 		|	bool divide = rand != 0xb;
-		|	unsigned uirc = UIR_C;
+		|	unsigned uirc = VUIR_C;
 		|	if (csa_clk) {
 		|		bool xor0c = state->mbit ^ (!state->coh);
 		|		bool xor0d = mp_q_bit ^ xor0c;
@@ -614,11 +609,16 @@ class VAL(PartFactory):
 		|
 		|''')
 
+    def sensitive(self):
+        yield "PIN_Q2.pos()"
+        yield "PIN_Q4.pos()"
+        yield "PIN_H2.neg()"
+
     def doit(self, file):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	rand = UIR_RAND;
+		|	rand = VUIR_RAND;
 		|
 		|	if (PIN_H2.negedge()) {
 		|		if (mp_fiu_oe == 0x2) {
