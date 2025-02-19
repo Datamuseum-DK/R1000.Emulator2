@@ -273,6 +273,7 @@ class SEQ(PartFactory):
 		|	unsigned branch_offset(void);
 		|	void q2clockstop(void);
 		|	void q3clockstop(void);
+		|	void seq_q3(void);
 		|	void seq_q4(void);
 		|''')
 
@@ -746,13 +747,13 @@ class SEQ(PartFactory):
 		|			dsp = tval & 0xffff;
 		|		}
 		|		dsp ^= 0xffff;;
-		|																						
+		|			
 		|		if (crnana && state->topbot)
 		|			state->ctop = dsp;
 		|		if (crnana && !state->topbot)
 		|			state->cbot = dsp;
 		|	}
-		|																						
+		|			
 		|	if (!bhcke) {
 		|		bool dmdisp = !(!state->bad_hint || (state->bhreg & 0x04));
 		|		bool crnor0a = !(crnana || dmdisp);
@@ -790,7 +791,7 @@ class SEQ(PartFactory):
 		|	if (!sclke && !RNDX(RND_NAME_LD)) {
 		|		state->cur_name = state->typ_bus >> 32;
 		|	}
-		|																						
+		|			
 		|	if (!sclke && !RNDX(RND_RES_NAME)) {
 		|		state->namram[state->resolve_address] = state->typ_bus >> 32;
 		|	}
@@ -994,7 +995,7 @@ class SEQ(PartFactory):
 		|			mode = 0;
 		|			state->bhreg = rom;
 		|		}
-		|																						
+		|			
 		|		state->hint_last = (state->bhreg >> 1) & 1;
 		|		state->hint_t_last = (state->bhreg >> 0) & 1;
 		|
@@ -1115,6 +1116,106 @@ class SEQ(PartFactory):
 		|	}
 		|}
 		|
+		|void
+		|SCM_«mmm» ::
+		|seq_q3(void)
+		|{
+		|	q3clockstop();
+		|	int_reads();
+		|	state->q3cond = condition();
+		|	state->bad_hint_enable = !((!mp_clock_stop_6) || (state->late_macro_event && !state->bad_hint));
+		|	unsigned pa040a = 0;
+		|	pa040a |= (state->decode & 0x7) << 6;
+		|	if (state->wanna_dispatch) pa040a |= 0x20;
+		|	if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
+		|	if (state->import_condition) pa040a |= 0x08;
+		|	if (state->stop) pa040a |= 0x04;
+		|	if (!maybe_dispatch) pa040a |= 0x02;
+		|	if (state->bad_hint) pa040a |= 0x01;
+		|	unsigned pa040d = state->pa040[pa040a];
+		|
+		|	bool bar8;
+		|	lmp = late_macro_pending();
+		|	macro_event = (!state->wanna_dispatch) && (early_macro_pending || (lmp != 8));
+		|	if (macro_event) {
+		|		bar8 = (macro_event && !early_macro_pending) && (lmp >= 7);
+		|	} else {
+		|		bar8 = !((pa040d >> 1) & 1);
+		|	}
+		|
+		|	if (!bar8) {
+		|		mp_mem_abort_e = false;
+		|	} else if (mp_mem_cond) {
+		|		mp_mem_abort_e = true;
+		|	} else if (mp_mem_cond_pol ^ state->q3cond) {
+		|		mp_mem_abort_e = true;
+		|	} else {
+		|		mp_mem_abort_e = false;
+		|	}
+		|
+		|	if (RNDX(RND_TOS_VLB) && !state->stop) {
+		|		state->tost = state->typ_bus >> 32;
+		|		state->vost = state->val_bus >> 32;
+		|		state->tosof = (state->typ_bus >> 7) & 0xfffff;
+		|	}
+		|	if (maybe_dispatch) {
+		|		switch (mem_start) {
+		|		case 0:
+		|		case 1:
+		|		case 2:
+		|			state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|			break;
+		|		case 3:
+		|		case 7:
+		|			state->name_bus = state->tost ^ 0xffffffff;
+		|			break;
+		|		default:
+		|			state->name_bus = state->vost ^ 0xffffffff;
+		|			break;
+		|		}
+		|	} else {
+		|		state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|	}
+		|	if (!(state->foo9 || mp_clock_stop_6)) {
+		|		state->treg = 0;
+		|		state->foo7 = false;
+		|	}
+		|	if (mp_adr_oe & 0x8) {
+		|		if (macro_event) {
+		|			mp_spc_bus = 0x6;
+		|		} else {
+		|			mp_spc_bus = (pa040d >> 3) & 0x7;
+		|		}
+		|		bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
+		|		bool resolve_drive;
+		|		if (!macro_event) {
+		|			resolve_drive = !((pa040d >> 6) & 1);
+		|		} else {
+		|			resolve_drive = true;
+		|		}
+		|		if (!resolve_drive) {
+		|			mp_adr_bus = state->resolve_offset << 7;
+		|		} else if (adr_is_code) {
+		|			mp_adr_bus = (state->coff >> 3) << 7;
+		|		} else {
+		|			mp_adr_bus = state->output_ob << 7;
+		|		}
+		|															
+		|		uint64_t branch;
+		|		branch = branch_offset() & 7;
+		|		branch ^= 0x7;
+		|		mp_adr_bus |= branch << 4;
+		|		if (!adr_is_code) {
+		|			mp_adr_bus |= state->name_bus << 32;
+		|		} else if (!(urand & 0x2)) {
+		|			mp_adr_bus |= state->pcseg << 32; 
+		|		} else {
+		|			mp_adr_bus |= state->retseg << 32;
+		|		}
+		|	}
+		|	bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
+		|	mp_mem_abort_l = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->stop);
+		|}
 		|''')
 
     def sensitive(self):
@@ -1398,104 +1499,9 @@ class SEQ(PartFactory):
 		|																mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
 		|															}
 		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
-		|																			if (q3pos) {
-		|																				q3clockstop();
-		|																				int_reads();
-		|																				state->q3cond = condition();
-		|																				state->bad_hint_enable = !((!mp_clock_stop_6) || (state->late_macro_event && !state->bad_hint));
-		|																				unsigned pa040a = 0;
-		|																				pa040a |= (state->decode & 0x7) << 6;
-		|																				if (state->wanna_dispatch) pa040a |= 0x20;
-		|																				if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
-		|																				if (state->import_condition) pa040a |= 0x08;
-		|																				if (state->stop) pa040a |= 0x04;
-		|																				if (!maybe_dispatch) pa040a |= 0x02;
-		|																				if (state->bad_hint) pa040a |= 0x01;
-		|																				unsigned pa040d = state->pa040[pa040a];
-		|
-		|																				bool bar8;
-		|																				lmp = late_macro_pending();
-		|																				macro_event = (!state->wanna_dispatch) && (early_macro_pending || (lmp != 8));
-		|																				if (macro_event) {
-		|																					bar8 = (macro_event && !early_macro_pending) && (lmp >= 7);
-		|																				} else {
-		|																					bar8 = !((pa040d >> 1) & 1);
-		|																				}
-		|
-		|																				if (!bar8) {
-		|																					mp_mem_abort_e = false;
-		|																				} else if (mp_mem_cond) {
-		|																					mp_mem_abort_e = true;
-		|																				} else if (mp_mem_cond_pol ^ state->q3cond) {
-		|																					mp_mem_abort_e = true;
-		|																				} else {
-		|																					mp_mem_abort_e = false;
-		|																				}
-		|
-		|																				if (RNDX(RND_TOS_VLB) && !state->stop) {
-		|																					state->tost = state->typ_bus >> 32;
-		|																					state->vost = state->val_bus >> 32;
-		|																					state->tosof = (state->typ_bus >> 7) & 0xfffff;
-		|																				}
-		|																				if (maybe_dispatch) {
-		|																					switch (mem_start) {
-		|																					case 0:
-		|																					case 1:
-		|																					case 2:
-		|																						state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
-		|																						break;
-		|																					case 3:
-		|																					case 7:
-		|																						state->name_bus = state->tost ^ 0xffffffff;
-		|																						break;
-		|																					default:
-		|																						state->name_bus = state->vost ^ 0xffffffff;
-		|																						break;
-		|																					}
-		|																				} else {
-		|																					state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
-		|																				}
-		|																				if (!(state->foo9 || mp_clock_stop_6)) {
-		|																					state->treg = 0;
-		|																					state->foo7 = false;
-		|																				}
-		|																				if (mp_adr_oe & 0x8) {
-		|																					if (macro_event) {
-		|																						mp_spc_bus = 0x6;
-		|																					} else {
-		|																						mp_spc_bus = (pa040d >> 3) & 0x7;
-		|																					}
-		|																					bool adr_is_code = !((!macro_event) && (pa040d & 0x01));
-		|																					bool resolve_drive;
-		|																					if (!macro_event) {
-		|																						resolve_drive = !((pa040d >> 6) & 1);
-		|																					} else {
-		|																						resolve_drive = true;
-		|																					}
-		|																					if (!resolve_drive) {
-		|																						mp_adr_bus = state->resolve_offset << 7;
-		|																					} else if (adr_is_code) {
-		|																						mp_adr_bus = (state->coff >> 3) << 7;
-		|																					} else {
-		|																						mp_adr_bus = state->output_ob << 7;
-		|																					}
-		|															
-		|																					uint64_t branch;
-		|																					branch = branch_offset() & 7;
-		|																					branch ^= 0x7;
-		|																					mp_adr_bus |= branch << 4;
-		|																					if (!adr_is_code) {
-		|																						mp_adr_bus |= state->name_bus << 32;
-		|																					} else if (!(urand & 0x2)) {
-		|																						mp_adr_bus |= state->pcseg << 32; 
-		|																					} else {
-		|																						mp_adr_bus |= state->retseg << 32;
-		|																					}
-		|																				}
-		|																				bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
-		|																				mp_mem_abort_l = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->stop);
-		|																			}
-		|//	ALWAYS						H1				Q1				Q2				Q3				Q4
+		|	if (q3pos) {
+		|		seq_q3();
+		|	}
 		|	if (q4pos) {
 		|		seq_q4();
 		|	}
