@@ -30,7 +30,7 @@ read_last_pc(const struct diagproc *dp)
 	ctr1 = tram[2048] + 2046;
 	ctr1 &= 0x7ff;
 	vbe16enc(dp->ram + 0x18, tram[ctr1] & 0x3fff);
-	sc_tracef(dp->name, "Turbo READ_LAST_PC.IOC (0x%x 0x%x 0x%x)", tram[2048], ctr1, tram[ctr1]);
+	Trace(trace_diproc, "%s %s (0x%x 0x%x 0x%x)", dp->name, "Turbo READ_LAST_PC.IOC", tram[2048], ctr1, tram[ctr1]);
 	return ((int)DIPROC_RESPONSE_DONE);
 }
 
@@ -51,7 +51,7 @@ load_control_store_200_ioc(const struct diagproc *dp)
 		inp = vbe16dec(dp->ram + 0x18 + n * 2);
 		ioc_wcs[ioc_ptr++] = inp & 0xffff;
 	}
-	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.IOC");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_CONTROL_STORE_200.IOC");
 	return ((int)DIPROC_RESPONSE_DONE);
 }
 
@@ -60,23 +60,23 @@ diagproc_turbo_ioc(const struct diagproc *dp)
 {
 
 	if (dp->dl_hash == LOAD_PAREG_IOC_HASH) {
-		sc_tracef(dp->name, "Turbo LOAD_PAREG.IOC");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_PAREG.IOC");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == PREP_RUN_IOC_HASH) {
-		sc_tracef(dp->name, "Turbo PREP_RUN.IOC");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_RUN.IOC");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_UIR_IOC_HASH) {
-		sc_tracef(dp->name, "Turbo LOAD_UIR.IOC");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_UIR.IOC");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == DISABLE_TIMERS_IOC_HASH) {
-		sc_tracef(dp->name, "Turbo DISABLE_TIMERS.IOC");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo DISABLE_TIMERS.IOC");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_WCS_ADDRESS_IOC_HASH) {
-		sc_tracef(dp->name, "Turbo LOAD_WCS_ADDRESS.IOC");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_WCS_ADDRESS.IOC");
 		ioc_ptr = vbe16dec(dp->ram + 0x2e);
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
@@ -85,7 +85,7 @@ diagproc_turbo_ioc(const struct diagproc *dp)
 		return (load_control_store_200_ioc(dp));
 	}
 	if (dp->dl_hash == RUN_CHECK_IOC_HASH) {
-		sc_tracef(dp->name, "START TRACING");
+		Trace(trace_diproc, "%s %s", dp->name, "START TRACING");
 		mp_ioc_trace = 1;
 		return ((int)DIPROC_RESPONSE_DONE);
 	}

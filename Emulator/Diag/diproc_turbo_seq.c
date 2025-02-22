@@ -86,7 +86,7 @@ load_dispatch_rams_200_seq(const struct diagproc *dp)
 		decode[offset + n] = dst;
 	}
 
-	sc_tracef(dp->name, "Turbo LOAD_DISPATCH_RAMS_200.SEQ");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_DISPATCH_RAMS_200.SEQ");
 
 	return ((int)DIPROC_RESPONSE_DONE);
 #endif
@@ -151,7 +151,7 @@ load_control_store_200_seq(const struct diagproc *dp)
 		wcs <<= 1; wcs |= (inp >> 26) & 1; // 0
 		seq_wcs[seq_ptr++] = wcs;
 	}
-	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.SEQ");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_CONTROL_STORE_200.SEQ");
 	return ((int)DIPROC_RESPONSE_DONE);
 }
 
@@ -171,23 +171,23 @@ prep_run_seq(const struct diagproc *dp)
 	nxtuadr[0] = vbe16dec(dp->ram + 0x18);
 	nxtuadr[1] = vbe16dec(dp->ram + 0x18);
 	mp_nua_bus = vbe16dec(dp->ram + 0x18);
-	sc_tracef(dp->name, "Turbo PREP_RUN.SEQ");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_RUN.SEQ");
 }
 
 int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_seq(const struct diagproc *dp)
 {
 	if (dp->dl_hash == CLEAR_PARITY_SEQ_HASH) {
-		sc_tracef(dp->name, "Turbo CLEAR_PARITY.SEQ");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_PARITY.SEQ");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == READ_NOVRAM_DATA_SEQ_HASH) {
-		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.SEQ");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_DATA.SEQ");
 		*dp->ip = 0x3;
 		return(diag_load_novram(dp, "R1000_SEQ_NOVRAM", 1, 0x1a, 8));
 	}
 	if (dp->dl_hash == READ_NOVRAM_INFO_SEQ_HASH) {
-		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.SEQ");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_INFO.SEQ");
 		*dp->ip = 0x3;
 		return(diag_load_novram(dp, "R1000_SEQ_NOVRAM", 0, 0x20, 21));
 	}
@@ -197,7 +197,7 @@ diagproc_turbo_seq(const struct diagproc *dp)
 		return (load_dispatch_rams_200_seq(dp));
 	}
 	if (dp->dl_hash == LOAD_COUNTER_SEQ_HASH) {
-		sc_tracef(dp->name, "Turbo LOAD_COUNTER.SEQ");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_COUNTER.SEQ");
 		seq_ptr = vbe16dec(dp->ram + 0x18);
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
@@ -210,34 +210,36 @@ diagproc_turbo_seq(const struct diagproc *dp)
 	        return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == RESET_SEQ_HASH) {
+		Trace(trace_diproc, "%s %s", dp->name, "THAW 0");
 		mp_seq_prepped = 0;
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == RUN_CHECK_SEQ_HASH) {
+		Trace(trace_diproc, "%s %s", dp->name, "THAW 1");
 		mp_seq_prepped = 1;
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 
 	if (dp->dl_hash == PREP_LOAD_DISPATCH_RAMS_SEQ_HASH) {
-		sc_tracef(dp->name, "Turbo PREP_LOAD_DISPATCH_RAMS.SEQ");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_LOAD_DISPATCH_RAMS.SEQ");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == CLR_BREAK_MASK_SEQ_HASH) {
-		sc_tracef(dp->name, "Turbo CLR_BREAK_MASK.SEQ");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo CLR_BREAK_MASK.SEQ");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == GET_MISC_ERRORS_SEQ_HASH) {
-		sc_tracef(dp->name, "Turbo GET_MISC_ERRORS.SEQ");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo GET_MISC_ERRORS.SEQ");
 		dp->ram[0x18] = 0x1f;
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == HALT_SEQ_HASH) {
-		sc_tracef(dp->name, "Turbo HALT.SEQ");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo HALT.SEQ");
 		*dp->ip = 0x6;
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 
-	sc_tracef(dp->name, "Turbo *.SEQ");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo *.SEQ");
 	return ((int)DIPROC_RESPONSE_DONE);
 	return (0);
 }

@@ -26,7 +26,7 @@ clear_tagstore_m32(const struct diagproc *dp)
 	ptr = (uint8_t *)(ctx + 1);
 	memset(ptr, 0x00, 9 << 15);
 
-	sc_tracef(dp->name, "Turbo CLEAR_TAGSTORE.M32");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_TAGSTORE.M32");
 	return ((int)DIPROC_RESPONSE_DONE);
 }
 
@@ -52,7 +52,7 @@ fill_memory_m32(const struct diagproc *dp)
 		ptrt[i+i+1] = val;
 	}
 
-	sc_tracef(dp->name, "Turbo FILL_MEMORY.M32");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo FILL_MEMORY.M32");
 	return ((int)DIPROC_RESPONSE_DONE);
 }
 
@@ -60,37 +60,37 @@ int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_mem32(const struct diagproc *dp)
 {
 	if (dp->dl_hash == RUN_CHECK_M32_HASH) {
-		sc_tracef(dp->name, "Turbo RUN_CHECK.M32");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo RUN_CHECK.M32");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	
 	if (dp->dl_hash == SET_HIT_M32_HASH) {
-		sc_tracef(dp->name, "Turbo SET_HIT.M32");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo SET_HIT.M32");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	
 	if (dp->dl_hash == LOAD_CONFIG_M32_HASH) {
-		sc_tracef(dp->name, "Turbo LOAD_CONFIG.M32");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_CONFIG.M32");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	
 	if (1 && dp->dl_hash == CLEAR_HITS_M32_HASH) {
-		sc_tracef(dp->name, "Turbo CLEAR_HITS.M32");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_HITS.M32");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	
 	if (dp->dl_hash == CLEAR_PARITY_ERRORS_M32_HASH) {
-		sc_tracef(dp->name, "Turbo CLEAR_PARITY_ERRORS.M32");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_PARITY_ERRORS.M32");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	
 	if (dp->dl_hash == READ_NOVRAM_DATA_M32_HASH) {
-		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.M32");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_DATA.M32");
 		*dp->ip = 0x3;
 		return(diag_load_novram(dp, "R1000_MEM0_NOVRAM", 0, 0x19, 12));
 	}
 	if (dp->dl_hash == READ_NOVRAM_INFO_M32_HASH) {
-		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.M32");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_INFO.M32");
 		*dp->ip = 0x3;
 		return(diag_load_novram(dp, "R1000_MEM0_NOVRAM", 0, 0x1f, 21));
 	}

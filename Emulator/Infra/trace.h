@@ -10,6 +10,7 @@
 	TRACER(ioc_duart, "IOC Duart")					\
 	TRACER(ioc_modem, "IOC Internal Modem")				\
 	TRACER(diagbus, "All bytes transmitted on DiagBus")		\
+	TRACER(diproc, "Dummy diproc")					\
 	TRACER(disk_data, "Data to/from disk(s)")			\
 	TRACER(tape_data, "Data to/from tape(s)")			\
 	TRACER(scsi_cmd, "SCSI commands, both busses")			\

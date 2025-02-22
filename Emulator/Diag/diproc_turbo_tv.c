@@ -71,7 +71,7 @@ load_register_file_typ(const struct diagproc *dp)
 
 	}
 
-	sc_tracef(dp->name, "Turbo LOAD_REGISTER_FILE_200.TYP");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_REGISTER_FILE_200.TYP");
 	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
@@ -105,7 +105,7 @@ load_register_file_val(const struct diagproc *dp)
 		val_aram[val_ptr] = wdr;
 	}
 
-	sc_tracef(dp->name, "Turbo LOAD_REGISTER_FILE_200.VAL");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_REGISTER_FILE_200.VAL");
 	return ((int)DIPROC_RESPONSE_DONE);
 #endif
 }
@@ -192,7 +192,7 @@ load_control_store_200_typ(const struct diagproc *dp)
 		wcs <<= 1; wcs |= (inv >> 29) & 1; // 0
 		typ_wcs[typ_ptr++] = wcs;
 	}
-	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.TYP");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_CONTROL_STORE_200.TYP");
 	return ((int)DIPROC_RESPONSE_DONE);
 }
 
@@ -269,7 +269,7 @@ load_control_store_200_val(const struct diagproc *dp)
 
 		val_wcs[val_ptr++] = wcs;
 	}
-	sc_tracef(dp->name, "Turbo LOAD_CONTROL_STORE_200.VAL");
+	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_CONTROL_STORE_200.VAL");
 	return ((int)DIPROC_RESPONSE_DONE);
 }
 
@@ -277,75 +277,75 @@ int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_typ(const struct diagproc *dp)
 {
 	if (dp->dl_hash == MF_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo MF.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo MF.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_WCS_UIR_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo LOAD_WCS_UIR.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_WCS_UIR.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == REG_TO_LOOP_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo REG_TO_LOOP.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo REG_TO_LOOP.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == READ_B_REG_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo READ_B_REG.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_B_REG.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == PREP_READ_REG_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo PREP_READ_REG.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_READ_REG.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == RUN_NORMAL_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo RUN_NORMAL.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo RUN_NORMAL.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == PREP_RUN_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo PREP_RUN.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_RUN.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == PREP_WRITE_REG_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo PREP_WRITE_REG.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_WRITE_REG.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == WRITE_REG_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo WRITE_REG.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo WRITE_REG.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_BENIGN_UWORD_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo LOAD_BENIGN_UWORD.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_BENIGN_UWORD.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_WDR_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo LOAD_WDR.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_WDR.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == ALIGN_CSA_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo ALIGN_CSA.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo ALIGN_CSA.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == CLEAR_PARITY_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo CLEAR_PARITY.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_PARITY.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == READ_NOVRAM_DATA_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_DATA.TYP");
 		*dp->ip = 0x3;
 		return(diag_load_novram(dp, "R1000_TYP_NOVRAM", 1, 0x19, 7));
 	}
 	if (dp->dl_hash == READ_NOVRAM_INFO_TYP_HASH) {
-		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_INFO.TYP");
 		*dp->ip = 0x3;
 		return(diag_load_novram(dp, "R1000_TYP_NOVRAM", 0, 0x20, 21));
 	}
 	if (dp->dl_hash == PREP_LOAD_REGISTER_FILE_TYP_HASH) {
 		typ_ptr = 0;
-		sc_tracef(dp->name, "Turbo PREP_LOAD_REGISTER_FILE.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_LOAD_REGISTER_FILE.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_DIAG_COUNTER_TYP_HASH) {
 		typ_ptr = 0x100;
-		sc_tracef(dp->name, "Turbo LOAD_DIAG_COUNTER.TYP");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_DIAG_COUNTER.TYP");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_REGISTER_FILE_200_TYP_HASH ||
@@ -362,29 +362,29 @@ int v_matchproto_(diagprocturbo_t)
 diagproc_turbo_val(const struct diagproc *dp)
 {
 	if (dp->dl_hash == LOAD_WDR_VAL_HASH) {
-		sc_tracef(dp->name, "Turbo LOAD_WDR.VAL");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_WDR.VAL");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == ALIGN_CSA_VAL_HASH) {
-		sc_tracef(dp->name, "Turbo ALIGN_CSA.VAL");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo ALIGN_CSA.VAL");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == CLEAR_PARITY_VAL_HASH) {
-		sc_tracef(dp->name, "Turbo CLEAR_PARITY.VAL");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_PARITY.VAL");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == READ_NOVRAM_DATA_VAL_HASH) {
-		sc_tracef(dp->name, "Turbo READ_NOVRAM_DATA.VAL");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_DATA.VAL");
 		*dp->ip = 0x3;
 		return(diag_load_novram(dp, "R1000_VAL_NOVRAM", 1, 0x19, 7));
 	}
 	if (dp->dl_hash == READ_NOVRAM_INFO_VAL_HASH) {
-		sc_tracef(dp->name, "Turbo READ_NOVRAM_INFO.VAL");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_INFO.VAL");
 		*dp->ip = 0x3;
 		return(diag_load_novram(dp, "R1000_VAL_NOVRAM", 0, 0x20, 21));
 	}
 	if (dp->dl_hash == PREP_RUN_VAL_HASH) {
-		sc_tracef(dp->name, "Turbo PREP_RUN.VAL");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_RUN.VAL");
 		unsigned uad = vbe16dec(dp->ram + 0x18);
 		if (uad == 0x100) {
 			val_aram[0x1f] = ~0;
@@ -393,7 +393,7 @@ diagproc_turbo_val(const struct diagproc *dp)
 	}
 	if (dp->dl_hash == PREP_LOAD_REGISTER_FILE_VAL_HASH) {
 		val_ptr = 0;
-		sc_tracef(dp->name, "Turbo PREP_LOAD_REGISTER_FILE.VAL");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_LOAD_REGISTER_FILE.VAL");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == LOAD_DIAG_COUNTER_VAL_HASH) {
@@ -409,12 +409,12 @@ diagproc_turbo_val(const struct diagproc *dp)
 		return (load_control_store_200_val(dp));
 	}
 	if (dp->dl_hash == RUN_NORMAL_VAL_HASH) {
-		sc_tracef(dp->name, "Turbo RUN_NORMAL.VAL");
+		Trace(trace_diproc, "%s %s", dp->name, "Turbo RUN_NORMAL.VAL");
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	if (dp->dl_hash == READ_RF_B_VAL_HASH) {
 		unsigned ptr = ~vbe16dec(dp->ram + 0x31) & 0x3ff;
-		sc_tracef(dp->name, "Turbo READ_RF_B.TYP [0x%x]", ptr);
+		Trace(trace_diproc, "%s %s [0x%x]", dp->name, "Turbo READ_RF_B.TYP", ptr);
 		if (ptr < 1024)
 			vbe64enc(dp->ram + 0x33, ~val_aram[ptr]);
 		return ((int)DIPROC_RESPONSE_DONE);
