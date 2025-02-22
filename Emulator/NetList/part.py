@@ -487,13 +487,13 @@ class PartFactory(Part):
 
     def autopin_doit_after(self, file):
         file.fmt('''
-		|	if(memcmp(&output, &state->output, sizeof(output))) {
+		|	if(sizeof(output) > 1 && memcmp(&output, &state->output, sizeof(output))) {
 		|		state->ctx.job |= 1;
 		|	        state->output = output;
 		|		state->ctx.wastage--;
 		|		state->idle = 0;
 		|	}
-		|	if (state->ctx.job) {
+		|	if (state->ctx.job & 1) {
 		|		next_trigger(5, sc_core::SC_NS);
 		|	} else if (idle_next != NULL) {
 		|		state->ctx.wastage++;
@@ -533,7 +533,7 @@ class PartFactory(Part):
 		|		if (!state->ctx.job) {
 		|			trcs << " ::";
 		|		} else {
-		|			trcs << std::hex << " @@ ";
+		|			trcs << std::hex << " @@ " << state->ctx.job << " " << sizeof(output) << " ";
 		|''')
   
         for node in self.comp:

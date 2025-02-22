@@ -15,7 +15,6 @@ class FIU(FChip):
 
         self.sig_left(ChipSig("-->+", "Q2"))
         self.sig_left(ChipSig("-->+", "Q4"))
-        self.sig_left(ChipSig("-->+", "H2"))
 
         self.sig_right(ChipSig("+-->", "SYNC"))
         self.sig_right(ChipSig("+-->", "FREZE"))

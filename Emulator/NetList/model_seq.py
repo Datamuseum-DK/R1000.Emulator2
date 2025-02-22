@@ -600,12 +600,14 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|q2clockstop(void)
 		|{
+		|#if 0
 		|	unsigned diag;
 		|	BUS_DIAG_READ(diag);
 		|	state->sf_stop = !(diag == 0);
 		|	mp_sf_stop = !(diag == 0);
-		|	output.sfstpo = state->sf_stop;
 		|	mp_freeze = (diag & 3) != 0;
+		|	output.sfstpo = state->sf_stop;
+		|#endif
 		|}
 		|
 		|void
@@ -617,6 +619,14 @@ class SEQ(PartFactory):
 		|	state->s_state_stop = true;
 		|	mp_clock_stop = true;
 		|	mp_ram_stop = true;
+		|#if 1
+		|	unsigned diag;
+		|	BUS_DIAG_READ(diag);
+		|	state->sf_stop = !(diag == 0);
+		|	mp_sf_stop = !(diag == 0);
+		|	mp_freeze = (diag & 3) != 0;
+		|	// output.sfstpo = state->sf_stop;
+		|#endif
 		|
 		|	unsigned clock_stop = 0;
 		|	state->clock_stop_1 = !(mp_clock_stop_6 && mp_clock_stop_7 && mp_below_tcp);
@@ -719,7 +729,7 @@ class SEQ(PartFactory):
 		|			break;
 		|		}
 		|	}
-		|	if (!PIN_SFSTP=> && mp_seq_prepped) {
+		|	if (!state->sf_stop && mp_seq_prepped) {
 		|		mp_nua_bus = nua & 0x3fff;
 		|	}
 		|	state->clock_stop_5 = (state->check_exit_ue && state->ferr);
@@ -833,7 +843,7 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|seq_q4(void)
 		|{
-		|	bool aclk = !PIN_SFSTP=>;
+		|	bool aclk = !state->sf_stop;
 		|	bool sclke = !(state->s_state_stop && !state->stop);
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = !sclke;
@@ -849,7 +859,15 @@ class SEQ(PartFactory):
 		|	}
 		|	if (aclk) {
 		|		state->late_macro_event = !(sclke || !(macro_event && !early_macro_pending));
-		|		mp_seq_halted = !(sclke || RNDX(RND_HALT));
+		|		if (!mp_seq_halted) {
+		|			mp_seq_halted = !(sclke || RNDX(RND_HALT));
+		|			if (mp_seq_halted) ALWAYS_TRACE(<< "THAW HALTED");
+		|#if 0
+		|		} else {
+		|			mp_seq_halted = !(sclke || RNDX(RND_HALT));
+		|			if (!mp_seq_halted) ALWAYS_TRACE(<< "THAW UNHALTED");
+		|#endif
+		|		}
 		|	}
 		|	if (state_clock && !state->ibld) {
 		|		state->macro_ins_typ = state->typ_bus;
@@ -1272,7 +1290,7 @@ class SEQ(PartFactory):
 		|	}
 		|	mp_clock_stop_7 = !state->bad_hint && state->l_macro_hic;
 		|	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
-		|	if (!PIN_SFSTP=> && mp_seq_prepped) {
+		|	if (!state->sf_stop && mp_seq_prepped) {
 		|		state->uir = state->wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
 		|		mp_nxt_cond_sel = UIR_CSEL;
 		|	}

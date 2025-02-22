@@ -24,7 +24,7 @@
 				)
 			)
 			(property "Value" "FIU"
-				(at -1.27 -35.56 0)
+				(at -1.27 -25.4 0)
 				(effects
 					(font
 						(size 2.54 2.54)
@@ -69,7 +69,7 @@
 				)
 			)
 			(property "Name" "______"
-				(at 11.43 -43.18 0)
+				(at 11.43 -33.02 0)
 				(effects
 					(font
 						(size 2.54 2.54)
@@ -80,7 +80,7 @@
 			(symbol "FIU_1_1"
 				(rectangle
 					(start -3.81 3.81)
-					(end 24.13 -36.83)
+					(end 24.13 -26.67)
 					(stroke
 						(width 0)
 						(type default)
@@ -118,24 +118,6 @@
 						)
 					)
 					(number "3"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -27.94 0)
-					(length 6.35)
-					(name "H2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "5"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -456,7 +438,7 @@
 				)
 			)
 			(property "Value" "SEQ"
-				(at -1.27 -66.04 0)
+				(at -1.27 -55.88 0)
 				(effects
 					(font
 						(size 2.54 2.54)
@@ -501,7 +483,7 @@
 				)
 			)
 			(property "Name" "______"
-				(at 13.97 -73.66 0)
+				(at 11.43 -63.5 0)
 				(effects
 					(font
 						(size 2.54 2.54)
@@ -512,7 +494,7 @@
 			(symbol "SEQ_1_1"
 				(rectangle
 					(start -3.81 3.81)
-					(end 29.21 -67.31)
+					(end 26.67 -57.15)
 					(stroke
 						(width 0)
 						(type default)
@@ -567,7 +549,7 @@
 							)
 						)
 					)
-					(number "5"
+					(number "4"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -578,7 +560,25 @@
 				(pin input line
 					(at -10.16 -38.1 0)
 					(length 6.35)
-					(name "SFSTP"
+					(name "DIAG0"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+				(pin input line
+					(at -10.16 -43.18 0)
+					(length 6.35)
+					(name "DIAG1"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -596,7 +596,7 @@
 				(pin input line
 					(at -10.16 -48.26 0)
 					(length 6.35)
-					(name "DIAG0"
+					(name "DIAG2"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -611,44 +611,8 @@
 						)
 					)
 				)
-				(pin input line
-					(at -10.16 -53.34 0)
-					(length 6.35)
-					(name "DIAG1"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "8"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -58.42 0)
-					(length 6.35)
-					(name "DIAG2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "9"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
 				(pin output line
-					(at 35.56 -7.62 180)
+					(at 33.02 -7.62 180)
 					(length 6.35)
 					(name "QDFRZ"
 						(effects
@@ -658,24 +622,6 @@
 						)
 					)
 					(number "2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin output line
-					(at 35.56 -17.78 180)
-					(length 6.35)
-					(name "SFSTPO"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "4"
 						(effects
 							(font
 								(size 2.54 2.54)
@@ -1165,7 +1111,7 @@
 	)
 	(wire
 		(pts
-			(xy 20.32 220.98) (xy 43.18 220.98)
+			(xy 20.32 210.82) (xy 43.18 210.82)
 		)
 		(stroke
 			(width 0)
@@ -1195,17 +1141,7 @@
 	)
 	(wire
 		(pts
-			(xy 43.18 210.82) (xy 22.86 210.82)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "326fb446-e155-45d5-8c0b-278f6d7e778e")
-	)
-	(wire
-		(pts
-			(xy 20.32 231.14) (xy 43.18 231.14)
+			(xy 20.32 220.98) (xy 43.18 220.98)
 		)
 		(stroke
 			(width 0)
@@ -1215,7 +1151,7 @@
 	)
 	(wire
 		(pts
-			(xy 88.9 180.34) (xy 116.84 180.34)
+			(xy 86.36 180.34) (xy 114.3 180.34)
 		)
 		(stroke
 			(width 0)
@@ -1262,16 +1198,6 @@
 			(type default)
 		)
 		(uuid "6390096c-9643-49d5-9ff1-6deba3fd1810")
-	)
-	(wire
-		(pts
-			(xy 88.9 190.5) (xy 111.76 190.5)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "698d7ac2-7b03-47f1-9e74-d26d5159b4ca")
 	)
 	(wire
 		(pts
@@ -1335,16 +1261,6 @@
 	)
 	(wire
 		(pts
-			(xy 33.02 50.8) (xy 43.18 50.8)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bb3a516b-9490-4cb7-90a2-943c669b7df3")
-	)
-	(wire
-		(pts
 			(xy 101.6 30.48) (xy 83.82 30.48)
 		)
 		(stroke
@@ -1385,7 +1301,7 @@
 	)
 	(wire
 		(pts
-			(xy 20.32 226.06) (xy 43.18 226.06)
+			(xy 20.32 215.9) (xy 43.18 215.9)
 		)
 		(stroke
 			(width 0)
@@ -1434,7 +1350,7 @@
 		(uuid "1a46687c-d857-4f43-927b-bfeb96d8e2ad")
 	)
 	(label "NSYNC"
-		(at 20.32 220.98 0)
+		(at 20.32 210.82 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -1444,7 +1360,7 @@
 		(uuid "28effd14-c020-47fa-a32d-89129c694bec")
 	)
 	(label "SFREZ"
-		(at 20.32 231.14 0)
+		(at 20.32 220.98 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -1482,16 +1398,6 @@
 			(justify left bottom)
 		)
 		(uuid "5d8a57e8-cdfa-4fc9-8a59-ac6a06729a42")
-	)
-	(label "H2"
-		(at 33.02 50.8 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "5eece77b-0e94-43f0-aa13-3603b630a294")
 	)
 	(label "NSYNC"
 		(at 88.9 30.48 0)
@@ -1604,7 +1510,7 @@
 		(uuid "bffcabb5-c2da-4b4e-85fd-bee82b4212c6")
 	)
 	(label "SFREZ"
-		(at 93.98 180.34 0)
+		(at 91.44 180.34 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -1612,16 +1518,6 @@
 			(justify left bottom)
 		)
 		(uuid "ccd3d425-e6dd-41ea-b9f5-f6898d5a635a")
-	)
-	(label "SF_STOP"
-		(at 22.86 210.82 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "d5bbabec-a488-4529-8423-329a4ba7ff68")
 	)
 	(label "Q4~"
 		(at 33.02 40.64 0)
@@ -1632,16 +1528,6 @@
 			(justify left bottom)
 		)
 		(uuid "ea0f821a-86f4-4dd3-954d-6ec0a10f0e45")
-	)
-	(label "SF_STOP"
-		(at 93.98 190.5 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "ea1d22e3-701b-4ebd-8cbd-c2f571fa083d")
 	)
 	(label "H2"
 		(at 30.48 337.82 0)
@@ -1674,7 +1560,7 @@
 		(uuid "ef06072d-e947-4942-a9e7-1098fb4050a3")
 	)
 	(label "NFREZE"
-		(at 20.32 226.06 0)
+		(at 20.32 215.9 0)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -1701,7 +1587,7 @@
 			)
 		)
 		(property "Value" "SEQ"
-			(at 52.07 238.76 0)
+			(at 52.07 228.6 0)
 			(effects
 				(font
 					(size 2.54 2.54)
@@ -1746,7 +1632,7 @@
 			)
 		)
 		(property "Name" "SEQ"
-			(at 67.31 246.38 0)
+			(at 64.77 236.22 0)
 			(effects
 				(font
 					(size 2.54 2.54)
@@ -1774,12 +1660,6 @@
 		)
 		(pin "7"
 			(uuid "0c3bc495-6b29-4126-96c3-48a01c285eaf")
-		)
-		(pin "8"
-			(uuid "042b1a89-3426-427d-bf15-90e4b3ed3629")
-		)
-		(pin "9"
-			(uuid "648489f5-aeab-4320-8c60-3fff58ceb4f5")
 		)
 		(instances
 			(project "SEQ"
@@ -2001,7 +1881,7 @@
 			)
 		)
 		(property "Value" "FIU"
-			(at 52.07 58.42 0)
+			(at 52.07 48.26 0)
 			(effects
 				(font
 					(size 2.54 2.54)
@@ -2046,7 +1926,7 @@
 			)
 		)
 		(property "Name" "FIU"
-			(at 64.77 66.04 0)
+			(at 64.77 55.88 0)
 			(effects
 				(font
 					(size 2.54 2.54)
@@ -2065,9 +1945,6 @@
 		)
 		(pin "4"
 			(uuid "618b00a6-9c96-47e7-9c81-15ee868e421e")
-		)
-		(pin "5"
-			(uuid "932cebed-b1e2-4c37-876e-3a3e62e91460")
 		)
 		(instances
 			(project "FIU"

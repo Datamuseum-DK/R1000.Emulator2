@@ -33,10 +33,12 @@ make -j 7 && make -j 7
 
 sc_boards ioc fiu mem0 seq typ val
 
+#cli trace +diproc
+
 # cli 'sc trace DI*PROC 0x14'
-cli 'trace +console'
-cli 'trace +diagbus'
-cli 'iop syscall'
+#cli 'trace +console'
+#cli 'trace +diagbus'
+#cli 'iop syscall'
 
 cli 'sc quota add 10000'
 cli 'sc quota exit'

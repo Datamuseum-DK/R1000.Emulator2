@@ -491,7 +491,7 @@ class FIU(PartFactory):
 		|	vout = rdq & vmsk;
 		|	vout |= tii & ~vmsk;
 		|
-		|	if (mp_fiu_oe == 0x1 && !PIN_H2=>) { 
+		|	if (mp_fiu_oe == 0x1) {
 		|		mp_fiu_bus = ~vout;
 		|	}
 		|
@@ -789,8 +789,7 @@ class FIU(PartFactory):
 		|fiu_q4(void)
 		|{
 		|	bool sclk = !mp_state_clk_en;
-		|	bool tsclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
-		|	bool tcsa_clk = tsclken;
+		|	bool tcsa_clk = (mp_clock_stop && mp_ram_stop && !mp_freeze);
 		|	unsigned mar_cntl = mp_mar_cntl;
 		|	bool rmarp = (mar_cntl & 0xe) == 0x4;
 		|	bool carry, name_match;
@@ -1012,24 +1011,27 @@ class FIU(PartFactory):
 		|	if (mp_fiu_freeze && !output.freze) {
 		|		output.freze = 1;
 		|		mp_nxt_sync_freeze |= 2;
+		|		ALWAYS_TRACE(<< "THAW1 " <<  output.freze << " " << mp_nxt_sync_freeze);
 		|	} else if (!mp_fiu_freeze && output.freze && !output.sync) {
 		|		output.sync = 1;
 		|		mp_nxt_sync_freeze |= 4;
+		|		ALWAYS_TRACE(<< "THAW2 " <<  output.freze << " " << mp_nxt_sync_freeze);
 		|	} else if (!mp_fiu_freeze && output.freze && output.sync) {
 		|		output.freze = 0;
 		|		mp_nxt_sync_freeze &= ~2;
 		|		countdown = 5;
+		|		ALWAYS_TRACE(<< "THAW3 " <<  output.freze << " " << mp_nxt_sync_freeze << " " << countdown);
 		|	} else if (!mp_fiu_freeze && !output.freze && output.sync) {
 		|		if (--countdown == 0) {
 		|			output.sync = 0;
 		|			mp_nxt_sync_freeze &= ~4;
 		|		}
+		|		ALWAYS_TRACE(<< "THAW4 " <<  output.freze << " " << mp_nxt_sync_freeze << " " << countdown);
 		|	}
 		|}
 		|''')
 
     def sensitive(self):
-        # yield "PIN_H2.neg()"
         yield "PIN_Q2"
         yield "PIN_Q4.pos()"
 
