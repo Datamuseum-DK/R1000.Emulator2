@@ -116,136 +116,131 @@ class SEQ(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint32_t *top;
-		|	uint32_t *bot;
-		|	uint32_t cbot, ctop;
-		|	unsigned emac;
-		|	unsigned curins;
-		|	bool topbot;
+		|	uint32_t *seq_top;
+		|	uint32_t *seq_bot;
+		|	uint32_t seq_cbot, seq_ctop;
+		|	unsigned seq_emac;
+		|	unsigned seq_curins;
+		|	bool seq_topbot;
 		|
-		|	uint64_t macro_ins_typ, macro_ins_val;
-		|	unsigned word;
-		|	unsigned macro_pc_offset;
-		|	unsigned curr_lex;
-		|	unsigned retrn_pc_ofs;
-		|	unsigned break_mask;
+		|	uint64_t seq_macro_ins_typ, seq_macro_ins_val;
+		|	unsigned seq_word;
+		|	unsigned seq_macro_pc_offset;
+		|	unsigned seq_curr_lex;
+		|	unsigned seq_retrn_pc_ofs;
+		|	unsigned seq_break_mask;
 		|
-		|	uint64_t tost, vost, cur_name;
-		|	uint64_t namram[1<<4];
-		|	uint64_t pcseg, retseg;
+		|	uint64_t seq_tost, seq_vost, seq_cur_name;
+		|	uint64_t seq_namram[1<<4];
+		|	uint64_t seq_pcseg, seq_retseg;
 		|
-		|	uint64_t tosram[1<<4];
-		|	uint64_t tosof;
-		|	uint32_t savrg;
-		|	uint32_t pred;
-		|	uint32_t topcnt;
+		|	uint64_t seq_tosram[1<<4];
+		|	uint64_t seq_tosof;
+		|	uint32_t seq_savrg;
+		|	uint32_t seq_pred;
+		|	uint32_t seq_topcnt;
 		|
-		|	uint16_t ram[16];
-		|	uint16_t topu;
-		|	uint16_t adr;
-		|	unsigned fiu;
-		|	unsigned other;
-		|	unsigned late_u;
-		|	unsigned prev;
-		|	unsigned uev;
+		|	uint16_t seq_ram[16];
+		|	uint16_t seq_topu;
+		|	uint16_t seq_adr;
+		|	unsigned seq_fiu;
+		|	unsigned seq_other;
+		|	unsigned seq_late_u;
+		|	unsigned seq_uev;
 		|
-		|	uint8_t pa040[512];
-		|	uint8_t pa041[512];
-		|	uint8_t pa042[512];
-		|	uint8_t pa043[512];
-		|	uint8_t pa044[512];
-		|	uint8_t pa045[512];
-		|	uint8_t pa046[512];
-		|	uint8_t pa047[512];
-		|	uint8_t pa048[512];
-		|	uint8_t bhreg;
-		|	unsigned rreg;
-		|	unsigned lreg;
-		|	unsigned treg;
-		|	bool hint_last;
-		|	bool hint_t_last;
-		|	bool last_late_cond;
-		|	bool uadr_mux, preturn, push_br, push;
-		|	uint64_t typ_bus;
-		|	uint64_t val_bus;
-		|	uint64_t output_ob;
-		|	uint64_t name_bus;
-		|	uint64_t coff;
-		|	unsigned uadr_decode;
-		|	unsigned display;
-		|       uint64_t resolve_offset;
-		|	bool cload;
-		|	bool ibuf_fill;
-		|	bool uses_tos;
-		|	bool l_macro_hic;
-		|	bool m_pc_mb;
-		|	unsigned n_in_csa;
-		|	unsigned decode;
-		|	unsigned wanna_dispatch;
-		|	bool ibld;
-		|	bool field_number_error;
-		|	bool import_condition;
-		|	bool m_break_class;
-		|	bool latched_cond;
-		|	bool saved_latched;
-		|	bool stack_size_zero;
-		|	unsigned rq;
-		|	bool m_tos_invld;
-		|	bool disp_cond0;
-		|	bool tos_vld_cond;
-		|	bool foo7;
-		|	bool check_exit_ue;
-		|	bool carry_out;
-		|	bool bad_hint;
-		|	bool m_res_ref;
-		|	bool bad_hint_enable;
-		|	bool ferr;
-		|	bool late_macro_event;
-		|	bool sf_stop;
-		|	bool s_state_stop;
-		|	bool clock_stop_1;
-		|	bool clock_stop_5;
-		|	bool clock_stop_6;
-		|	bool clock_stop_7;
-		|	unsigned clock_stop;
-		|	unsigned diag;
-		|	unsigned countdown;
+		|	uint8_t seq_pa040[512];
+		|	uint8_t seq_pa041[512];
+		|	uint8_t seq_pa042[512];
+		|	uint8_t seq_pa043[512];
+		|	uint8_t seq_pa044[512];
+		|	uint8_t seq_pa045[512];
+		|	uint8_t seq_pa046[512];
+		|	uint8_t seq_pa047[512];
+		|	uint8_t seq_pa048[512];
+		|	uint8_t seq_bhreg;
+		|	unsigned seq_rreg;
+		|	unsigned seq_lreg;
+		|	unsigned seq_treg;
+		|	bool seq_hint_last;
+		|	bool seq_hint_t_last;
+		|	bool seq_last_late_cond;
+		|	bool seq_uadr_mux, seq_preturn, seq_push_br, seq_push;
+		|	uint64_t seq_typ_bus;
+		|	uint64_t seq_val_bus;
+		|	uint64_t seq_output_ob;
+		|	uint64_t seq_name_bus;
+		|	uint64_t seq_coff;
+		|	unsigned seq_uadr_decode;
+		|	unsigned seq_display;
+		|       uint64_t seq_resolve_offset;
+		|	bool seq_cload;
+		|	bool seq_ibuf_fill;
+		|	bool seq_uses_tos;
+		|	bool seq_l_macro_hic;
+		|	bool seq_m_pc_mb;
+		|	unsigned seq_n_in_csa;
+		|	unsigned seq_decode;
+		|	unsigned seq_wanna_dispatch;
+		|	bool seq_ibld;
+		|	bool seq_field_number_error;
+		|	bool seq_import_condition;
+		|	bool seq_m_break_class;
+		|	bool seq_latched_cond;
+		|	bool seq_saved_latched;
+		|	bool seq_stack_size_zero;
+		|	unsigned seq_rq;
+		|	bool seq_m_tos_invld;
+		|	bool seq_tos_vld_cond;
+		|	bool seq_foo7;
+		|	bool seq_check_exit_ue;
+		|	bool seq_carry_out;
+		|	bool seq_bad_hint;
+		|	bool seq_m_res_ref;
+		|	bool seq_bad_hint_enable;
+		|	bool seq_ferr;
+		|	bool seq_late_macro_event;
+		|	bool seq_sf_stop;
+		|	bool seq_s_state_stop;
+		|	bool seq_clock_stop_1;
+		|	bool seq_clock_stop_5;
+		|	unsigned seq_diag;
+		|	unsigned seq_countdown;
 		|
-		|	uint16_t lex_valid;
-		|	bool lxval;
-		|	unsigned resolve_address;
-		|	bool m_ibuff_mt;
-		|	bool foo9;
-		|	bool q3cond;
-		|	bool stop;
-		|	uint64_t *wcsram;
-		|	uint64_t uir;
+		|	uint16_t seq_lex_valid;
+		|	bool seq_lxval;
+		|	unsigned seq_resolve_address;
+		|	bool seq_m_ibuff_mt;
+		|	bool seq_foo9;
+		|	bool seq_q3cond;
+		|	bool seq_stop;
+		|	uint64_t *seq_wcsram;
+		|	uint64_t seq_uir;
 		|
-		|#define UIR_BRN	((state->uir >> (41-13)) & 0x3fff)
-		|#define UIR_LUIR	((state->uir >> (41-15)) & 0x1)
-		|#define UIR_BRTYP	((state->uir >> (41-19)) & 0xf)
-		|#define UIR_BRTIM	((state->uir >> (41-21)) & 0x3)
-		|#define UIR_CSEL	((state->uir >> (41-28)) & 0x7f)
-		|#define UIR_LAUIR	((state->uir >> (41-30)) & 0x3)
-		|#define UIR_ENMIC	((state->uir >> (41-31)) & 0x1)
-		|#define UIR_IRD	((state->uir >> (41-34)) & 0x7)
-		|#define UIR_URAND	((state->uir >> (41-41)) & 0x7f)
+		|#define UIR_SEQ_BRN	((state->seq_uir >> (41-13)) & 0x3fff)
+		|#define UIR_SEQ_LUIR	((state->seq_uir >> (41-15)) & 0x1)
+		|#define UIR_SEQ_BRTYP	((state->seq_uir >> (41-19)) & 0xf)
+		|#define UIR_SEQ_BRTIM	((state->seq_uir >> (41-21)) & 0x3)
+		|#define UIR_SEQ_CSEL	((state->seq_uir >> (41-28)) & 0x7f)
+		|#define UIR_SEQ_LAUIR	((state->seq_uir >> (41-30)) & 0x3)
+		|#define UIR_SEQ_ENMIC	((state->seq_uir >> (41-31)) & 0x1)
+		|#define UIR_SEQ_IRD	((state->seq_uir >> (41-34)) & 0x7)
+		|#define UIR_SEQ_URAND	((state->seq_uir >> (41-41)) & 0x7f)
 		|''')
 
     def init(self, file):
         file.fmt('''
-		|	load_programmable(this->name(), state->pa040, sizeof state->pa040, "PA040-02");
-		|	load_programmable(this->name(), state->pa041, sizeof state->pa041, "PA041-01");
-		|	load_programmable(this->name(), state->pa042, sizeof state->pa041, "PA042-02");
-		|	load_programmable(this->name(), state->pa043, sizeof state->pa043, "PA043-02");
-		|	load_programmable(this->name(), state->pa044, sizeof state->pa044, "PA044-01");
-		|	load_programmable(this->name(), state->pa045, sizeof state->pa045, "PA045-03");
-		|	load_programmable(this->name(), state->pa046, sizeof state->pa046, "PA046-02");
-		|	load_programmable(this->name(), state->pa047, sizeof state->pa047, "PA047-02");
-		|	load_programmable(this->name(), state->pa048, sizeof state->pa048, "PA048-02");
-		|	state->wcsram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << UADR_WIDTH);
-		|	state->top = (uint32_t*)CTX_GetRaw("SEQ_TOP", sizeof(uint32_t) << 10);
-		|	state->bot = (uint32_t*)CTX_GetRaw("SEQ_BOT", sizeof(uint32_t) << 10);
+		|	load_programmable(this->name(), state->seq_pa040, sizeof state->seq_pa040, "PA040-02");
+		|	load_programmable(this->name(), state->seq_pa041, sizeof state->seq_pa041, "PA041-01");
+		|	load_programmable(this->name(), state->seq_pa042, sizeof state->seq_pa041, "PA042-02");
+		|	load_programmable(this->name(), state->seq_pa043, sizeof state->seq_pa043, "PA043-02");
+		|	load_programmable(this->name(), state->seq_pa044, sizeof state->seq_pa044, "PA044-01");
+		|	load_programmable(this->name(), state->seq_pa045, sizeof state->seq_pa045, "PA045-03");
+		|	load_programmable(this->name(), state->seq_pa046, sizeof state->seq_pa046, "PA046-02");
+		|	load_programmable(this->name(), state->seq_pa047, sizeof state->seq_pa047, "PA047-02");
+		|	load_programmable(this->name(), state->seq_pa048, sizeof state->seq_pa048, "PA048-02");
+		|	state->seq_wcsram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << UADR_WIDTH);
+		|	state->seq_top = (uint32_t*)CTX_GetRaw("SEQ_TOP", sizeof(uint32_t) << 10);
+		|	state->seq_bot = (uint32_t*)CTX_GetRaw("SEQ_BOT", sizeof(uint32_t) << 10);
 		|''')
 
     def priv_decl(self, file):
@@ -285,55 +280,55 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|int_reads()
 		|{
-		|	unsigned internal_reads = UIR_IRD;
+		|	unsigned internal_reads = UIR_SEQ_IRD;
 		|	switch (urand & 3) {
-		|	case 3:	state->coff = state->retrn_pc_ofs; break;
-		|	case 2: state->coff = branch_offset(); break;
-		|	case 1: state->coff = state->macro_pc_offset; break;
-		|	case 0: state->coff = branch_offset(); break;
+		|	case 3:	state->seq_coff = state->seq_retrn_pc_ofs; break;
+		|	case 2: state->seq_coff = branch_offset(); break;
+		|	case 1: state->seq_coff = state->seq_macro_pc_offset; break;
+		|	case 0: state->seq_coff = branch_offset(); break;
 		|	}
-		|	state->coff ^= 0x7fff;
+		|	state->seq_coff ^= 0x7fff;
 		|	if (internal_reads == 0) {
-		|		state->typ_bus = ~mp_typ_bus;
-		|		state->val_bus = ~mp_val_bus;
+		|		state->seq_typ_bus = ~mp_typ_bus;
+		|		state->seq_val_bus = ~mp_val_bus;
 		|		return;
 		|	}		
 		|
-		|	state->typ_bus = state->n_in_csa;
-		|	state->typ_bus |= state->output_ob << 7;
-		|	state->typ_bus ^= 0xffffffff;
+		|	state->seq_typ_bus = state->seq_n_in_csa;
+		|	state->seq_typ_bus |= state->seq_output_ob << 7;
+		|	state->seq_typ_bus ^= 0xffffffff;
 		|
 		|	switch (internal_reads) {
 		|	case 5:
-		|		state->typ_bus |= (state->name_bus ^ 0xffffffff) << 32;
+		|		state->seq_typ_bus |= (state->seq_name_bus ^ 0xffffffff) << 32;
 		|		break;
 		|	default:
-		|		state->typ_bus |= (uint64_t)state->cur_name << 32;
+		|		state->seq_typ_bus |= (uint64_t)state->seq_cur_name << 32;
 		|		break;
 		|	}
 		|	
 		|	if (!(urand & 0x2)) {
-		|		state->val_bus = state->pcseg << 32;
+		|		state->seq_val_bus = state->seq_pcseg << 32;
 		|	} else {
-		|		state->val_bus = state->retseg << 32;
+		|		state->seq_val_bus = state->seq_retseg << 32;
 		|	}
-		|	state->val_bus ^= 0xffffffffULL << 32; 
-		|	state->val_bus ^= (state->coff >> 12) << 16;
-		|	state->val_bus ^= 0xffffULL << 16; 
+		|	state->seq_val_bus ^= 0xffffffffULL << 32; 
+		|	state->seq_val_bus ^= (state->seq_coff >> 12) << 16;
+		|	state->seq_val_bus ^= 0xffffULL << 16; 
 		|	switch (internal_reads) {
 		|	case 1:
-		|		state->val_bus |= state->curins ^ 0xffff;
+		|		state->seq_val_bus |= state->seq_curins ^ 0xffff;
 		|		break;
 		|	case 2:
-		|		state->val_bus |= state->display;
+		|		state->seq_val_bus |= state->seq_display;
 		|		break;
 		|	case 3:
-		|		state->val_bus |= state->topu & 0xffff;
+		|		state->seq_val_bus |= state->seq_topu & 0xffff;
 		|		break;
 		|	default:
-		|		state->val_bus |= (state->coff << 4) & 0xffff;
-		|		state->val_bus |= (state->curr_lex & 0xf);
-		|		state->val_bus ^= 0xffff;
+		|		state->seq_val_bus |= (state->seq_coff << 4) & 0xffff;
+		|		state->seq_val_bus |= (state->seq_curr_lex & 0xf);
+		|		state->seq_val_bus ^= 0xffff;
 		|		break;
 		|	}
 		|}
@@ -345,7 +340,7 @@ class SEQ(PartFactory):
 		|	static uint8_t tbl[16] = {3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 0, 1, 1, 1, 0};
 		|
 		|	unsigned retval = tbl[br_type];
-		|	if (state->uadr_mux) {
+		|	if (state->seq_uadr_mux) {
 		|		retval |= 4;
 		|	}
 		|	return (retval);
@@ -356,21 +351,21 @@ class SEQ(PartFactory):
 		|late_macro_pending(void)
 		|{
 		|	unsigned csa = mp_csa_nve;
-		|	unsigned dec = state->decode >> 3;
+		|	unsigned dec = state->seq_decode >> 3;
 		|
 		|	if (csa < (dec & 7))
 		|		return (0);
 		|	if (csa > ((dec >> 3) | 12))
 		|		return (1);
-		|	if (state->stop)
+		|	if (state->seq_stop)
 		|		return (2);
-		|	if (!state->m_res_ref)
+		|	if (!state->seq_m_res_ref)
 		|		return (3);
-		|	if (!state->m_tos_invld)
+		|	if (!state->seq_m_tos_invld)
 		|		return (4);
-		|	if (!state->m_break_class)
+		|	if (!state->seq_m_break_class)
 		|		return (6);
-		|	if (!state->m_ibuff_mt)
+		|	if (!state->seq_m_ibuff_mt)
 		|		return (7);
 		|	return (8);
 		|}
@@ -382,21 +377,21 @@ class SEQ(PartFactory):
 		|
 		|	switch (condsel) {
 		|	case 0x57: // FIELD_NUM_ERR
-		|		return (!state->field_number_error);
+		|		return (!state->seq_field_number_error);
 		|	case 0x56: // LATCHED_COND
-		|		return (!state->latched_cond);
+		|		return (!state->seq_latched_cond);
 		|	case 0x55: // E_MACRO_PEND
 		|		return (!early_macro_pending);
 		|	case 0x54: // E_MACRO_EVNT~6
-		|		return (!((state->emac >> 0) & 1));
+		|		return (!((state->seq_emac >> 0) & 1));
 		|	case 0x53: // E_MACRO_EVNT~5
-		|		return (!((state->emac >> 1) & 1));
+		|		return (!((state->seq_emac >> 1) & 1));
 		|	case 0x52: // E_MACRO_EVNT~3
-		|		return (!((state->emac >> 3) & 1));
+		|		return (!((state->seq_emac >> 3) & 1));
 		|	case 0x51: // E_MACRO_EVNT~2
-		|		return (!((state->emac >> 4) & 1));
+		|		return (!((state->seq_emac >> 4) & 1));
 		|	case 0x50: // E_MACRO_EVNT~0
-		|		return (!((state->emac >> 6) & 1));
+		|		return (!((state->seq_emac >> 6) & 1));
 		|	default:
 		|		return (false);
 		|	}
@@ -409,34 +404,34 @@ class SEQ(PartFactory):
 		|
 		|	switch (condsel) {
 		|	case 0x4f: // DISP_COND0
-		|		return ((state->decode & 0x7) == 0);
+		|		return ((state->seq_decode & 0x7) == 0);
 		|		break;
 		|	case 0x4e: // True
 		|		return (true);
 		|		break;
 		|	case 0x4d: // M_IBUFF_MT
-		|		return (state->m_ibuff_mt);
+		|		return (state->seq_m_ibuff_mt);
 		|		break;
 		|	case 0x4c: // M_BRK_CLASS
-		|		return (state->m_break_class);
+		|		return (state->seq_m_break_class);
 		|		break;
 		|	case 0x4b: // M_TOS_INVLD
-		|		return (state->m_tos_invld);
+		|		return (state->seq_m_tos_invld);
 		|		break;
 		|	case 0x4a: // M_RES_REF
-		|		return (state->m_res_ref);
+		|		return (state->seq_m_res_ref);
 		|		break;
 		|	case 0x49: // M_OVERFLOW
 		|		{
 		|		unsigned csa = mp_csa_nve;
-		|		unsigned dec = state->decode >> 3;
+		|		unsigned dec = state->seq_decode >> 3;
 		|		return (csa <= ((dec >> 3) | 12));
 		|		}
 		|		break;
 		|	case 0x48: // M_UNDERFLOW
 		|		{
 		|		unsigned csa = mp_csa_nve;
-		|		unsigned dec = state->decode >> 3;
+		|		unsigned dec = state->seq_decode >> 3;
 		|		return (csa >= (dec & 7));
 		|		}
 		|		break;
@@ -452,28 +447,28 @@ class SEQ(PartFactory):
 		|
 		|	switch (condsel) {
 		|	case 0x47: // STACK_SIZE
-		|		return (state->stack_size_zero);
+		|		return (state->seq_stack_size_zero);
 		|		break;
 		|	case 0x46: // LATCHED_COND
-		|		return (state->latched_cond);
+		|		return (state->seq_latched_cond);
 		|		break;
 		|	case 0x45: // SAVED_LATCHED
-		|		return (state->saved_latched);
+		|		return (state->seq_saved_latched);
 		|		break;
 		|	case 0x44: // TOS_VLD.COND
-		|		return (state->tos_vld_cond);
+		|		return (state->seq_tos_vld_cond);
 		|		break;
 		|	case 0x43: // LEX_VLD.COND
-		|		return (state->lxval);
+		|		return (state->seq_lxval);
 		|		break;
 		|	case 0x42: // IMPORT.COND
-		|		return (state->import_condition);
+		|		return (state->seq_import_condition);
 		|		break;
 		|	case 0x41: // REST_PC_DEC
-		|		return ((state->rq >> 1) & 1);
+		|		return ((state->seq_rq >> 1) & 1);
 		|		break;
 		|	case 0x40: // RESTARTABLE
-		|		return ((state->rq >> 3) & 1);
+		|		return ((state->seq_rq >> 3) & 1);
 		|		break;
 		|	default:
 		|		return (false);
@@ -489,54 +484,54 @@ class SEQ(PartFactory):
 		|	uint16_t dra;
 		|	uint16_t dlr;
 		|	lex_random = (rndx >> 5) & 0x7;
-		|	dra = state->resolve_address & 3;
+		|	dra = state->seq_resolve_address & 3;
 		|	dlr = lex_random;
 		|	if (lex_random & 0x2) {
 		|		dns = 0xf;
 		|	} else {
-		|		dns = 0xf ^ (0x8 >> (state->resolve_address >> 2));
+		|		dns = 0xf ^ (0x8 >> (state->seq_resolve_address >> 2));
 		|	}
 		|	unsigned adr;
 		|	uint16_t nv = 0;
-		|	adr = ((state->lex_valid >> 12) & 0xf) << 5;
+		|	adr = ((state->seq_lex_valid >> 12) & 0xf) << 5;
 		|	adr |= dra << 3;
 		|	adr |= ((dlr >> 2) & 1) << 2;
 		|	adr |= ((dns >> 3) & 1) << 1;
 		|	bool pm3 = !((dns & 0x7) && !(dlr & 1));
 		|	adr |= pm3;
-		|	nv |= (state->pa041[adr] >> 4) << 12;
+		|	nv |= (state->seq_pa041[adr] >> 4) << 12;
 		|
-		|	adr = ((state->lex_valid >> 8) & 0xf) << 5;
+		|	adr = ((state->seq_lex_valid >> 8) & 0xf) << 5;
 		|	adr |= dra << 3;
 		|	adr |= ((dlr >> 2) & 1) << 2;
 		|	adr |= ((dns >> 2) & 1) << 1;
 		|	bool pm2 = !((dns & 0x3) && !(dlr & 1));
 		|	adr |= pm2;
-		|	nv |= (state->pa041[adr] >> 4) << 8;
+		|	nv |= (state->seq_pa041[adr] >> 4) << 8;
 		|
-		|	adr = ((state->lex_valid >> 4) & 0xf) << 5;
+		|	adr = ((state->seq_lex_valid >> 4) & 0xf) << 5;
 		|	adr |= dra << 3;
 		|	adr |= ((dlr >> 2) & 1) << 2;
 		|	adr |= ((dns >> 1) & 1) << 1;
 		|	bool pm1 = !((dns & 0x1) && !(dlr & 1));
 		|	adr |= pm1;
-		|	nv |= (state->pa041[adr] >> 4) << 4;
+		|	nv |= (state->seq_pa041[adr] >> 4) << 4;
 		|
-		|	adr = ((state->lex_valid >> 0) & 0xf) << 5;
+		|	adr = ((state->seq_lex_valid >> 0) & 0xf) << 5;
 		|	adr |= dra << 3;
 		|	adr |= ((dlr >> 2) & 1) << 2;
 		|	adr |= ((dns >> 0) & 1) << 1;
 		|	adr |= (dlr >> 0) & 1;
-		|	nv |= (state->pa041[adr] >> 4) << 0;
+		|	nv |= (state->seq_pa041[adr] >> 4) << 0;
 		|
-		|	state->lex_valid = nv;
+		|	state->seq_lex_valid = nv;
 		|}
 		|
 		|bool
 		|SCM_«mmm» ::
 		|condition(void)
 		|{
-		|	unsigned condsel = UIR_CSEL;
+		|	unsigned condsel = UIR_SEQ_CSEL;
 		|
 		|	switch (condsel >> 3) {
 		|	case 0x0: return(mp_condxf);
@@ -564,32 +559,32 @@ class SEQ(PartFactory):
 		|{
 		|	bool oper;
 		|	unsigned a;
-		|	if (!state->wanna_dispatch && !state->m_ibuff_mt) {
+		|	if (!state->seq_wanna_dispatch && !state->seq_m_ibuff_mt) {
 		|		a = 0;
 		|		oper = true;
-		|	} else if (!state->wanna_dispatch && state->m_ibuff_mt) {
-		|		a = state->display;
+		|	} else if (!state->seq_wanna_dispatch && state->seq_m_ibuff_mt) {
+		|		a = state->seq_display;
 		|		oper = false;
-		|	} else if (state->wanna_dispatch && !state->m_ibuff_mt) {
-		|		a = state->curins;
+		|	} else if (state->seq_wanna_dispatch && !state->seq_m_ibuff_mt) {
+		|		a = state->seq_curins;
 		|		oper = true;
 		|	} else {
-		|		a = state->curins;
+		|		a = state->seq_curins;
 		|		oper = true;
 		|	}
 		|	a &= 0x7ff;
 		|	if (a & 0x400)
 		|		a |= 0x7800;
 		|	a ^= 0x7fff;
-		|	unsigned b = state->macro_pc_offset & 0x7fff;
+		|	unsigned b = state->seq_macro_pc_offset & 0x7fff;
 		|	unsigned retval;
 		|	if (oper) {
-		|		if (state->wanna_dispatch)
+		|		if (state->seq_wanna_dispatch)
 		|			a += 1;
 		|		a &= 0x7fff;
 		|		retval = a + b;
 		|	} else {
-		|		if (!state->wanna_dispatch)
+		|		if (!state->seq_wanna_dispatch)
 		|			a += 1;
 		|		retval = b - a;
 		|	}
@@ -603,54 +598,54 @@ class SEQ(PartFactory):
 		|{
 		|	bool event = true;
 		|	mp_state_clk_stop = true;
-		|	state->s_state_stop = true;
+		|	state->seq_s_state_stop = true;
 		|	mp_clock_stop = true;
 		|	mp_ram_stop = true;
 		|
 		|	if (mp_seq_halted && mp_seq_prepped) {
-		|		state->diag |= 0x01;
+		|		state->seq_diag |= 0x01;
 		|		mp_sync_freeze |= 1;
 		|	} else {
-		|		state->diag &= ~0x01;
+		|		state->seq_diag &= ~0x01;
 		|		mp_sync_freeze &= ~1;
 		|	}
 		|
-		|	if (mp_fiu_freeze && !(state->diag & 0x2)) {
-		|		state->diag |= 0x02;
+		|	if (mp_fiu_freeze && !(state->seq_diag & 0x2)) {
+		|		state->seq_diag |= 0x02;
 		|		// output.freze = 1;
 		|		mp_sync_freeze |= 2;
-		|		ALWAYS_TRACE(<< "THAW1 " << state->diag << " " << mp_sync_freeze);
-		|	} else if (!mp_fiu_freeze && (state->diag & 0x2) && !(state->diag & 0x4)) {
-		|		state->diag |= 0x04;
+		|		ALWAYS_TRACE(<< "THAW1 " << state->seq_diag << " " << mp_sync_freeze);
+		|	} else if (!mp_fiu_freeze && (state->seq_diag & 0x2) && !(state->seq_diag & 0x4)) {
+		|		state->seq_diag |= 0x04;
 		|		// output.sync = 1;
 		|		mp_sync_freeze |= 4;
-		|		ALWAYS_TRACE(<< "THAW2 " << state->diag << " " << mp_sync_freeze);
-		|	} else if (!mp_fiu_freeze && (state->diag & 0x2) && (state->diag & 0x4)) {
-		|		state->diag &= ~0x02;
+		|		ALWAYS_TRACE(<< "THAW2 " << state->seq_diag << " " << mp_sync_freeze);
+		|	} else if (!mp_fiu_freeze && (state->seq_diag & 0x2) && (state->seq_diag & 0x4)) {
+		|		state->seq_diag &= ~0x02;
 		|		// output.freze = 0;
 		|		mp_sync_freeze &= ~2;
-		|		state->countdown = 5;
-		|		ALWAYS_TRACE(<< "THAW3 " << (state->diag & 0x2) << " " << mp_sync_freeze << " " << state->countdown);
-		|	} else if (!mp_fiu_freeze && !(state->diag & 0x2) && (state->diag & 0x4)) {
-		|		if (--state->countdown == 0) {
+		|		state->seq_countdown = 5;
+		|		ALWAYS_TRACE(<< "THAW3 " << (state->seq_diag & 0x2) << " " << mp_sync_freeze << " " << state->seq_countdown);
+		|	} else if (!mp_fiu_freeze && !(state->seq_diag & 0x2) && (state->seq_diag & 0x4)) {
+		|		if (--state->seq_countdown == 0) {
 		|			// output.sync = 0;
-		|			state->diag &= ~0x04;
+		|			state->seq_diag &= ~0x04;
 		|			mp_sync_freeze &= ~4;
 		|		}
-		|		ALWAYS_TRACE(<< "THAW4 " <<  state->diag << " " << mp_sync_freeze << " " << state->countdown);
+		|		ALWAYS_TRACE(<< "THAW4 " <<  state->seq_diag << " " << mp_sync_freeze << " " << state->seq_countdown);
 		|	}
 		|
-		|	state->sf_stop = !(state->diag == 0);
-		|	mp_sf_stop = !(state->diag == 0);
-		|	mp_freeze = (state->diag & 3) != 0;
+		|	state->seq_sf_stop = !(state->seq_diag == 0);
+		|	mp_sf_stop = !(state->seq_diag == 0);
+		|	mp_freeze = (state->seq_diag & 3) != 0;
 		|
 		|	unsigned clock_stop = 0;
-		|	state->clock_stop_1 = !(mp_clock_stop_6 && mp_clock_stop_7 && mp_below_tcp);
+		|	state->seq_clock_stop_1 = !(mp_clock_stop_6 && mp_clock_stop_7 && mp_below_tcp);
 		|	if (    mp_clock_stop_0) { clock_stop |= 0x40; }
-		|	if (state->clock_stop_1) { clock_stop |= 0x20; }
+		|	if (state->seq_clock_stop_1) { clock_stop |= 0x20; }
 		|	if (    mp_clock_stop_3) { clock_stop |= 0x10; }
 		|	if (    mp_clock_stop_4) { clock_stop |= 0x08; }
-		|	if (state->clock_stop_5) { clock_stop |= 0x04; }
+		|	if (state->seq_clock_stop_5) { clock_stop |= 0x04; }
 		|	if (mp_clock_stop_6) { clock_stop |= 0x02; }
 		|	if (mp_clock_stop_7) { clock_stop |= 0x01; }
 		|	
@@ -665,13 +660,13 @@ class SEQ(PartFactory):
 		|		}
 		|	}
 		|	if ((clock_stop | 0x03) != 0x7f) {
-		|		state->s_state_stop = false;
+		|		state->seq_s_state_stop = false;
 		|	}
 		|
-		|	if (state->sf_stop) {
+		|	if (state->seq_sf_stop) {
 		|		mp_clock_stop = false;
 		|		mp_state_clk_stop = false;
-		|		state->s_state_stop = false;
+		|		state->seq_s_state_stop = false;
 		|		if (!mp_csa_write_enable) {
 		|			mp_ram_stop = false;
 		|		}
@@ -684,49 +679,49 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|seq_q2(void)
 		|{
-		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
-		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
+		|	state->seq_tos_vld_cond = !(state->seq_foo7 || RNDX(RND_TOS_VLB));				// cond, q4
+		|	state->seq_m_tos_invld = !(state->seq_uses_tos && state->seq_tos_vld_cond);				// lmp, cond
 		|
-		|	state->check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->carry_out);	// q4
-		|	state->m_res_ref = !(state->lxval && !(state->display >> 15));				// lmp, cond
+		|	state->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->seq_carry_out);	// q4
+		|	state->seq_m_res_ref = !(state->seq_lxval && !(state->seq_display >> 15));				// lmp, cond
 		|
-		|	uint64_t val = state->val_bus >> 32;
+		|	uint64_t val = state->seq_val_bus >> 32;
 		|	val &= 0xffffff;
 		|
-		|	unsigned tmp = (val >> 7) ^ state->curins;
+		|	unsigned tmp = (val >> 7) ^ state->seq_curins;
 		|	tmp &= 0x3ff;
-		|	state->field_number_error = tmp != 0x3ff;
-		|	state->ferr = !(state->field_number_error && !(RNDX(RND_FLD_CHK) || !mp_uevent_enable));
+		|	state->seq_field_number_error = tmp != 0x3ff;
+		|	state->seq_ferr = !(state->seq_field_number_error && !(RNDX(RND_FLD_CHK) || !mp_uevent_enable));
 		|
-		|	state->ram[(state->adr + 1) & 0xf] = state->topu;
+		|	state->seq_ram[(state->seq_adr + 1) & 0xf] = state->seq_topu;
 		|
-		|	state->l_macro_hic = true;
+		|	state->seq_l_macro_hic = true;
 		|	unsigned nua;
-		|	if (state->bad_hint) {
-		|		nua = state->other;
-		|	} else if (state->late_macro_event) {
+		|	if (state->seq_bad_hint) {
+		|		nua = state->seq_other;
+		|	} else if (state->seq_late_macro_event) {
 		|		// Not tested by expmon_test_seq ?
-		|		nua = state->late_u << 3;
+		|		nua = state->seq_late_u << 3;
 		|		nua ^= (7 << 3);
 		|		nua |= 0x0140;
-		|		state->l_macro_hic = false;
-		|	} else if (state->uev != 16) {
-		|		nua = state->uev;
+		|		state->seq_l_macro_hic = false;
+		|	} else if (state->seq_uev != 16) {
+		|		nua = state->seq_uev;
 		|		nua <<= 3;
 		|		nua |= 0x0180;
 		|	} else {
 		|		unsigned sel = group_sel();
 		|		switch (sel) {
 		|		case 0:
-		|			nua = UIR_BRN;
-		|			nua += state->fiu;
+		|			nua = UIR_SEQ_BRN;
+		|			nua += state->seq_fiu;
 		|			break;
 		|		case 1:
-		|			nua = state->uadr_decode >> 3;
+		|			nua = state->seq_uadr_decode >> 3;
 		|			nua <<= 1;
 		|			break;
 		|		case 2:
-		|			nua = (state->topu ^ 0xffff) & 0x3fff;
+		|			nua = (state->seq_topu ^ 0xffff) & 0x3fff;
 		|			break;
 		|		case 3:
 		|		case 4:
@@ -736,7 +731,7 @@ class SEQ(PartFactory):
 		|		case 5:
 		|		case 6:
 		|		case 7:
-		|			nua = UIR_BRN;
+		|			nua = UIR_SEQ_BRN;
 		|			break;
 		|		default:
 		|			nua = 0;
@@ -744,12 +739,12 @@ class SEQ(PartFactory):
 		|			break;
 		|		}
 		|	}
-		|	if (!state->sf_stop && mp_seq_prepped) {
+		|	if (!state->seq_sf_stop && mp_seq_prepped) {
 		|		mp_nua_bus = nua & 0x3fff;
 		|	}
-		|	state->clock_stop_5 = (state->check_exit_ue && state->ferr);
-		|	mp_clock_stop_6 = !(!state->bad_hint && !state->late_macro_event && state->uev != 16);
-		|	mp_clock_stop_7 = !state->bad_hint && state->l_macro_hic;
+		|	state->seq_clock_stop_5 = (state->seq_check_exit_ue && state->seq_ferr);
+		|	mp_clock_stop_6 = !(!state->seq_bad_hint && !state->seq_late_macro_event && state->seq_uev != 16);
+		|	mp_clock_stop_7 = !state->seq_bad_hint && state->seq_l_macro_hic;
 		|	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
 		|}
 		|
@@ -759,21 +754,21 @@ class SEQ(PartFactory):
 		|{
 		|	q3clockstop();
 		|	int_reads();
-		|	state->q3cond = condition();
-		|	state->bad_hint_enable = !((!mp_clock_stop_6) || (state->late_macro_event && !state->bad_hint));
+		|	state->seq_q3cond = condition();
+		|	state->seq_bad_hint_enable = !((!mp_clock_stop_6) || (state->seq_late_macro_event && !state->seq_bad_hint));
 		|	unsigned pa040a = 0;
-		|	pa040a |= (state->decode & 0x7) << 6;
-		|	if (state->wanna_dispatch) pa040a |= 0x20;
+		|	pa040a |= (state->seq_decode & 0x7) << 6;
+		|	if (state->seq_wanna_dispatch) pa040a |= 0x20;
 		|	if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
-		|	if (state->import_condition) pa040a |= 0x08;
-		|	if (state->stop) pa040a |= 0x04;
+		|	if (state->seq_import_condition) pa040a |= 0x08;
+		|	if (state->seq_stop) pa040a |= 0x04;
 		|	if (!maybe_dispatch) pa040a |= 0x02;
-		|	if (state->bad_hint) pa040a |= 0x01;
-		|	unsigned pa040d = state->pa040[pa040a];
+		|	if (state->seq_bad_hint) pa040a |= 0x01;
+		|	unsigned pa040d = state->seq_pa040[pa040a];
 		|
 		|	bool bar8;
 		|	lmp = late_macro_pending();
-		|	macro_event = (!state->wanna_dispatch) && (early_macro_pending || (lmp != 8));
+		|	macro_event = (!state->seq_wanna_dispatch) && (early_macro_pending || (lmp != 8));
 		|	if (macro_event) {
 		|		bar8 = (macro_event && !early_macro_pending) && (lmp >= 7);
 		|	} else {
@@ -784,38 +779,38 @@ class SEQ(PartFactory):
 		|		mp_mem_abort_e = false;
 		|	} else if (mp_mem_cond) {
 		|		mp_mem_abort_e = true;
-		|	} else if (mp_mem_cond_pol ^ state->q3cond) {
+		|	} else if (mp_mem_cond_pol ^ state->seq_q3cond) {
 		|		mp_mem_abort_e = true;
 		|	} else {
 		|		mp_mem_abort_e = false;
 		|	}
 		|
-		|	if (RNDX(RND_TOS_VLB) && !state->stop) {
-		|		state->tost = state->typ_bus >> 32;
-		|		state->vost = state->val_bus >> 32;
-		|		state->tosof = (state->typ_bus >> 7) & 0xfffff;
+		|	if (RNDX(RND_TOS_VLB) && !state->seq_stop) {
+		|		state->seq_tost = state->seq_typ_bus >> 32;
+		|		state->seq_vost = state->seq_val_bus >> 32;
+		|		state->seq_tosof = (state->seq_typ_bus >> 7) & 0xfffff;
 		|	}
 		|	if (maybe_dispatch) {
 		|		switch (mem_start) {
 		|		case 0:
 		|		case 1:
 		|		case 2:
-		|			state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|			state->seq_name_bus = state->seq_namram[state->seq_resolve_address] ^ 0xffffffff;
 		|			break;
 		|		case 3:
 		|		case 7:
-		|			state->name_bus = state->tost ^ 0xffffffff;
+		|			state->seq_name_bus = state->seq_tost ^ 0xffffffff;
 		|			break;
 		|		default:
-		|			state->name_bus = state->vost ^ 0xffffffff;
+		|			state->seq_name_bus = state->seq_vost ^ 0xffffffff;
 		|			break;
 		|		}
 		|	} else {
-		|		state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|		state->seq_name_bus = state->seq_namram[state->seq_resolve_address] ^ 0xffffffff;
 		|	}
-		|	if (!(state->foo9 || mp_clock_stop_6)) {
-		|		state->treg = 0;
-		|		state->foo7 = false;
+		|	if (!(state->seq_foo9 || mp_clock_stop_6)) {
+		|		state->seq_treg = 0;
+		|		state->seq_foo7 = false;
 		|	}
 		|	if (mp_adr_oe & 0x8) {
 		|		if (macro_event) {
@@ -831,11 +826,11 @@ class SEQ(PartFactory):
 		|			resolve_drive = true;
 		|		}
 		|		if (!resolve_drive) {
-		|			mp_adr_bus = state->resolve_offset << 7;
+		|			mp_adr_bus = state->seq_resolve_offset << 7;
 		|		} else if (adr_is_code) {
-		|			mp_adr_bus = (state->coff >> 3) << 7;
+		|			mp_adr_bus = (state->seq_coff >> 3) << 7;
 		|		} else {
-		|			mp_adr_bus = state->output_ob << 7;
+		|			mp_adr_bus = state->seq_output_ob << 7;
 		|		}
 		|
 		|		uint64_t branch;
@@ -843,67 +838,67 @@ class SEQ(PartFactory):
 		|		branch ^= 0x7;
 		|		mp_adr_bus |= branch << 4;
 		|		if (!adr_is_code) {
-		|			mp_adr_bus |= state->name_bus << 32;
+		|			mp_adr_bus |= state->seq_name_bus << 32;
 		|		} else if (!(urand & 0x2)) {
-		|			mp_adr_bus |= state->pcseg << 32; 
+		|			mp_adr_bus |= state->seq_pcseg << 32; 
 		|		} else {
-		|			mp_adr_bus |= state->retseg << 32;
+		|			mp_adr_bus |= state->seq_retseg << 32;
 		|		}
 		|	}
-		|	bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
-		|	mp_mem_abort_l = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->stop);
+		|	bool bad_hint_disp = (!state->seq_bad_hint || (state->seq_bhreg & 0x08));
+		|	mp_mem_abort_l = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->seq_stop);
 		|}
 		|
 		|void
 		|SCM_«mmm» ::
 		|seq_q4(void)
 		|{
-		|	bool aclk = !state->sf_stop;
-		|	bool sclke = !(state->s_state_stop && !state->stop);
+		|	bool aclk = !state->seq_sf_stop;
+		|	bool sclke = !(state->seq_s_state_stop && !state->seq_stop);
 		|	bool sclk = aclk && !sclke;
 		|	bool state_clock = !sclke;
 		|
-		|	bool bhen = !((state->late_macro_event && !state->bad_hint) || (!mp_clock_stop_6));
-		|	bool bhcke = !(state->s_state_stop && bhen);
+		|	bool bhen = !((state->seq_late_macro_event && !state->seq_bad_hint) || (!mp_clock_stop_6));
+		|	bool bhcke = !(state->seq_s_state_stop && bhen);
 		|	if (state_clock) {
 		|		nxt_lex_valid();
 		|	}
-		|	bool dispatch = state->wanna_dispatch || early_macro_pending || (lmp != 8);
+		|	bool dispatch = state->seq_wanna_dispatch || early_macro_pending || (lmp != 8);
 		|	if (state_clock && !RNDX(RND_RES_OFFS)) {
-		|		state->tosram[state->resolve_address] = (state->typ_bus >> 7) & 0xfffff;
+		|		state->seq_tosram[state->seq_resolve_address] = (state->seq_typ_bus >> 7) & 0xfffff;
 		|	}
 		|	if (aclk) {
-		|		state->late_macro_event = !(sclke || !(macro_event && !early_macro_pending));
+		|		state->seq_late_macro_event = !(sclke || !(macro_event && !early_macro_pending));
 		|		if (!mp_seq_halted) {
 		|			mp_seq_halted = !(sclke || RNDX(RND_HALT));
 		|			if (mp_seq_halted) ALWAYS_TRACE(<< "THAW HALTED");
 		|		}
 		|	}
-		|	if (state_clock && !state->ibld) {
-		|		state->macro_ins_typ = state->typ_bus;
-		|		state->macro_ins_val = state->val_bus;
+		|	if (state_clock && !state->seq_ibld) {
+		|		state->seq_macro_ins_typ = state->seq_typ_bus;
+		|		state->seq_macro_ins_val = state->seq_val_bus;
 		|	}
 		|
 		|	if (state_clock && !RNDX(RND_RETRN_LD)) {
-		|		state->retrn_pc_ofs = state->macro_pc_offset;
+		|		state->seq_retrn_pc_ofs = state->seq_macro_pc_offset;
 		|	}
 		|
 		|	if (!bhcke && !macro_event) {
 		|		unsigned mode = 0;
 		|		unsigned u = 0;
-		|		if (state->cload) u |= 1;
-		|		if (state->wanna_dispatch) u |= 2;
+		|		if (state->seq_cload) u |= 1;
+		|		if (state->seq_wanna_dispatch) u |= 2;
 		|		switch (u) {
 		|		case 0: mode = 1; break;
 		|		case 1: mode = 1; break;
 		|		case 2:
-		|			if (!state->bad_hint) {
-		|				state->m_pc_mb = RNDX(RND_M_PC_MD0);
+		|			if (!state->seq_bad_hint) {
+		|				state->seq_m_pc_mb = RNDX(RND_M_PC_MD0);
 		|			} else {
-		|				state->m_pc_mb = !((state->bhreg >> 2) & 1);
+		|				state->seq_m_pc_mb = !((state->seq_bhreg >> 2) & 1);
 		|			}
 		|
-		|			if (state->m_pc_mb) mode |= 2;
+		|			if (state->seq_m_pc_mb) mode |= 2;
 		|			if (RNDX(RND_M_PC_MD1)) mode |= 1;
 		|			break;
 		|		case 3: mode = 0; break;
@@ -911,32 +906,32 @@ class SEQ(PartFactory):
 		|		if (mode == 3) {
 		|			uint64_t tmp;
 		|			if (!RNDX(RND_M_PC_MUX)) {
-		|				tmp = state->val_bus;
-		|				state->word = tmp >> 4;
-		|				state->macro_pc_offset = (tmp >> 4) & 0x7fff;
+		|				tmp = state->seq_val_bus;
+		|				state->seq_word = tmp >> 4;
+		|				state->seq_macro_pc_offset = (tmp >> 4) & 0x7fff;
 		|			} else {
-		|				state->macro_pc_offset = branch_offset();
-		|				state->word = state->macro_pc_offset;
+		|				state->seq_macro_pc_offset = branch_offset();
+		|				state->seq_word = state->seq_macro_pc_offset;
 		|			}
 		|		} else if (mode == 2) {
-		|			state->macro_pc_offset += 1;
-		|			state->word += 1;
+		|			state->seq_macro_pc_offset += 1;
+		|			state->seq_word += 1;
 		|		} else if (mode == 1) {
-		|			state->macro_pc_offset -= 1;
-		|			state->word += 7;
+		|			state->seq_macro_pc_offset -= 1;
+		|			state->seq_word += 7;
 		|		}
-		|		state->word &= 7;
+		|		state->seq_word &= 7;
 		|	}
 		|	if (state_clock && !RNDX(RND_CUR_LEX)) {
-		|		state->curr_lex = state->val_bus & 0xf;
-		|		state->curr_lex ^= 0xf;
+		|		state->seq_curr_lex = state->seq_val_bus & 0xf;
+		|		state->seq_curr_lex ^= 0xf;
 		|	}
 		|
 		|	if (aclk) {
 		|		early_macro_pending = mp_macro_event != 0;
-		|		state->emac = mp_macro_event ^ 0x7f;
+		|		state->seq_emac = mp_macro_event ^ 0x7f;
 		|		if (early_macro_pending) {
-		|			state->uadr_decode = 0x0400 + 0x20 * fls(mp_macro_event);
+		|			state->seq_uadr_decode = 0x0400 + 0x20 * fls(mp_macro_event);
 		|		}
 		|	}
 		|	bool crnana = !(RNDX(RND_INSTR_LD) && dispatch);
@@ -944,79 +939,79 @@ class SEQ(PartFactory):
 		|	if (sclk) {
 		|		unsigned dsp = 0;
 		|		if (!RNDX(RND_INSTR_MX)) {
-		|			dsp = state->display;
+		|			dsp = state->seq_display;
 		|		} else {
-		|			uint64_t tval = state->val_bus;
+		|			uint64_t tval = state->seq_val_bus;
 		|			dsp = tval & 0xffff;
 		|		}
 		|		dsp ^= 0xffff;;
 		|			
-		|		if (crnana && state->topbot)
-		|			state->ctop = dsp;
-		|		if (crnana && !state->topbot)
-		|			state->cbot = dsp;
+		|		if (crnana && state->seq_topbot)
+		|			state->seq_ctop = dsp;
+		|		if (crnana && !state->seq_topbot)
+		|			state->seq_cbot = dsp;
 		|	}
 		|			
 		|	if (!bhcke) {
-		|		bool dmdisp = !(!state->bad_hint || (state->bhreg & 0x04));
+		|		bool dmdisp = !(!state->seq_bad_hint || (state->seq_bhreg & 0x04));
 		|		bool crnor0a = !(crnana || dmdisp);
 		|		if (!crnor0a)
-		|			state->topbot = !state->topbot;
+		|			state->seq_topbot = !state->seq_topbot;
 		|	}
 		|
-		|	if (state->topbot) {
-		|		state->curins = state->cbot;
+		|	if (state->seq_topbot) {
+		|		state->seq_curins = state->seq_cbot;
 		|	} else {
-		|		state->curins = state->ctop;
+		|		state->seq_curins = state->seq_ctop;
 		|	}
 		|
 		|	if (sclk && !RNDX(RND_BR_MSK_L)) {
-		|		uint64_t tmp = state->val_bus;
-		|		state->break_mask = (tmp >> 16) & 0xffff;
+		|		uint64_t tmp = state->seq_val_bus;
+		|		state->seq_break_mask = (tmp >> 16) & 0xffff;
 		|	}
 		|
 		|	uint32_t *ciptr;
-		|	if (state->curins & 0xfc00) {
-		|		ciptr = &state->top[state->curins >> 6];
+		|	if (state->seq_curins & 0xfc00) {
+		|		ciptr = &state->seq_top[state->seq_curins >> 6];
 		|	} else {
-		|		ciptr = &state->bot[state->curins & 0x3ff];
+		|		ciptr = &state->seq_bot[state->seq_curins & 0x3ff];
 		|	}
 		|
 		|	unsigned ccl = (*ciptr >> 4) & 0xf;
 		|
 		|	if (ccl == 0) {
-		|		state->m_break_class = false;
+		|		state->seq_m_break_class = false;
 		|	} else {
-		|		state->m_break_class = (state->break_mask >> (15 - ccl)) & 1;
+		|		state->seq_m_break_class = (state->seq_break_mask >> (15 - ccl)) & 1;
 		|	}
-		|	state->m_break_class = !state->m_break_class;
+		|	state->seq_m_break_class = !state->seq_m_break_class;
 		|
 		|	if (state_clock) {
 		|		if (!RNDX(RND_NAME_LD)) {
-		|			state->cur_name = state->typ_bus >> 32;
+		|			state->seq_cur_name = state->seq_typ_bus >> 32;
 		|		}
 		|			
 		|		if (!RNDX(RND_RES_NAME)) {
-		|			state->namram[state->resolve_address] = state->typ_bus >> 32;
+		|			state->seq_namram[state->seq_resolve_address] = state->seq_typ_bus >> 32;
 		|		}
 		|
 		|		if (!RNDX(RND_RETRN_LD)) {
-		|			state->retseg = state->pcseg;
+		|			state->seq_retseg = state->seq_pcseg;
 		|		}
 		|		if (!RNDX(RND_M_PC_LDH)) {
 		|			//unsigned val;
-		|			//val = state->val_bus >> 32;
+		|			//val = state->seq_val_bus >> 32;
 		|			//val ^= 0xffffffff;
-		|			state->pcseg = (~state->val_bus >> 32) & 0xffffff;
+		|			state->seq_pcseg = (~state->seq_val_bus >> 32) & 0xffffff;
 		|		}
 		|		if (!RNDX(RND_SAVE_LD)) {
-		|			state->savrg = state->resolve_offset;
-		|			state->carry_out = carry_out;
+		|			state->seq_savrg = state->seq_resolve_offset;
+		|			state->seq_carry_out = carry_out;
 		|		}
 		|
 		|		uint64_t cnb;
 		|		if (!RNDX(RND_CNTL_MUX)) {
-		|			cnb = ~state->typ_bus;
+		|			cnb = ~state->seq_typ_bus;
 		|		} else {
 		|			cnb = mp_fiu_bus;
 		|		}
@@ -1025,25 +1020,25 @@ class SEQ(PartFactory):
 		|		cnb &= 0xfffff;
 		|
 		|		if (!RNDX(RND_PRED_LD)) {
-		|			state->pred = cnb;
+		|			state->seq_pred = cnb;
 		|		}
 		|		unsigned csa_cntl = mp_csa_cntl;
 		|
 		|		bool ten = (csa_cntl != 2 && csa_cntl != 3);
 		|		bool tud = !(csa_cntl & 1);
 		|		if (!RNDX(RND_TOP_LD)) {
-		|			state->topcnt = cnb;
+		|			state->seq_topcnt = cnb;
 		|		} else if (ten) {
 		|			// Nothing
 		|		} else if (tud) {
-		|			state->topcnt += 1;
+		|			state->seq_topcnt += 1;
 		|		} else {
-		|			state->topcnt += 0xfffff;
+		|			state->seq_topcnt += 0xfffff;
 		|		}
-		|		state->topcnt &= 0xfffff;
+		|		state->seq_topcnt &= 0xfffff;
 		|	}
 		|
-		|	if (state->s_state_stop && state->l_macro_hic) {
+		|	if (state->seq_s_state_stop && state->seq_l_macro_hic) {
 		|		bool xwrite;
 		|		bool pop;
 		|		unsigned stkinpsel = 0;
@@ -1051,94 +1046,94 @@ class SEQ(PartFactory):
 		|			xwrite = true;
 		|			pop = true;
 		|			stkinpsel = 3;
-		|		} else if (!state->push) {
+		|		} else if (!state->seq_push) {
 		|			xwrite = true;
 		|			pop = false;
-		|			if (!state->push_br) stkinpsel |= 2;
-		|			if (state->bad_hint) stkinpsel |= 1;
+		|			if (!state->seq_push_br) stkinpsel |= 2;
+		|			if (state->seq_bad_hint) stkinpsel |= 1;
 		|		} else {
 		|			xwrite = !RNDX(RND_PUSH);
-		|			pop = !!(state->preturn || RNDX(RND_POP));
+		|			pop = !!(state->seq_preturn || RNDX(RND_POP));
 		|			stkinpsel = 0x1;;
 		|		}
 		|
 		|		if (xwrite) {
 		|			switch(stkinpsel) {
 		|			case 0:
-		|				state->topu = UIR_BRN;
-		|				if (state->q3cond) state->topu |= (1<<15);
-		|				if (state->latched_cond) state->topu |= (1<<14);
-		|				state->topu ^= 0xffff;
+		|				state->seq_topu = UIR_SEQ_BRN;
+		|				if (state->seq_q3cond) state->seq_topu |= (1<<15);
+		|				if (state->seq_latched_cond) state->seq_topu |= (1<<14);
+		|				state->seq_topu ^= 0xffff;
 		|				break;
 		|			case 1:
-		|				state->topu = mp_fiu_bus;
-		|				state->topu &= 0xffff;
+		|				state->seq_topu = mp_fiu_bus;
+		|				state->seq_topu &= 0xffff;
 		|				break;
 		|			case 2:
-		|				state->topu = mp_cur_uadr;
-		|				if (state->q3cond) state->topu |= (1<<15);
-		|				if (state->latched_cond) state->topu |= (1<<14);
-		|				state->topu += 1;
-		|				state->topu ^= 0xffff;
+		|				state->seq_topu = mp_cur_uadr;
+		|				if (state->seq_q3cond) state->seq_topu |= (1<<15);
+		|				if (state->seq_latched_cond) state->seq_topu |= (1<<14);
+		|				state->seq_topu += 1;
+		|				state->seq_topu ^= 0xffff;
 		|				break;
 		|			case 3:
-		|				state->topu = mp_cur_uadr;
-		|				if (state->q3cond) state->topu |= (1<<15);
-		|				if (state->latched_cond) state->topu |= (1<<14);
-		|				state->topu ^= 0xffff;
+		|				state->seq_topu = mp_cur_uadr;
+		|				if (state->seq_q3cond) state->seq_topu |= (1<<15);
+		|				if (state->seq_latched_cond) state->seq_topu |= (1<<14);
+		|				state->seq_topu ^= 0xffff;
 		|				break;
 		|			}
 		|		} else if (pop) {
-		|			state->topu = state->ram[state->adr];
+		|			state->seq_topu = state->seq_ram[state->seq_adr];
 		|		}
-		|		state->saved_latched = !((state->topu >> 14) & 0x1);
+		|		state->seq_saved_latched = !((state->seq_topu >> 14) & 0x1);
 		|
-		|		if (RNDX(RND_CLEAR_ST) && !state->stop) {
-		|			state->adr = xwrite;
+		|		if (RNDX(RND_CLEAR_ST) && !state->seq_stop) {
+		|			state->seq_adr = xwrite;
 		|		} else if (xwrite || pop) {
 		|			if (xwrite) {
-		|				state->adr = (state->adr + 1) & 0xf;
+		|				state->seq_adr = (state->seq_adr + 1) & 0xf;
 		|			} else {
-		|				state->adr = (state->adr + 0xf) & 0xf;
+		|				state->seq_adr = (state->seq_adr + 0xf) & 0xf;
 		|			}
 		|		}
-		|		state->stack_size_zero = state->adr == 0;
+		|		state->seq_stack_size_zero = state->seq_adr == 0;
 		|	}
 		|
 		|	if (sclk) {
-		|		state->fiu = mp_fiu_bus;
-		|		state->fiu &= 0x3fff;
+		|		state->seq_fiu = mp_fiu_bus;
+		|		state->seq_fiu &= 0x3fff;
 		|	}
 		|
 		|	if (aclk) {
 		|		if (!maybe_dispatch) {
-		|			state->late_u = 7;
+		|			state->seq_late_u = 7;
 		|		} else {
-		|			state->late_u = lmp;
-		|			if (state->late_u == 8)
-		|				state->late_u = 7;
+		|			state->seq_late_u = lmp;
+		|			if (state->seq_late_u == 8)
+		|				state->seq_late_u = 7;
 		|		}
 		|		unsigned sel = group_sel();
 		|		switch (sel) {
 		|		case 0:
 		|		case 7:
-		|			state->other = mp_cur_uadr + 1;
+		|			state->seq_other = mp_cur_uadr + 1;
 		|			break;
 		|		case 1:
 		|		case 2:
 		|		case 3:
-		|			state->other = UIR_BRN;
+		|			state->seq_other = UIR_SEQ_BRN;
 		|			break;
 		|		case 4:
-		|			state->other = UIR_BRN;
-		|			state->other += state->fiu;
+		|			state->seq_other = UIR_SEQ_BRN;
+		|			state->seq_other += state->seq_fiu;
 		|			break;
 		|		case 5:
-		|			state->other = state->decode >> 3;
-		|			state->other <<= 1;
+		|			state->seq_other = state->seq_decode >> 3;
+		|			state->seq_other <<= 1;
 		|			break;
 		|		case 6:
-		|			state->other = (state->topu ^ 0xffff) & 0x3fff;
+		|			state->seq_other = (state->seq_topu ^ 0xffff) & 0x3fff;
 		|			break;
 		|		default:
 		|			assert(sel < 8);
@@ -1147,25 +1142,25 @@ class SEQ(PartFactory):
 		|	}
 		|
 		|	if (aclk) {
-		|		if (state->check_exit_ue) {
+		|		if (state->seq_check_exit_ue) {
 		|			mp_seq_uev &= ~UEV_CK_EXIT;
 		|		} else {
 		|			mp_seq_uev |= UEV_CK_EXIT;
 		|		}
-		|		if (state->ferr) {
+		|		if (state->seq_ferr) {
 		|			mp_seq_uev &= ~UEV_FLD_ERR;
 		|		} else {
 		|			mp_seq_uev |= UEV_FLD_ERR;
 		|		}
-		|		if (state->clock_stop_1) {
+		|		if (state->seq_clock_stop_1) {
 		|			mp_seq_uev &= ~UEV_NEW_PAK;
 		|		} else {
 		|			mp_seq_uev |= UEV_NEW_PAK;
 		|		}
 		|
-		|		state->uev = 16 - fls(mp_seq_uev);
+		|		state->seq_uev = 16 - fls(mp_seq_uev);
 		|
-		|		if (state->s_state_stop) {
+		|		if (state->seq_s_state_stop) {
 		|			mp_cur_uadr = mp_nua_bus;
 		|		}
 		|
@@ -1176,7 +1171,7 @@ class SEQ(PartFactory):
 		|			adr |= 0x04;
 		|		adr |= br_tim << 3;
 		|		adr |= br_type << 5;
-		|		unsigned rom = state->pa044[adr];
+		|		unsigned rom = state->seq_pa044[adr];
 		|
 		|		if (!state_clock) {
 		|			rom |= 0x2;
@@ -1184,125 +1179,125 @@ class SEQ(PartFactory):
 		|			rom ^= 0x2;
 		|		}
 		|		if (!bhcke) {
-		|			state->bhreg = rom;
+		|			state->seq_bhreg = rom;
 		|		}
 		|			
-		|		state->hint_last = (state->bhreg >> 1) & 1;
-		|		state->hint_t_last = (state->bhreg >> 0) & 1;
+		|		state->seq_hint_last = (state->seq_bhreg >> 1) & 1;
+		|		state->seq_hint_t_last = (state->seq_bhreg >> 0) & 1;
 		|
-		|		bool bad_hint_disp = (!state->bad_hint || (state->bhreg & 0x08));
-		|		if (state->s_state_stop && state->bad_hint_enable && bad_hint_disp) {
+		|		bool bad_hint_disp = (!state->seq_bad_hint || (state->seq_bhreg & 0x08));
+		|		if (state->seq_s_state_stop && state->seq_bad_hint_enable && bad_hint_disp) {
 		|			unsigned restrt_rnd = 0;
 		|			restrt_rnd |= RNDX(RND_RESTRT0) ? 2 : 0;
 		|			restrt_rnd |= RNDX(RND_RESTRT1) ? 1 : 0;
-		|			if (!state->wanna_dispatch) {
-		|				state->rreg = 0xa;
+		|			if (!state->seq_wanna_dispatch) {
+		|				state->seq_rreg = 0xa;
 		|			} else if (restrt_rnd != 0) {
-		|				state->rreg = (restrt_rnd & 0x3) << 1;
+		|				state->seq_rreg = (restrt_rnd & 0x3) << 1;
 		|			} else {
-		|				state->rreg &= 0xa;
+		|				state->seq_rreg &= 0xa;
 		|			}
 		|			if (macro_event) {
-		|				state->rreg &= ~0x2;
+		|				state->seq_rreg &= ~0x2;
 		|			}
-		|			state->treg = 0x3;
+		|			state->seq_treg = 0x3;
 		|			bool dnan0d = !(dispatch && RNDX(RND_PRED_LD));
-		|			bool tsnor0b = !(dnan0d || state->tos_vld_cond);
+		|			bool tsnor0b = !(dnan0d || state->seq_tos_vld_cond);
 		|			if (tsnor0b)
-		|				state->treg |= 0x8;
-		|			if (!state->tos_vld_cond)
-		|				state->treg |= 0x4;
-		|		} else if (state->s_state_stop && state->bad_hint_enable) {
-		|			state->rreg <<= 1;
-		|			state->rreg &= 0xe;
-		|			state->rreg |= 0x1;
-		|			state->treg <<= 1;
-		|			state->treg &= 0xe;
-		|			state->treg |= 0x1;
+		|				state->seq_treg |= 0x8;
+		|			if (!state->seq_tos_vld_cond)
+		|				state->seq_treg |= 0x4;
+		|		} else if (state->seq_s_state_stop && state->seq_bad_hint_enable) {
+		|			state->seq_rreg <<= 1;
+		|			state->seq_rreg &= 0xe;
+		|			state->seq_rreg |= 0x1;
+		|			state->seq_treg <<= 1;
+		|			state->seq_treg &= 0xe;
+		|			state->seq_treg |= 0x1;
 		|		}
-		|		state->rq = state->rreg;
-		|		state->foo7 = state->treg >> 3;
+		|		state->seq_rq = state->seq_rreg;
+		|		state->seq_foo7 = state->seq_treg >> 3;
 		|
 		|		unsigned lin = 0;
-		|		lin |= state->latched_cond << 3;
-		|		unsigned condsel = UIR_CSEL;
-		|		uint8_t pa042 = state->pa042[condsel << 2];
+		|		lin |= state->seq_latched_cond << 3;
+		|		unsigned condsel = UIR_SEQ_CSEL;
+		|		uint8_t pa042 = state->seq_pa042[condsel << 2];
 		|		bool is_e_ml = (pa042 >> 7) & 1;
 		|		lin |= is_e_ml << 2;
-		|		lin |= UIR_LUIR << 1;
-		|		lin |= state->q3cond << 0;
+		|		lin |= UIR_SEQ_LUIR << 1;
+		|		lin |= state->seq_q3cond << 0;
 		|
 		|		if (state_clock) {
-		|			state->lreg = lin;
+		|			state->seq_lreg = lin;
 		|			if (lin & 0x4) {
-		|				state->last_late_cond = condition();
+		|				state->seq_last_late_cond = condition();
 		|			}
 		|		}
 		|
-		|		switch(state->lreg & 0x6) {
+		|		switch(state->seq_lreg & 0x6) {
 		|		case 0x0:
 		|		case 0x4:
-		|			state->latched_cond = (state->lreg >> 3) & 1;
+		|			state->seq_latched_cond = (state->seq_lreg >> 3) & 1;
 		|			break;
 		|		case 0x2:
-		|			state->latched_cond = (state->lreg >> 0) & 1;
+		|			state->seq_latched_cond = (state->seq_lreg >> 0) & 1;
 		|			break;
 		|		case 0x6:
-		|			state->latched_cond = state->last_late_cond;
+		|			state->seq_latched_cond = state->seq_last_late_cond;
 		|			break;
 		|		}
 		|	}
 		|
-		|	bool last_cond_late = (state->lreg >> 2) & 1;
-		|	if (state->hint_last) {
-		|		state->bad_hint = false;
-		|	} else if (!last_cond_late && !state->hint_t_last) {
-		|		state->bad_hint = state->lreg & 1;
-		|	} else if (!last_cond_late &&  state->hint_t_last) {
-		|		state->bad_hint = !(state->lreg & 1);
-		|	} else if ( last_cond_late && !state->hint_t_last) {
-		|		state->bad_hint = state->last_late_cond;
-		|	} else if ( last_cond_late &&  state->hint_t_last) {
-		|		state->bad_hint = !state->last_late_cond;
+		|	bool last_cond_late = (state->seq_lreg >> 2) & 1;
+		|	if (state->seq_hint_last) {
+		|		state->seq_bad_hint = false;
+		|	} else if (!last_cond_late && !state->seq_hint_t_last) {
+		|		state->seq_bad_hint = state->seq_lreg & 1;
+		|	} else if (!last_cond_late &&  state->seq_hint_t_last) {
+		|		state->seq_bad_hint = !(state->seq_lreg & 1);
+		|	} else if ( last_cond_late && !state->seq_hint_t_last) {
+		|		state->seq_bad_hint = state->seq_last_late_cond;
+		|	} else if ( last_cond_late &&  state->seq_hint_t_last) {
+		|		state->seq_bad_hint = !state->seq_last_late_cond;
 		|	}
 		|
-		|	switch(state->word) {
-		|	case 0x0: state->display = state->macro_ins_val >>  0; break;
-		|	case 0x1: state->display = state->macro_ins_val >> 16; break;
-		|	case 0x2: state->display = state->macro_ins_val >> 32; break;
-		|	case 0x3: state->display = state->macro_ins_val >> 48; break;
-		|	case 0x4: state->display = state->macro_ins_typ >>  0; break;
-		|	case 0x5: state->display = state->macro_ins_typ >> 16; break;
-		|	case 0x6: state->display = state->macro_ins_typ >> 32; break;
-		|	case 0x7: state->display = state->macro_ins_typ >> 48; break;
+		|	switch(state->seq_word) {
+		|	case 0x0: state->seq_display = state->seq_macro_ins_val >>  0; break;
+		|	case 0x1: state->seq_display = state->seq_macro_ins_val >> 16; break;
+		|	case 0x2: state->seq_display = state->seq_macro_ins_val >> 32; break;
+		|	case 0x3: state->seq_display = state->seq_macro_ins_val >> 48; break;
+		|	case 0x4: state->seq_display = state->seq_macro_ins_typ >>  0; break;
+		|	case 0x5: state->seq_display = state->seq_macro_ins_typ >> 16; break;
+		|	case 0x6: state->seq_display = state->seq_macro_ins_typ >> 32; break;
+		|	case 0x7: state->seq_display = state->seq_macro_ins_typ >> 48; break;
 		|	}
-		|	state->display &= 0xffff;
+		|	state->seq_display &= 0xffff;
 		|
 		|	if (!early_macro_pending) {
-		|		unsigned ai = state->display;
+		|		unsigned ai = state->seq_display;
 		|		ai ^= 0xffff;
-		|		bool top = (state->display >> 10) != 0x3f;
+		|		bool top = (state->seq_display >> 10) != 0x3f;
 		|		uint32_t *ptr;
 		|		if (top)
-		|			ptr = &state->top[ai >> 6];
+		|			ptr = &state->seq_top[ai >> 6];
 		|		else
-		|			ptr = &state->bot[ai & 0x3ff];
-		|		state->uadr_decode = (*ptr >> 16);
-		|		state->decode = (*ptr >> 8) & 0xff;
+		|			ptr = &state->seq_bot[ai & 0x3ff];
+		|		state->seq_uadr_decode = (*ptr >> 16);
+		|		state->seq_decode = (*ptr >> 8) & 0xff;
 		|	}
-		|	state->uses_tos = (state->uadr_decode >> 2) & 1;
-		|	state->ibuf_fill = (state->uadr_decode >> 1) & 1;
+		|	state->seq_uses_tos = (state->seq_uadr_decode >> 2) & 1;
+		|	state->seq_ibuf_fill = (state->seq_uadr_decode >> 1) & 1;
 		|	if (state_clock) {
-		|		state->n_in_csa = mp_csa_nve;
+		|		state->seq_n_in_csa = mp_csa_nve;
 		|	}
 		|	if (aclk) {
-		|		state->foo9 = !RNDX(RND_TOS_VLB);
+		|		state->seq_foo9 = !RNDX(RND_TOS_VLB);
 		|	}
-		|	mp_clock_stop_7 = !state->bad_hint && state->l_macro_hic;
+		|	mp_clock_stop_7 = !state->seq_bad_hint && state->seq_l_macro_hic;
 		|	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
-		|	if (!state->sf_stop && mp_seq_prepped) {
-		|		state->uir = state->wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
-		|		mp_nxt_cond_sel = UIR_CSEL;
+		|	if (!state->seq_sf_stop && mp_seq_prepped) {
+		|		state->seq_uir = state->seq_wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
+		|		mp_nxt_cond_sel = UIR_SEQ_CSEL;
 		|	}
 		|}
 		|
@@ -1322,17 +1317,17 @@ class SEQ(PartFactory):
 		|
 		|if (h1pos) {
 		|
-		|	urand = UIR_URAND;
-		|	rndx = state->pa048[urand | (state->bad_hint ? 0x100 : 0)] << 24;
-		|	rndx |= state->pa046[urand | (state->bad_hint ? 0x100 : 0)] << 16;
-		|	rndx |=  state->pa045[urand | 0x100] << 8;
-		|	rndx |= state->pa047[urand | 0x100];
+		|	urand = UIR_SEQ_URAND;
+		|	rndx = state->seq_pa048[urand | (state->seq_bad_hint ? 0x100 : 0)] << 24;
+		|	rndx |= state->seq_pa046[urand | (state->seq_bad_hint ? 0x100 : 0)] << 16;
+		|	rndx |=  state->seq_pa045[urand | 0x100] << 8;
+		|	rndx |= state->seq_pa047[urand | 0x100];
 		|
-		|	br_type = UIR_BRTYP;
+		|	br_type = UIR_SEQ_BRTYP;
 		|	maybe_dispatch = 0xb < br_type && br_type < 0xf;
 		|
 		|	if (mp_fiu_oe == 0x8)
-		|		mp_fiu_bus = state->topu;
+		|		mp_fiu_bus = state->seq_topu;
 		|	if (mp_seqtv_oe) {
 		|		h1pos = false;
 		|	}
@@ -1340,44 +1335,44 @@ class SEQ(PartFactory):
 		|
 		|if (h1pos || q1pos) {
 		|	int_reads();
-		|	unsigned lex_adr = UIR_LAUIR;
+		|	unsigned lex_adr = UIR_SEQ_LAUIR;
 		|
-		|	if (maybe_dispatch && !(state->display >> 15)) {
+		|	if (maybe_dispatch && !(state->seq_display >> 15)) {
 		|		switch (lex_adr) {
-		|		case 0:	state->resolve_address = (state->display >> 9) & 0xf; break;
-		|		case 1: state->resolve_address = 0xf; break;
-		|		case 2: state->resolve_address = 0xf; break;
-		|		case 3: state->resolve_address = 0xe; break;
+		|		case 0:	state->seq_resolve_address = (state->seq_display >> 9) & 0xf; break;
+		|		case 1: state->seq_resolve_address = 0xf; break;
+		|		case 2: state->seq_resolve_address = 0xf; break;
+		|		case 3: state->seq_resolve_address = 0xe; break;
 		|		}
 		|	} else {
 		|		switch (lex_adr) {
-		|		case 0:	state->resolve_address = state->curr_lex ^ 0xf; break;
+		|		case 0:	state->seq_resolve_address = state->seq_curr_lex ^ 0xf; break;
 		|		case 1:
-		|			state->resolve_address = (state->val_bus & 0xf) + 1; 
+		|			state->seq_resolve_address = (state->seq_val_bus & 0xf) + 1; 
 		|			break;
-		|		case 2: state->resolve_address = 0xf; break;
-		|		case 3: state->resolve_address = 0xe; break;
+		|		case 2: state->seq_resolve_address = 0xf; break;
+		|		case 3: state->seq_resolve_address = 0xe; break;
 		|		}
 		|	}
 		|	
-		|	state->resolve_address &= 0xf;
+		|	state->seq_resolve_address &= 0xf;
 		|	if (lex_adr == 1) {
-		|		state->import_condition = true;
+		|		state->seq_import_condition = true;
 		|		sign_extend = true;
 		|	} else {
-		|		state->import_condition = state->resolve_address != 0xf;
-		|		sign_extend = state->resolve_address <= 0xd;
+		|		state->seq_import_condition = state->seq_resolve_address != 0xf;
+		|		sign_extend = state->seq_resolve_address <= 0xd;
 		|	}
 		|
-		|	state->lxval = !((state->lex_valid >> (15 - state->resolve_address)) & 1);
+		|	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
 		|
 		|	if (!maybe_dispatch) {
 		|		uses_tos = false;
 		|		mem_start = 7;
-		|		intreads = UIR_IRD & 3;
+		|		intreads = UIR_SEQ_IRD & 3;
 		|	} else {
-		|		uses_tos = state->uses_tos;
-		|		mem_start = state->decode & 0x7;
+		|		uses_tos = state->seq_uses_tos;
+		|		mem_start = state->seq_decode & 0x7;
 		|		if (mem_start == 0 || mem_start == 4) {
 		|			intreads = 3;
 		|		} else {
@@ -1388,18 +1383,18 @@ class SEQ(PartFactory):
 		|	unsigned offs;
 		|	if (uses_tos) {
 		|		if (RNDX(RND_TOS_VLB)) {
-		|			offs = (state->typ_bus >> 7) & 0xfffff;
+		|			offs = (state->seq_typ_bus >> 7) & 0xfffff;
 		|		} else {
-		|			offs = state->tosof;
+		|			offs = state->seq_tosof;
 		|		}
 		|	} else {
-		|		offs = state->tosram[state->resolve_address];
+		|		offs = state->seq_tosram[state->seq_resolve_address];
 		|	}
 		|	offs ^= 0xfffff;
 		|	offs &= 0xfffff;
 		|
-		|	bool d7 = (state->display & 0x8100) == 0;
-		|	unsigned sgdisp = state->display & 0xff;
+		|	bool d7 = (state->seq_display & 0x8100) == 0;
+		|	unsigned sgdisp = state->seq_display & 0xff;
 		|	if (!d7)
 		|		sgdisp |= 0x100;
 		|	if (!(sign_extend && d7))
@@ -1407,72 +1402,72 @@ class SEQ(PartFactory):
 		|
 		|	bool acin = ((mem_start & 1) != 0);
 		|	sgdisp &= 0xfffff;
-		|	state->resolve_offset = 0;
+		|	state->seq_resolve_offset = 0;
 		|
 		|	switch(mem_start) {
 		|	case 0:
 		|	case 2:
-		|		state->resolve_offset = offs + sgdisp + 1;
-		|		carry_out = (state->resolve_offset >> 20) == 0;
+		|		state->seq_resolve_offset = offs + sgdisp + 1;
+		|		carry_out = (state->seq_resolve_offset >> 20) == 0;
 		|		break;
 		|	case 1:
 		|	case 3:
-		|		state->resolve_offset = (1<<20) + offs - (sgdisp + 1);
+		|		state->seq_resolve_offset = (1<<20) + offs - (sgdisp + 1);
 		|		carry_out = acin && (offs == 0);
 		|		break;
 		|	case 4:
 		|	case 6:
-		|		state->resolve_offset = sgdisp ^ 0xfffff;
+		|		state->seq_resolve_offset = sgdisp ^ 0xfffff;
 		|		// Carry is probably "undefined" here.
 		|		break;
 		|	case 5:
 		|	case 7:
-		|		state->resolve_offset = offs;
+		|		state->seq_resolve_offset = offs;
 		|		carry_out = acin && (offs == 0);
 		|		break;
 		|	}
 		|
-		|	state->resolve_offset &= 0xfffff;
+		|	state->seq_resolve_offset &= 0xfffff;
 		|
 		|	if (intreads == 3) {
-		|		state->output_ob = state->pred;
+		|		state->seq_output_ob = state->seq_pred;
 		|	} else if (intreads == 2) {
-		|		state->output_ob = state->topcnt;
+		|		state->seq_output_ob = state->seq_topcnt;
 		|	} else if (intreads == 1) {
-		|		state->output_ob = state->resolve_offset;
+		|		state->seq_output_ob = state->seq_resolve_offset;
 		|	} else if (intreads == 0) {
-		|		state->output_ob = state->savrg;
+		|		state->seq_output_ob = state->seq_savrg;
 		|	} else {
-		|		state->output_ob = 0xfffff;
+		|		state->seq_output_ob = 0xfffff;
 		|	}
-		|	state->output_ob &= 0xfffff;
+		|	state->seq_output_ob &= 0xfffff;
 		|	if (!maybe_dispatch) {
-		|		state->name_bus = state->namram[state->resolve_address] ^ 0xffffffff;
+		|		state->seq_name_bus = state->seq_namram[state->seq_resolve_address] ^ 0xffffffff;
 		|	} else {
-		|		state->name_bus = 0xffffffff;
+		|		state->seq_name_bus = 0xffffffff;
 		|	}
-		|	state->cload = RNDX(RND_CIB_PC_L) && (!state->bad_hint) && (!condition());
-		|	bool ibuff_ld = !(state->cload || RNDX(RND_IBUFF_LD));
-		|	state->ibld = !ibuff_ld;
-		|	bool ibemp = !(ibuff_ld || (state->word != 0));
-		|	state->m_ibuff_mt = !(ibemp && state->ibuf_fill);
+		|	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!condition());
+		|	bool ibuff_ld = !(state->seq_cload || RNDX(RND_IBUFF_LD));
+		|	state->seq_ibld = !ibuff_ld;
+		|	bool ibemp = !(ibuff_ld || (state->seq_word != 0));
+		|	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
 		|
 		|}
 		|	if (h1pos) {	// NB See above for early termination of h1pos on no OE signal.
 		|		int_reads();	// Necessary
 		|
-		|		mp_typ_bus = ~state->typ_bus;
-		|		mp_val_bus = ~state->val_bus;
+		|		mp_typ_bus = ~state->seq_typ_bus;
+		|		mp_val_bus = ~state->seq_val_bus;
 		|	}
 		|
 		|	if (q1pos) {
 		|
-		|		br_tim = UIR_BRTIM;
+		|		br_tim = UIR_SEQ_BRTIM;
 		|		unsigned bhow;
 		|		bool brtm3;
-		|		if (state->bad_hint) {
+		|		if (state->seq_bad_hint) {
 		|			bhow = 2;
-		|			brtm3 = ((state->bhreg) >> 5) & 1;
+		|			brtm3 = ((state->seq_bhreg) >> 5) & 1;
 		|		} else {
 		|			bhow = br_tim;
 		|			brtm3 = br_type & 1;
@@ -1480,28 +1475,28 @@ class SEQ(PartFactory):
 		|		}
 		|
 		|		switch (bhow) {
-		|		case 0: state->uadr_mux = !condition(); break;
-		|		case 1: state->uadr_mux = !state->latched_cond; break;
-		|		case 2: state->uadr_mux = false; break;
-		|		case 3: state->uadr_mux = true; break;
+		|		case 0: state->seq_uadr_mux = !condition(); break;
+		|		case 1: state->seq_uadr_mux = !state->seq_latched_cond; break;
+		|		case 2: state->seq_uadr_mux = false; break;
+		|		case 3: state->seq_uadr_mux = true; break;
 		|		}
 		|		if (brtm3)
-		|			state->uadr_mux = !state->uadr_mux;
+		|			state->seq_uadr_mux = !state->seq_uadr_mux;
 		|
 		|		unsigned adr = 0;
-		|		if (state->bad_hint) adr |= 0x01;
+		|		if (state->seq_bad_hint) adr |= 0x01;
 		|		adr |= (br_type << 1);
-		|		if (state->bhreg & 0x20) adr |= 0x20;
-		|		if (state->bhreg & 0x40) adr |= 0x80;
-		|		if (state->bhreg & 0x80) adr |= 0x100;
-		|		unsigned rom = state->pa043[adr];
-		|		state->wanna_dispatch = !(((rom >> 5) & 1) && !state->uadr_mux);	// Changes @15, 20, 60ns
-		|		state->preturn = !(((rom >> 3) & 1) ||  state->uadr_mux);
-		|		state->push_br =    (rom >> 1) & 1;
-		|		state->push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->uadr_mux));
-		|		state->stop = !(!state->bad_hint && (state->uev == 16) && !state->late_macro_event);
-		|		bool evnan0d = !(UIR_ENMIC && (state->uev == 16));
-		|		mp_uevent_enable = !(evnan0d || state->stop);
+		|		if (state->seq_bhreg & 0x20) adr |= 0x20;
+		|		if (state->seq_bhreg & 0x40) adr |= 0x80;
+		|		if (state->seq_bhreg & 0x80) adr |= 0x100;
+		|		unsigned rom = state->seq_pa043[adr];
+		|		state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !state->seq_uadr_mux);	// Changes @15, 20, 60ns
+		|		state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
+		|		state->seq_push_br =    (rom >> 1) & 1;
+		|		state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
+		|		state->seq_stop = !(!state->seq_bad_hint && (state->seq_uev == 16) && !state->seq_late_macro_event);
+		|		bool evnan0d = !(UIR_SEQ_ENMIC && (state->seq_uev == 16));
+		|		mp_uevent_enable = !(evnan0d || state->seq_stop);
 		|	}
 		|
 		|	if (PIN_Q2.posedge()) {
