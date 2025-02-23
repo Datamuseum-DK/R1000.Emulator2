@@ -46,65 +46,65 @@ class TYP(PartFactory):
 		|
 		|#define A_LSB BUS64_LSB
 		|#define B_LSB BUS64_LSB
-		|#define A_BITS(n) (state->a >> A_LSB(n))
-		|#define B_BITS(n) (state->b >> B_LSB(n))
+		|#define A_BITS(n) (state->typ_a >> A_LSB(n))
+		|#define B_BITS(n) (state->typ_b >> B_LSB(n))
 		|#define A_BIT(n) (A_BITS(n) & 1)
 		|#define B_BIT(n) (B_BITS(n) & 1)
-		|#define A_LIT() (state->a & 0x7f)
-		|#define B_LIT() (state->b & 0x7f)
+		|#define A_LIT() (state->typ_a & 0x7f)
+		|#define B_LIT() (state->typ_b & 0x7f)
 		|''')
 
     def state(self, file):
  
         file.fmt('''
-		|	uint64_t *rfram;
-		|	uint8_t pa010[512], pa068[512], pa059[512];
-		|	uint64_t a, b, c, nalu, alu;
-		|	uint64_t wdr;
-		|	uint64_t count;
-		|	unsigned csa_offset;
-		|	unsigned topreg;
-		|	unsigned botreg;
-		|	bool csa_hit;
-		|	bool csa_write;
-		|	unsigned aadr;
-		|	unsigned badr;
-		|	unsigned cadr;
-		|	bool cond;
-		|	bool almsb;
-		|	bool coh;
-		|	bool com;
-		|	uint32_t ofreg;
-		|	bool ppriv;
-		|	bool last_cond;
-		|	bool wen;
-		|	bool is_binary;
-		|	bool sub_else_add;
-		|	bool ovr_en;
-		|	uint64_t *wcsram;
-		|	uint64_t uir;
+		|	uint64_t *typ_rfram;
+		|	uint8_t typ_pa010[512], typ_pa068[512], typ_pa059[512];
+		|	uint64_t typ_a, typ_b, c, typ_nalu, typ_alu;
+		|	uint64_t typ_wdr;
+		|	uint64_t typ_count;
+		|	unsigned typ_csa_offset;
+		|	unsigned typ_topreg;
+		|	unsigned typ_botreg;
+		|	bool typ_csa_hit;
+		|	bool typ_csa_write;
+		|	unsigned typ_aadr;
+		|	unsigned typ_badr;
+		|	unsigned typ_cadr;
+		|	bool typ_cond;
+		|	bool typ_almsb;
+		|	bool typ_coh;
+		|	bool typ_com;
+		|	uint32_t typ_ofreg;
+		|	bool typ_ppriv;
+		|	bool typ_last_cond;
+		|	bool typ_wen;
+		|	bool typ_is_binary;
+		|	bool typ_sub_else_add;
+		|	bool typ_ovr_en;
+		|	uint64_t *typ_wcsram;
+		|	uint64_t typ_uir;
 		|
-		|#define TUIR_A		((state->uir >> 41) & 0x3f)
-		|#define TUIR_B		((state->uir >> 35) & 0x3f)
-		|#define TUIR_FRM	((state->uir >> 30) & 0x1f)
-		|#define TUIR_RAND	((state->uir >> 24) & 0xf)
-		|#define TUIR_C		((state->uir >> 18) & 0x3f)
-		|#define TUIR_CLIT	(((state->uir >> (46-16)) & 0x1f) | (((state->uir >> (46-18) & 0x3)<<5)))
-		|#define TUIR_UPVC	((state->uir >> 15) & 0x7)
-		|#define TUIR_SEL	((state->uir >> 14) & 0x1)
-		|#define TUIR_AFNC	((state->uir >> 9) & 0x1f)
-		|#define TUIR_CSRC	((state->uir >> 8) & 0x1)
-		|#define TUIR_MCTL	((state->uir >> 4) & 0xf)
-		|#define TUIR_CCTL	((state->uir >> 1) & 0x7)
+		|#define UIR_TYP_A		((state->typ_uir >> 41) & 0x3f)
+		|#define UIR_TYP_B		((state->typ_uir >> 35) & 0x3f)
+		|#define UIR_TYP_FRM	((state->typ_uir >> 30) & 0x1f)
+		|#define UIR_TYP_RAND	((state->typ_uir >> 24) & 0xf)
+		|#define UIR_TYP_C		((state->typ_uir >> 18) & 0x3f)
+		|#define UIR_TYP_CLIT	(((state->typ_uir >> (46-16)) & 0x1f) | (((state->typ_uir >> (46-18) & 0x3)<<5)))
+		|#define UIR_TYP_UPVC	((state->typ_uir >> 15) & 0x7)
+		|#define UIR_TYP_SEL	((state->typ_uir >> 14) & 0x1)
+		|#define UIR_TYP_AFNC	((state->typ_uir >> 9) & 0x1f)
+		|#define UIR_TYP_CSRC	((state->typ_uir >> 8) & 0x1)
+		|#define UIR_TYP_MCTL	((state->typ_uir >> 4) & 0xf)
+		|#define UIR_TYP_CCTL	((state->typ_uir >> 1) & 0x7)
 		|''')
 
     def init(self, file):
         file.fmt('''
-		|	load_programmable(this->name(), state->pa010, sizeof state->pa010, "PA010");
-		|	load_programmable(this->name(), state->pa068, sizeof state->pa068, "PA068");
-		|	load_programmable(this->name(), state->pa059, sizeof state->pa059, "PA059-01");
-		|	state->wcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
-		|	state->rfram = (uint64_t*)CTX_GetRaw("TYP_RF", sizeof(uint64_t) << 10);
+		|	load_programmable(this->name(), state->typ_pa010, sizeof state->typ_pa010, "PA010");
+		|	load_programmable(this->name(), state->typ_pa068, sizeof state->typ_pa068, "PA068");
+		|	load_programmable(this->name(), state->typ_pa059, sizeof state->typ_pa059, "PA059-01");
+		|	state->typ_wcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
+		|	state->typ_rfram = (uint64_t*)CTX_GetRaw("TYP_RF", sizeof(uint64_t) << 10);
 		|''')
 
     def priv_decl(self, file):
@@ -136,8 +136,8 @@ class TYP(PartFactory):
 		|bin_op_pass(void)
 		|{
 		|	bool dp = !(A_BIT(35) && B_BIT(35));
-		|	bool abim = !(!(A_BITS(31) == state->ofreg) | dp);
-		|	bool bbim = !(!(B_BITS(31) == state->ofreg) | dp);
+		|	bool abim = !(!(A_BITS(31) == state->typ_ofreg) | dp);
+		|	bool bbim = !(!(B_BITS(31) == state->typ_ofreg) | dp);
 		|
 		|	return (!(
 		|		(abim && bbim) ||
@@ -161,14 +161,14 @@ class TYP(PartFactory):
 		|SCM_«mmm» ::
 		|a_op_pass(void)
 		|{
-		|	return (!(A_BIT(35) && ((A_BITS(31) == state->ofreg) || A_BIT(34))));
+		|	return (!(A_BIT(35) && ((A_BITS(31) == state->typ_ofreg) || A_BIT(34))));
 		|}
 		|
 		|bool
 		|SCM_«mmm» ::
 		|b_op_pass(void)
 		|{
-		|	return (!(B_BIT(35) && ((B_BITS(31) == state->ofreg) || B_BIT(34))));
+		|	return (!(B_BIT(35) && ((B_BITS(31) == state->typ_ofreg) || B_BIT(34))));
 		|}
 		|
 		|bool
@@ -176,18 +176,18 @@ class TYP(PartFactory):
 		|clev(void)
 		|{
 		|	return (!(
-		|		(!(rand != 0x4) && !(A_LIT() != TUIR_CLIT)) ||
+		|		(!(rand != 0x4) && !(A_LIT() != UIR_TYP_CLIT)) ||
 		|		(!(rand != 0x6) && !(A_LIT() != B_LIT())) ||
-		|		(!(rand != 0x5) && !(B_LIT() != TUIR_CLIT)) ||
-		|		(!(rand != 0x7) && !(A_LIT() != B_LIT()) && !(B_LIT() != TUIR_CLIT))
+		|		(!(rand != 0x5) && !(B_LIT() != UIR_TYP_CLIT)) ||
+		|		(!(rand != 0x7) && !(A_LIT() != B_LIT()) && !(B_LIT() != UIR_TYP_CLIT))
 		|	));
 		|}
 		|
-		|void SCM_«mmm» :: cond_a(bool val) { state->cond = val; mp_condxc = !val; };
-		|void SCM_«mmm» :: cond_b(bool val) { state->cond = val; mp_condxb = !val; };
-		|void SCM_«mmm» :: cond_c(bool val) { state->cond = val; mp_condxa = !val; };
-		|void SCM_«mmm» :: cond_d(bool val) { state->cond = val; mp_condx9 = !val; };
-		|void SCM_«mmm» :: cond_e(bool val) { state->cond = val; mp_condx8 = !val; };
+		|void SCM_«mmm» :: cond_a(bool val) { state->typ_cond = val; mp_condxc = !val; };
+		|void SCM_«mmm» :: cond_b(bool val) { state->typ_cond = val; mp_condxb = !val; };
+		|void SCM_«mmm» :: cond_c(bool val) { state->typ_cond = val; mp_condxa = !val; };
+		|void SCM_«mmm» :: cond_d(bool val) { state->typ_cond = val; mp_condx9 = !val; };
+		|void SCM_«mmm» :: cond_e(bool val) { state->typ_cond = val; mp_condx8 = !val; };
 		|
 		|void
 		|SCM_«mmm» ::
@@ -199,17 +199,17 @@ class TYP(PartFactory):
 		|
 		|	switch(condsel) {
 		|	case 0x18:	// L - TYP_ALU_ZERO
-		|		cond_a(state->nalu != 0);
+		|		cond_a(state->typ_nalu != 0);
 		|		break;
 		|	case 0x19:	// L - TYP_ALU_NONZERO
-		|		cond_a(state->nalu == 0);
+		|		cond_a(state->typ_nalu == 0);
 		|		break;
 		|	case 0x1a:	// L - TYP_ALU_A_GT_OR_GE_B
 		|		{
-		|		bool ovrsign = (!(((A_BIT(0) != B_BIT(0)) && state->is_binary) || (!state->is_binary && !A_BIT(0))));
+		|		bool ovrsign = (!(((A_BIT(0) != B_BIT(0)) && state->typ_is_binary) || (!state->typ_is_binary && !A_BIT(0))));
 		|		cond_a(!(
 		|		    ((A_BIT(0) != B_BIT(0)) && A_BIT(0)) ||
-		|		    (state->coh && (ovrsign ^ state->sub_else_add))
+		|		    (state->typ_coh && (ovrsign ^ state->typ_sub_else_add))
 		|		));
 		|		}
 		|		break;
@@ -217,33 +217,33 @@ class TYP(PartFactory):
 		|		cond_a(true);
 		|		break;
 		|	case 0x1c:	// E - TYP_LOOP_COUNTER_ZERO
-		|		cond_a(state->count != 0x3ff);
+		|		cond_a(state->typ_count != 0x3ff);
 		|		break;
 		|	case 0x1d:	// SPARE
 		|		cond_a(true);
 		|		break;
 		|	case 0x1e:	// L - TYP_ALU_ZERO - COMBO with VAL_ALU_NONZERO
-		|		cond_a(state->nalu != 0);
+		|		cond_a(state->typ_nalu != 0);
 		|		break;
 		|	case 0x1f:	// L - TYP_ALU_32_CO - ALU 32 BIT CARRY OUT
-		|		cond_a(state->com);
+		|		cond_a(state->typ_com);
 		|		break;
 		|	case 0x20:	// L - TYP_ALU_CARRY
-		|		cond_b(!state->coh);
+		|		cond_b(!state->typ_coh);
 		|		break;
 		|	case 0x21:	// L - TYP_ALU_OVERFLOW
 		|		{
-		|		bool ovrsign = (!(((A_BIT(0) != B_BIT(0)) && state->is_binary) || (!state->is_binary && !A_BIT(0))));
-		|		cond_b(state->ovr_en || (
-		|		    state->coh ^ state->almsb ^ state->sub_else_add ^ ovrsign
+		|		bool ovrsign = (!(((A_BIT(0) != B_BIT(0)) && state->typ_is_binary) || (!state->typ_is_binary && !A_BIT(0))));
+		|		cond_b(state->typ_ovr_en || (
+		|		    state->typ_coh ^ state->typ_almsb ^ state->typ_sub_else_add ^ ovrsign
 		|		));
 		|		}
 		|		break;
 		|	case 0x22:	// L - TYP_ALU_LT_ZERO
-		|		cond_b(state->almsb);
+		|		cond_b(state->typ_almsb);
 		|		break;
 		|	case 0x23:	// L - TYP_ALU_LE_ZERO
-		|		cond_b(!(state->almsb && (state->nalu != 0)));
+		|		cond_b(!(state->typ_almsb && (state->typ_nalu != 0)));
 		|		break;
 		|	case 0x24:	// ML - TYP_SIGN_BITS_EQUAL
 		|		cond_b((A_BIT(0) != B_BIT(0)));
@@ -255,16 +255,16 @@ class TYP(PartFactory):
 		|		cond_b(false);
 		|		break;
 		|	case 0x27:	// E - TYP_PREVIOUS
-		|		cond_b(state->last_cond);
+		|		cond_b(state->typ_last_cond);
 		|		break;
 		|	case 0x28:	// ML - OF_KIND_MATCH
 		|		{
-		|		unsigned mask_a = state->pa059[TUIR_CLIT] >> 1;
-		|		unsigned okpat_a = state->pa059[TUIR_CLIT + 256] >> 1;
-		|		bool oka = (0x7f ^ (mask_a & B_LIT())) != okpat_a; // XXX state->b ??
+		|		unsigned mask_a = state->typ_pa059[UIR_TYP_CLIT] >> 1;
+		|		unsigned okpat_a = state->typ_pa059[UIR_TYP_CLIT + 256] >> 1;
+		|		bool oka = (0x7f ^ (mask_a & B_LIT())) != okpat_a; // XXX state->typ_b ??
 		|
-		|		unsigned mask_b = state->pa059[TUIR_CLIT + 128] >> 1;
-		|		unsigned okpat_b = state->pa059[TUIR_CLIT + 384] >> 1;
+		|		unsigned mask_b = state->typ_pa059[UIR_TYP_CLIT + 128] >> 1;
+		|		unsigned okpat_b = state->typ_pa059[UIR_TYP_CLIT + 384] >> 1;
 		|		bool okb = (0x7f ^ (mask_b & B_LIT())) != okpat_b;
 		|
 		|		bool okm = !(oka & okb);
@@ -272,16 +272,16 @@ class TYP(PartFactory):
 		|		}
 		|		break;
 		|	case 0x29:	// ML - CLASS_A_EQ_LIT
-		|		cond_c(A_LIT() != TUIR_CLIT);
+		|		cond_c(A_LIT() != UIR_TYP_CLIT);
 		|		break;
 		|	case 0x2a:	// ML - CLASS_B_EQ_LIT
-		|		cond_c(B_LIT() != TUIR_CLIT);
+		|		cond_c(B_LIT() != UIR_TYP_CLIT);
 		|		break;
 		|	case 0x2b:	// ML - CLASS_A_EQ_B
 		|		cond_c(A_LIT() != B_LIT());
 		|		break;
 		|	case 0x2c:	// ML - CLASS_A_B_EQ_LIT
-		|		cond_c(!(A_LIT() != TUIR_CLIT) || (B_LIT() != TUIR_CLIT));
+		|		cond_c(!(A_LIT() != UIR_TYP_CLIT) || (B_LIT() != UIR_TYP_CLIT));
 		|		break;
 		|	case 0x2d:	// E - PRIVACY_A_OP_PASS
 		|		cond_c(a_op_pass());
@@ -305,7 +305,7 @@ class TYP(PartFactory):
 		|		cond_d(!(bin_op_pass() || priv_path_eq()));
 		|		break;
 		|	case 0x34:	// E - PASS_PRIVACY_BIT
-		|		cond_d(state->ppriv);
+		|		cond_d(state->typ_ppriv);
 		|		break;
 		|	case 0x35:	// ML - B_BUS_BIT_32
 		|		cond_d(B_BIT(32));
@@ -347,59 +347,59 @@ class TYP(PartFactory):
 		|SCM_«mmm» ::
 		|find_a(void)
 		|{
-		|	unsigned uira = TUIR_A;
+		|	unsigned uira = UIR_TYP_A;
 		|	if (uira == 0x28) {
-		|		state->a = ~0ULL << 10;
-		|		state->a |= state->count;
+		|		state->typ_a = ~0ULL << 10;
+		|		state->typ_a |= state->typ_count;
 		|		return;
 		|	}
 		|	if ((uira & 0x3c) == 0x28) {
-		|		state->a = ~0ULL;
+		|		state->typ_a = ~0ULL;
 		|		return;
 		|	}
-		|	state->aadr = 0;
+		|	state->typ_aadr = 0;
 		|	if (uira == 0x2c) {
-		|		state->aadr = state->count;
+		|		state->typ_aadr = state->typ_count;
 		|	} else if (uira <= 0x1f) {
-		|		state->aadr = frm << 5;
-		|		state->aadr |= uira & 0x1f;
+		|		state->typ_aadr = frm << 5;
+		|		state->typ_aadr |= uira & 0x1f;
 		|	} else if (uira <= 0x2f) {
-		|		state->aadr |= (uira + state->topreg + 1) & 0xf;
+		|		state->typ_aadr |= (uira + state->typ_topreg + 1) & 0xf;
 		|	} else {
-		|		state->aadr |= uira & 0x1f;
+		|		state->typ_aadr |= uira & 0x1f;
 		|	}
-		|	state->a = state->rfram[state->aadr];
+		|	state->typ_a = state->typ_rfram[state->typ_aadr];
 		|}
 		|
 		|void
 		|SCM_«mmm» ::
 		|find_b(void)
 		|{
-		|	unsigned uirb = TUIR_B;
+		|	unsigned uirb = UIR_TYP_B;
 		|
-		|	state->badr = 0;
+		|	state->typ_badr = 0;
 		|	if (uirb == 0x2c) {
-		|		state->badr = state->count;
+		|		state->typ_badr = state->typ_count;
 		|	} else if (uirb <= 0x1f) {
-		|		state->badr = frm << 5;
-		|		state->badr |= uirb & 0x1f;
+		|		state->typ_badr = frm << 5;
+		|		state->typ_badr |= uirb & 0x1f;
 		|	} else if (uirb <= 0x27) {
-		|		state->badr |= (uirb + state->topreg + 1) & 0xf;
+		|		state->typ_badr |= (uirb + state->typ_topreg + 1) & 0xf;
 		|	} else if (uirb <= 0x2b) {
-		|		unsigned csa = state->botreg + (uirb&1);
+		|		unsigned csa = state->typ_botreg + (uirb&1);
 		|		if (!(uirb & 2)) {
-		|			csa += state->csa_offset;
+		|			csa += state->typ_csa_offset;
 		|		}
-		|		state->badr |= csa & 0xf;
+		|		state->typ_badr |= csa & 0xf;
 		|	} else if (uirb <= 0x2f) {
-		|		state->badr |= (uirb + state->topreg + 1) & 0xf;
+		|		state->typ_badr |= (uirb + state->typ_topreg + 1) & 0xf;
 		|	} else {
-		|		state->badr |= uirb & 0x1f;
+		|		state->typ_badr |= uirb & 0x1f;
 		|	}
 		|	if (uirb == 0x29 && mp_typt_oe) {
-		|		state->b = ~mp_typ_bus;
+		|		state->typ_b = ~mp_typ_bus;
 		|	} else {
-		|		state->b = state->rfram[state->badr];
+		|		state->typ_b = state->typ_rfram[state->typ_badr];
 		|	}
 		|}
 		|
@@ -407,27 +407,27 @@ class TYP(PartFactory):
 		|SCM_«mmm» ::
 		|typ_q2(void)
 		|{
-		|	unsigned uirc = TUIR_C;
+		|	unsigned uirc = UIR_TYP_C;
 		|
-		|	unsigned priv_check = TUIR_UPVC;
+		|	unsigned priv_check = UIR_TYP_UPVC;
 		|	if (mp_fiu_oe != 0x4) {
 		|		find_a();
 		|	}
 		|	if (mp_typt_oe) {
 		|		find_b();
 		|	}
-		|	state->wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
+		|	state->typ_wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
 		|	if (mp_csa_write_enable && uirc != 0x28)
-		|	state->wen = !state->wen;
+		|	state->typ_wen = !state->typ_wen;
 		|
 		|	bool divide = rand != 0xb;
 		|	bool acond = true;
-		|	if (divide && state->last_cond)
+		|	if (divide && state->typ_last_cond)
 		|		acond = false;
 		|	if (!divide && mp_q_bit) 
 		|		acond = false;
 		|	struct f181 f181l, f181h;
-		|	unsigned tmp, idx, alurand, alufunc = TUIR_AFNC;
+		|	unsigned tmp, idx, alurand, alufunc = UIR_TYP_AFNC;
 		|
 		|	if (rand < 8) {
 		|		alurand = 7;
@@ -438,86 +438,84 @@ class TYP(PartFactory):
 		|	idx |= alurand << 5;
 		|	idx |= alufunc;
 		|		
-		|	tmp = state->pa068[idx];
-		|	state->is_binary = (tmp >> 1) & 1;
+		|	tmp = state->typ_pa068[idx];
+		|	state->typ_is_binary = (tmp >> 1) & 1;
 		|	tmp >>= 3;
 		|
 		|	f181l.ctl = tmp >> 1;
 		|	f181l.ctl |= (tmp & 1) << 4;
 		|	f181l.ctl |= (rand != 0xf) << 5;
-		|	f181l.ci = (state->pa068[idx] >> 2) & 1;
-		|	f181l.a = state->a & 0xffffffff;
-		|	f181l.b = state->b & 0xffffffff;
+		|	f181l.ci = (state->typ_pa068[idx] >> 2) & 1;
+		|	f181l.a = state->typ_a & 0xffffffff;
+		|	f181l.b = state->typ_b & 0xffffffff;
 		|	f181_alu(&f181l);
-		|	state->com = f181l.co;
-		|	state->nalu = f181l.o;
+		|	state->typ_com = f181l.co;
+		|	state->typ_nalu = f181l.o;
 		|
-		|	tmp = state->pa010[idx];
-		|	state->sub_else_add = (tmp >> 2) & 1;
-		|	state->ovr_en = (tmp >> 1) & 1;
+		|	tmp = state->typ_pa010[idx];
+		|	state->typ_sub_else_add = (tmp >> 2) & 1;
+		|	state->typ_ovr_en = (tmp >> 1) & 1;
 		|	tmp >>= 3;
 		|
 		|	f181h.ctl = tmp >> 1;
 		|	f181h.ctl |= (tmp & 1) << 4;
 		|	f181h.ctl |= 1 << 5;
 		|	f181h.ci = f181l.co;
-		|	f181h.a = state->a >> 32;
-		|	f181h.b = state->b >> 32;
+		|	f181h.a = state->typ_a >> 32;
+		|	f181h.b = state->typ_b >> 32;
 		|	f181_alu(&f181h);
-		|	state->coh = f181h.co;
-		|	state->nalu |= ((uint64_t)f181h.o) << 32;
-		|	state->alu = ~state->nalu;
-		|	state->almsb = state->alu >> 63ULL;
+		|	state->typ_coh = f181h.co;
+		|	state->typ_nalu |= ((uint64_t)f181h.o) << 32;
+		|	state->typ_alu = ~state->typ_nalu;
+		|	state->typ_almsb = state->typ_alu >> 63ULL;
 		|
 		|	if (mp_adr_oe & 0x4) {
+		|		uint64_t alu = state->typ_alu;
 		|		unsigned spc = mp_spc_bus;
-		|		uint64_t alu = state->alu;
-		|
 		|		if (spc != 4) {
 		|			alu |=0xf8000000ULL;
 		|		}
-		|
-		|		mp_adr_bus = alu ^ ~0ULL;
+		|		mp_adr_bus = ~alu;
 		|	}
 		|
-		|	state->cadr = 0;
+		|	state->typ_cadr = 0;
 		|	if (uirc <= 0x1f) {
 		|		// FRAME:REG
-		|		state->cadr |= uirc & 0x1f;
-		|		state->cadr |= frm << 5;
+		|		state->typ_cadr |= uirc & 0x1f;
+		|		state->typ_cadr |= frm << 5;
 		|	} else if (uirc <= 0x27) {
 		|		// 0x20 = TOP-1
 		|		// …
 		|		// 0x27 = TOP-8
-		|		state->cadr = (state->topreg + (uirc & 0x7) + 1) & 0xf;
+		|		state->typ_cadr = (state->typ_topreg + (uirc & 0x7) + 1) & 0xf;
 		|	} else if (uirc == 0x28) {
 		|		// 0x28 LOOP COUNTER (RF write disabled)
 		|	} else if (uirc == 0x29 && mp_csa_write_enable) {
 		|		// 0x29 DEFAULT (RF write disabled)
-		|		unsigned sum = state->botreg + state->csa_offset + 1;
-		|		state->cadr |= sum & 0xf;
+		|		unsigned sum = state->typ_botreg + state->typ_csa_offset + 1;
+		|		state->typ_cadr |= sum & 0xf;
 		|	} else if (uirc == 0x29 && !mp_csa_write_enable) {
 		|		// 0x29 DEFAULT (RF write disabled)
-		|		state->cadr |= uirc & 0x1f;
-		|		state->cadr |= frm << 5;
+		|		state->typ_cadr |= uirc & 0x1f;
+		|		state->typ_cadr |= frm << 5;
 		|	} else if (uirc <= 0x2b) {
 		|		// 0x2a BOT
 		|		// 0x2b BOT-1
-		|		state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
-		|		state->cadr |= (state->botreg + (uirc & 1)) & 0xf;
+		|		state->typ_cadr |= (state->typ_botreg + (uirc & 1)) & 0xf;
+		|		state->typ_cadr |= (state->typ_botreg + (uirc & 1)) & 0xf;
 		|	} else if (uirc == 0x2c) {
 		|		// 0x28 = LOOP_REG
-		|		state->cadr = state->count;
+		|		state->typ_cadr = state->typ_count;
 		|	} else if (uirc == 0x2d) {
 		|		// 0x2d SPARE
 		|		assert (uirc != 0x2d);
 		|	} else if (uirc <= 0x2f) {
 		|		// 0x2e = TOP+1
 		|		// 0x2f = TOP
-		|		state->cadr = (state->topreg + (uirc & 0x1) + 0xf) & 0xf;
+		|		state->typ_cadr = (state->typ_topreg + (uirc & 0x1) + 0xf) & 0xf;
 		|	} else if (uirc <= 0x3f) {
 		|		// GP[0…F]
-		|		state->cadr |= 0x10 | (uirc & 0x0f);
+		|		state->typ_cadr |= 0x10 | (uirc & 0x0f);
 		|	} else {
 		|		assert(uirc <= 0x3f);
 		|	}
@@ -526,7 +524,7 @@ class TYP(PartFactory):
 		|	mp_clock_stop_3 = true;
 		|	mp_clock_stop_4 = true;
 		|	unsigned selcond = 0x00;
-		|	if (state->ppriv) {
+		|	if (state->typ_ppriv) {
 		|		selcond = 0x80 >> priv_check;
 		|	}
 		|#define TYP_UEV (UEV_CLASS|UEV_BIN_EQ|UEV_BIN_OP|UEV_TOS_OP|UEV_TOS1_OP|UEV_CHK_SYS)
@@ -542,10 +540,10 @@ class TYP(PartFactory):
 		|			mp_seq_uev |= UEV_TOS1_OP;
 		|		if ((selcond == 0x20 && a_op_pass()) || (selcond == 0x08 && b_op_pass()))
 		|			mp_seq_uev |= UEV_TOS_OP;
-		|		if ((!((rand != 0xe) || !(B_LIT() != TUIR_CLIT))))
+		|		if ((!((rand != 0xe) || !(B_LIT() != UIR_TYP_CLIT))))
 		|			mp_seq_uev |= UEV_CHK_SYS;
 		|
-		|		if ((!((rand != 0xe) || !(B_LIT() != TUIR_CLIT)))) {
+		|		if ((!((rand != 0xe) || !(B_LIT() != UIR_TYP_CLIT)))) {
 		|			mp_clock_stop_3 = false;
 		|		}
 		|
@@ -581,22 +579,22 @@ class TYP(PartFactory):
 		|	bool clo = false;
 		|	bool uirsclk = !mp_sf_stop;
 		|	bool sclke = (mp_clock_stop && mp_ram_stop && !mp_freeze);
-		|	unsigned priv_check = TUIR_UPVC;
-		|	unsigned uirc = TUIR_C;
+		|	unsigned priv_check = UIR_TYP_UPVC;
+		|	unsigned uirc = UIR_TYP_C;
 		|
 		|	if (uirsclk) {
-		|		state->csa_hit = mp_csa_hit;
-		|		state->csa_write = mp_csa_wr;
-		|		mp_csa_write_enable = !(state->csa_hit || state->csa_write);
+		|		state->typ_csa_hit = mp_csa_hit;
+		|		state->typ_csa_write = mp_csa_wr;
+		|		mp_csa_write_enable = !(state->typ_csa_hit || state->typ_csa_write);
 		|	}
 		|
-		|	bool c_source = TUIR_CSRC;
+		|	bool c_source = UIR_TYP_CSRC;
 		|	uint64_t fiu = 0;
 		|	bool fiu0, fiu1;
 		|	fiu0 = c_source;
 		|	fiu1 = c_source == (rand != 0x3);
 		|
-		|	bool sel = TUIR_SEL;
+		|	bool sel = UIR_TYP_SEL;
 		|
 		|	if (!fiu0 || !fiu1) {
 		|		fiu = ~mp_fiu_bus;
@@ -606,9 +604,9 @@ class TYP(PartFactory):
 		|		chi = true;
 		|	} else {
 		|		if (sel) {
-		|			c |= state->wdr & 0xffffffff00000000ULL;
+		|			c |= state->typ_wdr & 0xffffffff00000000ULL;
 		|		} else {
-		|			c |= state->alu & 0xffffffff00000000ULL;
+		|			c |= state->typ_alu & 0xffffffff00000000ULL;
 		|		}
 		|		chi = true;
 		|	}
@@ -617,9 +615,9 @@ class TYP(PartFactory):
 		|		clo = true;
 		|	} else {
 		|		if (sel) {
-		|			c |= state->wdr & 0xffffffffULL;
+		|			c |= state->typ_wdr & 0xffffffffULL;
 		|		} else {
-		|			c |= state->alu & 0xffffffffULL;
+		|			c |= state->typ_alu & 0xffffffffULL;
 		|		}
 		|		clo = true;
 		|	}
@@ -629,52 +627,52 @@ class TYP(PartFactory):
 		|		c |= 0xffffffffULL << 32;
 		|
 		|	bool awe = (!(mp_freeze) && mp_ram_stop);
-		|	if (awe && !state->wen) {
-		|		state->rfram[state->cadr] = c;
+		|	if (awe && !state->typ_wen) {
+		|		state->typ_rfram[state->typ_cadr] = c;
 		|	}
 		|	unsigned csmux3 = mp_csa_offs ^ 0xf;
 		|	if (uirsclk) {
-		|		state->csa_offset = csmux3;
+		|		state->typ_csa_offset = csmux3;
 		|	}
 		|	if (sclke) {
 		|		if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
-		|			state->wdr = ~mp_typ_bus;
+		|			state->typ_wdr = ~mp_typ_bus;
 		|		}
 		|		if (uirc == 0x28) {
-		|			state->count = c;
+		|			state->typ_count = c;
 		|		} else if (rand == 0x2) {
-		|			state->count += 1;
+		|			state->typ_count += 1;
 		|		} else if (rand == 0x1) {
-		|			state->count += 0x3ff;
+		|			state->typ_count += 0x3ff;
 		|		}
-		|		state->count &= 0x3ff;
+		|		state->typ_count &= 0x3ff;
 		|
 		|		unsigned csmux0;
 		|		if (mp_load_top)
-		|			csmux0 = state->botreg;
+		|			csmux0 = state->typ_botreg;
 		|		else
-		|			csmux0 = state->topreg;
+		|			csmux0 = state->typ_topreg;
 		|
 		|		unsigned csalu0 = csmux3 + csmux0 + 1;
 		|	
 		|		if (!mp_load_bot)
-		|			state->botreg = csalu0;
+		|			state->typ_botreg = csalu0;
 		|		if (!(mp_load_top && mp_pop_down))
-		|			state->topreg = csalu0;
-		|		state->last_cond = state->cond;
+		|			state->typ_topreg = csalu0;
+		|		state->typ_last_cond = state->typ_cond;
 		|		if (rand == 0xc) {
-		|			state->ofreg = state->b >> 32;
+		|			state->typ_ofreg = state->typ_b >> 32;
 		|		}
 		|
 		|		if (priv_check != 7) {
 		|			bool set_pass_priv = rand != 0xd;
-		|			state->ppriv = set_pass_priv;
+		|			state->typ_ppriv = set_pass_priv;
 		|		}
 		|	}
 		|	if (uirsclk) {
-		|		state->uir = state->wcsram[mp_nua_bus] ^ 0x7fffc0000000ULL;
-		|		mp_nxt_mar_cntl = TUIR_MCTL;
-		|		mp_nxt_csa_cntl = TUIR_CCTL;
+		|		state->typ_uir = state->typ_wcsram[mp_nua_bus] ^ 0x7fffc0000000ULL;
+		|		mp_nxt_mar_cntl = UIR_TYP_MCTL;
+		|		mp_nxt_csa_cntl = UIR_TYP_CCTL;
 		|	}
 		|}
 		|''')
@@ -688,38 +686,37 @@ class TYP(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	bool h1pos = PIN_H2.negedge();
-		|	bool q2pos = PIN_Q2.posedge();
-		|	bool q4pos = PIN_Q4.posedge();
 		|
-		|	rand = TUIR_RAND;
-		|	frm = TUIR_FRM;
+		|	rand = UIR_TYP_RAND;
+		|	frm = UIR_TYP_FRM;
 		|
-		|	unsigned marctl = TUIR_MCTL;
+		|	unsigned marctl = UIR_TYP_MCTL;
 		|
-		|	if (h1pos) {
+		|	if (PIN_H2.negedge()) {
 		|		if (mp_fiu_oe == 0x4) {
 		|			find_a();
-		|			mp_fiu_bus = ~state->a;
+		|			mp_fiu_bus = ~state->typ_a;
 		|		}
 		|		if (!mp_typt_oe) {
 		|			find_b();
-		|			mp_typ_bus = ~state->b;
+		|			mp_typ_bus = ~state->typ_b;
 		|		}
 		|		typ_cond(mp_cond_sel, 0);
-		|	}
-		|
-		|	if (q2pos) {
-		|		typ_q2();
-		|	}
-		|	if (q2pos || (mp_adr_oe & 0x6)) {	// XXX: && ?
-		|		if (marctl & 0x8) {
-		|			mp_spc_bus = (marctl & 0x7) ^ 0x7;
-		|		} else {
-		|			mp_spc_bus = (state->b & 0x7) ^ 0x7;
+		|		if (mp_adr_oe & 0x6) {
+		|			if (marctl & 0x8) {
+		|				mp_spc_bus = (marctl & 0x7) ^ 0x7;
+		|			} else {
+		|				find_b();
+		|				mp_spc_bus = (state->typ_b & 0x7) ^ 0x7;
+		|			}
 		|		}
-		|	}
-		|	if (q4pos) {
+		|	} else if (PIN_Q2.posedge()) {
+		|		typ_q2();
+		|		if ((mp_adr_oe & 0x6) && marctl < 0x8) {	// XXX: && ?
+		|			mp_spc_bus = (state->typ_b & 0x7) ^ 0x7;
+		|			// XXX: when 4, possible race against address bus truncation in TYP or VAL
+		|		}
+		|	} else if (PIN_Q4.posedge()) {
 		|		typ_q4();
 		|	}
 		|
