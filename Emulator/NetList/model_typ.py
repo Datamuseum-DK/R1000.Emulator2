@@ -57,7 +57,7 @@ class TYP(PartFactory):
     def state(self, file):
  
         file.fmt('''
-		|	uint64_t rfram[1<<10];
+		|	uint64_t *rfram;
 		|	uint8_t pa010[512], pa068[512], pa059[512];
 		|	uint64_t a, b, c, nalu, alu;
 		|	uint64_t wdr;
@@ -104,6 +104,7 @@ class TYP(PartFactory):
 		|	load_programmable(this->name(), state->pa068, sizeof state->pa068, "PA068");
 		|	load_programmable(this->name(), state->pa059, sizeof state->pa059, "PA059-01");
 		|	state->wcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
+		|	state->rfram = (uint64_t*)CTX_GetRaw("TYP_RF", sizeof(uint64_t) << 10);
 		|''')
 
     def priv_decl(self, file):

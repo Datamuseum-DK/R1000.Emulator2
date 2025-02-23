@@ -6,22 +6,15 @@
 
 #include "Infra/r1000.h"
 #include "Chassis/r1000sc.h"
-#include "Chassis/z_codes.h"
 #include "Diag/diag.h"
 #include "Diag/diagproc.h"
 #include "Diag/exp_hash.h"
 #include "Infra/context.h"
 #include "Infra/vend.h"
 
-#if defined(HAS_Z016)
-static uint64_t *typ_aram;
-#endif
-#if defined(HAS_Z019)
-static uint8_t *typ_rfpar;
-#endif
+static uint64_t *typ_rf;
 static unsigned typ_ptr;
 
-#if defined(HAS_Z013) || defined(HAS_Z016)
 static uint64_t
 get_wdr(const struct diagproc *dp, uint8_t offset)
 {
@@ -45,69 +38,47 @@ get_wdr(const struct diagproc *dp, uint8_t offset)
 	}
 	return (wdr);
 }
-#endif
 
 static int
 load_register_file_typ(const struct diagproc *dp)
 {
-#if !defined(HAS_Z016)
-	fprintf(stderr, "No Z016\n");
-	(void)dp;
-	return (0);
-#else
-	struct ctx *ctx;
 	uint64_t wdr;
 	int i;
 
-	if (typ_aram == NULL) {
-		ctx = CTX_Find(COMP_Z016);
-		AN(ctx);
-		typ_aram = (uint64_t *)(void*)(ctx + 1);
+	if (typ_rf == NULL) {
+		typ_rf = (uint64_t*)CTX_GetRaw("TYP_RF", sizeof(uint64_t) << 10);
 	}
 
 	for (i = 0; i < 16; i++, typ_ptr++) {
 		wdr = get_wdr(dp, 0x18 + i * 12);
-		typ_aram[typ_ptr] = wdr;
+		typ_rf[typ_ptr] = wdr;
 
 	}
 
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_REGISTER_FILE_200.TYP");
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
-#if defined(HAS_Z013)
-static uint64_t *val_aram;
-#endif
-
+static uint64_t *val_rf;
 static unsigned val_ptr;
 
 static int
 load_register_file_val(const struct diagproc *dp)
 {
-#if !defined(HAS_Z013)
-	fprintf(stderr, "NO Z013\n");
-	(void)dp;
-	return (0);
-#else
-	struct ctx *ctx;
 	uint64_t wdr;
 	int i;
 
-	if (val_aram == NULL) {
-		ctx = CTX_Find(COMP_Z013);
-		AN(ctx);
-		val_aram = (uint64_t *)(void*)(ctx + 1);
+	if (val_rf == NULL) {
+		val_rf= (uint64_t*)CTX_GetRaw("VAL_RF", sizeof(uint64_t) << 10);
 	}
 	
 	for (i = 0; i < 16; i++, val_ptr++) {
 		wdr = get_wdr(dp, 0x18 + i * 12);
-		val_aram[val_ptr] = wdr;
+		val_rf[val_ptr] = wdr;
 	}
 
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_REGISTER_FILE_200.VAL");
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
 static uint64_t *typ_wcs;
@@ -115,14 +86,11 @@ static uint64_t *typ_wcs;
 static int
 load_control_store_200_typ(const struct diagproc *dp)
 {
-	struct ctx *ctx;
 	int n;
 	uint64_t wcs, inp, inv;
 
 	if (typ_wcs == NULL) {
-		ctx = CTX_Find("TYP_WCS");
-		AN(ctx);
-		typ_wcs = (uint64_t *)(void*)(ctx + 1);
+		typ_wcs = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 	}
 	for (n = 0; n < 16; n++) {
 		inp = vbe64dec(dp->ram + 0x18 + n * 8);
@@ -201,14 +169,11 @@ static uint64_t *val_wcs;
 static int
 load_control_store_200_val(const struct diagproc *dp)
 {
-	struct ctx *ctx;
 	int n;
 	uint64_t wcs, inp, inv;
 
 	if (val_wcs == NULL) {
-		ctx = CTX_Find("VAL_WCS");
-		AN(ctx);
-		val_wcs = (uint64_t *)(void*)(ctx + 1);
+		val_wcs = (uint64_t*)CTX_GetRaw("VAL_WCS", sizeof(uint64_t) << 14);
 	}
 	for (n = 0; n < 16; n++) {
 		inp = vbe64dec(dp->ram + 0x18 + n * 8);
@@ -387,7 +352,7 @@ diagproc_turbo_val(const struct diagproc *dp)
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_RUN.VAL");
 		unsigned uad = vbe16dec(dp->ram + 0x18);
 		if (uad == 0x100) {
-			val_aram[0x1f] = ~0;
+			val_rf[0x1f] = ~0;
 		}
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
@@ -416,7 +381,7 @@ diagproc_turbo_val(const struct diagproc *dp)
 		unsigned ptr = ~vbe16dec(dp->ram + 0x31) & 0x3ff;
 		Trace(trace_diproc, "%s %s [0x%x]", dp->name, "Turbo READ_RF_B.TYP", ptr);
 		if (ptr < 1024)
-			vbe64enc(dp->ram + 0x33, ~val_aram[ptr]);
+			vbe64enc(dp->ram + 0x33, ~val_rf[ptr]);
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	return (0);

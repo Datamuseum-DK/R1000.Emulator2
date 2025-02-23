@@ -116,10 +116,8 @@ class SEQ(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint32_t top[1<<10];	// Z020
-		|	uint32_t bot[1<<10];	// Z020
-		|	uint16_t nxtuadr;	// Z020
-		|	uint16_t curuadr;	// Z020
+		|	uint32_t *top;
+		|	uint32_t *bot;
 		|	uint32_t cbot, ctop;
 		|	unsigned emac;
 		|	unsigned curins;
@@ -246,6 +244,8 @@ class SEQ(PartFactory):
 		|	load_programmable(this->name(), state->pa047, sizeof state->pa047, "PA047-02");
 		|	load_programmable(this->name(), state->pa048, sizeof state->pa048, "PA048-02");
 		|	state->wcsram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << UADR_WIDTH);
+		|	state->top = (uint32_t*)CTX_GetRaw("SEQ_TOP", sizeof(uint32_t) << 10);
+		|	state->bot = (uint32_t*)CTX_GetRaw("SEQ_BOT", sizeof(uint32_t) << 10);
 		|''')
 
     def priv_decl(self, file):
@@ -615,15 +615,6 @@ class SEQ(PartFactory):
 		|		mp_sync_freeze &= ~1;
 		|	}
 		|
-		|#if 0
-		|	state->diag |= 0x02;
-		|	if (mp_fiu_unfreeze == 1) {
-		|		state->diag &= ~0x2;
-		|	} else if (mp_fiu_unfreeze > 1) {
-		|		mp_fiu_unfreeze--;
-		|	}
-		|#endif
-		|#if 1
 		|	if (mp_fiu_freeze && !(state->diag & 0x2)) {
 		|		state->diag |= 0x02;
 		|		// output.freze = 1;
@@ -648,7 +639,6 @@ class SEQ(PartFactory):
 		|		}
 		|		ALWAYS_TRACE(<< "THAW4 " <<  state->diag << " " << mp_sync_freeze << " " << state->countdown);
 		|	}
-		|#endif
 		|
 		|	state->sf_stop = !(state->diag == 0);
 		|	mp_sf_stop = !(state->diag == 0);
@@ -740,7 +730,7 @@ class SEQ(PartFactory):
 		|			break;
 		|		case 3:
 		|		case 4:
-		|			nua = state->curuadr;
+		|			nua = mp_cur_uadr;
 		|			nua += 1;
 		|			break;
 		|		case 5:
@@ -887,11 +877,6 @@ class SEQ(PartFactory):
 		|		if (!mp_seq_halted) {
 		|			mp_seq_halted = !(sclke || RNDX(RND_HALT));
 		|			if (mp_seq_halted) ALWAYS_TRACE(<< "THAW HALTED");
-		|#if 0
-		|		} else {
-		|			mp_seq_halted = !(sclke || RNDX(RND_HALT));
-		|			if (!mp_seq_halted) ALWAYS_TRACE(<< "THAW UNHALTED");
-		|#endif
 		|		}
 		|	}
 		|	if (state_clock && !state->ibld) {
@@ -1090,14 +1075,14 @@ class SEQ(PartFactory):
 		|				state->topu &= 0xffff;
 		|				break;
 		|			case 2:
-		|				state->topu = state->curuadr;
+		|				state->topu = mp_cur_uadr;
 		|				if (state->q3cond) state->topu |= (1<<15);
 		|				if (state->latched_cond) state->topu |= (1<<14);
 		|				state->topu += 1;
 		|				state->topu ^= 0xffff;
 		|				break;
 		|			case 3:
-		|				state->topu = state->curuadr;
+		|				state->topu = mp_cur_uadr;
 		|				if (state->q3cond) state->topu |= (1<<15);
 		|				if (state->latched_cond) state->topu |= (1<<14);
 		|				state->topu ^= 0xffff;
@@ -1137,7 +1122,7 @@ class SEQ(PartFactory):
 		|		switch (sel) {
 		|		case 0:
 		|		case 7:
-		|			state->other = state->curuadr + 1;
+		|			state->other = mp_cur_uadr + 1;
 		|			break;
 		|		case 1:
 		|		case 2:
@@ -1181,7 +1166,7 @@ class SEQ(PartFactory):
 		|		state->uev = 16 - fls(mp_seq_uev);
 		|
 		|		if (state->s_state_stop) {
-		|			state->curuadr = mp_nua_bus;
+		|			mp_cur_uadr = mp_nua_bus;
 		|		}
 		|
 		|		unsigned adr = 0;
@@ -1526,14 +1511,6 @@ class SEQ(PartFactory):
 		|	} else if (PIN_Q4.posedge()) {
 		|		seq_q4();
 		|	}
-		|
-		|#if 0
-		|	if (mp_seq_halted && mp_seq_prepped) {
-		|		mp_nxt_sync_freeze |= 1;
-		|	} else {
-		|		mp_nxt_sync_freeze &= ~1;
-		|	}
-		|#endif
 		|
 		|''')
 

@@ -80,7 +80,6 @@ class R1000Cpu():
         self.boards = []
         self.chassis_makefile = None
         self.nets = {}
-        self.z_codes = []
 
         self.cdir = os.path.join(workdir, "Chassis")
         self.tstamp = os.path.join(self.cdir, "_timestamp")
@@ -119,9 +118,6 @@ class R1000Cpu():
     def add_part(self, name, part):
         ''' Add a part to our catalog, if not already occupied '''
         self.part_lib.add_part(name, part)
-
-    def add_z_code(self, comp, zcode):
-        self.z_codes.append((zcode, comp))
 
     def sc_mod(self, basename):
         ''' Create SCM for parts '''
@@ -185,26 +181,6 @@ class R1000Cpu():
             board.produce()
 
         self.chassis_makefile.commit()
-
-        self.emit_z_codes()
-
-    def emit_z_codes(self):
-
-        z_codes = SrcFile(self.cdir + "/z_codes.h")
-
-        z_codes.write("\n#define Z_CODES(MACRO) \\\n")
-
-        for z_code, comp in sorted(self.z_codes):
-            z_codes.write('\tMACRO(' + z_code + ', "' + comp.ctx() + '") \\\n')
-
-        z_codes.write('\n')
-
-        for z_code, comp in sorted(self.z_codes):
-            print(z_code, comp.ctx())
-            z_codes.write('#define HAS_' + z_code.upper() + ' 1\n')
-            z_codes.write('#define COMP_' + z_code.upper() + ' "%s"\n' % comp.ctx())
-
-        z_codes.commit()
 
 def main():
     ''' ... '''

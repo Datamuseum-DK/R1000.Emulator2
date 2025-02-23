@@ -6,7 +6,6 @@
 
 #include "Infra/r1000.h"
 #include "Chassis/r1000sc.h"
-#include "Chassis/z_codes.h"
 #include "Diag/diag.h"
 #include "Diag/diagproc.h"
 #include "Diag/exp_hash.h"
@@ -17,14 +16,13 @@ static int
 clear_tagstore_m32(const struct diagproc *dp)
 {
 
-	struct ctx *ctx;
 	uint8_t *ptr;
+	uint64_t *ptr2;
 
-	// TAR
-	ctx = CTX_Find(COMP_Z000);
-	AN(ctx);
-	ptr = (uint8_t *)(ctx + 1);
-	memset(ptr, 0x00, 9 << 15);
+	ptr = CTX_GetRaw("MEM.rame", sizeof(*ptr) << 15);
+	memset(ptr, 0x00, sizeof(*ptr) << 15);
+	ptr2 = CTX_GetRaw("MEM.ram", sizeof(*ptr2) << 15);
+	memset(ptr2, 0x00, sizeof(*ptr2) << 15);
 
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_TAGSTORE.M32");
 	return ((int)DIPROC_RESPONSE_DONE);
@@ -33,20 +31,13 @@ clear_tagstore_m32(const struct diagproc *dp)
 static int
 fill_memory_m32(const struct diagproc *dp)
 {
-	struct ctx *ctx;
 	uint64_t typ, val, *ptrt;
 	int i;
 
 	typ = vbe64dec(dp->ram + 0x18);		// P18IS8 DATA.TYP
 	val = vbe64dec(dp->ram + 0x20);		// P20IS8 DATA.VAL
 
-	// P28IS1 DATA.VPAR is loaded into DREGVP but not stored anywhere.
-
-	// RAMA
-	ctx = CTX_Find(COMP_Z000);
-	AN(ctx);
-	uint8_t *ptr = (void*)(ctx + 1);
-	ptrt = (uint64_t *)(void*)(ptr + (9 << 15));
+	ptrt = CTX_GetRaw("MEM.bitt", sizeof(*ptrt) << 22);
 	for (i = 0; i < 1<<21; i++) {
 		ptrt[i+i] = typ;
 		ptrt[i+i+1] = val;

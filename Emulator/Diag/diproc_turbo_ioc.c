@@ -6,7 +6,6 @@
 
 #include "Infra/r1000.h"
 #include "Chassis/r1000sc.h"
-#include "Chassis/z_codes.h"
 #include "Diag/diag.h"
 #include "Diag/diagproc.h"
 #include "Diag/exp_hash.h"

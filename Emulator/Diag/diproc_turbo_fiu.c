@@ -6,7 +6,6 @@
 
 #include "Infra/r1000.h"
 #include "Chassis/r1000sc.h"
-#include "Chassis/z_codes.h"
 #include "Diag/diag.h"
 #include "Diag/diagproc.h"
 #include "Diag/exp_hash.h"
@@ -90,22 +89,11 @@ static int
 load_counter(const struct diagproc *dp)
 {
 	fiu_ptr = vbe16dec(dp->ram + 0x28);
-#if !defined(HAS_Z025)
-	fprintf(stderr, "NO Z025\n");
-	(void)dp;
-	return (0);
-#else
-	struct ctx *ctx;
-	uint32_t *ptr;
 
-	ctx = CTX_Find(COMP_Z025);
-	AN(ctx);
-	ptr = (unsigned *)(void*)(ctx + 1);
-	*ptr = vbe16dec(dp->ram + 0x26);
+	mp_refresh_count = vbe16dec(dp->ram + 0x26);
 
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_COUNTER.FIU");
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
 int v_matchproto_(diagprocturbo_t)

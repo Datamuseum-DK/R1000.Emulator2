@@ -112,6 +112,8 @@ void f181_alu(struct f181 *);
 	macro(unsigned, state_clk_en, 0) \
 	macro(unsigned, below_tcp, 0) \
 	macro(unsigned, sync_freeze, 0) \
+	macro(uint16_t, refresh_count, 0) \
+	macro(uint16_t, cur_uadr, 0) \
 
 #define MIDSTATE(macro) \
 	macro(unsigned, cond_sel, 0) \

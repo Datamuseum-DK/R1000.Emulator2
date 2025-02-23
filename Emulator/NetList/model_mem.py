@@ -46,10 +46,9 @@ class MEM(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t ram[1<<15];	// Turbo 12 bit line, 3 bit set
-		|	uint8_t rame[1<<15];	// Turbo 12 bit line, 3 bit set
-		|	uint64_t bitt[1 << 22];	// Turbo 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
-		|
+		|	uint64_t *ram;
+		|	uint8_t *rame;
+		|	uint64_t *bitt;
 		|	unsigned cl, wd;
 		|	uint64_t tdreg, tqreg;
 		|	uint64_t vdreg, vqreg;
@@ -68,6 +67,17 @@ class MEM(PartFactory):
 		|	bool cyo, cyt;
 		|	unsigned cmd, bcmd;
 		|	unsigned mar_set;
+		|''')
+
+    def init(self, file):
+        file.fmt('''
+		|	state->bcmd = 1 << state->cmd;
+		|	state->bitt = (uint64_t*)CTX_GetRaw("MEM.bitt", sizeof(*state->bitt) << 22);
+		|       				// Turbo 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
+		|	state->ram = (uint64_t*)CTX_GetRaw("MEM.ram", sizeof(*state->ram) << 15);
+		|       				// Turbo 12 bit line, 3 bit set
+		|	state->rame = (uint8_t*)CTX_GetRaw("MEM.rame", sizeof(*state->rame) << 15);
+		|       				// Turbo 12 bit line, 3 bit set
 		|''')
 
     def extra(self, file):
@@ -215,11 +225,6 @@ class MEM(PartFactory):
     def sensitive(self):
         yield "PIN_Q4.pos()"
         yield "PIN_H2.neg()"
-
-    def init(self, file):
-        file.fmt('''
-		|	state->bcmd = 1 << state->cmd;
-		|''')
 
     def doit(self, file):
         ''' The meat of the doit() function '''

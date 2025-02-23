@@ -66,7 +66,6 @@ class FIU(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint16_t refresh_count;			// Z025
 		|       unsigned oreg;
 		|       uint64_t mdreg;
 		|	uint64_t treg;
@@ -210,7 +209,7 @@ class FIU(PartFactory):
 		|		mp_condx3 = (state->oreg + (state->lfreg & 0x3f) + (state->lfreg & 0x80)) <= 255;
 		|		break;
 		|	case 0x66: mp_condx3 = (state->moff & 0x3f) > 0x30; 	break;
-		|	case 0x67: mp_condx3 = !(state->refresh_count != 0xffff); 		break;
+		|	case 0x67: mp_condx3 = !(mp_refresh_count != 0xffff); 		break;
 		|	case 0x68: mp_condx2 = !state->csa_oor_next;		break;
 		|	case 0x69: mp_condx2 = !false; 			break; // SCAV_HIT
 		|	case 0x6a: mp_condx2 = !state->page_xing; 		break;
@@ -242,7 +241,7 @@ class FIU(PartFactory):
 		|	u |= 0x3ULL << BUS64_LSB(31);
 		|	u |= (uint64_t)(mp_seq_uev10_page_x) << BUS64_LSB(32);
 		|	u |= (uint64_t)((state->prmt >> 1) & 1) << BUS64_LSB(33);
-		|	u |= (uint64_t)(state->refresh_count != 0xffff) << BUS64_LSB(34);
+		|	u |= (uint64_t)(mp_refresh_count != 0xffff) << BUS64_LSB(34);
 		|	u |= (uint64_t)(mp_seq_uev0_memex) << BUS64_LSB(35);
 		|	u |= ((line >> 0) & 1) << BUS64_LSB(48);
 		|	u |= ((line >> 1) & 1) << BUS64_LSB(50);
@@ -654,7 +653,7 @@ class FIU(PartFactory):
 		|		((board_hit != 0xf) && mnan2a) ||
 		|		(state->logrw_d && state->csaht)
 		|	);
-		|	if (state->refresh_count == 0xffff) {
+		|	if (mp_refresh_count == 0xffff) {
 		|		mp_macro_event |= 0x40;
 		|	} else {
 		|		mp_macro_event &= ~0x40;
@@ -917,9 +916,9 @@ class FIU(PartFactory):
 		|	}
 		|			
 		|	if (mem_start == 0x06) {
-		|		state->refresh_count = state->ti_bus >> 48;
-		|	} else if (state->refresh_count != 0xffff) {
-		|		state->refresh_count++;
+		|		mp_refresh_count = state->ti_bus >> 48;
+		|	} else if (mp_refresh_count != 0xffff) {
+		|		mp_refresh_count++;
 		|	}
 		|
 		|	bool le_abort = mp_mem_abort_el;
@@ -1007,29 +1006,6 @@ class FIU(PartFactory):
 		|		state->uir = state->wcsram[mp_nua_bus];
 		|		state->typuir = state->typwcsram[mp_nua_bus];
 		|	}
-		|
-		|#if 0
-		|	if (mp_fiu_freeze && !output.freze) {
-		|		output.freze = 1;
-		|		mp_nxt_sync_freeze |= 2;
-		|		ALWAYS_TRACE(<< "THAW1 " <<  output.freze << " " << mp_nxt_sync_freeze);
-		|	} else if (!mp_fiu_freeze && output.freze && !output.sync) {
-		|		output.sync = 1;
-		|		mp_nxt_sync_freeze |= 4;
-		|		ALWAYS_TRACE(<< "THAW2 " <<  output.freze << " " << mp_nxt_sync_freeze);
-		|	} else if (!mp_fiu_freeze && output.freze && output.sync) {
-		|		output.freze = 0;
-		|		mp_nxt_sync_freeze &= ~2;
-		|		countdown = 5;
-		|		ALWAYS_TRACE(<< "THAW3 " <<  output.freze << " " << mp_nxt_sync_freeze << " " << countdown);
-		|	} else if (!mp_fiu_freeze && !output.freze && output.sync) {
-		|		if (--countdown == 0) {
-		|			output.sync = 0;
-		|			mp_nxt_sync_freeze &= ~4;
-		|		}
-		|		ALWAYS_TRACE(<< "THAW4 " <<  output.freze << " " << mp_nxt_sync_freeze << " " << countdown);
-		|	}
-		|#endif
 		|}
 		|''')
 

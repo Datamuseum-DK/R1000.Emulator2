@@ -88,8 +88,6 @@ class KiCadNetList():
             comp = ComponentSexp(sexp)
             sheet.add_component(comp)
             self.comps[comp.ref] = comp
-            if comp.location[0] == 'z':
-                cpu.add_z_code(comp, comp.location)
 
     def build_nets(self):
         ''' Build nets '''

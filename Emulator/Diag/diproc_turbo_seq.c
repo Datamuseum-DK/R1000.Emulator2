@@ -6,7 +6,6 @@
 
 #include "Infra/r1000.h"
 #include "Chassis/r1000sc.h"
-#include "Chassis/z_codes.h"
 #include "Diag/diag.h"
 #include "Diag/diagproc.h"
 #include "Diag/exp_hash.h"
@@ -15,36 +14,27 @@
 
 
 static unsigned seq_ptr;
-#if defined(HAS_Z020)
 static uint64_t *seq_wcs;
-static uint32_t *decode;
-#endif
+static uint32_t *decode_top;
+static uint32_t *decode_bot;
 
 static int
 load_dispatch_rams_200_seq(const struct diagproc *dp)
 {
-#if !defined(HAS_Z020)
-	fprintf(stderr, "NO Z020\n");
-	(void)dp;
-	return (0);
-#else
-	struct ctx *ctx;
-	unsigned offset, n;
+	unsigned n, offset;
 	uint64_t src;
-	uint32_t dst;
+	uint32_t dst, *ptr;
 
-	if (decode == NULL) {
-		ctx = CTX_Find(COMP_Z020);
-		AN(ctx);
-		decode = (uint32_t *)(void*)(ctx + 1);
+	if (decode_top == NULL) {
+		decode_top = (uint32_t*)CTX_GetRaw("SEQ_TOP", sizeof(uint32_t) << 10);
+		decode_bot = (uint32_t*)CTX_GetRaw("SEQ_BOT", sizeof(uint32_t) << 10);
 	}
 	offset = vbe16dec(dp->ram + 0x18);
 	if (dp->ram[0x11]) {
-		// Low
-		offset += 1024;
+		ptr = decode_bot;
 	} else {
-		// High
 		offset >>= 6;
+		ptr = decode_top;
 	}
 	for (n = 0; n < 16; n++) {
 		src = vbe64dec(dp->ram + 0x1a + 8 * n);
@@ -83,13 +73,12 @@ load_dispatch_rams_200_seq(const struct diagproc *dp)
 		dst <<= 1; dst |= (src >> 13) & 1; // =0
 		dst <<= 1; dst |= (src >>  4) & 1; // =0
 
-		decode[offset + n] = dst;
+		ptr[offset + n] = dst;
 	}
 
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_DISPATCH_RAMS_200.SEQ");
 
 	return ((int)DIPROC_RESPONSE_DONE);
-#endif
 }
 
 static int
@@ -158,18 +147,8 @@ load_control_store_200_seq(const struct diagproc *dp)
 static void
 prep_run_seq(const struct diagproc *dp)
 {
-	struct ctx *ctx;
-	uint16_t *nxtuadr;
 
-	ctx = CTX_Find(COMP_Z020);
-	AN(ctx);
-	uint8_t *ptr = (void*)(ctx + 1);
-	ptr += 4 << 10;	// uint32_t top[1<<10]
-	ptr += 4 << 10; // uint32_t bot[1<<10]
-	nxtuadr = (uint16_t *)(void*)ptr;
-
-	nxtuadr[0] = vbe16dec(dp->ram + 0x18);
-	nxtuadr[1] = vbe16dec(dp->ram + 0x18);
+	mp_cur_uadr = vbe16dec(dp->ram + 0x18);
 	mp_nua_bus = vbe16dec(dp->ram + 0x18);
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_RUN.SEQ");
 }

@@ -44,7 +44,7 @@ class VAL(PartFactory):
     def state(self, file):
 
         file.fmt('''
-		|	uint64_t rfram[1<<10];		// Z013
+		|	uint64_t *rfram;
 		|	uint64_t a, b, c;
 		|	uint64_t wdr;
 		|	uint64_t zerocnt;
@@ -82,6 +82,7 @@ class VAL(PartFactory):
 		|	load_programmable(this->name(), pa010, sizeof pa010, "PA010");
 		|	load_programmable(this->name(), pa011, sizeof pa011, "PA011");
 		|	state->wcsram = (uint64_t*)CTX_GetRaw("VAL_WCS", sizeof(uint64_t) << 14);
+		|	state->rfram = (uint64_t*)CTX_GetRaw("VAL_RF", sizeof(uint64_t) << 10);
 		|	state->csa_hit = true;
 		|	state->csa_write = true;
 		|''')

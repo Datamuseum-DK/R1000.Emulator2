@@ -14,7 +14,6 @@ OBJS    += ${OBJDIR}/diproc_turbo_fiu.o
 ${OBJDIR}/diproc_turbo_fiu.o: \
     Diag/diproc_turbo_fiu.c \
     Chassis/r1000sc.h \
-    ${WORKDIR}/Chassis/z_codes.h \
     Diag/diag.h \
     Diag/diagproc.h \
     Diag/exp_hash.h \
@@ -26,7 +25,6 @@ OBJS    += ${OBJDIR}/diproc_turbo_ioc.o
 ${OBJDIR}/diproc_turbo_ioc.o: \
     Diag/diproc_turbo_ioc.c \
     Chassis/r1000sc.h \
-    ${WORKDIR}/Chassis/z_codes.h \
     Diag/diag.h \
     Diag/diagproc.h \
     Diag/exp_hash.h \
@@ -38,7 +36,6 @@ OBJS    += ${OBJDIR}/diproc_turbo_mem32.o
 ${OBJDIR}/diproc_turbo_mem32.o: \
     Diag/diproc_turbo_mem32.c \
     Chassis/r1000sc.h \
-    ${WORKDIR}/Chassis/z_codes.h \
     Diag/diag.h \
     Diag/diagproc.h \
     Diag/exp_hash.h \
@@ -50,7 +47,6 @@ OBJS    += ${OBJDIR}/diproc_turbo_seq.o
 ${OBJDIR}/diproc_turbo_seq.o: \
     Diag/diproc_turbo_seq.c \
     Chassis/r1000sc.h \
-    ${WORKDIR}/Chassis/z_codes.h \
     Diag/diag.h \
     Diag/diagproc.h \
     Diag/exp_hash.h \
@@ -62,7 +58,6 @@ OBJS    += ${OBJDIR}/diproc_turbo_tv.o
 ${OBJDIR}/diproc_turbo_tv.o: \
     Diag/diproc_turbo_tv.c \
     Chassis/r1000sc.h \
-    ${WORKDIR}/Chassis/z_codes.h \
     Diag/diag.h \
     Diag/diagproc.h \
     Diag/exp_hash.h \
