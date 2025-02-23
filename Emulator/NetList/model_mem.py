@@ -46,37 +46,37 @@ class MEM(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|	uint64_t *ram;
-		|	uint8_t *rame;
-		|	uint64_t *bitt;
-		|	unsigned cl, wd;
-		|	uint64_t tdreg, tqreg;
-		|	uint64_t vdreg, vqreg;
+		|	uint64_t *mem_ram;
+		|	uint8_t *mem_rame;
+		|	uint64_t *mem_bitt;
+		|	unsigned mem_cl, mem_wd;
+		|	uint64_t mem_tdreg, mem_tqreg;
+		|	uint64_t mem_vdreg, mem_vqreg;
 		|
-		|	unsigned word;
-		|	uint64_t qreg;
-		|	unsigned hash;
-		|	uint64_t mar_space, mar_name, mar_page;
-		|	bool cstop;
-		|	unsigned hit_lru;
-		|	bool eabort, labort;
-		|	bool p_mcyc2_next;
-		|	unsigned q4cmd;
-		|	unsigned q4cont;
-		|	unsigned hits;
-		|	bool cyo, cyt;
-		|	unsigned cmd, bcmd;
-		|	unsigned mar_set;
+		|	unsigned mem_word;
+		|	uint64_t mem_qreg;
+		|	unsigned mem_hash;
+		|	uint64_t mem_mar_space, mem_mar_name, mem_mar_page;
+		|	bool mem_cstop;
+		|	unsigned mem_hit_lru;
+		|	bool mem_eabort, mem_labort;
+		|	bool mem_p_mcyc2_next;
+		|	unsigned mem_q4cmd;
+		|	unsigned mem_q4cont;
+		|	unsigned mem_hits;
+		|	bool mem_cyo, mem_cyt;
+		|	unsigned mem_cmd, mem_bcmd;
+		|	unsigned mem_mar_set;
 		|''')
 
     def init(self, file):
         file.fmt('''
-		|	state->bcmd = 1 << state->cmd;
-		|	state->bitt = (uint64_t*)CTX_GetRaw("MEM.bitt", sizeof(*state->bitt) << 22);
+		|	state->mem_bcmd = 1 << state->mem_cmd;
+		|	state->mem_bitt = (uint64_t*)CTX_GetRaw("MEM.bitt", sizeof(*state->mem_bitt) << 22);
 		|       				// Turbo 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
-		|	state->ram = (uint64_t*)CTX_GetRaw("MEM.ram", sizeof(*state->ram) << 15);
+		|	state->mem_ram = (uint64_t*)CTX_GetRaw("MEM.ram", sizeof(*state->mem_ram) << 15);
 		|       				// Turbo 12 bit line, 3 bit set
-		|	state->rame = (uint8_t*)CTX_GetRaw("MEM.rame", sizeof(*state->rame) << 15);
+		|	state->mem_rame = (uint8_t*)CTX_GetRaw("MEM.rame", sizeof(*state->mem_rame) << 15);
 		|       				// Turbo 12 bit line, 3 bit set
 		|''')
 
@@ -99,7 +99,7 @@ class MEM(PartFactory):
 		|#define CMD_LRQ	(1<<0x2)	// LRU QUERY
 		|#define CMD_AVQ	(1<<0x1)	// AVAILABLE QUERY
 		|#define CMD_IDL	(1<<0x0)	// IDLE
-		|#define CMDS(x) ((state->bcmd & (x)) != 0)
+		|#define CMDS(x) ((state->mem_bcmd & (x)) != 0)
 		|
 		|#define BSET_0	0x01
 		|#define BSET_1	0x02
@@ -135,6 +135,8 @@ class MEM(PartFactory):
 		|	unsigned find_set(unsigned cmd);
 		|	bool is_hit(unsigned adr, unsigned eadr, unsigned set);
 		|	void load_mar(void);
+		|	void mem_h1(void);
+		|	void mem_q4(void);
 		|''')
 
     def priv_impl(self, file):
@@ -144,20 +146,20 @@ class MEM(PartFactory):
 		|find_set(unsigned cmd)
 		|{
 		|	unsigned set2 = 0;
-		|	if (state->hits & (BSET_3|BSET_7)) {
+		|	if (state->mem_hits & (BSET_3|BSET_7)) {
 		|		set2 = 3;
-		|	} else if (state->hits & (BSET_2|BSET_6)) {
+		|	} else if (state->mem_hits & (BSET_2|BSET_6)) {
 		|		set2 = 2;
-		|	} else if (state->hits & (BSET_1|BSET_5)) {
+		|	} else if (state->mem_hits & (BSET_1|BSET_5)) {
 		|		set2 = 1;
-		|	} else if (state->hits & (BSET_0|BSET_4)) {
+		|	} else if (state->mem_hits & (BSET_0|BSET_4)) {
 		|		set2 = 0;
-		|	} else if (cmd == 0xe && ((state->mar_set & ~4) == 2)) {
+		|	} else if (cmd == 0xe && ((state->mem_mar_set & ~4) == 2)) {
 		|		set2 = 2;
 		|	} else {
 		|		set2 = 3;
 		|	}
-		|	if (state->hits & (BSET_4|BSET_5|BSET_6|BSET_7)) {
+		|	if (state->mem_hits & (BSET_4|BSET_5|BSET_6|BSET_7)) {
 		|		set2 |= 4;
 		|	}
 		|	return (set2);
@@ -167,24 +169,24 @@ class MEM(PartFactory):
 		|SCM_«mmm» ::
 		|is_hit(unsigned adr, unsigned eadr, unsigned set)
 		|{
-		|	if (state->labort)
+		|	if (state->mem_labort)
 		|		return false;
 		|
 		|	if CMDS(CMD_IDL)
 		|		return (true);
 		|
-		|	unsigned tag = state->rame[eadr];
+		|	unsigned tag = state->mem_rame[eadr];
 		|
 		|	unsigned page_state = tag & 3;
 		|	// R1000_Micro_Arch_Mem.pdf p19:
 		|	//    00: Loading, 01: Read-only, 10: Read-Write, 11: Invalid
 		|
-		|	uint64_t data = state->ram[adr];
+		|	uint64_t data = state->mem_ram[adr];
 		|	uint64_t ta = data >> 19;
 		|	uint64_t ts = data & 0x7;
 		|
-		|	bool name = (state->mar_name == (ta >> 13));
-		|	bool offset = (state->mar_page == (ta & 0x1fff)) && (state->mar_space == ts);
+		|	bool name = (state->mem_mar_name == (ta >> 13));
+		|	bool offset = (state->mem_mar_page == (ta & 0x1fff)) && (state->mem_mar_space == ts);
 		|	if CMDS(CMD_AVQ)
 		|		return (page_state == 0);
 		|	if CMDS(CMD_LTR)
@@ -197,7 +199,7 @@ class MEM(PartFactory):
 		|		return (name && offset && (page_state == 1 || page_state == 2));
 		|	if CMDS(CMD_LMW)
 		|		return (name && offset && page_state == 1);
-		|	return (state->mar_set == set);
+		|	return (state->mem_mar_set == set);
 		|}
 		|
 		|void
@@ -209,16 +211,169 @@ class MEM(PartFactory):
 		|
 		|	s = mp_spc_bus;
 		|	a = mp_adr_bus;
-		|	state->mar_space = s;
-		|	state->mar_name = (a>>32) & 0xffffffffULL;
-		|	state->mar_page = (a>>19) & 0x1fff;
-		|	state->mar_set = (a>>BUS64_LSB(27)) & 0xf;
+		|	state->mem_mar_space = s;
+		|	state->mem_mar_name = (a>>32) & 0xffffffffULL;
+		|	state->mem_mar_page = (a>>19) & 0x1fff;
+		|	state->mem_mar_set = (a>>BUS64_LSB(27)) & 0xf;
 		|
-		|	state->word = (a >> 7) & 0x3f;
-		|	state->hash = 0;
-		|	state->hash ^= cache_line_tbl_h[(a >> 42) & 0x3ff];
-		|	state->hash ^= cache_line_tbl_l[(a >> 13) & 0xfff];
-		|	state->hash ^= cache_line_tbl_s[state->mar_space & 0x7];
+		|	state->mem_word = (a >> 7) & 0x3f;
+		|	state->mem_hash = 0;
+		|	state->mem_hash ^= cache_line_tbl_h[(a >> 42) & 0x3ff];
+		|	state->mem_hash ^= cache_line_tbl_l[(a >> 13) & 0xfff];
+		|	state->mem_hash ^= cache_line_tbl_s[state->mem_mar_space & 0x7];
+		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|mem_h1(void)
+		|{
+		|	bool labort = !(mp_mem_abort_l && mp_mem_abort_el);
+		|	bool p_early_abort = state->mem_eabort;
+		|	bool p_mcyc2_next_hd = state->mem_p_mcyc2_next;
+		|	if (p_early_abort && p_mcyc2_next_hd) {
+		|		state->mem_cmd = 0;
+		|	} else {
+		|		state->mem_cmd = state->mem_q4cmd ^ 0xf;
+		|	}
+		|	state->mem_bcmd = 1 << state->mem_cmd;
+		|	state->mem_p_mcyc2_next =
+		|	    !(
+		|	        ((state->mem_q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
+		|	        ((!state->mem_q4cont) && (!p_early_abort) && (!p_mcyc2_next_hd))
+		|	    );
+		|	state->mem_cyo = !((state->mem_q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd);
+		|	state->mem_cyt = p_mcyc2_next_hd;
+		|
+		|	if (state->mem_cyo) {
+		|		if        (state->mem_hits & BSET_4) { mp_mem_set = 0;
+		|		} else if (state->mem_hits & BSET_5) { mp_mem_set = 1;
+		|		} else if (state->mem_hits & BSET_6) { mp_mem_set = 2;
+		|		} else if (state->mem_hits & BSET_7) { mp_mem_set = 3;
+		|		} else if (state->mem_hits & BSET_0) { mp_mem_set = 0;
+		|		} else if (state->mem_hits & BSET_1) { mp_mem_set = 1;
+		|		} else if (state->mem_hits & BSET_2) { mp_mem_set = 2;
+		|		} else                           { mp_mem_set = 3;
+		|		}
+		|
+		|		mp_mem_hit = 0xf;
+		|		if (state->mem_hits & (BSET_0|BSET_1|BSET_2|BSET_3))
+		|			mp_mem_hit &= ~1;
+		|		if (state->mem_hits & (BSET_4|BSET_5|BSET_6|BSET_7))
+		|			mp_mem_hit &= ~8;
+		|		if (state->mem_hits) {
+		|			unsigned tadr = state->mem_hash << 3;
+		|			     if (state->mem_hits & BSET_0)	state->mem_hit_lru = state->mem_rame[tadr | 0];
+		|			else if (state->mem_hits & BSET_1)	state->mem_hit_lru = state->mem_rame[tadr | 1];
+		|			else if (state->mem_hits & BSET_2)	state->mem_hit_lru = state->mem_rame[tadr | 2];
+		|			else if (state->mem_hits & BSET_3)	state->mem_hit_lru = state->mem_rame[tadr | 3];
+		|			else if (state->mem_hits & BSET_4)	state->mem_hit_lru = state->mem_rame[tadr | 4];
+		|			else if (state->mem_hits & BSET_5)	state->mem_hit_lru = state->mem_rame[tadr | 5];
+		|			else if (state->mem_hits & BSET_6)	state->mem_hit_lru = state->mem_rame[tadr | 6];
+		|			else if (state->mem_hits & BSET_7)	state->mem_hit_lru = state->mem_rame[tadr | 7];
+		|			state->mem_hit_lru >>= 2;
+		|			state->mem_hit_lru &= 0xf;
+		|		} else {
+		|			state->mem_hit_lru = 0xf;
+		|		}
+		|	}
+		|	if (!state->mem_cyt) {
+		|		if (CMDS(CMD_PTR)) {
+		|			unsigned padr = (state->mem_hash << 3) | (state->mem_mar_set & 0x7);
+		|			state->mem_qreg = state->mem_ram[padr] & ~(0x7fULL << 6);
+		|			state->mem_qreg |= (state->mem_rame[padr] & 0x7f) << 6;
+		|		}
+		|	}
+		|
+		|	if (!state->mem_cyt) {
+		|		if (CMDS(CMD_LMR|CMD_PMR) && !labort) {
+		|			unsigned set = find_set(state->mem_cmd);
+		|			uint32_t radr =	(set << 18) | (state->mem_cl << 6) | state->mem_wd;
+		|			assert(radr < (1 << 21));
+		|			state->mem_tqreg = state->mem_bitt[radr+radr];
+		|			state->mem_vqreg = state->mem_bitt[radr+radr+1];
+		|		}
+		|	}
+		|	
+		|	if (!state->mem_cyt) {
+		|		bool ihit = mp_mem_hit == 0xf;
+		|		if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->mem_labort) {
+		|			unsigned set = find_set(state->mem_cmd);
+		|			uint32_t radr = (set << 18) | (state->mem_cl << 6) | state->mem_wd;
+		|			assert(radr < (1 << 21));
+		|			state->mem_bitt[radr+radr] = state->mem_tdreg;
+		|			state->mem_bitt[radr+radr+1] = state->mem_vdreg;
+		|		}
+		|
+		|		if (CMDS(CMD_PTW)) {
+		|			bool my_board = false;
+		|			bool which_board = state->mem_mar_set >> 3;
+		|			if (which_board == my_board) {
+		|				unsigned padr = (state->mem_hash << 3) | (state->mem_mar_set & 0x7);
+		|				state->mem_ram[padr] = state->mem_vdreg & ~(0x7fULL << 6);
+		|				state->mem_rame[padr] = (state->mem_vdreg >> 6) & 0x7f;
+		|			}
+		|		} else if (!state->mem_labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
+		|			unsigned padr = state->mem_hash << 3;
+		|			for (unsigned u = 0; u < 8; u++)
+		|				state->mem_rame[padr + u] = dolru(state->mem_hit_lru, state->mem_rame[padr + u], state->mem_cmd);
+		|		}
+		|	}
+		|
+		|	bool not_me = mp_mem_hit == 0xf;
+		|	
+		|	if (!mp_memv_oe && mp_memtv_oe) {
+		|		if (not_me) {
+		|			mp_val_bus = ~0ULL;
+		|		} else {
+		|			mp_val_bus = state->mem_qreg;
+		|		}
+		|	} else if (!mp_memtv_oe) {
+		|		if (not_me) {
+		|			mp_typ_bus = ~0ULL;
+		|			mp_val_bus = ~0ULL;
+		|		} else {
+		|			mp_typ_bus = state->mem_tqreg;
+		|			mp_val_bus = state->mem_vqreg;
+		|		}
+		|	}
+		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|mem_q4(void)
+		|{
+		|	bool labort = !(mp_mem_abort_l && mp_mem_abort_el);
+		|
+		|	state->mem_cl = state->mem_hash;
+		|	state->mem_wd = state->mem_word;
+		|
+		|	state->mem_cstop = mp_sync_freeze == 0;
+		|
+		|	if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
+		|		state->mem_tdreg = mp_typ_bus;
+		|		state->mem_vdreg = mp_val_bus;
+		|	}
+		|	bool loadmar = !((mp_mar_cntl >= 4) && mp_clock_stop_7);
+		|	if (!loadmar && state->mem_cstop) {
+		|		load_mar();
+		|	}
+		|
+		|	if (!state->mem_cyo) {
+		|		state->mem_hits = 0;
+		|		unsigned badr = state->mem_hash << 3;
+		|		if (is_hit(badr | 0, badr | 0, 0)) state->mem_hits |= BSET_0;
+		|		if (is_hit(badr | 1, badr | 1, 1)) state->mem_hits |= BSET_1;
+		|		if (is_hit(badr | 2, badr | 2, 2)) state->mem_hits |= BSET_2;
+		|		if (is_hit(badr | 3, badr | 3, 3)) state->mem_hits |= BSET_3;
+		|		if (is_hit(badr | 4, badr | 4, 4)) state->mem_hits |= BSET_4;
+		|		if (is_hit(badr | 5, badr | 5, 5)) state->mem_hits |= BSET_5;
+		|		if (is_hit(badr | 6, badr | 6, 6)) state->mem_hits |= BSET_6;
+		|		if (is_hit(badr | 7, badr | 7, 7)) state->mem_hits |= BSET_7;
+		|	}
+		|	state->mem_q4cmd = mp_mem_ctl;
+		|	state->mem_q4cont = mp_mem_continue;
+		|	state->mem_labort = labort;
+		|	state->mem_eabort = !(mp_mem_abort_e && mp_mem_abort_el);
 		|}
 		|''')
 
@@ -230,154 +385,10 @@ class MEM(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|
-		|	bool q4pos = PIN_Q4.posedge();
-		|	bool h1pos = PIN_H2.negedge();
-		|
-		|	bool labort = !(mp_mem_abort_l && mp_mem_abort_el);
-		|
-		|	if (h1pos) {
-		|		bool p_early_abort = state->eabort;
-		|		bool p_mcyc2_next_hd = state->p_mcyc2_next;
-		|		if (p_early_abort && p_mcyc2_next_hd) {
-		|			state->cmd = 0;
-		|		} else {
-		|			state->cmd = state->q4cmd ^ 0xf;
-		|		}
-		|		state->bcmd = 1 << state->cmd;
-		|		state->p_mcyc2_next =
-		|		    !(
-		|		        ((state->q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
-		|		        ((!state->q4cont) && (!p_early_abort) && (!p_mcyc2_next_hd))
-		|		    );
-		|		state->cyo = !((state->q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd);
-		|		state->cyt = p_mcyc2_next_hd;
-		|
-		|		if (state->cyo) {
-		|			if        (state->hits & BSET_4) { mp_mem_set = 0;
-		|			} else if (state->hits & BSET_5) { mp_mem_set = 1;
-		|			} else if (state->hits & BSET_6) { mp_mem_set = 2;
-		|			} else if (state->hits & BSET_7) { mp_mem_set = 3;
-		|			} else if (state->hits & BSET_0) { mp_mem_set = 0;
-		|			} else if (state->hits & BSET_1) { mp_mem_set = 1;
-		|			} else if (state->hits & BSET_2) { mp_mem_set = 2;
-		|			} else                           { mp_mem_set = 3;
-		|			}
-		|
-		|			mp_mem_hit = 0xf;
-		|			if (state->hits & (BSET_0|BSET_1|BSET_2|BSET_3))
-		|				mp_mem_hit &= ~1;
-		|			if (state->hits & (BSET_4|BSET_5|BSET_6|BSET_7))
-		|				mp_mem_hit &= ~8;
-		|			if (state->hits) {
-		|				unsigned tadr = state->hash << 3;
-		|				     if (state->hits & BSET_0)	state->hit_lru = state->rame[tadr | 0];
-		|				else if (state->hits & BSET_1)	state->hit_lru = state->rame[tadr | 1];
-		|				else if (state->hits & BSET_2)	state->hit_lru = state->rame[tadr | 2];
-		|				else if (state->hits & BSET_3)	state->hit_lru = state->rame[tadr | 3];
-		|				else if (state->hits & BSET_4)	state->hit_lru = state->rame[tadr | 4];
-		|				else if (state->hits & BSET_5)	state->hit_lru = state->rame[tadr | 5];
-		|				else if (state->hits & BSET_6)	state->hit_lru = state->rame[tadr | 6];
-		|				else if (state->hits & BSET_7)	state->hit_lru = state->rame[tadr | 7];
-		|				state->hit_lru >>= 2;
-		|				state->hit_lru &= 0xf;
-		|			} else {
-		|				state->hit_lru = 0xf;
-		|			}
-		|		}
-		|		if (!state->cyt) {
-		|			if (CMDS(CMD_PTR)) {
-		|				unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
-		|				state->qreg = state->ram[padr] & ~(0x7fULL << 6);
-		|				state->qreg |= (state->rame[padr] & 0x7f) << 6;
-		|			}
-		|		}
-		|
-		|		if (!state->cyt) {
-		|			if (CMDS(CMD_LMR|CMD_PMR) && !labort) {
-		|				unsigned set = find_set(state->cmd);
-		|				uint32_t radr =	(set << 18) | (state->cl << 6) | state->wd;
-		|				assert(radr < (1 << 21));
-		|				state->tqreg = state->bitt[radr+radr];
-		|				state->vqreg = state->bitt[radr+radr+1];
-		|			}
-		|		}
-		|	
-		|		if (!state->cyt) {
-		|			bool ihit = mp_mem_hit == 0xf;
-		|			if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->labort) {
-		|				unsigned set = find_set(state->cmd);
-		|				uint32_t radr = (set << 18) | (state->cl << 6) | state->wd;
-		|				assert(radr < (1 << 21));
-		|				state->bitt[radr+radr] = state->tdreg;
-		|				state->bitt[radr+radr+1] = state->vdreg;
-		|			}
-		|
-		|			if (CMDS(CMD_PTW)) {
-		|				bool my_board = false;
-		|				bool which_board = state->mar_set >> 3;
-		|				if (which_board == my_board) {
-		|					unsigned padr = (state->hash << 3) | (state->mar_set & 0x7);
-		|					state->ram[padr] = state->vdreg & ~(0x7fULL << 6);
-		|					state->rame[padr] = (state->vdreg >> 6) & 0x7f;
-		|				}
-		|			} else if (!state->labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
-		|				unsigned padr = state->hash << 3;
-		|				for (unsigned u = 0; u < 8; u++)
-		|					state->rame[padr + u] = dolru(state->hit_lru, state->rame[padr + u], state->cmd);
-		|			}
-		|		}
-		|
-		|		bool not_me = mp_mem_hit == 0xf;
-		|	
-		|		if (!mp_memv_oe && mp_memtv_oe) {
-		|			if (not_me) {
-		|				mp_val_bus = ~0ULL;
-		|			} else {
-		|				mp_val_bus = state->qreg;
-		|			}
-		|		} else if (!mp_memtv_oe) {
-		|			if (not_me) {
-		|				mp_typ_bus = ~0ULL;
-		|				mp_val_bus = ~0ULL;
-		|			} else {
-		|				mp_typ_bus = state->tqreg;
-		|				mp_val_bus = state->vqreg;
-		|			}
-		|		}
-		|	}
-		|
-		|	if (q4pos) {
-		|		state->cl = state->hash;
-		|		state->wd = state->word;
-		|
-		|		state->cstop = mp_sync_freeze == 0;
-		|
-		|		if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
-		|			state->tdreg = mp_typ_bus;
-		|			state->vdreg = mp_val_bus;
-		|		}
-		|		bool loadmar = !((mp_mar_cntl >= 4) && mp_clock_stop_7);
-		|		if (!loadmar && state->cstop) {
-		|			load_mar();
-		|		}
-		|
-		|		if (!state->cyo) {
-		|			state->hits = 0;
-		|			unsigned badr = state->hash << 3;
-		|			if (is_hit(badr | 0, badr | 0, 0)) state->hits |= BSET_0;
-		|			if (is_hit(badr | 1, badr | 1, 1)) state->hits |= BSET_1;
-		|			if (is_hit(badr | 2, badr | 2, 2)) state->hits |= BSET_2;
-		|			if (is_hit(badr | 3, badr | 3, 3)) state->hits |= BSET_3;
-		|			if (is_hit(badr | 4, badr | 4, 4)) state->hits |= BSET_4;
-		|			if (is_hit(badr | 5, badr | 5, 5)) state->hits |= BSET_5;
-		|			if (is_hit(badr | 6, badr | 6, 6)) state->hits |= BSET_6;
-		|			if (is_hit(badr | 7, badr | 7, 7)) state->hits |= BSET_7;
-		|		}
-		|		state->q4cmd = mp_mem_ctl;
-		|		state->q4cont = mp_mem_continue;
-		|		state->labort = labort;
-		|		state->eabort = !(mp_mem_abort_e && mp_mem_abort_el);
+		|	if (PIN_H2.negedge()) {
+		|		mem_h1();
+		|	} else if (PIN_Q4.posedge()) {
+		|		mem_q4();
 		|	}
 		|''')
 
