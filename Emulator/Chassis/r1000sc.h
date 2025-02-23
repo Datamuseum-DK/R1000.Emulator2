@@ -64,6 +64,7 @@ void f181_alu(struct f181 *);
 	macro(unsigned, seq_halted, 0) \
 	macro(unsigned, seq_uev, 0) \
 	macro(unsigned, fiu_freeze, 0) \
+	macro(unsigned, fiu_unfreeze, 0) \
 	macro(unsigned, key_switch, 1) \
 	macro(unsigned, csa_offs, 0) \
 	macro(unsigned, csa_nve, 0) \
@@ -110,6 +111,7 @@ void f181_alu(struct f181 *);
 	macro(unsigned, state_clk_stop, 0) \
 	macro(unsigned, state_clk_en, 0) \
 	macro(unsigned, below_tcp, 0) \
+	macro(unsigned, sync_freeze, 0) \
 
 #define MIDSTATE(macro) \
 	macro(unsigned, cond_sel, 0) \
@@ -125,7 +127,6 @@ void f181_alu(struct f181 *);
 	macro(unsigned, ioctv_oe, 0) \
 	macro(unsigned, valv_oe, 0) \
 	macro(unsigned, typt_oe, 0) \
-	macro(unsigned, sync_freeze, 0) \
 	macro(unsigned, q_bit, 0) \
 
 #define DMACRO(typ, nam, val) extern volatile typ mp_##nam;

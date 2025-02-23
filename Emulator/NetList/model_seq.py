@@ -210,6 +210,8 @@ class SEQ(PartFactory):
 		|	bool clock_stop_6;
 		|	bool clock_stop_7;
 		|	unsigned clock_stop;
+		|	unsigned diag;
+		|	unsigned countdown;
 		|
 		|	uint16_t lex_valid;
 		|	bool lxval;
@@ -271,7 +273,6 @@ class SEQ(PartFactory):
 		|       void nxt_lex_valid(void);
 		|       bool condition(void);
 		|	unsigned branch_offset(void);
-		|	void q2clockstop(void);
 		|	void q3clockstop(void);
 		|	void seq_q2(void);
 		|	void seq_q3(void);
@@ -598,20 +599,6 @@ class SEQ(PartFactory):
 		|
 		|void
 		|SCM_«mmm» ::
-		|q2clockstop(void)
-		|{
-		|#if 0
-		|	unsigned diag;
-		|	BUS_DIAG_READ(diag);
-		|	state->sf_stop = !(diag == 0);
-		|	mp_sf_stop = !(diag == 0);
-		|	mp_freeze = (diag & 3) != 0;
-		|	output.sfstpo = state->sf_stop;
-		|#endif
-		|}
-		|
-		|void
-		|SCM_«mmm» ::
 		|q3clockstop(void)
 		|{
 		|	bool event = true;
@@ -619,14 +606,53 @@ class SEQ(PartFactory):
 		|	state->s_state_stop = true;
 		|	mp_clock_stop = true;
 		|	mp_ram_stop = true;
-		|#if 1
-		|	unsigned diag;
-		|	BUS_DIAG_READ(diag);
-		|	state->sf_stop = !(diag == 0);
-		|	mp_sf_stop = !(diag == 0);
-		|	mp_freeze = (diag & 3) != 0;
-		|	// output.sfstpo = state->sf_stop;
+		|
+		|	if (mp_seq_halted && mp_seq_prepped) {
+		|		state->diag |= 0x01;
+		|		mp_sync_freeze |= 1;
+		|	} else {
+		|		state->diag &= ~0x01;
+		|		mp_sync_freeze &= ~1;
+		|	}
+		|
+		|#if 0
+		|	state->diag |= 0x02;
+		|	if (mp_fiu_unfreeze == 1) {
+		|		state->diag &= ~0x2;
+		|	} else if (mp_fiu_unfreeze > 1) {
+		|		mp_fiu_unfreeze--;
+		|	}
 		|#endif
+		|#if 1
+		|	if (mp_fiu_freeze && !(state->diag & 0x2)) {
+		|		state->diag |= 0x02;
+		|		// output.freze = 1;
+		|		mp_sync_freeze |= 2;
+		|		ALWAYS_TRACE(<< "THAW1 " << state->diag << " " << mp_sync_freeze);
+		|	} else if (!mp_fiu_freeze && (state->diag & 0x2) && !(state->diag & 0x4)) {
+		|		state->diag |= 0x04;
+		|		// output.sync = 1;
+		|		mp_sync_freeze |= 4;
+		|		ALWAYS_TRACE(<< "THAW2 " << state->diag << " " << mp_sync_freeze);
+		|	} else if (!mp_fiu_freeze && (state->diag & 0x2) && (state->diag & 0x4)) {
+		|		state->diag &= ~0x02;
+		|		// output.freze = 0;
+		|		mp_sync_freeze &= ~2;
+		|		state->countdown = 5;
+		|		ALWAYS_TRACE(<< "THAW3 " << (state->diag & 0x2) << " " << mp_sync_freeze << " " << state->countdown);
+		|	} else if (!mp_fiu_freeze && !(state->diag & 0x2) && (state->diag & 0x4)) {
+		|		if (--state->countdown == 0) {
+		|			// output.sync = 0;
+		|			state->diag &= ~0x04;
+		|			mp_sync_freeze &= ~4;
+		|		}
+		|		ALWAYS_TRACE(<< "THAW4 " <<  state->diag << " " << mp_sync_freeze << " " << state->countdown);
+		|	}
+		|#endif
+		|
+		|	state->sf_stop = !(state->diag == 0);
+		|	mp_sf_stop = !(state->diag == 0);
+		|	mp_freeze = (state->diag & 3) != 0;
 		|
 		|	unsigned clock_stop = 0;
 		|	state->clock_stop_1 = !(mp_clock_stop_6 && mp_clock_stop_7 && mp_below_tcp);
@@ -668,7 +694,6 @@ class SEQ(PartFactory):
 		|SCM_«mmm» ::
 		|seq_q2(void)
 		|{
-		|	q2clockstop();
 		|	state->tos_vld_cond = !(state->foo7 || RNDX(RND_TOS_VLB));				// cond, q4
 		|	state->m_tos_invld = !(state->uses_tos && state->tos_vld_cond);				// lmp, cond
 		|
@@ -1502,12 +1527,13 @@ class SEQ(PartFactory):
 		|		seq_q4();
 		|	}
 		|
-		|	output.qdfrz = mp_seq_halted && mp_seq_prepped;
+		|#if 0
 		|	if (mp_seq_halted && mp_seq_prepped) {
 		|		mp_nxt_sync_freeze |= 1;
 		|	} else {
 		|		mp_nxt_sync_freeze &= ~1;
 		|	}
+		|#endif
 		|
 		|''')
 

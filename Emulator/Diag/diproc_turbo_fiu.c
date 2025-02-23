@@ -177,10 +177,12 @@ diagproc_turbo_fiu(const struct diagproc *dp)
 	if (dp->dl_hash == RUN_NORMAL_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "THAW 0");
 		mp_fiu_freeze = 0;
+		mp_fiu_unfreeze = 5;
 	}
 	if (dp->dl_hash == FREEZE_WORLD_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "THAW 1");
 		mp_fiu_freeze = 1;
+		mp_fiu_unfreeze = 0;
 	}
 
 

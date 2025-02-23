@@ -170,7 +170,7 @@ class FIU(PartFactory):
 		|	bool memstart = 0;
 		|	bool mp_seq_uev10_page_x = 0;
 		|	bool mp_seq_uev0_memex = 0;
-		|	unsigned countdown = 0;
+		|	//unsigned countdown = 0;
 		|	unsigned hit_offset = 0;
 		|	unsigned mem_start = 0;
 		|	unsigned condsel = 0;
@@ -1008,6 +1008,7 @@ class FIU(PartFactory):
 		|		state->typuir = state->typwcsram[mp_nua_bus];
 		|	}
 		|
+		|#if 0
 		|	if (mp_fiu_freeze && !output.freze) {
 		|		output.freze = 1;
 		|		mp_nxt_sync_freeze |= 2;
@@ -1028,6 +1029,7 @@ class FIU(PartFactory):
 		|		}
 		|		ALWAYS_TRACE(<< "THAW4 " <<  output.freze << " " << mp_nxt_sync_freeze << " " << countdown);
 		|	}
+		|#endif
 		|}
 		|''')
 

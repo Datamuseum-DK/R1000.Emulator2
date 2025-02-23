@@ -17,11 +17,7 @@ class SEQ(FChip):
         self.sig_left(ChipSig("-->+", "Q4"))
         self.sig_left(ChipSig("-->+", "H2"))
 
-        self.sig_left(ChipSig("-->+", "DIAG", 0, 2))
-
-        self.sig_right(ChipSig("+-->", "QDFRZ"))
-
-        self.finish()
+        self.finish(19)
 
 def register():
     yield SEQ()
