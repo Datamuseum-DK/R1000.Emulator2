@@ -129,6 +129,17 @@ class FIU(PartFactory):
 		|	uint64_t fiu_uir;
 		|	uint64_t fiu_typuir;
 		|
+		|	unsigned fiu_hit_offset;
+		|	unsigned fiu_condsel;
+		|	bool fiu_tmp_csa_oor_next;
+		|	bool fiu_scav_trap_next;
+		|	bool fiu_memcyc1;
+		|	bool fiu_uev10_page_x;
+		|	bool fiu_uev0_memex;
+		|	unsigned fiu_mem_start;
+		|	bool fiu_memstart;
+		|	unsigned fiu_pa025d, fiu_pa026d, fiu_pa027d;
+		|
 		|#define UIR_FIU_OL		((state->fiu_uir >> 40) & 0x7f)
 		|#define UIR_FIU_LFL	((state->fiu_uir >> 32) & 0x7f)
 		|#define UIR_FIU_LFRC	((state->fiu_uir >> 30) & 0x3)
@@ -161,18 +172,6 @@ class FIU(PartFactory):
 
     def priv_decl(self, file):
         file.fmt('''
-		|	unsigned pa025 = 0, pa026 = 0, pa027 = 0;
-		|	unsigned tivi = 0;
-		|	bool csa_oor_next = 0;
-		|	bool scav_trap_next = 0;
-		|	bool memcyc1 = 0;
-		|	bool memstart = 0;
-		|	bool mp_seq_uev10_page_x = 0;
-		|	bool mp_seq_uev0_memex = 0;
-		|	//unsigned countdown = 0;
-		|	unsigned hit_offset = 0;
-		|	unsigned mem_start = 0;
-		|	unsigned condsel = 0;
 		|
 		|	uint64_t read_fiu_bus(unsigned line);
 		|	void do_tivi(void);
@@ -199,7 +198,7 @@ class FIU(PartFactory):
 		|fiu_conditions()
 		|{
 		|
-		|	switch(condsel) {
+		|	switch(state->fiu_condsel) {
 		|	case 0x60: mp_condx3 = !state->fiu_memex; 		break;
 		|	case 0x61: mp_condx3 = !state->fiu_phys_last; 		break;
 		|	case 0x62: mp_condx3 = !state->fiu_write_last; 		break;
@@ -239,17 +238,17 @@ class FIU(PartFactory):
 		|	u |= (uint64_t)mp_mem_set << BUS64_LSB(27);
 		|	u |= (uint64_t)((state->fiu_omq >> 2) & 0x3) << BUS64_LSB(29);
 		|	u |= 0x3ULL << BUS64_LSB(31);
-		|	u |= (uint64_t)(mp_seq_uev10_page_x) << BUS64_LSB(32);
+		|	u |= (uint64_t)(state->fiu_uev10_page_x) << BUS64_LSB(32);
 		|	u |= (uint64_t)((state->fiu_prmt >> 1) & 1) << BUS64_LSB(33);
 		|	u |= (uint64_t)(mp_refresh_count != 0xffff) << BUS64_LSB(34);
-		|	u |= (uint64_t)(mp_seq_uev0_memex) << BUS64_LSB(35);
+		|	u |= (uint64_t)(state->fiu_uev0_memex) << BUS64_LSB(35);
 		|	u |= ((line >> 0) & 1) << BUS64_LSB(48);
 		|	u |= ((line >> 1) & 1) << BUS64_LSB(50);
 		|	u |= (uint64_t)state->fiu_nmatch << BUS64_LSB(56);
 		|	u |= (uint64_t)state->fiu_in_range << BUS64_LSB(57);
 		|	u |= (uint64_t)state->fiu_csa_oor_next << BUS64_LSB(58);
 		|	u |= (uint64_t)mp_csa_hit << BUS64_LSB(59);
-		|	u |= (uint64_t)hit_offset;
+		|	u |= (uint64_t)state->fiu_hit_offset;
 		|	return (u);
 		|}
 		|
@@ -258,7 +257,7 @@ class FIU(PartFactory):
 		|do_tivi(void)
 		|{
 		|
-		|	tivi = UIR_FIU_TIVI;
+		|	unsigned tivi = UIR_FIU_TIVI;
 		|
 		|	uint64_t vi;
 		|	switch (tivi) {
@@ -515,7 +514,7 @@ class FIU(PartFactory):
 		|tcsa(bool clock)
 		|{
 		|	bool invalidate_csa = !(mp_csa_hit && !state->fiu_tcsa_tf_pred);
-		|	unsigned hit_offs = hit_offset;
+		|	unsigned hit_offs = state->fiu_hit_offset;
 		|
 		|	unsigned adr;
 		|	if (state->fiu_tcsa_tf_pred) {
@@ -594,46 +593,46 @@ class FIU(PartFactory):
 		|
 		|	state->fiu_in_range = (!state->fiu_pdt && name_match) || (dif & 0xffff0);
 		|
-		|	hit_offset = (0xf + state->fiu_nve - (dif & 0xf)) & 0xf;
+		|	state->fiu_hit_offset = (0xf + state->fiu_nve - (dif & 0xf)) & 0xf;
 		|
 		|	mp_csa_hit = (bool)!(carry && !(state->fiu_in_range || ((dif & 0xf) >= state->fiu_nve)));
 		|
 		|	unsigned pa025a = 0;
-		|	pa025a |= mem_start;
+		|	pa025a |= state->fiu_mem_start;
 		|	pa025a |= state->fiu_state0 << 8;
 		|	pa025a |= state->fiu_state1 << 7;
 		|	pa025a |= state->fiu_labort << 6;
 		|	pa025a |= state->fiu_e_abort_dly << 5;
-		|	pa025 = state->fiu_pa025[pa025a];
-		|	memcyc1 = (pa025 >> 1) & 1;
-		|	memstart = (pa025 >> 0) & 1;
+		|	state->fiu_pa025d = state->fiu_pa025[pa025a];
+		|	state->fiu_memcyc1 = (state->fiu_pa025d >> 1) & 1;
+		|	state->fiu_memstart = (state->fiu_pa025d >> 0) & 1;
 		|
-		|	if (memstart) {
+		|	if (state->fiu_memstart) {
 		|		state->fiu_mcntl = state->fiu_lcntl;
 		|	} else {
 		|		state->fiu_mcntl = state->fiu_pcntl_d;
 		|	}
 		|	state->fiu_phys_ref = !(state->fiu_mcntl & 0x6);
-		|	state->fiu_logrwn = !(state->fiu_logrw && memcyc1);
+		|	state->fiu_logrwn = !(state->fiu_logrw && state->fiu_memcyc1);
 		|	state->fiu_logrw = !(state->fiu_phys_ref || ((state->fiu_mcntl >> 3) & 1));
 		|
-		|	scav_trap_next = state->fiu_scav_trap;
-		|	if (condsel == 0x69) {		// SCAVENGER_HIT
-		|		scav_trap_next = false;
+		|	state->fiu_scav_trap_next = state->fiu_scav_trap;
+		|	if (state->fiu_condsel == 0x69) {		// SCAVENGER_HIT
+		|		state->fiu_scav_trap_next = false;
 		|	} else if (rmarp) {
-		|		scav_trap_next = (state->fiu_ti_bus >> BUS64_LSB(32)) & 1;
+		|		state->fiu_scav_trap_next = (state->fiu_ti_bus >> BUS64_LSB(32)) & 1;
 		|	} else if (state->fiu_log_query) {
-		|		scav_trap_next = false;
+		|		state->fiu_scav_trap_next = false;
 		|	}
 		|
 		|
-		|	csa_oor_next = state->fiu_csa_oor;
-		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
-		|		csa_oor_next = false;
+		|	state->fiu_tmp_csa_oor_next = state->fiu_csa_oor;
+		|	if (state->fiu_condsel == 0x68) {		// CSA_OUT_OF_RANGE
+		|		state->fiu_tmp_csa_oor_next = false;
 		|	} else if (rmarp) {
-		|		csa_oor_next = (state->fiu_ti_bus >> BUS64_LSB(33)) & 1;
+		|		state->fiu_tmp_csa_oor_next = (state->fiu_ti_bus >> BUS64_LSB(33)) & 1;
 		|	} else if (state->fiu_log_query) {
-		|		csa_oor_next = state->fiu_csa_oor_next;
+		|		state->fiu_tmp_csa_oor_next = state->fiu_csa_oor_next;
 		|	}
 		|
 		|	bool pgmod = (state->fiu_omq >> 1) & 1;
@@ -644,10 +643,10 @@ class FIU(PartFactory):
 		|	pa027a |= (state->fiu_omq & 0xc);
 		|	pa027a |= 1 << 1;
 		|	pa027a |= pgmod << 0;
-		|	pa027 = state->fiu_pa027[pa027a];
-		|	state->fiu_setq = (pa027 >> 3) & 3;
+		|	state->fiu_pa027d = state->fiu_pa027[pa027a];
+		|	state->fiu_setq = (state->fiu_pa027d >> 3) & 3;
 		|
-		|	bool mnor0b = state->fiu_drive_mru || ((pa027 & 3) == 0);
+		|	bool mnor0b = state->fiu_drive_mru || ((state->fiu_pa027d & 3) == 0);
 		|	bool mnan2a = !(mnor0b && state->fiu_logrw_d);
 		|	state->fiu_miss = !(
 		|		((board_hit != 0xf) && mnan2a) ||
@@ -666,66 +665,66 @@ class FIU(PartFactory):
 		|{
 		|	do_tivi();
 		|	unsigned pa025a = 0;
-		|	pa025a |= mem_start;
+		|	pa025a |= state->fiu_mem_start;
 		|	pa025a |= state->fiu_state0 << 8;
 		|	pa025a |= state->fiu_state1 << 7;
 		|	pa025a |= state->fiu_labort << 6;
 		|	pa025a |= state->fiu_e_abort_dly << 5;
-		|	pa025 = state->fiu_pa025[pa025a];
-		|	memcyc1 = (pa025 >> 1) & 1;
-		|	memstart = (pa025 >> 0) & 1;
+		|	state->fiu_pa025d = state->fiu_pa025[pa025a];
+		|	state->fiu_memcyc1 = (state->fiu_pa025d >> 1) & 1;
+		|	state->fiu_memstart = (state->fiu_pa025d >> 0) & 1;
 		|
-		|	if (memstart) {
+		|	if (state->fiu_memstart) {
 		|		state->fiu_mcntl = state->fiu_lcntl;
 		|	} else {
 		|		state->fiu_mcntl = state->fiu_pcntl_d;
 		|	}
 		|	state->fiu_phys_ref = !(state->fiu_mcntl & 0x6);
-		|	state->fiu_logrwn = !(state->fiu_logrw && memcyc1);
+		|	state->fiu_logrwn = !(state->fiu_logrw && state->fiu_memcyc1);
 		|	state->fiu_logrw = !(state->fiu_phys_ref || ((state->fiu_mcntl >> 3) & 1));
 		|
 		|	unsigned mar_cntl = mp_mar_cntl;
 		|	bool rmarp = (mar_cntl & 0xe) == 0x4;
 		|
-		|	scav_trap_next = state->fiu_scav_trap;
-		|	if (condsel == 0x69) {		// SCAVENGER_HIT
-		|		scav_trap_next = false;
+		|	state->fiu_scav_trap_next = state->fiu_scav_trap;
+		|	if (state->fiu_condsel == 0x69) {		// SCAVENGER_HIT
+		|		state->fiu_scav_trap_next = false;
 		|	} else if (rmarp) {
-		|		scav_trap_next = (state->fiu_ti_bus >> BUS64_LSB(32)) & 1;
+		|		state->fiu_scav_trap_next = (state->fiu_ti_bus >> BUS64_LSB(32)) & 1;
 		|	} else if (state->fiu_log_query) {
-		|		scav_trap_next = false;
+		|		state->fiu_scav_trap_next = false;
 		|	}
 		|
 		|
-		|	csa_oor_next = state->fiu_csa_oor;
-		|	if (condsel == 0x68) {		// CSA_OUT_OF_RANGE
-		|		csa_oor_next = false;
+		|	state->fiu_tmp_csa_oor_next = state->fiu_csa_oor;
+		|	if (state->fiu_condsel == 0x68) {		// CSA_OUT_OF_RANGE
+		|		state->fiu_tmp_csa_oor_next = false;
 		|	} else if (rmarp) {
-		|		csa_oor_next = (state->fiu_ti_bus >> BUS64_LSB(33)) & 1;
+		|		state->fiu_tmp_csa_oor_next = (state->fiu_ti_bus >> BUS64_LSB(33)) & 1;
 		|	} else if (state->fiu_log_query) {
-		|		csa_oor_next = state->fiu_csa_oor_next;
+		|		state->fiu_tmp_csa_oor_next = state->fiu_csa_oor_next;
 		|	}
 		|
-		|	unsigned pa026a = mem_start;
+		|	unsigned pa026a = state->fiu_mem_start;
 		|	if (state->fiu_omq & 0x02)	// INIT_MRU_D
 		|		pa026a |= 0x20;
 		|	if (state->fiu_phys_last)
 		|		pa026a |= 0x40;
 		|	if (state->fiu_write_last)
 		|		pa026a |= 0x80;
-		|	pa026 = state->fiu_pa026[pa026a];
+		|	state->fiu_pa026d = state->fiu_pa026[pa026a];
 		|	// INIT_MRU, ACK_REFRESH, START_IF_INCM, START_TAG_RD, PCNTL0-3
 		|
 		|	if (state->fiu_log_query) {
 		|		// PIN_MISS instead of cache_miss_next looks suspicious
 		|		// but confirmed on both /200 and /400 FIU boards.
 		|		// 20230910/phk
-		|		state->fiu_memex = !(!state->fiu_miss && !csa_oor_next && !scav_trap_next);
+		|		state->fiu_memex = !(!state->fiu_miss && !state->fiu_tmp_csa_oor_next && !state->fiu_scav_trap_next);
 		|	} else {
 		|		state->fiu_memex = !(!state->fiu_cache_miss && !state->fiu_csa_oor && !state->fiu_scav_trap);
 		|	}
 		|	mp_restore_rdr = (state->fiu_prmt >> 1) & 1;
-		|	bool sel = !((!mp_state_clk_stop && memcyc1) || (mp_state_clk_en && !memcyc1));
+		|	bool sel = !((!mp_state_clk_stop && state->fiu_memcyc1) || (mp_state_clk_en && !state->fiu_memcyc1));
 		|	if (sel) {
 		|		mp_dummy_next = !((state->fiu_prmt >> 0) & 1);
 		|	} else {
@@ -748,39 +747,39 @@ class FIU(PartFactory):
 		|
 		|	state->fiu_lcntl = state->fiu_mcntl;
 		|	state->fiu_drive_mru = state->fiu_init_mru_d;
-		|	state->fiu_memcnd = (pa025 >> 4) & 1;	// CM_CTL0
-		|	state->fiu_cndtru = (pa025 >> 3) & 1;	// CM_CTL1
+		|	state->fiu_memcnd = (state->fiu_pa025d >> 4) & 1;	// CM_CTL0
+		|	state->fiu_cndtru = (state->fiu_pa025d >> 3) & 1;	// CM_CTL1
 		|	mp_mem_cond= !(state->fiu_memcnd);
 		|	mp_mem_cond_pol = !(state->fiu_cndtru);
 		|			
-		|	if (memcyc1) {
+		|	if (state->fiu_memcyc1) {
 		|		mp_mem_ctl= state->fiu_lcntl;
 		|	} else {
-		|		mp_mem_ctl= pa026 & 0xf;
+		|		mp_mem_ctl= state->fiu_pa026d & 0xf;
 		|	}
 		|	bool inc_mar = (state->fiu_prmt >> 3) & 1;
 		|	state->fiu_page_crossing_next = (
-		|		condsel != 0x6a) && (// sel_pg_xing
-		|		condsel != 0x6e) && (// sel_incyc_px
+		|		state->fiu_condsel != 0x6a) && (// sel_pg_xing
+		|		state->fiu_condsel != 0x6e) && (// sel_incyc_px
 		|		(
 		|			(state->fiu_page_xing) ||
 		|			(!state->fiu_page_xing && inc_mar && (state->fiu_moff & 0x1f) == 0x1f)
 		|		)
 		|	);
-		|	mp_mem_continue= !((pa025 >> 5) & 1);
-		|	mp_seq_uev10_page_x = !(mp_uevent_enable && state->fiu_page_xing);
+		|	mp_mem_continue= !((state->fiu_pa025d >> 5) & 1);
+		|	state->fiu_uev10_page_x = !(mp_uevent_enable && state->fiu_page_xing);
 		|	if (mp_uevent_enable && state->fiu_page_xing) {
 		|		mp_seq_uev |= UEV_PAGE_X;
 		|	} else {
 		|		mp_seq_uev &= ~UEV_PAGE_X;
 		|	}
-		|	mp_seq_uev0_memex = !(mp_uevent_enable && state->fiu_memex);
+		|	state->fiu_uev0_memex = !(mp_uevent_enable && state->fiu_memex);
 		|	if (mp_uevent_enable && state->fiu_memex) {
 		|		mp_seq_uev |= UEV_MEMEX;
 		|	} else {
 		|		mp_seq_uev &= ~UEV_MEMEX;
 		|	}
-		|	mp_clock_stop_0 = mp_seq_uev10_page_x && mp_seq_uev0_memex;
+		|	mp_clock_stop_0 = state->fiu_uev10_page_x && state->fiu_uev0_memex;
 		|}
 		|
 		|void
@@ -877,7 +876,7 @@ class FIU(PartFactory):
 		|
 		|	state->fiu_in_range = (!state->fiu_pdt && name_match) || (dif & 0xffff0);
 		|
-		|	hit_offset = (0xf + state->fiu_nve - (dif & 0xf)) & 0xf;
+		|	state->fiu_hit_offset = (0xf + state->fiu_nve - (dif & 0xf)) & 0xf;
 		|
 		|	uint64_t adr = 0;
 		|	adr = mp_adr_bus;
@@ -914,7 +913,7 @@ class FIU(PartFactory):
 		|			
 		|	}
 		|			
-		|	if (mem_start == 0x06) {
+		|	if (state->fiu_mem_start == 0x06) {
 		|		mp_refresh_count = state->fiu_ti_bus >> 48;
 		|	} else if (mp_refresh_count != 0xffff) {
 		|		mp_refresh_count++;
@@ -925,79 +924,79 @@ class FIU(PartFactory):
 		|	bool eabrt = !(e_abort && le_abort);
 		|	bool l_abort = mp_mem_abort_l;
 		|	bool idum;
-		|	bool sel = !((!mp_state_clk_stop && memcyc1) || (mp_state_clk_en && !memcyc1));
+		|	bool sel = !((!mp_state_clk_stop && state->fiu_memcyc1) || (mp_state_clk_en && !state->fiu_memcyc1));
 		|	if (sel) {
 		|		idum = (state->fiu_prmt >> 5) & 1;
 		|	} else {
 		|		idum = state->fiu_dumon;
 		|	}
-		|	state->fiu_state0 = (pa025 >> 7) & 1;
-		|	state->fiu_state1 = (pa025 >> 6) & 1;
+		|	state->fiu_state0 = (state->fiu_pa025d >> 7) & 1;
+		|	state->fiu_state1 = (state->fiu_pa025d >> 6) & 1;
 		|	state->fiu_labort = !(l_abort && le_abort);
 		|	state->fiu_e_abort_dly = eabrt;
-		|	state->fiu_pcntl_d = pa026 & 0xf;
+		|	state->fiu_pcntl_d = state->fiu_pa026d & 0xf;
 		|	state->fiu_dumon = idum;
 		|	state->fiu_csaht = !mp_csa_hit;
 		|
 		|	if (!mp_sf_stop) {
 		|		bool cache_miss_next = state->fiu_cache_miss;
-		|		if (condsel == 0x6b) {		// CACHE_MISS
+		|		if (state->fiu_condsel == 0x6b) {		// CACHE_MISS
 		|			cache_miss_next = false;
 		|		} else if (rmarp) {
 		|			cache_miss_next = (state->fiu_ti_bus >> BUS64_LSB(35)) & 1;
 		|		} else if (state->fiu_log_query) {
 		|			cache_miss_next = state->fiu_miss;
 		|		}
-		|		state->fiu_scav_trap = scav_trap_next;
+		|		state->fiu_scav_trap = state->fiu_scav_trap_next;
 		|		state->fiu_cache_miss = cache_miss_next;
-		|		state->fiu_csa_oor = csa_oor_next;
+		|		state->fiu_csa_oor = state->fiu_tmp_csa_oor_next;
 		|								
 		|		if (rmarp) {
 		|			state->fiu_mar_modified = (state->fiu_ti_bus >> BUS64_LSB(39)) & 1;
-		|		} else if (condsel == 0x6d) {
+		|		} else if (state->fiu_condsel == 0x6d) {
 		|			state->fiu_mar_modified = 1;
 		|		} else if (state->fiu_omf20) {
 		|			state->fiu_mar_modified = le_abort;
-		|		} else if (!memstart && le_abort) {
+		|		} else if (!state->fiu_memstart && le_abort) {
 		|			state->fiu_mar_modified = le_abort;
 		|		}
 		|		if (rmarp) {
 		|			state->fiu_incmplt_mcyc = (state->fiu_ti_bus >> BUS64_LSB(40)) & 1;
-		|		} else if (mem_start == 0x12) {
+		|		} else if (state->fiu_mem_start == 0x12) {
 		|			state->fiu_incmplt_mcyc = true;
-		|		} else if (memcyc1) {
+		|		} else if (state->fiu_memcyc1) {
 		|			state->fiu_incmplt_mcyc = le_abort;
 		|		}
 		|		if (rmarp) {
 		|			state->fiu_phys_last = (state->fiu_ti_bus >> BUS64_LSB(37)) & 1;
 		|			state->fiu_write_last = (state->fiu_ti_bus >> BUS64_LSB(38)) & 1;
-		|		} else if (memcyc1) {
+		|		} else if (state->fiu_memcyc1) {
 		|			state->fiu_phys_last = state->fiu_phys_ref;
 		|			state->fiu_write_last = (state->fiu_mcntl & 1);
 		|		}
 		|								
 		|		state->fiu_log_query = !(state->fiu_labort || state->fiu_logrwn);
 		|										
-		|		state->fiu_omf20 = (memcyc1 && ((state->fiu_prmt >> 3) & 1) && !mp_state_clk_en);
+		|		state->fiu_omf20 = (state->fiu_memcyc1 && ((state->fiu_prmt >> 3) & 1) && !mp_state_clk_en);
 		|		
-		|		if (memcyc1)
+		|		if (state->fiu_memcyc1)
 		|			state->fiu_mctl_is_read = !(state->fiu_lcntl & 1);
 		|		else
-		|			state->fiu_mctl_is_read = !(pa026 & 1);
+		|			state->fiu_mctl_is_read = !(state->fiu_pa026d & 1);
 		|								
 		|		state->fiu_logrw_d = state->fiu_logrw;
 		|	}
 		|
 		|	if (!mp_state_clk_en) {
 		|		state->fiu_omq = 0;
-		|		state->fiu_omq |= (pa027 & 3) << 2;
-		|		state->fiu_omq |= ((pa027 >> 5) & 1) << 1;
+		|		state->fiu_omq |= (state->fiu_pa027d & 3) << 2;
+		|		state->fiu_omq |= ((state->fiu_pa027d >> 5) & 1) << 1;
 		|		if (rmarp) {
 		|			state->fiu_page_xing = (state->fiu_ti_bus >> BUS64_LSB(34)) & 1;
 		|		} else {
 		|			state->fiu_page_xing = (state->fiu_page_crossing_next);
 		|		}
-		|		state->fiu_init_mru_d = (pa026 >> 7) & 1;
+		|		state->fiu_init_mru_d = (state->fiu_pa026d >> 7) & 1;
 		|	}
 		|	state->fiu_csa_oor_next = !(carry || name_match);
 		|
@@ -1020,7 +1019,7 @@ class FIU(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|
-		|	condsel = mp_cond_sel;
+		|	state->fiu_condsel = mp_cond_sel;
 		|
 		|	unsigned mar_cntl = mp_mar_cntl;
 		|
@@ -1034,7 +1033,7 @@ class FIU(PartFactory):
 		|	state->fiu_prmt ^= 0x02;
 		|	state->fiu_prmt &= 0x7b;
 		|
-		|	mem_start = UIR_FIU_MSTRT ^ 0x1e;
+		|	state->fiu_mem_start = UIR_FIU_MSTRT ^ 0x1e;
 		|
 		|	if (q1pos) {
 		|		fiu_q1();
@@ -1054,11 +1053,11 @@ class FIU(PartFactory):
 		|		}
 		|	}
 		|
-		|	if (condsel == 0x6b) {
+		|	if (state->fiu_condsel == 0x6b) {
 		|		if (q2pos) {
 		|			fiu_conditions();
 		|		}
-		|	} else if (!q4pos && (60 <= condsel && condsel <= 0x6f)) {
+		|	} else if (!q4pos && (60 <= state->fiu_condsel && state->fiu_condsel <= 0x6f)) {
 		|		fiu_conditions();
 		|	}
 		|	if (!q4pos) {
