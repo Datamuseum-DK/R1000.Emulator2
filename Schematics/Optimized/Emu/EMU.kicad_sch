@@ -128,144 +128,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "r1000:IOC"
-			(pin_names
-				(offset 1.016)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "U"
-				(at 2.54 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "IOC"
-				(at -1.27 -35.56 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Location" "___"
-				(at -1.27 0 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Name" "______"
-				(at 11.43 -43.18 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify bottom)
-				)
-			)
-			(symbol "IOC_1_1"
-				(rectangle
-					(start -3.81 3.81)
-					(end 24.13 -36.83)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin input line
-					(at -10.16 -7.62 0)
-					(length 6.35)
-					(name "Q2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -17.78 0)
-					(length 6.35)
-					(name "Q4"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -27.94 0)
-					(length 6.35)
-					(name "H2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "r1000:SEQ"
 			(pin_names
 				(offset 1.016)
@@ -567,16 +429,6 @@
 	)
 	(wire
 		(pts
-			(xy 276.86 27.94) (xy 287.02 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "0d437d55-66d3-444f-b225-3cc570b2b901")
-	)
-	(wire
-		(pts
 			(xy 119.38 27.94) (xy 132.08 27.94)
 		)
 		(stroke
@@ -617,16 +469,6 @@
 	)
 	(wire
 		(pts
-			(xy 287.02 38.1) (xy 276.86 38.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8321c3f8-fd74-4b48-888d-ff2e52163858")
-	)
-	(wire
-		(pts
 			(xy 68.58 27.94) (xy 78.74 27.94)
 		)
 		(stroke
@@ -634,16 +476,6 @@
 			(type default)
 		)
 		(uuid "83d74e3b-150f-49a6-8a5c-01a33ca6ad22")
-	)
-	(wire
-		(pts
-			(xy 287.02 48.26) (xy 276.86 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "887db47f-bc45-4cd4-81c6-442cabeec2ba")
 	)
 	(wire
 		(pts
@@ -684,16 +516,6 @@
 			(justify left bottom)
 		)
 		(uuid "50a5ad1c-4f64-4347-ad84-b4ba1f88359f")
-	)
-	(label "Q2~"
-		(at 276.86 27.94 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "5d8a57e8-cdfa-4fc9-8a59-ac6a06729a42")
 	)
 	(label "Q4~"
 		(at 119.38 38.1 0)
@@ -746,16 +568,6 @@
 		(uuid "98aced4d-8eb9-48a1-8c7e-4d33def68555")
 	)
 	(label "Q4~"
-		(at 276.86 38.1 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "b25f165f-6db4-414d-bebc-ff5492550c9a")
-	)
-	(label "Q4~"
 		(at 76.2 93.98 0)
 		(effects
 			(font
@@ -774,16 +586,6 @@
 			(justify left bottom)
 		)
 		(uuid "ea0f821a-86f4-4dd3-954d-6ec0a10f0e45")
-	)
-	(label "H2"
-		(at 276.86 48.26 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "ee42bd9b-6c6b-4829-9197-fb40b3f28457")
 	)
 	(symbol
 		(lib_id "r1000:SEQ")
@@ -875,95 +677,6 @@
 			(project "EMU"
 				(path "/20011966-7388-780e-03cc-2841463a393b"
 					(reference "U107")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "r1000:IOC")
-		(at 297.18 20.32 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "49d6c098-c68a-46c1-949a-eef43cccc347")
-		(property "Reference" "U2105"
-			(at 299.72 15.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "IOC"
-			(at 295.91 55.88 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 298.45 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 298.45 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 297.18 20.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Location" "x99"
-			(at 295.91 20.32 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Name" "IOC"
-			(at 308.61 63.5 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify bottom)
-			)
-		)
-		(pin "1"
-			(uuid "939df9a9-d20e-42ac-97f0-5b3477fc1fd8")
-		)
-		(pin "2"
-			(uuid "2415fbdd-547d-4e56-b1ca-ff114546e870")
-		)
-		(pin "3"
-			(uuid "083c7eec-cafa-4e5a-b7f3-6104e4870131")
-		)
-		(instances
-			(project "EMU"
-				(path "/20011966-7388-780e-03cc-2841463a393b"
-					(reference "U2105")
 					(unit 1)
 				)
 			)

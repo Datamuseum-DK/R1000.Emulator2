@@ -76,6 +76,7 @@ class IOC(PartFactory):
 		|	uint16_t *ioc_tram;
 		|	uint64_t *ioc_wcsram;
 		|	uint64_t ioc_uir;
+		|	bool ioc_is_tracing;
 		|
 		|#define UIR_IOC_ULWDR	((state->ioc_uir >> 13) & 0x1)
 		|#define UIR_IOC_RAND	((state->ioc_uir >>  8) & 0x1f)
@@ -94,14 +95,13 @@ class IOC(PartFactory):
 		|	struct ctx *c1 = CTX_Find("IOP.ram_space");
 		|	assert(c1 != NULL);
 		|	state->ioc_ram = (uint8_t*)(c1 + 1);
-		|	is_tracing = false;
+		|	state->ioc_is_tracing = false;
 		|''')
 
     def priv_decl(self, file):
         ''' further private decls '''
         file.fmt('''
-		|	bool is_tracing = 0;
-		|       void do_xact(void);
+		|       void ioc_do_xact(void);
 		|       void ioc_cond(void);
 		|       void ioc_h1(void);
 		|       void ioc_q2(void);
@@ -112,7 +112,7 @@ class IOC(PartFactory):
         file.fmt('''
 		|void
 		|SCM_«mmm» ::
-		|do_xact(void)
+		|ioc_do_xact(void)
 		|{
 		|	if (!state->ioc_xact)
 		|		state->ioc_xact = ioc_sc_bus_get_xact();
@@ -347,68 +347,87 @@ class IOC(PartFactory):
 		|{
 		|	bool sclk_pos = mp_clock_stop;
 		|	unsigned rand = UIR_IOC_RAND;
-		|	uint64_t typ, val;
-		|	typ = mp_typ_bus;
-		|	val = mp_val_bus;
 		|
-		|	if (sclk_pos) {
-		|		if (rand == 0x23)
-		|			state->ioc_cpu_running = true;
-		|		if (rand == 0x24)
-		|			state->ioc_cpu_running = false;
+		|	if (mp_ioc_trace && ((mp_sync_freeze & 0x3) == 0) && !state->ioc_is_tracing) {
+		|		state->ioc_is_tracing = true;
+		|		ALWAYS_TRACE(<< " IS TRACING");
+		|	}
+		|	if (mp_ioc_trace && (mp_sync_freeze & 0x3) && state->ioc_is_tracing) {
+		|		state->ioc_is_tracing = true;
+		|		mp_ioc_trace = 0;
+		|		ALWAYS_TRACE(<< " STOP TRACING");
 		|	}
 		|
-		|	if ((state->ioc_request_int_en &&
-		|	    state->ioc_reqrdp != state->ioc_reqwrp) && state->ioc_iack != 6) {
+		|	if ((state->ioc_request_int_en && state->ioc_reqrdp != state->ioc_reqwrp) && state->ioc_iack != 6) {
 		|		state->ioc_iack = 6;
 		|		ioc_sc_bus_start_iack(6);
 		|	}
-		|	if ((!state->ioc_request_int_en ||
-		|	    state->ioc_reqrdp == state->ioc_reqwrp) && state->ioc_iack != 7) {
+		|	if ((!state->ioc_request_int_en || state->ioc_reqrdp == state->ioc_reqwrp) && state->ioc_iack != 7) {
 		|		state->ioc_iack = 7;
 		|		ioc_sc_bus_start_iack(7);
 		|	}
 		|
-		|	do_xact();
-		|
-		|	if (sclk_pos && rand == 0x04) {
-		|		state->ioc_reqfifo[state->ioc_reqwrp++] = typ & 0xffff;
-		|		state->ioc_reqwrp &= 0x3ff;
-		|	}
-		|
-		|
-		|	if (sclk_pos && rand == 0x05) {
-		|		state->ioc_rsprdp++;
-		|		state->ioc_rsprdp &= 0x3ff;
-		|	}
+		|	ioc_do_xact();
 		|
 		|	if (sclk_pos) {
 		|		unsigned adr = (state->ioc_areg | state->ioc_acnt) << 2;
 		|		assert(adr < (512<<10));
 		|
-		|		if ((rand == 0x1c) || (rand == 0x1d)) {
+		|		switch(rand) {
+		|		case 0x01:
+		|			state->ioc_acnt = (mp_typ_bus >> 2) & 0x00fff;
+		|			state->ioc_areg = (mp_typ_bus >> 2) & 0x1f000;
+		|			break;
+		|		case 0x04:
+		|			state->ioc_reqfifo[state->ioc_reqwrp++] = mp_typ_bus & 0xffff;
+		|			state->ioc_reqwrp &= 0x3ff;
+		|			break;
+		|		case 0x05:
+		|			state->ioc_rsprdp++;
+		|			state->ioc_rsprdp &= 0x3ff;
+		|			break;
+		|		case 0x08:
+		|			state->ioc_rtc = 0;
+		|			break;
+		|		case 0x0c:
+		|			state->ioc_sen = false;
+		|			break;
+		|		case 0x0d:
+		|			state->ioc_sen = true;
+		|			break;
+		|		case 0x0e:
+		|			state->ioc_den = false;
+		|			break;
+		|		case 0x0f:
+		|			state->ioc_den = true;
+		|			break;
+		|		case 0x1c:
 		|			state->ioc_rdata = vbe32dec(state->ioc_ram + adr);
-		|		}
-		|
-		|		if ((rand == 0x1e) || (rand == 0x1f)) {
-		|			uint32_t data = typ >> 32;
-		|			vbe32enc(state->ioc_ram + adr, data);
-		|		}
-		|
-		|		if (rand == 0x01) {
-		|			state->ioc_acnt = (typ >> 2) & 0x00fff;
-		|			state->ioc_areg = (typ >> 2) & 0x1f000;
-		|		}
-		|
-		|		if ((rand == 0x1c) || (rand == 0x1e)) {
 		|			state->ioc_acnt += 1;
 		|			state->ioc_acnt &= 0xfff;
+		|			break;
+		|		case 0x1d:
+		|			state->ioc_rdata = vbe32dec(state->ioc_ram + adr);
+		|			break;
+		|		case 0x1e:
+		|			vbe32enc(state->ioc_ram + adr, mp_typ_bus >> 32);
+		|			state->ioc_acnt += 1;
+		|			state->ioc_acnt &= 0xfff;
+		|			break;
+		|		case 0x1f:
+		|			vbe32enc(state->ioc_ram + adr, mp_typ_bus >> 32);
+		|			break;
+		|		case 0x23:
+		|			state->ioc_cpu_running = true;
+		|			break;
+		|		case 0x24:
+		|			state->ioc_cpu_running = false;
+		|			break;
+		|		default:
+		|			break;
 		|		}
 		|	}
 		|
-		|	if (sclk_pos && rand == 0x08) {
-		|		state->ioc_rtc = 0;
-		|	}
 		|	if (!mp_sf_stop && rand != 0x08) {
 		|		state->ioc_rtc++;
 		|		state->ioc_rtc &= 0xffff;
@@ -417,24 +436,10 @@ class IOC(PartFactory):
 		|	state->ioc_prescaler++;
 		|	state->ioc_ten = state->ioc_prescaler != 0xf;
 		|	state->ioc_prescaler &= 0xf;
-		|	if (sclk_pos) {
-		|		if (rand == 0x0c) {
-		|			state->ioc_sen = false;
-		|		}
-		|		if (rand == 0x0d) {
-		|			state->ioc_sen = true;
-		|		}
-		|		if (rand == 0x0e) {
-		|			state->ioc_den = false;
-		|		}
-		|		if (rand == 0x0f) {
-		|			state->ioc_den = true;
-		|		}
-		|	}
 		|
-		|	state->ioc_slice_ev= state->ioc_slice == 0xffff;
+		|	state->ioc_slice_ev = state->ioc_slice == 0xffff;
 		|	if (rand == 0x06) {
-		|		uint64_t tmp = typ;
+		|		uint64_t tmp = mp_typ_bus;
 		|		tmp >>= 32;
 		|		state->ioc_slice = tmp >> 16;
 		|		TRACE(<< " LD " << std::hex << state->ioc_slice);
@@ -444,7 +449,7 @@ class IOC(PartFactory):
 		|
 		|	state->ioc_delay_ev= state->ioc_delay == 0xffff;
 		|	if (rand == 0x07) {
-		|		uint64_t tmp = typ;
+		|		uint64_t tmp = mp_typ_bus;
 		|		tmp >>= 32;
 		|		state->ioc_delay = tmp;
 		|	} else if (!state->ioc_den && !state->ioc_ten) {
@@ -452,8 +457,8 @@ class IOC(PartFactory):
 		|	}
 		|	bool rddum = (UIR_IOC_TVBS < 0xc) || !state->ioc_dumen;
 		|	if (rddum && !mp_restore_rdr) {
-		|		state->ioc_dummy_typ = typ;
-		|		state->ioc_dummy_val = val;
+		|		state->ioc_dummy_typ = mp_typ_bus;
+		|		state->ioc_dummy_val = mp_val_bus;
 		|	}
 		|
 		|	if (!mp_sf_stop) {
@@ -528,25 +533,6 @@ class IOC(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	if (state->ctx.activations < 2) {
-		|		state->ioc_dummy_typ = -1;
-		|		state->ioc_dummy_val = -1;
-		|	}
-		|
-		|	if (state->ctx.activations < 1000) {
-		|		state->ioc_sen = true;
-		|		state->ioc_den = true;
-		|	}
-		|
-		|	if (mp_ioc_trace && ((mp_sync_freeze & 0x3) == 0) && !is_tracing) {
-		|		is_tracing = true;
-		|		ALWAYS_TRACE(<< " IS TRACING");
-		|	}
-		|	if (mp_ioc_trace && (mp_sync_freeze & 0x3) && is_tracing) {
-		|		is_tracing = true;
-		|		mp_ioc_trace = 0;
-		|		ALWAYS_TRACE(<< " STOP TRACING");
-		|	}
 		|
 		|	if (PIN_H2.negedge()) { 
 		|		ioc_h1();
