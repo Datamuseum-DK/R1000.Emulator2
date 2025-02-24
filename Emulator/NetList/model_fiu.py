@@ -130,7 +130,6 @@ class FIU(PartFactory):
 		|	uint64_t fiu_typuir;
 		|
 		|	unsigned fiu_hit_offset;
-		|	unsigned fiu_condsel;
 		|	bool fiu_tmp_csa_oor_next;
 		|	bool fiu_scav_trap_next;
 		|	bool fiu_memcyc1;
@@ -198,7 +197,7 @@ class FIU(PartFactory):
 		|fiu_conditions()
 		|{
 		|
-		|	switch(state->fiu_condsel) {
+		|	switch(mp_cond_sel) {
 		|	case 0x60: mp_condx3 = !state->fiu_memex; 		break;
 		|	case 0x61: mp_condx3 = !state->fiu_phys_last; 		break;
 		|	case 0x62: mp_condx3 = !state->fiu_write_last; 		break;
@@ -617,7 +616,7 @@ class FIU(PartFactory):
 		|	state->fiu_logrw = !(state->fiu_phys_ref || ((state->fiu_mcntl >> 3) & 1));
 		|
 		|	state->fiu_scav_trap_next = state->fiu_scav_trap;
-		|	if (state->fiu_condsel == 0x69) {		// SCAVENGER_HIT
+		|	if (mp_cond_sel == 0x69) {		// SCAVENGER_HIT
 		|		state->fiu_scav_trap_next = false;
 		|	} else if (rmarp) {
 		|		state->fiu_scav_trap_next = (state->fiu_ti_bus >> BUS64_LSB(32)) & 1;
@@ -627,7 +626,7 @@ class FIU(PartFactory):
 		|
 		|
 		|	state->fiu_tmp_csa_oor_next = state->fiu_csa_oor;
-		|	if (state->fiu_condsel == 0x68) {		// CSA_OUT_OF_RANGE
+		|	if (mp_cond_sel == 0x68) {		// CSA_OUT_OF_RANGE
 		|		state->fiu_tmp_csa_oor_next = false;
 		|	} else if (rmarp) {
 		|		state->fiu_tmp_csa_oor_next = (state->fiu_ti_bus >> BUS64_LSB(33)) & 1;
@@ -687,7 +686,7 @@ class FIU(PartFactory):
 		|	bool rmarp = (mar_cntl & 0xe) == 0x4;
 		|
 		|	state->fiu_scav_trap_next = state->fiu_scav_trap;
-		|	if (state->fiu_condsel == 0x69) {		// SCAVENGER_HIT
+		|	if (mp_cond_sel == 0x69) {		// SCAVENGER_HIT
 		|		state->fiu_scav_trap_next = false;
 		|	} else if (rmarp) {
 		|		state->fiu_scav_trap_next = (state->fiu_ti_bus >> BUS64_LSB(32)) & 1;
@@ -697,7 +696,7 @@ class FIU(PartFactory):
 		|
 		|
 		|	state->fiu_tmp_csa_oor_next = state->fiu_csa_oor;
-		|	if (state->fiu_condsel == 0x68) {		// CSA_OUT_OF_RANGE
+		|	if (mp_cond_sel == 0x68) {		// CSA_OUT_OF_RANGE
 		|		state->fiu_tmp_csa_oor_next = false;
 		|	} else if (rmarp) {
 		|		state->fiu_tmp_csa_oor_next = (state->fiu_ti_bus >> BUS64_LSB(33)) & 1;
@@ -759,8 +758,8 @@ class FIU(PartFactory):
 		|	}
 		|	bool inc_mar = (state->fiu_prmt >> 3) & 1;
 		|	state->fiu_page_crossing_next = (
-		|		state->fiu_condsel != 0x6a) && (// sel_pg_xing
-		|		state->fiu_condsel != 0x6e) && (// sel_incyc_px
+		|		mp_cond_sel != 0x6a) && (// sel_pg_xing
+		|		mp_cond_sel != 0x6e) && (// sel_incyc_px
 		|		(
 		|			(state->fiu_page_xing) ||
 		|			(!state->fiu_page_xing && inc_mar && (state->fiu_moff & 0x1f) == 0x1f)
@@ -940,7 +939,7 @@ class FIU(PartFactory):
 		|
 		|	if (!mp_sf_stop) {
 		|		bool cache_miss_next = state->fiu_cache_miss;
-		|		if (state->fiu_condsel == 0x6b) {		// CACHE_MISS
+		|		if (mp_cond_sel == 0x6b) {		// CACHE_MISS
 		|			cache_miss_next = false;
 		|		} else if (rmarp) {
 		|			cache_miss_next = (state->fiu_ti_bus >> BUS64_LSB(35)) & 1;
@@ -953,7 +952,7 @@ class FIU(PartFactory):
 		|								
 		|		if (rmarp) {
 		|			state->fiu_mar_modified = (state->fiu_ti_bus >> BUS64_LSB(39)) & 1;
-		|		} else if (state->fiu_condsel == 0x6d) {
+		|		} else if (mp_cond_sel == 0x6d) {
 		|			state->fiu_mar_modified = 1;
 		|		} else if (state->fiu_omf20) {
 		|			state->fiu_mar_modified = le_abort;
@@ -1019,8 +1018,6 @@ class FIU(PartFactory):
 		|	bool q2pos = PIN_Q2.posedge();
 		|	bool q4pos = PIN_Q4.posedge();
 		|
-		|	state->fiu_condsel = mp_cond_sel;
-		|
 		|	unsigned mar_cntl = mp_mar_cntl;
 		|
 		|	unsigned pa028a = mar_cntl << 5;
@@ -1053,14 +1050,14 @@ class FIU(PartFactory):
 		|		}
 		|	}
 		|
-		|	if (state->fiu_condsel == 0x6b) {
+		|	if (mp_cond_sel == 0x6b) {
 		|		if (q2pos) {
 		|			fiu_conditions();
 		|		}
-		|	} else if (!q4pos && (60 <= state->fiu_condsel && state->fiu_condsel <= 0x6f)) {
+		|	} else if ((q1pos || q2pos) && (60 <= mp_cond_sel && mp_cond_sel <= 0x6f)) {
 		|		fiu_conditions();
 		|	}
-		|	if (!q4pos) {
+		|	if (q2pos) {
 		|		tcsa(false);
 		|	}
 		|''')
