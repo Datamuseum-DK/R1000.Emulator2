@@ -8,126 +8,6 @@
 		(title "EMU Main")
 	)
 	(lib_symbols
-		(symbol "r1000:FIU"
-			(pin_names
-				(offset 1.016)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "U"
-				(at 2.54 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "FIU"
-				(at -1.27 -25.4 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Location" "___"
-				(at -1.27 0 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Name" "______"
-				(at 11.43 -33.02 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify bottom)
-				)
-			)
-			(symbol "FIU_1_1"
-				(rectangle
-					(start -3.81 3.81)
-					(end 24.13 -26.67)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin input line
-					(at -10.16 -7.62 0)
-					(length 6.35)
-					(name "Q2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -17.78 0)
-					(length 6.35)
-					(name "Q4"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "r1000:SEQ"
 			(pin_names
 				(offset 1.016)
@@ -469,26 +349,6 @@
 	)
 	(wire
 		(pts
-			(xy 68.58 27.94) (xy 78.74 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "83d74e3b-150f-49a6-8a5c-01a33ca6ad22")
-	)
-	(wire
-		(pts
-			(xy 68.58 38.1) (xy 78.74 38.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "9f11abd1-86c0-4bfb-bbd9-79b6a93bc550")
-	)
-	(wire
-		(pts
 			(xy 71.12 83.82) (xy 86.36 83.82)
 		)
 		(stroke
@@ -526,16 +386,6 @@
 			(justify left bottom)
 		)
 		(uuid "6608ea2f-c4a5-4048-a067-c30aa4b024d8")
-	)
-	(label "Q2~"
-		(at 68.58 27.94 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "786f0e07-3554-4eb2-b694-a179ff85b690")
 	)
 	(label "Q2~"
 		(at 119.38 27.94 0)
@@ -576,16 +426,6 @@
 			(justify left bottom)
 		)
 		(uuid "bffcabb5-c2da-4b4e-85fd-bee82b4212c6")
-	)
-	(label "Q4~"
-		(at 68.58 38.1 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "ea0f821a-86f4-4dd3-954d-6ec0a10f0e45")
 	)
 	(symbol
 		(lib_id "r1000:SEQ")
@@ -677,98 +517,6 @@
 			(project "EMU"
 				(path "/20011966-7388-780e-03cc-2841463a393b"
 					(reference "U107")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "r1000:FIU")
-		(at 88.9 20.32 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "862e5a76-1623-4fc4-9658-6a670e79793a")
-		(property "Reference" "U105"
-			(at 91.44 15.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "FIU"
-			(at 87.63 45.72 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 90.17 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 90.17 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 88.9 20.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Location" "z025"
-			(at 87.63 20.32 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Name" "FIU"
-			(at 100.33 53.34 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify bottom)
-			)
-		)
-		(pin "1"
-			(uuid "f791ee49-2df7-4ed3-8bb8-23959cacc464")
-		)
-		(pin "2"
-			(uuid "a52e92cd-e8a3-478b-b63a-9f6acb6fd9c5")
-		)
-		(instances
-			(project "FIU"
-				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
-					(reference "U105")
-					(unit 1)
-				)
-			)
-			(project "EMU"
-				(path "/20011966-7388-780e-03cc-2841463a393b"
-					(reference "U105")
 					(unit 1)
 				)
 			)

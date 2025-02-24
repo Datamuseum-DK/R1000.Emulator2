@@ -36,6 +36,7 @@
 from part import PartModel, PartFactory
 
 import model_mem
+import model_fiu
 import model_typ
 import model_val
 import model_ioc
@@ -45,6 +46,7 @@ class XClkGen(PartFactory):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.b_mem = model_mem.MEM("imem")
+        self.b_fiu = model_fiu.FIU("ifiu")
         self.b_typ = model_typ.TYP("ityp")
         self.b_val = model_val.VAL("ival")
         self.b_ioc = model_ioc.IOC("iioc")
@@ -53,6 +55,7 @@ class XClkGen(PartFactory):
         super().extra(file)
         self.scm.sf_cc.include("Diag/diagproc.h")
         self.b_mem.extra(file)
+        self.b_fiu.extra(file)
         self.b_typ.extra(file)
         self.b_val.extra(file)
         self.b_ioc.scm = self.scm
@@ -64,24 +67,28 @@ class XClkGen(PartFactory):
 		|	unsigned when;
 		|''')
         self.b_mem.state(file)
+        self.b_fiu.state(file)
         self.b_typ.state(file)
         self.b_val.state(file)
         self.b_ioc.state(file)
 
     def init(self, file):
         self.b_mem.init(file)
+        self.b_fiu.init(file)
         self.b_typ.init(file)
         self.b_val.init(file)
         self.b_ioc.init(file)
 
     def priv_decl(self, file):
         self.b_mem.priv_decl(file)
+        self.b_fiu.priv_decl(file)
         self.b_typ.priv_decl(file)
         self.b_val.priv_decl(file)
         self.b_ioc.priv_decl(file)
 
     def priv_impl(self, file):
         self.b_mem.priv_impl(file)
+        self.b_fiu.priv_impl(file)
         self.b_typ.priv_impl(file)
         self.b_val.priv_impl(file)
         self.b_ioc.priv_impl(file)
@@ -105,6 +112,7 @@ class XClkGen(PartFactory):
 		|		PIN_Q4<=(1);
 		|		state->when = 15;
 		|		mem_q4();
+		|		fiu_q4();
 		|		typ_q4();
 		|		val_q4();
 		|		ioc_q4();
@@ -128,10 +136,12 @@ class XClkGen(PartFactory):
 		|	case 60:
 		|		PIN_Q2<=(0);
 		|		state->when = 110;
+		|		fiu_q1();
 		|		break;
 		|	case 110:
 		|		PIN_Q2<=(1);
 		|		state->when = 130;
+		|		fiu_q2();
 		|		typ_q2();
 		|		val_q2();
 		|		ioc_q2();
