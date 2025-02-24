@@ -8,144 +8,6 @@
 		(title "EMU Main")
 	)
 	(lib_symbols
-		(symbol "r1000:SEQ"
-			(pin_names
-				(offset 1.016)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "U"
-				(at 2.54 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "SEQ"
-				(at -1.27 -35.56 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Location" "___"
-				(at -1.27 0 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Name" "______"
-				(at 11.43 -43.18 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify bottom)
-				)
-			)
-			(symbol "SEQ_1_1"
-				(rectangle
-					(start -3.81 3.81)
-					(end 24.13 -36.83)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin input line
-					(at -10.16 -7.62 0)
-					(length 6.35)
-					(name "Q2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -17.78 0)
-					(length 6.35)
-					(name "Q4"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -27.94 0)
-					(length 6.35)
-					(name "H2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "r1000:XCLKGEN"
 			(pin_names
 				(offset 1.016)
@@ -309,16 +171,6 @@
 	)
 	(wire
 		(pts
-			(xy 119.38 27.94) (xy 132.08 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1938705f-fc3d-4ac5-86e6-9bb51329a272")
-	)
-	(wire
-		(pts
 			(xy 71.12 93.98) (xy 86.36 93.98)
 		)
 		(stroke
@@ -339,16 +191,6 @@
 	)
 	(wire
 		(pts
-			(xy 119.38 48.26) (xy 132.08 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5e7fccd2-1149-4edd-921f-1847a25b5eb7")
-	)
-	(wire
-		(pts
 			(xy 71.12 83.82) (xy 86.36 83.82)
 		)
 		(stroke
@@ -356,16 +198,6 @@
 			(type default)
 		)
 		(uuid "b856d662-6aaf-4945-ad95-6dfc908f6ccb")
-	)
-	(wire
-		(pts
-			(xy 119.38 38.1) (xy 132.08 38.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f035bd43-ee5f-4fb5-9421-54932d80bd7c")
 	)
 	(label "H2"
 		(at 76.2 83.82 0)
@@ -377,26 +209,6 @@
 		)
 		(uuid "50a5ad1c-4f64-4347-ad84-b4ba1f88359f")
 	)
-	(label "Q4~"
-		(at 119.38 38.1 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "6608ea2f-c4a5-4048-a067-c30aa4b024d8")
-	)
-	(label "Q2~"
-		(at 119.38 27.94 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "8914a5eb-1988-4b6d-95b9-0028831e9947")
-	)
 	(label "Q2~"
 		(at 76.2 88.9 0)
 		(effects
@@ -407,16 +219,6 @@
 		)
 		(uuid "8c364ca1-99cd-40fa-bd2a-f8a033c53351")
 	)
-	(label "H2"
-		(at 119.38 48.26 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "98aced4d-8eb9-48a1-8c7e-4d33def68555")
-	)
 	(label "Q4~"
 		(at 76.2 93.98 0)
 		(effects
@@ -426,101 +228,6 @@
 			(justify left bottom)
 		)
 		(uuid "bffcabb5-c2da-4b4e-85fd-bee82b4212c6")
-	)
-	(symbol
-		(lib_id "r1000:SEQ")
-		(at 142.24 20.32 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "2bfb32c3-9254-4b99-8bec-42c4d99948b2")
-		(property "Reference" "U107"
-			(at 144.78 15.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "SEQ"
-			(at 140.97 55.88 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 143.51 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 143.51 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 142.24 20.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Location" "z020"
-			(at 140.97 20.32 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Name" "SEQ"
-			(at 153.67 63.5 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify bottom)
-			)
-		)
-		(pin "1"
-			(uuid "c4c818c8-088a-4b05-b95a-0e38675f8964")
-		)
-		(pin "2"
-			(uuid "d4b4780a-15ad-4850-acf8-09e981322fe3")
-		)
-		(pin "3"
-			(uuid "05336500-8435-4b04-b495-492de2fb6de3")
-		)
-		(instances
-			(project "SEQ"
-				(path "/20011966-1ffc-24d7-1b4b-436a182362c4"
-					(reference "U107")
-					(unit 1)
-				)
-			)
-			(project "EMU"
-				(path "/20011966-7388-780e-03cc-2841463a393b"
-					(reference "U107")
-					(unit 1)
-				)
-			)
-		)
 	)
 	(symbol
 		(lib_id "r1000:XCLKGEN")

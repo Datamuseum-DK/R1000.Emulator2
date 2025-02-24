@@ -270,6 +270,9 @@ class SEQ(PartFactory):
 		|       bool condition(void);
 		|	unsigned branch_offset(void);
 		|	void q3clockstop(void);
+		|	void seq_p1(void);
+		|	void seq_h1(void);
+		|	void seq_q1(void);
 		|	void seq_q2(void);
 		|	void seq_q3(void);
 		|	void seq_q4(void);
@@ -674,6 +677,197 @@ class SEQ(PartFactory):
 		|	}
 		|	mp_state_clk_en= !(mp_state_clk_stop && mp_clock_stop_7);
 		|	mp_mem_abort_el = event;
+		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|seq_p1(void)
+		|{
+		|	int_reads();
+		|	unsigned lex_adr = UIR_SEQ_LAUIR;
+		|
+		|	if (state->seq_maybe_dispatch && !(state->seq_display >> 15)) {
+		|		switch (lex_adr) {
+		|		case 0:	state->seq_resolve_address = (state->seq_display >> 9) & 0xf; break;
+		|		case 1: state->seq_resolve_address = 0xf; break;
+		|		case 2: state->seq_resolve_address = 0xf; break;
+		|		case 3: state->seq_resolve_address = 0xe; break;
+		|		}
+		|	} else {
+		|		switch (lex_adr) {
+		|		case 0:	state->seq_resolve_address = state->seq_curr_lex ^ 0xf; break;
+		|		case 1:
+		|			state->seq_resolve_address = (state->seq_val_bus & 0xf) + 1; 
+		|			break;
+		|		case 2: state->seq_resolve_address = 0xf; break;
+		|		case 3: state->seq_resolve_address = 0xe; break;
+		|		}
+		|	}
+		|	
+		|	state->seq_resolve_address &= 0xf;
+		|	if (lex_adr == 1) {
+		|		state->seq_import_condition = true;
+		|		state->seq_sign_extend = true;
+		|	} else {
+		|		state->seq_import_condition = state->seq_resolve_address != 0xf;
+		|		state->seq_sign_extend = state->seq_resolve_address <= 0xd;
+		|	}
+		|
+		|	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
+		|
+		|	unsigned uses_tos;
+		|	if (!state->seq_maybe_dispatch) {
+		|		uses_tos = false;
+		|		state->seq_mem_start = 7;
+		|		state->seq_intreads = UIR_SEQ_IRD & 3;
+		|	} else {
+		|		uses_tos = state->seq_uses_tos;
+		|		state->seq_mem_start = state->seq_decode & 0x7;
+		|		if (state->seq_mem_start == 0 || state->seq_mem_start == 4) {
+		|			state->seq_intreads = 3;
+		|		} else {
+		|			state->seq_intreads = 1;
+		|		}
+		|	}
+		|
+		|	unsigned offs;
+		|	if (uses_tos) {
+		|		if (RNDX(RND_TOS_VLB)) {
+		|			offs = (state->seq_typ_bus >> 7) & 0xfffff;
+		|		} else {
+		|			offs = state->seq_tosof;
+		|		}
+		|	} else {
+		|		offs = state->seq_tosram[state->seq_resolve_address];
+		|	}
+		|	offs ^= 0xfffff;
+		|	offs &= 0xfffff;
+		|
+		|	bool d7 = (state->seq_display & 0x8100) == 0;
+		|	unsigned sgdisp = state->seq_display & 0xff;
+		|	if (!d7)
+		|		sgdisp |= 0x100;
+		|	if (!(state->seq_sign_extend && d7))
+		|		sgdisp |= 0xffe00;
+		|
+		|	bool acin = ((state->seq_mem_start & 1) != 0);
+		|	sgdisp &= 0xfffff;
+		|	state->seq_resolve_offset = 0;
+		|
+		|	switch(state->seq_mem_start) {
+		|	case 0:
+		|	case 2:
+		|		state->seq_resolve_offset = offs + sgdisp + 1;
+		|		state->seq_tmp_carry_out = (state->seq_resolve_offset >> 20) == 0;
+		|		break;
+		|	case 1:
+		|	case 3:
+		|		state->seq_resolve_offset = (1<<20) + offs - (sgdisp + 1);
+		|		state->seq_tmp_carry_out = acin && (offs == 0);
+		|		break;
+		|	case 4:
+		|	case 6:
+		|		state->seq_resolve_offset = sgdisp ^ 0xfffff;
+		|		// Carry is probably "undefined" here.
+		|		break;
+		|	case 5:
+		|	case 7:
+		|		state->seq_resolve_offset = offs;
+		|		state->seq_tmp_carry_out = acin && (offs == 0);
+		|		break;
+		|	}
+		|
+		|	state->seq_resolve_offset &= 0xfffff;
+		|
+		|	if (state->seq_intreads == 3) {
+		|		state->seq_output_ob = state->seq_pred;
+		|	} else if (state->seq_intreads == 2) {
+		|		state->seq_output_ob = state->seq_topcnt;
+		|	} else if (state->seq_intreads == 1) {
+		|		state->seq_output_ob = state->seq_resolve_offset;
+		|	} else if (state->seq_intreads == 0) {
+		|		state->seq_output_ob = state->seq_savrg;
+		|	} else {
+		|		state->seq_output_ob = 0xfffff;
+		|	}
+		|	state->seq_output_ob &= 0xfffff;
+		|	if (!state->seq_maybe_dispatch) {
+		|		state->seq_name_bus = state->seq_namram[state->seq_resolve_address] ^ 0xffffffff;
+		|	} else {
+		|		state->seq_name_bus = 0xffffffff;
+		|	}
+		|	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!condition());
+		|	bool ibuff_ld = !(state->seq_cload || RNDX(RND_IBUFF_LD));
+		|	state->seq_ibld = !ibuff_ld;
+		|	bool ibemp = !(ibuff_ld || (state->seq_word != 0));
+		|	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
+		|
+		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|seq_h1(void)
+		|{
+		|
+		|	state->seq_urand = UIR_SEQ_URAND;
+		|	state->seq_rndx = state->seq_pa048[state->seq_urand | (state->seq_bad_hint ? 0x100 : 0)] << 24;
+		|	state->seq_rndx |= state->seq_pa046[state->seq_urand | (state->seq_bad_hint ? 0x100 : 0)] << 16;
+		|	state->seq_rndx |=  state->seq_pa045[state->seq_urand | 0x100] << 8;
+		|	state->seq_rndx |= state->seq_pa047[state->seq_urand | 0x100];
+		|
+		|	state->seq_br_type = UIR_SEQ_BRTYP;
+		|	state->seq_maybe_dispatch = 0xb < state->seq_br_type && state->seq_br_type < 0xf;
+		|
+		|	if (mp_fiu_oe == 0x8)
+		|		mp_fiu_bus = state->seq_topu;
+		|	if (!mp_seqtv_oe) {
+		|		seq_p1();
+		|		int_reads();	// Necessary
+		|		mp_typ_bus = ~state->seq_typ_bus;
+		|		mp_val_bus = ~state->seq_val_bus;
+		|	}
+		|}
+		|
+		|void
+		|SCM_«mmm» ::
+		|seq_q1(void)
+		|{
+		|	seq_p1();
+		|	state->seq_br_tim = UIR_SEQ_BRTIM;
+		|	unsigned bhow;
+		|	bool brtm3;
+		|	if (state->seq_bad_hint) {
+		|		bhow = 2;
+		|		brtm3 = ((state->seq_bhreg) >> 5) & 1;
+		|	} else {
+		|		bhow = state->seq_br_tim;
+		|		brtm3 = state->seq_br_type & 1;
+		|
+		|	}
+		|
+		|	switch (bhow) {
+		|	case 0: state->seq_uadr_mux = !condition(); break;
+		|	case 1: state->seq_uadr_mux = !state->seq_latched_cond; break;
+		|	case 2: state->seq_uadr_mux = false; break;
+		|	case 3: state->seq_uadr_mux = true; break;
+		|	}
+		|	if (brtm3)
+		|		state->seq_uadr_mux = !state->seq_uadr_mux;
+		|
+		|	unsigned adr = 0;
+		|	if (state->seq_bad_hint) adr |= 0x01;
+		|	adr |= (state->seq_br_type << 1);
+		|	if (state->seq_bhreg & 0x20) adr |= 0x20;
+		|	if (state->seq_bhreg & 0x40) adr |= 0x80;
+		|	if (state->seq_bhreg & 0x80) adr |= 0x100;
+		|	unsigned rom = state->seq_pa043[adr];
+		|	state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !state->seq_uadr_mux);	// Changes @15, 20, 60ns
+		|	state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
+		|	state->seq_push_br =    (rom >> 1) & 1;
+		|	state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
+		|	state->seq_stop = !(!state->seq_bad_hint && (state->seq_uev == 16) && !state->seq_late_macro_event);
+		|	bool evnan0d = !(UIR_SEQ_ENMIC && (state->seq_uev == 16));
+		|	mp_uevent_enable = !(evnan0d || state->seq_stop);
 		|}
 		|
 		|void
@@ -1316,191 +1510,13 @@ class SEQ(PartFactory):
 		|	bool q1pos = PIN_Q2.negedge();
 		|	bool h1pos = PIN_H2.negedge();
 		|
-		|if (h1pos) {
-		|
-		|	state->seq_urand = UIR_SEQ_URAND;
-		|	state->seq_rndx = state->seq_pa048[state->seq_urand | (state->seq_bad_hint ? 0x100 : 0)] << 24;
-		|	state->seq_rndx |= state->seq_pa046[state->seq_urand | (state->seq_bad_hint ? 0x100 : 0)] << 16;
-		|	state->seq_rndx |=  state->seq_pa045[state->seq_urand | 0x100] << 8;
-		|	state->seq_rndx |= state->seq_pa047[state->seq_urand | 0x100];
-		|
-		|	state->seq_br_type = UIR_SEQ_BRTYP;
-		|	state->seq_maybe_dispatch = 0xb < state->seq_br_type && state->seq_br_type < 0xf;
-		|
-		|	if (mp_fiu_oe == 0x8)
-		|		mp_fiu_bus = state->seq_topu;
-		|	if (mp_seqtv_oe) {
-		|		h1pos = false;
-		|	}
-		|}
-		|
-		|if (h1pos || q1pos) {
-		|	int_reads();
-		|	unsigned lex_adr = UIR_SEQ_LAUIR;
-		|
-		|	if (state->seq_maybe_dispatch && !(state->seq_display >> 15)) {
-		|		switch (lex_adr) {
-		|		case 0:	state->seq_resolve_address = (state->seq_display >> 9) & 0xf; break;
-		|		case 1: state->seq_resolve_address = 0xf; break;
-		|		case 2: state->seq_resolve_address = 0xf; break;
-		|		case 3: state->seq_resolve_address = 0xe; break;
-		|		}
-		|	} else {
-		|		switch (lex_adr) {
-		|		case 0:	state->seq_resolve_address = state->seq_curr_lex ^ 0xf; break;
-		|		case 1:
-		|			state->seq_resolve_address = (state->seq_val_bus & 0xf) + 1; 
-		|			break;
-		|		case 2: state->seq_resolve_address = 0xf; break;
-		|		case 3: state->seq_resolve_address = 0xe; break;
-		|		}
-		|	}
-		|	
-		|	state->seq_resolve_address &= 0xf;
-		|	if (lex_adr == 1) {
-		|		state->seq_import_condition = true;
-		|		state->seq_sign_extend = true;
-		|	} else {
-		|		state->seq_import_condition = state->seq_resolve_address != 0xf;
-		|		state->seq_sign_extend = state->seq_resolve_address <= 0xd;
-		|	}
-		|
-		|	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
-		|
-		|	unsigned uses_tos;
-		|	if (!state->seq_maybe_dispatch) {
-		|		uses_tos = false;
-		|		state->seq_mem_start = 7;
-		|		state->seq_intreads = UIR_SEQ_IRD & 3;
-		|	} else {
-		|		uses_tos = state->seq_uses_tos;
-		|		state->seq_mem_start = state->seq_decode & 0x7;
-		|		if (state->seq_mem_start == 0 || state->seq_mem_start == 4) {
-		|			state->seq_intreads = 3;
-		|		} else {
-		|			state->seq_intreads = 1;
-		|		}
-		|	}
-		|
-		|	unsigned offs;
-		|	if (uses_tos) {
-		|		if (RNDX(RND_TOS_VLB)) {
-		|			offs = (state->seq_typ_bus >> 7) & 0xfffff;
-		|		} else {
-		|			offs = state->seq_tosof;
-		|		}
-		|	} else {
-		|		offs = state->seq_tosram[state->seq_resolve_address];
-		|	}
-		|	offs ^= 0xfffff;
-		|	offs &= 0xfffff;
-		|
-		|	bool d7 = (state->seq_display & 0x8100) == 0;
-		|	unsigned sgdisp = state->seq_display & 0xff;
-		|	if (!d7)
-		|		sgdisp |= 0x100;
-		|	if (!(state->seq_sign_extend && d7))
-		|		sgdisp |= 0xffe00;
-		|
-		|	bool acin = ((state->seq_mem_start & 1) != 0);
-		|	sgdisp &= 0xfffff;
-		|	state->seq_resolve_offset = 0;
-		|
-		|	switch(state->seq_mem_start) {
-		|	case 0:
-		|	case 2:
-		|		state->seq_resolve_offset = offs + sgdisp + 1;
-		|		state->seq_tmp_carry_out = (state->seq_resolve_offset >> 20) == 0;
-		|		break;
-		|	case 1:
-		|	case 3:
-		|		state->seq_resolve_offset = (1<<20) + offs - (sgdisp + 1);
-		|		state->seq_tmp_carry_out = acin && (offs == 0);
-		|		break;
-		|	case 4:
-		|	case 6:
-		|		state->seq_resolve_offset = sgdisp ^ 0xfffff;
-		|		// Carry is probably "undefined" here.
-		|		break;
-		|	case 5:
-		|	case 7:
-		|		state->seq_resolve_offset = offs;
-		|		state->seq_tmp_carry_out = acin && (offs == 0);
-		|		break;
-		|	}
-		|
-		|	state->seq_resolve_offset &= 0xfffff;
-		|
-		|	if (state->seq_intreads == 3) {
-		|		state->seq_output_ob = state->seq_pred;
-		|	} else if (state->seq_intreads == 2) {
-		|		state->seq_output_ob = state->seq_topcnt;
-		|	} else if (state->seq_intreads == 1) {
-		|		state->seq_output_ob = state->seq_resolve_offset;
-		|	} else if (state->seq_intreads == 0) {
-		|		state->seq_output_ob = state->seq_savrg;
-		|	} else {
-		|		state->seq_output_ob = 0xfffff;
-		|	}
-		|	state->seq_output_ob &= 0xfffff;
-		|	if (!state->seq_maybe_dispatch) {
-		|		state->seq_name_bus = state->seq_namram[state->seq_resolve_address] ^ 0xffffffff;
-		|	} else {
-		|		state->seq_name_bus = 0xffffffff;
-		|	}
-		|	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!condition());
-		|	bool ibuff_ld = !(state->seq_cload || RNDX(RND_IBUFF_LD));
-		|	state->seq_ibld = !ibuff_ld;
-		|	bool ibemp = !(ibuff_ld || (state->seq_word != 0));
-		|	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
-		|
-		|}
-		|	if (h1pos) {	// NB See above for early termination of h1pos on no OE signal.
-		|		int_reads();	// Necessary
-		|
-		|		mp_typ_bus = ~state->seq_typ_bus;
-		|		mp_val_bus = ~state->seq_val_bus;
+		|	if (h1pos) {
+		|		seq_h1();
 		|	}
 		|
 		|	if (q1pos) {
-		|
-		|		state->seq_br_tim = UIR_SEQ_BRTIM;
-		|		unsigned bhow;
-		|		bool brtm3;
-		|		if (state->seq_bad_hint) {
-		|			bhow = 2;
-		|			brtm3 = ((state->seq_bhreg) >> 5) & 1;
-		|		} else {
-		|			bhow = state->seq_br_tim;
-		|			brtm3 = state->seq_br_type & 1;
-		|
-		|		}
-		|
-		|		switch (bhow) {
-		|		case 0: state->seq_uadr_mux = !condition(); break;
-		|		case 1: state->seq_uadr_mux = !state->seq_latched_cond; break;
-		|		case 2: state->seq_uadr_mux = false; break;
-		|		case 3: state->seq_uadr_mux = true; break;
-		|		}
-		|		if (brtm3)
-		|			state->seq_uadr_mux = !state->seq_uadr_mux;
-		|
-		|		unsigned adr = 0;
-		|		if (state->seq_bad_hint) adr |= 0x01;
-		|		adr |= (state->seq_br_type << 1);
-		|		if (state->seq_bhreg & 0x20) adr |= 0x20;
-		|		if (state->seq_bhreg & 0x40) adr |= 0x80;
-		|		if (state->seq_bhreg & 0x80) adr |= 0x100;
-		|		unsigned rom = state->seq_pa043[adr];
-		|		state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !state->seq_uadr_mux);	// Changes @15, 20, 60ns
-		|		state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
-		|		state->seq_push_br =    (rom >> 1) & 1;
-		|		state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
-		|		state->seq_stop = !(!state->seq_bad_hint && (state->seq_uev == 16) && !state->seq_late_macro_event);
-		|		bool evnan0d = !(UIR_SEQ_ENMIC && (state->seq_uev == 16));
-		|		mp_uevent_enable = !(evnan0d || state->seq_stop);
+		|		seq_q1();
 		|	}
-		|
 		|	if (PIN_Q2.posedge()) {
 		|		seq_q2();
 		|	} else if (PIN_Q4.negedge()) {
