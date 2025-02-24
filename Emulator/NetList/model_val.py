@@ -39,7 +39,7 @@ from part import PartModelDQ, PartFactory
 class VAL(PartFactory):
     ''' VAL C-bus mux '''
 
-    autopin = True
+    #autopin = True
 
     def state(self, file):
 
@@ -64,6 +64,10 @@ class VAL(PartFactory):
 		|	bool val_cwe;
 		|	uint64_t *val_wcsram;
 		|	uint64_t val_uir;
+		|	unsigned val_rand;
+		|	uint8_t val_pa010[512];
+		|	uint8_t val_pa011[512];
+		|	bool val_thiscond;
 		|
 		|#define UIR_VAL_A		((state->val_uir >> (39-5)) & 0x3f)
 		|#define UIR_VAL_B		((state->val_uir >> (39-11)) & 0x3f)
@@ -79,8 +83,8 @@ class VAL(PartFactory):
 
     def init(self, file):
         file.fmt('''
-		|	load_programmable(this->name(), pa010, sizeof pa010, "PA010");
-		|	load_programmable(this->name(), pa011, sizeof pa011, "PA011");
+		|	load_programmable(this->name(), state->val_pa010, sizeof state->val_pa010, "PA010");
+		|	load_programmable(this->name(), state->val_pa011, sizeof state->val_pa011, "PA011");
 		|	state->val_wcsram = (uint64_t*)CTX_GetRaw("VAL_WCS", sizeof(uint64_t) << 14);
 		|	state->val_rfram = (uint64_t*)CTX_GetRaw("VAL_RF", sizeof(uint64_t) << 10);
 		|	state->val_csa_hit = true;
@@ -89,16 +93,12 @@ class VAL(PartFactory):
 
     def priv_decl(self, file):
         file.fmt('''
-		|	unsigned rand = 0;
-		|	uint8_t pa010[512];
-		|	uint8_t pa011[512];
-		|	bool thiscond = false;
 		|
 		|	bool ovrsgn(void);
 		|	void val_cond(void);
 		|	bool fiu_cond(void);
-		|	void find_a(void);
-		|	void find_b(void);
+		|	void val_find_a(void);
+		|	void val_find_b(void);
 		|	void val_h1(void);
 		|	void val_q2(void);
 		|	void val_q4(void);
@@ -129,92 +129,92 @@ class VAL(PartFactory):
 		|		csel ^= 0x58;
 		|	switch(csel) {
 		|	case 0x00:	// L VAL_ALU_ZERO
-		|		thiscond = (state->val_nalu != 0);
+		|		state->val_thiscond = (state->val_nalu != 0);
 		|		break;
 		|	case 0x01:	// L VAL_ALU_NONZERO
-		|		thiscond = (state->val_nalu == 0);
+		|		state->val_thiscond = (state->val_nalu == 0);
 		|		break;
 		|	case 0x02:	// L VAL_ALU_A_LT_OR_LE_B
-		|		thiscond = !(
+		|		state->val_thiscond = !(
 		|			(state->val_bmsb && (state->val_amsb ^ state->val_bmsb)) ||
 		|			(!state->val_coh && (ovrsgn() ^ state->val_sub_else_add))
 		|		);
 		|		break;
 		|	case 0x03:	// SPARE
-		|		thiscond = true;
+		|		state->val_thiscond = true;
 		|		break;
 		|	case 0x04:	// E VAL_LOOP_COUNTER_ZERO
-		|		thiscond = state->val_count != 0x3ff;
+		|		state->val_thiscond = state->val_count != 0x3ff;
 		|		break;
 		|	case 0x05:	// SPARE
-		|		thiscond = true;
+		|		state->val_thiscond = true;
 		|		break;
 		|	case 0x06:	// L VAL_ALU_NONZERO
-		|		thiscond = (state->val_nalu == 0);
+		|		state->val_thiscond = (state->val_nalu == 0);
 		|		break;
 		|	case 0x07:	// L VAL_ALU_32_CO
-		|		thiscond = state->val_carry_middle;
+		|		state->val_thiscond = state->val_carry_middle;
 		|		break;
 		|	case 0x08:	// L VAL_ALU_CARRY
-		|		thiscond = !state->val_coh;
+		|		state->val_thiscond = !state->val_coh;
 		|		break;
 		|	case 0x09:	// L VAL_ALU_OVERFLOW
-		|		thiscond = state->val_ovren || !(ovrsgn() ^ state->val_sub_else_add ^ (!state->val_coh) ^ state->val_cmsb);
+		|		state->val_thiscond = state->val_ovren || !(ovrsgn() ^ state->val_sub_else_add ^ (!state->val_coh) ^ state->val_cmsb);
 		|		break;
 		|	case 0x0a:	// L VAL_ALU_LT_ZERO
-		|		thiscond = state->val_cmsb;
+		|		state->val_thiscond = state->val_cmsb;
 		|		break;
 		|	case 0x0b:	// L VAL_ALU_LE_ZERO
-		|		thiscond = !state->val_cmsb || (state->val_nalu == 0);
+		|		state->val_thiscond = !state->val_cmsb || (state->val_nalu == 0);
 		|		break;
 		|	case 0x0c:	// ML VAL_SIGN_BITS_EQUAL
-		|		thiscond = (state->val_amsb ^ state->val_bmsb);
+		|		state->val_thiscond = (state->val_amsb ^ state->val_bmsb);
 		|		break;
 		|	case 0x0d:	// SPARE
-		|		thiscond = true;
+		|		state->val_thiscond = true;
 		|		break;
 		|	case 0x0e:	// SPARE
-		|		thiscond = true;
+		|		state->val_thiscond = true;
 		|		break;
 		|	case 0x0f:	// E VAL_PREVIOUS
-		|		thiscond = state->val_last_cond;
+		|		state->val_thiscond = state->val_last_cond;
 		|		break;
 		|	case 0x10:	// L VAL_ALU_32_ZERO
-		|		thiscond = (state->val_nalu >> 32);
+		|		state->val_thiscond = (state->val_nalu >> 32);
 		|		break;
 		|	case 0x11:	// L VAL_ALU_40_ZERO
-		|		thiscond = (state->val_nalu >> 16);
+		|		state->val_thiscond = (state->val_nalu >> 16);
 		|		break;
 		|	case 0x12:	// L VAL_ALU_MIDDLE_ZERO
-		|		thiscond = (state->val_nalu & 0xffff0000ULL);
+		|		state->val_thiscond = (state->val_nalu & 0xffff0000ULL);
 		|		break;
 		|	case 0x13:	// E VAL_Q_BIT
-		|		thiscond = mp_q_bit;
+		|		state->val_thiscond = mp_q_bit;
 		|		break;
 		|	case 0x14:	// SPARE
-		|		thiscond = true;
+		|		state->val_thiscond = true;
 		|		break;
 		|	case 0x15:	// E VAL_M_BIT
-		|		thiscond = state->val_mbit;
+		|		state->val_thiscond = state->val_mbit;
 		|		break;
 		|	case 0x16:	// E VAL_TRUE
-		|		thiscond = false;
+		|		state->val_thiscond = false;
 		|		break;
 		|	case 0x17:	// E VAL_FALSE
-		|		thiscond = true;
+		|		state->val_thiscond = true;
 		|		break;
 		|	default:
 		|		break;
 		|	}
 		|	switch (csel >> 3) {
 		|	case 0x0:
-		|		mp_condxf = !thiscond;
+		|		mp_condxf = !state->val_thiscond;
 		|		break;
 		|	case 0x1:
-		|		mp_condxe = !thiscond;
+		|		mp_condxe = !state->val_thiscond;
 		|		break;
 		|	case 0x2:
-		|		mp_condxd = !thiscond;
+		|		mp_condxd = !state->val_thiscond;
 		|		break;
 		|	default:
 		|		break;
@@ -259,7 +259,7 @@ class VAL(PartFactory):
 		|
 		|void
 		|SCM_«mmm» ::
-		|find_a(void)
+		|val_find_a(void)
 		|{
 		|	unsigned uira = UIR_VAL_A;
 		|	if (uira == 0x28) {
@@ -267,8 +267,8 @@ class VAL(PartFactory):
 		|		state->val_a |= ~0x3ff;
 		|	} else if (uira == 0x29) {
 		|		unsigned mdst;
-		|		bool prod_16 = rand != 0xd;
-		|		bool prod_32 = rand != 0xe;
+		|		bool prod_16 = state->val_rand != 0xd;
+		|		bool prod_32 = state->val_rand != 0xe;
 		|		mdst = prod_32 << 1;
 		|		mdst |= prod_16;
 		|		switch(mdst) {
@@ -301,7 +301,7 @@ class VAL(PartFactory):
 		|
 		|void
 		|SCM_«mmm» ::
-		|find_b(void)
+		|val_find_b(void)
 		|{
 		|	unsigned uirb = UIR_VAL_B;
 		|	bool oe, oe7;
@@ -313,7 +313,7 @@ class VAL(PartFactory):
 		|		oe = true;
 		|	}
 		|
-		|	oe7 = oe || (rand == 0x6);
+		|	oe7 = oe || (state->val_rand == 0x6);
 		|
 		|	unsigned badr = 0;
 		|	if (!oe || !oe7) {
@@ -354,23 +354,39 @@ class VAL(PartFactory):
 		| 
 		|void
 		|SCM_«mmm» ::
+		|val_h1(void)
+		|{
+		|	state->val_rand = UIR_VAL_RAND;
+		|	if (mp_fiu_oe == 0x2) {
+		|		val_find_a();
+		|		mp_fiu_bus = ~state->val_a;
+		|	}
+		|	if (!mp_valv_oe) {
+		|		val_find_b();
+		|		mp_val_bus = ~state->val_b;
+		|	}
+		|	val_cond();
+		|}
+		| 
+		|void
+		|SCM_«mmm» ::
 		|val_q2(void)
 		|{
 		|
-		|	bool divide = rand != 0xb;
+		|	bool divide = state->val_rand != 0xb;
 		|	unsigned uirc = UIR_VAL_C;
 		|	if (mp_fiu_oe != 0x02) {
-		|		find_a();
+		|		val_find_a();
 		|	}
 		|	if (mp_valv_oe) {
-		|		find_b();
+		|		val_find_b();
 		|	}
 		|	state->val_wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
 		|	if (state->val_cwe && uirc != 0x28)
 		|		state->val_wen = !state->val_wen;
 		|
 		|	state->val_msrc = UIR_VAL_MSRC;
-		|	bool start_mult = rand != 0xc;
+		|	bool start_mult = state->val_rand != 0xc;
 		|	if (!start_mult) {
 		|		state->val_malat = ~state->val_a;
 		|		state->val_mblat = ~state->val_b;
@@ -397,19 +413,19 @@ class VAL(PartFactory):
 		|		proma |= 0x100;
 		|	}
 		|
-		|	tmp = pa011[proma];			// S0-4.LOW
+		|	tmp = state->val_pa011[proma];			// S0-4.LOW
 		|	state->val_isbin = (tmp >> 1) & 1;			// IS_BINARY
 		|	f181l.ctl = (tmp >> 4) & 0xf;
 		|	f181l.ctl |= ((tmp >> 3) & 1) << 4;
 		|	f181l.ctl |= 1 << 5;
-		|	f181l.ci = (pa011[proma] >> 2) & 1;	// ALU.C15
+		|	f181l.ci = (state->val_pa011[proma] >> 2) & 1;	// ALU.C15
 		|	f181l.a = state->val_a & 0xffffffff;
 		|	f181l.b = state->val_b & 0xffffffff;
 		|	f181_alu(&f181l);
 		|	state->val_carry_middle = f181l.co;
 		|	state->val_nalu = f181l.o;
 		|
-		|	tmp = pa010[proma];			// S0-4.HIGH
+		|	tmp = state->val_pa010[proma];			// S0-4.HIGH
 		|	state->val_ovren = (tmp >> 1) & 1;			// OVR.EN~
 		|	state->val_sub_else_add = (tmp >> 2) & 1;			// SUB_ELSE_ADD
 		|	f181h.ctl = (tmp >> 4) & 0xf;
@@ -434,11 +450,11 @@ class VAL(PartFactory):
 		|
 		|	uint64_t fiu = 0, mux = 0;
 		|	bool c_source = UIR_VAL_CSRC;
-		|	bool split_c_src = rand == 0x4;
+		|	bool split_c_src = state->val_rand == 0x4;
 		|	if (split_c_src || !c_source) {
 		|		fiu = ~mp_fiu_bus;
 		|	}
-		|	if (!c_source && (rand == 3 || rand == 6)) {
+		|	if (!c_source && (state->val_rand == 3 || state->val_rand == 6)) {
 		|		fiu &= ~1ULL;
 		|		fiu |= fiu_cond();
 		|	}
@@ -524,7 +540,7 @@ class VAL(PartFactory):
 		|	bool sclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
 		|	bool csa_clk = sclken;
 		|	bool uirsclk = !mp_sf_stop;
-		|	bool divide = rand != 0xb;
+		|	bool divide = state->val_rand != 0xb;
 		|	unsigned uirc = UIR_VAL_C;
 		|	if (csa_clk) {
 		|		bool xor0c = state->val_mbit ^ (!state->val_coh);
@@ -564,7 +580,7 @@ class VAL(PartFactory):
 		|	unsigned csmux3 = mp_csa_offs ^ 0xf;
 		|
 		|	if (sclken) {
-		|		if (rand == 0x5) {
+		|		if (state->val_rand == 0x5) {
 		|			uint64_t count2 = 0x40 - flsll(~state->val_alu);
 		|			state->val_zerocnt = ~count2;
 		|		}
@@ -573,9 +589,9 @@ class VAL(PartFactory):
 		|		}
 		|		if (uirc == 0x28) {
 		|			state->val_count = state->val_c;
-		|	} else if (rand == 0x2 || !divide) {
+		|	} else if (state->val_rand == 0x2 || !divide) {
 		|			state->val_count += 1;
-		|		} else if (rand == 0x1) {
+		|		} else if (state->val_rand == 0x1) {
 		|			state->val_count += 0x3ff;
 		|		}
 		|		state->val_count &= 0x3ff;
@@ -605,7 +621,7 @@ class VAL(PartFactory):
 		|		state->val_uir = state->val_wcsram[mp_nua_bus] ^ 0xffff800000ULL;
 		|	}
 		|	if (csa_clk)
-		|		state->val_last_cond = thiscond;
+		|		state->val_last_cond = state->val_thiscond;
 		|}
 		|
 		|''')
@@ -619,18 +635,9 @@ class VAL(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
-		|	rand = UIR_VAL_RAND;
 		|
 		|	if (PIN_H2.negedge()) {
-		|		if (mp_fiu_oe == 0x2) {
-		|			find_a();
-		|			mp_fiu_bus = ~state->val_a;
-		|		}
-		|		if (!mp_valv_oe) {
-		|			find_b();
-		|			mp_val_bus = ~state->val_b;
-		|		}
-		|		val_cond();
+		|		val_h1();
 		|	} else if (PIN_Q2.posedge())
 		|		val_q2();
 		|	else if (PIN_Q4.posedge())

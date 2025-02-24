@@ -35,18 +35,48 @@
 
 from part import PartModel, PartFactory
 
+import model_mem
+import model_typ
+import model_val
 
 class XClkGen(PartFactory):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.b_mem = model_mem.MEM("imem")
+        self.b_typ = model_typ.TYP("ityp")
+        self.b_val = model_val.VAL("ival")
 
     def extra(self, file):
         super().extra(file)
         self.scm.sf_cc.include("Diag/diagproc.h")
+        self.b_mem.extra(file)
+        self.b_typ.extra(file)
+        self.b_val.extra(file)
 
     def state(self, file):
         file.fmt('''
 		|	unsigned pit;
 		|	unsigned when;
 		|''')
+        self.b_mem.state(file)
+        self.b_typ.state(file)
+        self.b_val.state(file)
+
+    def init(self, file):
+        self.b_mem.init(file)
+        self.b_typ.init(file)
+        self.b_val.init(file)
+
+    def priv_decl(self, file):
+        self.b_mem.priv_decl(file)
+        self.b_typ.priv_decl(file)
+        self.b_val.priv_decl(file)
+
+    def priv_impl(self, file):
+        self.b_mem.priv_impl(file)
+        self.b_typ.priv_impl(file)
+        self.b_val.priv_impl(file)
 
     def sensitive(self):
         for a in range(0):
@@ -66,6 +96,9 @@ class XClkGen(PartFactory):
 		|	case 10:
 		|		PIN_Q4<=(1);
 		|		state->when = 15;
+		|		mem_q4();
+		|		typ_q4();
+		|		val_q4();
 		|		break;
 		|	case 15:
 		|		if (++state->pit == 256) {
@@ -78,6 +111,9 @@ class XClkGen(PartFactory):
 		|	case 30:
 		|		PIN_H2<=(0);
 		|		state->when = 60;
+		|		mem_h1();
+		|		typ_h1();
+		|		val_h1();
 		|		break;
 		|	case 60:
 		|		PIN_Q2<=(0);
@@ -86,6 +122,8 @@ class XClkGen(PartFactory):
 		|	case 110:
 		|		PIN_Q2<=(1);
 		|		state->when = 130;
+		|		typ_q2();
+		|		val_q2();
 		|		break;
 		|	case 130:
 		|		PIN_H2<=(1);

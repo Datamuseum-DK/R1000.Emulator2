@@ -266,126 +266,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "r1000:MEM"
-			(pin_names
-				(offset 1.016)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "U"
-				(at 2.54 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "MEM"
-				(at -1.27 -25.4 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Location" "___"
-				(at -1.27 0 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Name" "______"
-				(at 11.43 -33.02 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify bottom)
-				)
-			)
-			(symbol "MEM_1_1"
-				(rectangle
-					(start -3.81 3.81)
-					(end 24.13 -26.67)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin input line
-					(at -10.16 -7.62 0)
-					(length 6.35)
-					(name "Q4"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -17.78 0)
-					(length 6.35)
-					(name "H2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "r1000:SEQ"
 			(pin_names
 				(offset 1.016)
@@ -456,282 +336,6 @@
 				)
 			)
 			(symbol "SEQ_1_1"
-				(rectangle
-					(start -3.81 3.81)
-					(end 24.13 -36.83)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin input line
-					(at -10.16 -7.62 0)
-					(length 6.35)
-					(name "Q2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -17.78 0)
-					(length 6.35)
-					(name "Q4"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -27.94 0)
-					(length 6.35)
-					(name "H2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "r1000:TYP"
-			(pin_names
-				(offset 1.016)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "U"
-				(at 2.54 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "TYP"
-				(at -1.27 -35.56 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Location" "___"
-				(at -1.27 0 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Name" "______"
-				(at 11.43 -43.18 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify bottom)
-				)
-			)
-			(symbol "TYP_1_1"
-				(rectangle
-					(start -3.81 3.81)
-					(end 24.13 -36.83)
-					(stroke
-						(width 0)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-				(pin input line
-					(at -10.16 -7.62 0)
-					(length 6.35)
-					(name "Q2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -17.78 0)
-					(length 6.35)
-					(name "Q4"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-				(pin input line
-					(at -10.16 -27.94 0)
-					(length 6.35)
-					(name "H2"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-					(number "3"
-						(effects
-							(font
-								(size 2.54 2.54)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
-		(symbol "r1000:VAL"
-			(pin_names
-				(offset 1.016)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(property "Reference" "U"
-				(at 2.54 5.08 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "VAL"
-				(at -1.27 -35.56 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Footprint" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Datasheet" ""
-				(at 1.27 -1.27 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Description" ""
-				(at 0 0 0)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-					(hide yes)
-				)
-			)
-			(property "Location" "___"
-				(at -1.27 0 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify left)
-				)
-			)
-			(property "Name" "______"
-				(at 11.43 -43.18 0)
-				(effects
-					(font
-						(size 2.54 2.54)
-					)
-					(justify bottom)
-				)
-			)
-			(symbol "VAL_1_1"
 				(rectangle
 					(start -3.81 3.81)
 					(end 24.13 -36.83)
@@ -963,26 +567,6 @@
 	)
 	(wire
 		(pts
-			(xy 172.72 27.94) (xy 182.88 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "06f5ab63-b736-4313-ae99-d9f40e65225a")
-	)
-	(wire
-		(pts
-			(xy 172.72 38.1) (xy 182.88 38.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "094fd9be-f14d-4559-bec3-117f131a7d66")
-	)
-	(wire
-		(pts
 			(xy 276.86 27.94) (xy 287.02 27.94)
 		)
 		(stroke
@@ -1013,16 +597,6 @@
 	)
 	(wire
 		(pts
-			(xy 223.52 38.1) (xy 236.22 38.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2cb022c2-a408-494b-b81c-5e1af670f457")
-	)
-	(wire
-		(pts
 			(xy 71.12 88.9) (xy 86.36 88.9)
 		)
 		(stroke
@@ -1040,16 +614,6 @@
 			(type default)
 		)
 		(uuid "5e7fccd2-1149-4edd-921f-1847a25b5eb7")
-	)
-	(wire
-		(pts
-			(xy 27.94 27.94) (xy 17.78 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "6390096c-9643-49d5-9ff1-6deba3fd1810")
 	)
 	(wire
 		(pts
@@ -1093,16 +657,6 @@
 	)
 	(wire
 		(pts
-			(xy 172.72 48.26) (xy 182.88 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "a8093bf1-a8e8-4c5e-a0c4-ce4f4c48a84b")
-	)
-	(wire
-		(pts
 			(xy 71.12 83.82) (xy 86.36 83.82)
 		)
 		(stroke
@@ -1110,16 +664,6 @@
 			(type default)
 		)
 		(uuid "b856d662-6aaf-4945-ad95-6dfc908f6ccb")
-	)
-	(wire
-		(pts
-			(xy 17.78 38.1) (xy 27.94 38.1)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "ee1dce17-794e-438c-abaf-d2fbab2ac180")
 	)
 	(wire
 		(pts
@@ -1131,56 +675,6 @@
 		)
 		(uuid "f035bd43-ee5f-4fb5-9421-54932d80bd7c")
 	)
-	(wire
-		(pts
-			(xy 223.52 27.94) (xy 236.22 27.94)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f158f819-f817-46a3-90ec-d29fd7d47742")
-	)
-	(wire
-		(pts
-			(xy 223.52 48.26) (xy 236.22 48.26)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "fd4bd309-5c68-4a93-9874-6fb4655de379")
-	)
-	(label "Q2~"
-		(at 223.52 27.94 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "07a8f53d-19b3-483d-a645-d1af11f97ea4")
-	)
-	(label "H2"
-		(at 17.78 38.1 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "136875ae-3008-47f5-b954-6886f89a8086")
-	)
-	(label "Q4~"
-		(at 17.78 27.94 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "1a46687c-d857-4f43-927b-bfeb96d8e2ad")
-	)
 	(label "H2"
 		(at 76.2 83.82 0)
 		(effects
@@ -1190,16 +684,6 @@
 			(justify left bottom)
 		)
 		(uuid "50a5ad1c-4f64-4347-ad84-b4ba1f88359f")
-	)
-	(label "Q4~"
-		(at 223.52 38.1 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "57894889-36a3-4d66-8a02-f687be89e932")
 	)
 	(label "Q2~"
 		(at 276.86 27.94 0)
@@ -1261,26 +745,6 @@
 		)
 		(uuid "98aced4d-8eb9-48a1-8c7e-4d33def68555")
 	)
-	(label "H2"
-		(at 172.72 48.26 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "a00ff332-dcbc-4d04-b95b-ce57930ec86b")
-	)
-	(label "Q4~"
-		(at 172.72 38.1 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "a87f5a4c-479c-4bef-8ae6-c107ab2b21c7")
-	)
 	(label "Q4~"
 		(at 276.86 38.1 0)
 		(effects
@@ -1312,16 +776,6 @@
 		(uuid "ea0f821a-86f4-4dd3-954d-6ec0a10f0e45")
 	)
 	(label "H2"
-		(at 223.52 48.26 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "ec592e40-5c6c-408c-9a4f-1095ee97e351")
-	)
-	(label "H2"
 		(at 276.86 48.26 0)
 		(effects
 			(font
@@ -1330,16 +784,6 @@
 			(justify left bottom)
 		)
 		(uuid "ee42bd9b-6c6b-4829-9197-fb40b3f28457")
-	)
-	(label "Q2~"
-		(at 172.72 27.94 0)
-		(effects
-			(font
-				(size 2.54 2.54)
-			)
-			(justify left bottom)
-		)
-		(uuid "ef06072d-e947-4942-a9e7-1098fb4050a3")
 	)
 	(symbol
 		(lib_id "r1000:SEQ")
@@ -1526,104 +970,6 @@
 		)
 	)
 	(symbol
-		(lib_id "r1000:MEM")
-		(at 38.1 20.32 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "4f36eb77-913e-4018-92a4-601c52e254f4")
-		(property "Reference" "U1105"
-			(at 40.64 15.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "MEM"
-			(at 36.83 45.72 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 39.37 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 39.37 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 38.1 20.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Location" "z000"
-			(at 36.83 20.32 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Name" "MEM"
-			(at 49.53 53.34 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify bottom)
-			)
-		)
-		(pin "1"
-			(uuid "07845336-c286-4887-8666-d0d3b6c590cc")
-		)
-		(pin "2"
-			(uuid "84585865-d408-4c47-b20f-3e69ede5924e")
-		)
-		(instances
-			(project "FIU"
-				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
-					(reference "U1105")
-					(unit 1)
-				)
-			)
-			(project "MEM32"
-				(path "/20011966-487c-2cfb-5da0-3540af989df7"
-					(reference "U105")
-					(unit 1)
-				)
-			)
-			(project "EMU"
-				(path "/20011966-7388-780e-03cc-2841463a393b"
-					(reference "U1105")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "r1000:FIU")
 		(at 88.9 20.32 0)
 		(unit 1)
@@ -1716,101 +1062,6 @@
 		)
 	)
 	(symbol
-		(lib_id "r1000:TYP")
-		(at 193.04 20.32 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "c2ecce3d-3fc6-4671-91da-2acdfceb59ed")
-		(property "Reference" "U104"
-			(at 195.58 15.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "TYP"
-			(at 191.77 55.88 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 194.31 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 194.31 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 193.04 20.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Location" "z016"
-			(at 191.77 20.32 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Name" "TYP"
-			(at 204.47 63.5 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify bottom)
-			)
-		)
-		(pin "1"
-			(uuid "e7861ea8-2a06-4c37-a92a-b8db9bcb5390")
-		)
-		(pin "2"
-			(uuid "4d678af1-736d-4669-92c5-5e731bcbadb4")
-		)
-		(pin "3"
-			(uuid "35e5c456-d022-4e57-890d-5686faab4ace")
-		)
-		(instances
-			(project "EMU"
-				(path "/20011966-7388-780e-03cc-2841463a393b"
-					(reference "U104")
-					(unit 1)
-				)
-			)
-			(project "TYP"
-				(path "/20011966-7b12-533f-4d20-457d979e0ec9"
-					(reference "U104")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "r1000:XCLKGEN")
 		(at 35.56 99.06 0)
 		(unit 1)
@@ -1894,101 +1145,6 @@
 			(project "EMU"
 				(path "/20011966-7388-780e-03cc-2841463a393b"
 					(reference "U103")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "r1000:VAL")
-		(at 246.38 20.32 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "d620859f-9dcb-4628-9949-f334a8cf3fc6")
-		(property "Reference" "U1104"
-			(at 248.92 15.24 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "VAL"
-			(at 245.11 55.88 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 247.65 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 247.65 21.59 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 246.38 20.32 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Location" "z013"
-			(at 245.11 20.32 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify left)
-			)
-		)
-		(property "Name" "VAL"
-			(at 257.81 63.5 0)
-			(effects
-				(font
-					(size 2.54 2.54)
-				)
-				(justify bottom)
-			)
-		)
-		(pin "1"
-			(uuid "99aab2bf-e18d-4f43-b9e6-4393aa7bb06b")
-		)
-		(pin "2"
-			(uuid "916aa790-46c9-416a-ba9d-90da6c5d6467")
-		)
-		(pin "3"
-			(uuid "3a776c02-93c7-425c-a9e2-426611c1690f")
-		)
-		(instances
-			(project "VAL"
-				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
-					(reference "U104")
-					(unit 1)
-				)
-			)
-			(project "EMU"
-				(path "/20011966-7388-780e-03cc-2841463a393b"
-					(reference "U1104")
 					(unit 1)
 				)
 			)
