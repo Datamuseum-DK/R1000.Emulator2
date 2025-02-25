@@ -144,7 +144,6 @@ i8052_thread(void *priv)
 		case 0xa: // DOWNLOAD
 			pointer = 0x10;
 			csum = 0;
-			hash = 0;
 			counter = i8052_rx_diagbus(i52);
 			hash = 0;
 			csum += counter;

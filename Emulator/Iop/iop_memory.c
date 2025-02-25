@@ -47,11 +47,9 @@ mem_peg_set(unsigned lo, unsigned hi, unsigned pegval)
 	uint64_t u, blo = lo, bhi = hi;
 	uint8_t *peg;
 
-	lo &= ~1;
 	for(u = blo; u < bhi; u += 2) {
 		peg = mem_find_peg(u);
 		if (peg == NULL) {
-			// printf("No PEG at 0x%x\n", u);
 			continue;
 		}
 		AN(peg);

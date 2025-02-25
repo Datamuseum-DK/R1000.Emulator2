@@ -568,6 +568,7 @@ class VAL(PartFactory):
 		|	case 1: a = (state->val_malat >> 32) & 0xffff; break;
 		|	case 2: a = (state->val_malat >> 16) & 0xffff; break;
 		|	case 3: a = (state->val_malat >>  0) & 0xffff; break;
+		|	default: assert(false);
 		|	}
 		|	uint32_t b;
 		|	switch (state->val_msrc & 3) {
@@ -575,6 +576,7 @@ class VAL(PartFactory):
 		|	case 1: b = (state->val_mblat >> 32) & 0xffff; break;
 		|	case 2: b = (state->val_mblat >> 16) & 0xffff; break;
 		|	case 3: b = (state->val_mblat >>  0) & 0xffff; break;
+		|	default: assert(false);
 		|	}
 		|	state->val_mprod = a * b;
 		|	unsigned csmux3 = mp_csa_offs ^ 0xf;

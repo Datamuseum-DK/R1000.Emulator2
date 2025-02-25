@@ -157,12 +157,10 @@ callout_callback(callout_callback_f *func,
 {
 	struct callout *co;
 	struct priv_sig_callback *psc;
-	char *p;
 
-	p = calloc(sizeof *co + sizeof *psc, 1);
-	AN(p);
-	co = (void*)p;
-	psc = (void*)(p + sizeof *co);
+	co = calloc(sizeof *co + sizeof *psc, 1);
+	AN(co);
+	psc = (void*)(co + 1);
 	psc->func = func;
 	psc->priv = priv;
 	co->when = simclock + when;
@@ -193,11 +191,9 @@ callout_sleep(nanosec duration)
 {
 	struct sleeps *slp;
 	struct callout *co;
-	char *p;
 
-	p = calloc(sizeof *co, 1);
-	AN(p);
-	co = (void*)p;
+	co = calloc(sizeof *co, 1);
+	AN(co);
 
 	AZ(pthread_mutex_lock(&callout_mtx));
 	slp = VTAILQ_FIRST(&idle_sleeps);

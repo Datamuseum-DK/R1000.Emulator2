@@ -108,6 +108,7 @@ class XClkGen(PartFactory):
         ''' The meat of the doit() function '''
 
         file.fmt('''
+		|#if 0
 		|	unsigned now;
 		|
 		|	now = state->when;
@@ -168,6 +169,42 @@ class XClkGen(PartFactory):
 		|	}
 		|	next_trigger((state->when - now) % 200, sc_core::SC_NS);
 		|	state->when = state->when % 200;
+		|#else
+		|	unsigned u;
+		|	for (u=0; u < 100; u++) {
+		|	mem_q4();
+		|	fiu_q4();
+		|	typ_q4();
+		|	val_q4();
+		|	ioc_q4();
+		|	seq_q4();
+		|
+		|	if (++state->pit == 256) {
+		|		pit_clock();
+		|		state->pit = 0;
+		|	}
+		|	update_state();
+		|
+		|	mem_h1();
+		|	typ_h1();
+		|	val_h1();
+		|	ioc_h1();
+		|	seq_h1();
+		|
+		|	fiu_q1();
+		|	seq_q1();
+		|
+		|	fiu_q2();
+		|	typ_q2();
+		|	val_q2();
+		|	ioc_q2();
+		|	seq_q2();
+		|
+		|	seq_q3();
+		|	}
+		|	next_trigger(20000, sc_core::SC_NS);
+		|
+		|#endif
 		|''')
 
 def register(part_lib):

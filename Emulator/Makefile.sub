@@ -47,13 +47,17 @@ ${R1000BIN}:	${OBJS}
 	@echo Linking ${R1000BIN}
 	@${CXX} -o ${R1000BIN} ${R1000SIM} ${SC_CFLAGS} ${LDFLAGS} ${OBJS} ${SC_L}
 
-
 flint: ${OBJS}
 	flexelint flint.lnt \
+		"+cpp(cc)" \
 		${R1000SIM} ${CFLAGSMINUSI} ${CFLAGSMINUSD} \
+		-I . ${SC_I} \
+		-I /usr/include/c++/v1 \
 		-I${WORKDIR}/ \
 		Dfs/*.c \
 		Diag/*.c \
 		Infra/*.c \
 		Iop/*.c \
 		Chassis/*.c \
+		Chassis/*.cc \
+		Emu/*.cc \

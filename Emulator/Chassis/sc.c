@@ -536,6 +536,7 @@ f181_alu(struct f181 *priv)
 	case 0x4: d = priv->a & (priv->b^0xffffffff); break;
 	case 0x8: d = priv->a & priv->b; break;
 	case 0xc: d = priv->a; break;
+	default: assert(0);
 	}
 	d ^= 0xffffffff;
 

@@ -469,7 +469,6 @@ class FIU(PartFactory):
 		|			tii = ~0ULL;
 		|		break;
 		|	case 2:
-		|		tii = mp_val_bus;
 		|		tii = state->fiu_vi_bus;
 		|		break;
 		|	case 3:
