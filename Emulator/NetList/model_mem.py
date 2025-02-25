@@ -73,11 +73,11 @@ class MEM(PartFactory):
         file.fmt('''
 		|	state->mem_bcmd = 1 << state->mem_cmd;
 		|	state->mem_bitt = (uint64_t*)CTX_GetRaw("MEM.bitt", sizeof(*state->mem_bitt) << 22);
-		|       				// Turbo 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
+		|			// Turbo 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
 		|	state->mem_ram = (uint64_t*)CTX_GetRaw("MEM.ram", sizeof(*state->mem_ram) << 15);
-		|       				// Turbo 12 bit line, 3 bit set
+		|			// Turbo 12 bit line, 3 bit set
 		|	state->mem_rame = (uint8_t*)CTX_GetRaw("MEM.rame", sizeof(*state->mem_rame) << 15);
-		|       				// Turbo 12 bit line, 3 bit set
+		|			// Turbo 12 bit line, 3 bit set
 		|''')
 
     def extra(self, file):
@@ -237,10 +237,10 @@ class MEM(PartFactory):
 		|	}
 		|	state->mem_bcmd = 1 << state->mem_cmd;
 		|	state->mem_p_mcyc2_next =
-		|	    !(
-		|	        ((state->mem_q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
-		|	        ((!state->mem_q4cont) && (!p_early_abort) && (!p_mcyc2_next_hd))
-		|	    );
+		|		!(
+		|			((state->mem_q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
+		|			((!state->mem_q4cont) && (!p_early_abort) && (!p_mcyc2_next_hd))
+		|		);
 		|	state->mem_cyo = !((state->mem_q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd);
 		|	state->mem_cyt = p_mcyc2_next_hd;
 		|

@@ -53,14 +53,23 @@ class XClkGen(PartFactory):
         self.b_val = model_val.VAL("ival")
         self.b_ioc = model_ioc.IOC("iioc")
 
+    def hdr(self, file, board):
+        file.write('\n\n// ' + '-' * 20 + " " + board + " " + "-" * 20 + "\n\n")
+
     def extra(self, file):
         super().extra(file)
         self.scm.sf_cc.include("Diag/diagproc.h")
+        self.hdr(file, "MEM")
         self.b_mem.extra(file)
+        self.hdr(file, "FIU")
         self.b_fiu.extra(file)
+        self.hdr(file, "SEQ")
         self.b_seq.extra(file)
+        self.hdr(file, "TYP")
         self.b_typ.extra(file)
+        self.hdr(file, "VAL")
         self.b_val.extra(file)
+        self.hdr(file, "IOC")
         self.b_ioc.scm = self.scm
         self.b_ioc.extra(file)
 
@@ -69,35 +78,59 @@ class XClkGen(PartFactory):
 		|	unsigned pit;
 		|	unsigned when;
 		|''')
+        self.hdr(file, "MEM")
         self.b_mem.state(file)
+        self.hdr(file, "FIU")
         self.b_fiu.state(file)
+        self.hdr(file, "SEQ")
         self.b_seq.state(file)
+        self.hdr(file, "TYP")
         self.b_typ.state(file)
+        self.hdr(file, "VAL")
         self.b_val.state(file)
+        self.hdr(file, "IOC")
         self.b_ioc.state(file)
 
     def init(self, file):
+        self.hdr(file, "MEM")
         self.b_mem.init(file)
+        self.hdr(file, "FIU")
         self.b_fiu.init(file)
+        self.hdr(file, "SEQ")
         self.b_seq.init(file)
+        self.hdr(file, "TYP")
         self.b_typ.init(file)
+        self.hdr(file, "VAL")
         self.b_val.init(file)
+        self.hdr(file, "IOC")
         self.b_ioc.init(file)
 
     def priv_decl(self, file):
+        self.hdr(file, "MEM")
         self.b_mem.priv_decl(file)
+        self.hdr(file, "FIU")
         self.b_fiu.priv_decl(file)
+        self.hdr(file, "SEQ")
         self.b_seq.priv_decl(file)
+        self.hdr(file, "TYP")
         self.b_typ.priv_decl(file)
+        self.hdr(file, "VAL")
         self.b_val.priv_decl(file)
+        self.hdr(file, "IOC")
         self.b_ioc.priv_decl(file)
 
     def priv_impl(self, file):
+        self.hdr(file, "MEM")
         self.b_mem.priv_impl(file)
+        self.hdr(file, "FIU")
         self.b_fiu.priv_impl(file)
+        self.hdr(file, "SEQ")
         self.b_seq.priv_impl(file)
+        self.hdr(file, "TYP")
         self.b_typ.priv_impl(file)
+        self.hdr(file, "VAL")
         self.b_val.priv_impl(file)
+        self.hdr(file, "IOC")
         self.b_ioc.priv_impl(file)
 
     def sensitive(self):

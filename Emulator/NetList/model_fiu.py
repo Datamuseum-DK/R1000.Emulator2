@@ -66,8 +66,8 @@ class FIU(PartFactory):
 
     def state(self, file):
         file.fmt('''
-		|       unsigned fiu_oreg;
-		|       uint64_t fiu_mdreg;
+		|	unsigned fiu_oreg;
+		|	uint64_t fiu_mdreg;
 		|	uint64_t fiu_treg;
 		|	uint64_t fiu_vreg;
 		|	uint64_t fiu_refresh_reg;

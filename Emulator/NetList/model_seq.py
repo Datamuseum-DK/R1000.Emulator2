@@ -172,7 +172,7 @@ class SEQ(PartFactory):
 		|	uint64_t seq_coff;
 		|	unsigned seq_uadr_decode;
 		|	unsigned seq_display;
-		|       uint64_t seq_resolve_offset;
+		|	uint64_t seq_resolve_offset;
 		|	bool seq_cload;
 		|	bool seq_ibuf_fill;
 		|	bool seq_uses_tos;
@@ -226,7 +226,7 @@ class SEQ(PartFactory):
 		|	bool seq_maybe_dispatch;
 		|	bool seq_sign_extend;
 		|	unsigned seq_intreads;
-		|       bool seq_tmp_carry_out;
+		|	bool seq_tmp_carry_out;
 		|	bool uses_tos;
 		|	unsigned seq_mem_start;
 		|
