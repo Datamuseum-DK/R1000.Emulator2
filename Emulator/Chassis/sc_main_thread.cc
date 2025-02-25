@@ -1,59 +1,34 @@
-#include <stdio.h>
-#include <systemc.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "Chassis/r1000sc.h"
 #include "Chassis/r1000sc_priv.h"
+#include "Chassis/r1000_arch.hh"
 
+static uint64_t ucycle;
 
 double
 sc_now(void)
 {
-	return (sc_time_stamp().to_double());
+	return (ucycle * 200);
 }
-
-#include "emu_pub.hh"
 
 extern "C"
 void *
 sc_main_thread(void *priv)
 {
-	int argc = 0;
-	char **argv = NULL;
-	int retval;
+	r1000_arch r1k;
 
-	(void)priv;
-
-	retval = sc_core::sc_elab_and_sim( argc, argv);
-	fprintf(stderr, "HERE %s %d: retval %d\n", __func__, __LINE__, retval);
-	return (NULL);
-}
-
-int
-sc_main(int argc, char *argv[])
-{
-	emu *emu;
-
-	(void)argc;
-	(void)argv;
-
-	emu = make_emu("EMU");
-
-	sc_set_time_resolution(1, sc_core::SC_NS);
-
-	cout << sc_get_time_resolution() <<  " Resolution\n";
-
-	sc_start(SC_ZERO_TIME);
+	(void)sc_main_get_quota();
 	while(1) {
-		double dt = sc_main_get_quota();
-		sc_start(dt * 1e6, SC_US);
-		cout << "@" << sc_time_stamp() << " DONE\n";
+		r1k.doit();
+		ucycle += 1;
 	}
-
 	return(0);
 }
 
 double
 sc_when(void)
 {
-	return (sc_time_stamp().to_seconds());
+	return (ucycle * 200e-9);
 }

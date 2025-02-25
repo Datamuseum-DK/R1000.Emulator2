@@ -166,7 +166,7 @@ void update_state(void);
 		buf[0] = '\0'; \
 		std::stringstream ss(buf); \
 		ss << "" __VA_ARGS__ << (uint8_t)0; \
-		sysc_trace(this->name(), ss.str().c_str()); \
+		sysc_trace("r1000_arch", ss.str().c_str()); \
 	} while (0)
 
 #define TRACE( ...) \
@@ -176,7 +176,7 @@ void update_state(void);
 			buf[0] = '\0'; \
 			std::stringstream ss(buf); \
 			ss << "" __VA_ARGS__ << (uint8_t)0; \
-			sysc_trace(this->name(), ss.str().c_str()); \
+			sysc_trace("r1000_arch", ss.str().c_str()); \
 		} \
 	} while (0)
 

@@ -1,13 +1,11 @@
 
 
-
-R1000BIN = ${WORKDIR}/_obj/r1000sim.${BRANCH}
+R1000BIN = ${WORKDIR}/_obj/r1000sim
 
 OBJDIR = ${WORKDIR}/_obj
 
 r1000sim: ${R1000BIN}
 	@echo "WORKDIR ${WORKDIR}"
-	@echo "BRANCH ${BRANCH}"
 	@echo "OPTIMIZE ${OPTIMIZE}"
 	ln -sf ${R1000BIN} r1000sim
 
@@ -21,11 +19,6 @@ include Diag/Makefile.inc
 include Makefile.musashi.inc
 include Iop/Makefile.inc
 include Chassis/Makefile.inc
-include Components/Makefile.inc
-
-include ${WORKDIR}/Emu/Makefile.inc
-include ${WORKDIR}/Chassis/Makefile.inc
-
 
 CFLAGSMINUSI += -I.
 CFLAGSMINUSD += -DMUSASHI_CNF='"Iop/musashi_conf.h"'
@@ -36,8 +29,6 @@ CFLAGS += ${CFLAGSMINUSI}
 CFLAGS += ${PARANOIA}
 
 SC_API ?= -std=c++14
-SC_I ?= -I/usr/local/include -I.
-SC_L ?= -L/usr/local/lib -lsystemc
 
 SC_CFLAGS += ${SC_API} ${OPTIMIZE} ${PARANOIA} ${PARANOIAXX} -pthread 
 SC_CC = ${CXX} ${SC_CFLAGS} -I. ${SC_I} -c
