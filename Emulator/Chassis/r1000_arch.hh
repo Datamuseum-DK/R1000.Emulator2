@@ -26,7 +26,6 @@ class r1000_arch {
 	void rotator(bool sclk);
 	bool fiu_conditions(void);
 	uint64_t frame(void);
-	void tcsa(bool clock);
 	void fiu_q1(void);
 	void fiu_q2(void);
 	void fiu_q4(void);

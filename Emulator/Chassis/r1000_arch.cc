@@ -1170,59 +1170,6 @@ rotator(bool sclk)
 
 void
 r1000_arch ::
-tcsa(bool clock)
-{
-	bool invalidate_csa = !(mp_csa_hit && !state->fiu_tcsa_tf_pred);
-	unsigned hit_offs = state->fiu_hit_offset;
-
-	unsigned adr;
-	if (state->fiu_tcsa_tf_pred) {
-		adr = state->fiu_tcsa_sr;
-		adr |= 0x100;
-	} else {
-		adr = hit_offs;
-	}
-	adr ^= 0xf;
-	unsigned csacntl = mp_csa_cntl;
-	adr |= csacntl << 4;
-
-	if (state->fiu_tcsa_inval_csa)
-		adr |= (1<<7);
-
-	unsigned q = fiu_pa060[adr];
-	bool load_ctl_top = (q >> 3) & 0x1;
-	bool load_top_bot = (q >> 2) & 0x1;
-	bool sel_constant = (q >> 1) & 0x1;
-	bool minus_one = (q >> 0) & 0x1;
-
-	mp_load_top = !(load_top_bot && ((csacntl >> 1) & 1));
-	mp_load_bot = !(load_top_bot && ((csacntl >> 2) & 1));
-	mp_pop_down = load_ctl_top && state->fiu_tcsa_tf_pred;
-
-	if (!invalidate_csa) {
-		mp_csa_offs = 0xf;
-	} else if (!sel_constant && !minus_one) {
-		mp_csa_offs = 0x1;
-	} else if (!sel_constant && minus_one) {
-		mp_csa_offs = 0xf;
-	} else {
-		mp_csa_offs = hit_offs;
-	}
-
-	mp_csa_nve = q >> 4;
-
-	if (clock) {
-		state->fiu_tcsa_sr = q >> 4;
-		state->fiu_tcsa_inval_csa = invalidate_csa;
-		unsigned csacntl0 = (state->fiu_typwcsram[mp_nua_bus] >> 1) & 7;
-		unsigned csacntl1 = (state->fiu_typuir >> 1) & 6;
-		state->fiu_tcsa_tf_pred = !((csacntl0 == 7) && (csacntl1 == 0));
-	}
-
-}
-
-void
-r1000_arch ::
 fiu_q1(void)
 {
 	bool sclk = false;
@@ -1469,7 +1416,46 @@ fiu_q2(void)
 		mp_seq_uev &= ~UEV_MEMEX;
 	}
 	mp_clock_stop_0 = state->fiu_uev10_page_x && state->fiu_uev0_memex;
-	tcsa(false);
+	{
+	bool invalidate_csa = !(mp_csa_hit && !state->fiu_tcsa_tf_pred);
+	unsigned hit_offs = state->fiu_hit_offset;
+
+	unsigned adr;
+	if (state->fiu_tcsa_tf_pred) {
+		adr = state->fiu_tcsa_sr;
+		adr |= 0x100;
+	} else {
+		adr = hit_offs;
+	}
+	adr ^= 0xf;
+	unsigned csacntl = mp_csa_cntl;
+	adr |= csacntl << 4;
+
+	if (state->fiu_tcsa_inval_csa)
+		adr |= (1<<7);
+
+	unsigned q = fiu_pa060[adr];
+	bool load_ctl_top = (q >> 3) & 0x1;
+	bool load_top_bot = (q >> 2) & 0x1;
+	bool sel_constant = (q >> 1) & 0x1;
+	bool minus_one = (q >> 0) & 0x1;
+
+	mp_load_top = !(load_top_bot && ((csacntl >> 1) & 1));
+	mp_load_bot = !(load_top_bot && ((csacntl >> 2) & 1));
+	mp_pop_down = load_ctl_top && state->fiu_tcsa_tf_pred;
+
+	if (!invalidate_csa) {
+		mp_csa_offs = 0xf;
+	} else if (!sel_constant && !minus_one) {
+		mp_csa_offs = 0x1;
+	} else if (!sel_constant && minus_one) {
+		mp_csa_offs = 0xf;
+	} else {
+		mp_csa_offs = hit_offs;
+	}
+
+	mp_csa_nve = q >> 4;
+	}
 	if ((!mp_fiut_oe || !mp_fiuv_oe)) {
 		do_tivi();
 		if (!mp_fiut_oe) {
@@ -1504,7 +1490,14 @@ fiu_q4(void)
 
 
 	do_tivi();
-	tcsa(tcsa_clk);
+	if (tcsa_clk) {
+		bool invalidate_csa = !(mp_csa_hit && !state->fiu_tcsa_tf_pred);
+		state->fiu_tcsa_inval_csa = invalidate_csa;
+		unsigned csacntl0 = (state->fiu_typwcsram[mp_nua_bus] >> 1) & 7;
+		unsigned csacntl1 = (state->fiu_typuir >> 1) & 6;
+		state->fiu_tcsa_tf_pred = !((csacntl0 == 7) && (csacntl1 == 0));
+		state->fiu_tcsa_sr = mp_csa_nve;
+	}
 	if (sclk) {
 		if (UIR_FIU_LDMDR || !UIR_FIU_TCLK || !UIR_FIU_VCLK) {
 			rotator(sclk);
