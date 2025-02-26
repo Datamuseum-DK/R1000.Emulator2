@@ -1914,21 +1914,17 @@ void
 r1000_arch ::
 nxt_lex_valid(void)
 {
-	unsigned lex_random;
+	unsigned lex_random = (state->seq_rndx >> 5) & 0x7;
+	uint16_t dra = state->seq_resolve_address & 3;
+	uint16_t dlr = lex_random;
 	uint16_t dns;
-	uint16_t dra;
-	uint16_t dlr;
-	lex_random = (state->seq_rndx >> 5) & 0x7;
-	dra = state->seq_resolve_address & 3;
-	dlr = lex_random;
 	if (lex_random & 0x2) {
 		dns = 0xf;
 	} else {
 		dns = 0xf ^ (0x8 >> (state->seq_resolve_address >> 2));
 	}
-	unsigned adr;
 	uint16_t nv = 0;
-	adr = ((state->seq_lex_valid >> 12) & 0xf) << 5;
+	unsigned adr = ((state->seq_lex_valid >> 12) & 0xf) << 5;
 	adr |= dra << 3;
 	adr |= ((dlr >> 2) & 1) << 2;
 	adr |= ((dns >> 3) & 1) << 1;
@@ -2484,12 +2480,23 @@ seq_q4(void)
 
 	bool bhen = !((state->seq_late_macro_event && !state->seq_bad_hint) || (!mp_clock_stop_6));
 	bool bhcke = !(state->seq_s_state_stop && bhen);
+	bool dispatch = state->seq_wanna_dispatch || state->seq_early_macro_pending || (state->seq_lmp != 8);
 	if (state_clock) {
 		nxt_lex_valid();
-	}
-	bool dispatch = state->seq_wanna_dispatch || state->seq_early_macro_pending || (state->seq_lmp != 8);
-	if (state_clock && !RNDX(RND_RES_OFFS)) {
-		state->seq_tosram[state->seq_resolve_address] = (state->seq_typ_bus >> 7) & 0xfffff;
+		if (!RNDX(RND_RES_OFFS)) {
+			state->seq_tosram[state->seq_resolve_address] = (state->seq_typ_bus >> 7) & 0xfffff;
+		}
+		if (!state->seq_ibld) {
+			state->seq_macro_ins_typ = state->seq_typ_bus;
+			state->seq_macro_ins_val = state->seq_val_bus;
+		}
+		if (!RNDX(RND_RETRN_LD)) {
+			state->seq_retrn_pc_ofs = state->seq_macro_pc_offset;
+		}
+		if (!RNDX(RND_CUR_LEX)) {
+			state->seq_curr_lex = state->seq_val_bus & 0xf;
+			state->seq_curr_lex ^= 0xf;
+		}
 	}
 	if (aclk) {
 		state->seq_late_macro_event = !(sclke || !(state->seq_macro_event && !state->seq_early_macro_pending));
@@ -2497,14 +2504,11 @@ seq_q4(void)
 			mp_seq_halted = !(sclke || RNDX(RND_HALT));
 			if (mp_seq_halted) ALWAYS_TRACE(<< "THAW HALTED");
 		}
-	}
-	if (state_clock && !state->seq_ibld) {
-		state->seq_macro_ins_typ = state->seq_typ_bus;
-		state->seq_macro_ins_val = state->seq_val_bus;
-	}
-
-	if (state_clock && !RNDX(RND_RETRN_LD)) {
-		state->seq_retrn_pc_ofs = state->seq_macro_pc_offset;
+		state->seq_early_macro_pending = mp_macro_event != 0;
+		state->seq_emac = mp_macro_event ^ 0x7f;
+		if (state->seq_early_macro_pending) {
+			state->seq_uadr_decode = 0x0400 + 0x20 * fls(mp_macro_event);
+		}
 	}
 
 	if (!bhcke && !state->seq_macro_event) {
@@ -2546,18 +2550,7 @@ seq_q4(void)
 		}
 		state->seq_word &= 7;
 	}
-	if (state_clock && !RNDX(RND_CUR_LEX)) {
-		state->seq_curr_lex = state->seq_val_bus & 0xf;
-		state->seq_curr_lex ^= 0xf;
-	}
 
-	if (aclk) {
-		state->seq_early_macro_pending = mp_macro_event != 0;
-		state->seq_emac = mp_macro_event ^ 0x7f;
-		if (state->seq_early_macro_pending) {
-			state->seq_uadr_decode = 0x0400 + 0x20 * fls(mp_macro_event);
-		}
-	}
 	bool crnana = !(RNDX(RND_INSTR_LD) && dispatch);
 
 	if (sclk) {
@@ -2574,6 +2567,10 @@ seq_q4(void)
 			state->seq_ctop = dsp;
 		if (crnana && !state->seq_topbot)
 			state->seq_cbot = dsp;
+		if (!RNDX(RND_BR_MSK_L)) {
+			uint64_t tmp = state->seq_val_bus;
+			state->seq_break_mask = (tmp >> 16) & 0xffff;
+		}
 	}
 			
 	if (!bhcke) {
@@ -2587,11 +2584,6 @@ seq_q4(void)
 		state->seq_curins = state->seq_cbot;
 	} else {
 		state->seq_curins = state->seq_ctop;
-	}
-
-	if (sclk && !RNDX(RND_BR_MSK_L)) {
-		uint64_t tmp = state->seq_val_bus;
-		state->seq_break_mask = (tmp >> 16) & 0xffff;
 	}
 
 	uint32_t *ciptr;
@@ -2763,9 +2755,7 @@ seq_q4(void)
 			assert(sel < 8);
 			break;
 		}
-	}
 
-	if (aclk) {
 		if (state->seq_check_exit_ue) {
 			mp_seq_uev &= ~UEV_CK_EXIT;
 		} else {
