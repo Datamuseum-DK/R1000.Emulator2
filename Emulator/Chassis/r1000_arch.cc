@@ -2513,13 +2513,11 @@ seq_q4(void)
 
 	if (!bhcke && !state->seq_macro_event) {
 		unsigned mode = 0;
-		unsigned u = 0;
-		if (state->seq_cload) u |= 1;
-		if (state->seq_wanna_dispatch) u |= 2;
-		switch (u) {
-		case 0: mode = 1; break;
-		case 1: mode = 1; break;
-		case 2:
+		if (!state->seq_wanna_dispatch) {
+			mode = 1;
+		} else if (state->seq_cload) {
+			mode = 0;
+		} else {
 			if (!state->seq_bad_hint) {
 				state->seq_m_pc_mb = RNDX(RND_M_PC_MD0);
 			} else {
@@ -2528,8 +2526,6 @@ seq_q4(void)
 
 			if (state->seq_m_pc_mb) mode |= 2;
 			if (RNDX(RND_M_PC_MD1)) mode |= 1;
-			break;
-		case 3: mode = 0; break;
 		}
 		if (mode == 3) {
 			uint64_t tmp;
@@ -2615,9 +2611,6 @@ seq_q4(void)
 			state->seq_retseg = state->seq_pcseg;
 		}
 		if (!RNDX(RND_M_PC_LDH)) {
-			//unsigned val;
-			//val = state->seq_val_bus >> 32;
-			//val ^= 0xffffffff;
 			state->seq_pcseg = (~state->seq_val_bus >> 32) & 0xffffff;
 		}
 		if (!RNDX(RND_SAVE_LD)) {
@@ -2625,30 +2618,31 @@ seq_q4(void)
 			state->seq_carry_out = state->seq_tmp_carry_out;
 		}
 
-		uint64_t cnb;
-		if (!RNDX(RND_CNTL_MUX)) {
-			cnb = ~state->seq_typ_bus;
-		} else {
-			cnb = mp_fiu_bus;
-		}
-		//cnb &= 0xffffffffULL;
-		cnb >>= 7;
-		cnb &= 0xfffff;
-
 		if (!RNDX(RND_PRED_LD)) {
+			uint64_t cnb = 0;
+			if (!RNDX(RND_CNTL_MUX)) {
+				cnb = ~state->seq_typ_bus;
+			} else {
+				cnb = mp_fiu_bus;
+			}
+			cnb >>= 7;
+			cnb &= 0xfffff;
 			state->seq_pred = cnb;
 		}
-		unsigned csa_cntl = mp_csa_cntl;
 
-		bool ten = (csa_cntl != 2 && csa_cntl != 3);
-		bool tud = !(csa_cntl & 1);
 		if (!RNDX(RND_TOP_LD)) {
+			uint64_t cnb = 0;
+			if (!RNDX(RND_CNTL_MUX)) {
+				cnb = ~state->seq_typ_bus;
+			} else {
+				cnb = mp_fiu_bus;
+			}
+			cnb >>= 7;
+			cnb &= 0xfffff;
 			state->seq_topcnt = cnb;
-		} else if (ten) {
-			// Nothing
-		} else if (tud) {
+		} else if (mp_csa_cntl == 2) {
 			state->seq_topcnt += 1;
-		} else {
+		} else if (mp_csa_cntl == 3) {
 			state->seq_topcnt += 0xfffff;
 		}
 		state->seq_topcnt &= 0xfffff;
@@ -2669,8 +2663,8 @@ seq_q4(void)
 			if (state->seq_bad_hint) stkinpsel |= 1;
 		} else {
 			xwrite = !RNDX(RND_PUSH);
-			pop = !!(state->seq_preturn || RNDX(RND_POP));
-			stkinpsel = 0x1;;
+			pop = state->seq_preturn || RNDX(RND_POP);
+			stkinpsel = 0x1;
 		}
 
 		if (xwrite) {
