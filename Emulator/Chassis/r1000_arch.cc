@@ -1480,8 +1480,6 @@ fiu_q4(void)
 	state->fiu_prmt ^= 0x02;
 	state->fiu_prmt &= 0x7b;
 
-
-	do_tivi();
 	if (tcsa_clk) {
 		bool invalidate_csa = !(mp_csa_hit && !state->fiu_tcsa_tf_pred);
 		state->fiu_tcsa_inval_csa = invalidate_csa;
