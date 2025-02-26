@@ -21,7 +21,6 @@ class r1000_arch {
 
 // -------------------- FIU --------------------
 
-	uint64_t read_fiu_bus(unsigned line);
 	void do_tivi(void);
 	void rotator(bool sclk);
 	bool fiu_conditions(void);

@@ -846,13 +846,6 @@ mem_q4(void)
 
 // -------------------- FIU --------------------
 
-uint64_t
-r1000_arch ::
-read_fiu_bus(unsigned line)
-{
-	return (~mp_fiu_bus);
-}
-
 bool
 r1000_arch ::
 fiu_conditions()
@@ -928,7 +921,7 @@ do_tivi(void)
 		vi = ~mp_val_bus;
 		break;
 	case 0x02: case 0x06: case 0x0a:
-		vi = read_fiu_bus(tivi);
+		vi = ~mp_fiu_bus;
 		break;
 	case 0x03: case 0x07: case 0x0b:
 		vi = frame() ^ ~0ULL;
@@ -946,7 +939,7 @@ do_tivi(void)
 		ti = state->fiu_treg;
 		break;
 	case 0x04: case 0x05: case 0x06: case 0x07:
-		ti = read_fiu_bus(tivi);
+		ti = ~mp_fiu_bus;
 		break;
 	case 0x08: case 0x09: case 0x0a: case 0x0b:
 		ti = ~mp_typ_bus;
@@ -1133,7 +1126,7 @@ rotator(bool sclk)
 		tii = state->fiu_vi_bus;
 		break;
 	case 3:
-		tii = read_fiu_bus(0x20);
+		tii = ~mp_fiu_bus;
 		break;
 	}
 
@@ -4277,6 +4270,12 @@ ioc_q4(void)
 			state->ioc_rsprdp++;
 			state->ioc_rsprdp &= 0x3ff;
 			break;
+		case 0x06:
+			state->ioc_slice = mp_typ_bus >> 48;
+			break;
+		case 0x07:
+			state->ioc_delay = mp_typ_bus >> 32;
+			break;
 		case 0x08:
 			state->ioc_rtc = 0;
 			break;
@@ -4328,23 +4327,13 @@ ioc_q4(void)
 	state->ioc_ten = state->ioc_prescaler != 0xf;
 	state->ioc_prescaler &= 0xf;
 
-	state->ioc_slice_ev = state->ioc_slice == 0xffff;
-	if (rand == 0x06) {
-		uint64_t tmp = mp_typ_bus;
-		tmp >>= 32;
-		state->ioc_slice = tmp >> 16;
-		TRACE(<< " LD " << std::hex << state->ioc_slice);
-	} else 	if (!state->ioc_sen && !state->ioc_ten) {
-		state->ioc_slice++;
-	}
-
-	state->ioc_delay_ev= state->ioc_delay == 0xffff;
-	if (rand == 0x07) {
-		uint64_t tmp = mp_typ_bus;
-		tmp >>= 32;
-		state->ioc_delay = tmp;
-	} else if (!state->ioc_den && !state->ioc_ten) {
-		state->ioc_delay++;
+	if (!state->ioc_ten) {
+		state->ioc_slice_ev = state->ioc_slice == 0xffff;
+		state->ioc_delay_ev= state->ioc_delay == 0xffff;
+		if (rand != 0x06 && !state->ioc_sen)
+			state->ioc_slice++;
+		if (rand != 0x07 && !state->ioc_den)
+			state->ioc_delay++;
 	}
 	bool rddum = (UIR_IOC_TVBS < 0xc) || !state->ioc_dumen;
 	if (rddum && !mp_restore_rdr) {
