@@ -859,24 +859,23 @@ fiu_conditions()
 {
 
 	switch(mp_cond_sel) {
-	case 0x60: mp_condx3 = !state->fiu_memex; 		return(mp_condx3);
-	case 0x61: mp_condx3 = !state->fiu_phys_last; 		return(mp_condx3);
-	case 0x62: mp_condx3 = !state->fiu_write_last; 		return(mp_condx3);
-	case 0x63: mp_condx3 = !mp_csa_hit; 		return(mp_condx3);
-	case 0x64: mp_condx3 = !((state->fiu_oreg >> 6) & 1); 	return(mp_condx3);
+	case 0x60: return(!state->fiu_memex);
+	case 0x61: return(!state->fiu_phys_last);
+	case 0x62: return(!state->fiu_write_last);
+	case 0x63: return(!mp_csa_hit);
+	case 0x64: return(!((state->fiu_oreg >> 6) & 1));
 	case 0x65: // Cross word shift
-		mp_condx3 = (state->fiu_oreg + (state->fiu_lfreg & 0x3f) + (state->fiu_lfreg & 0x80)) <= 255;
-		return(mp_condx3);
-	case 0x66: mp_condx3 = (state->fiu_moff & 0x3f) > 0x30; 	return(mp_condx3);
-	case 0x67: mp_condx3 = !(mp_refresh_count != 0xffff); 		return(mp_condx3);
-	case 0x68: mp_condx2 = !state->fiu_csa_oor_next;		return(mp_condx2);
-	case 0x69: mp_condx2 = !false; 			return(mp_condx2); // SCAV_HIT
-	case 0x6a: mp_condx2 = !state->fiu_page_xing; 		return(mp_condx2);
-	case 0x6b: mp_condx2 = !state->fiu_miss; 		return(mp_condx2);
-	case 0x6c: mp_condx2 = !state->fiu_incmplt_mcyc; 	return(mp_condx2);
-	case 0x6d: mp_condx2 = !state->fiu_mar_modified; 	return(mp_condx2);
-	case 0x6e: mp_condx2 = !state->fiu_incmplt_mcyc; 	return(mp_condx2);
-	case 0x6f: mp_condx2 = (state->fiu_moff & 0x3f) != 0; 	return(mp_condx2);
+		return((state->fiu_oreg + (state->fiu_lfreg & 0x3f) + (state->fiu_lfreg & 0x80)) <= 255);
+	case 0x66: return((state->fiu_moff & 0x3f) > 0x30);
+	case 0x67: return(!(mp_refresh_count != 0xffff));
+	case 0x68: return(!state->fiu_csa_oor_next);
+	case 0x69: return(!false); 			// SCAV_HIT
+	case 0x6a: return(!state->fiu_page_xing);
+	case 0x6b: return(!state->fiu_miss);
+	case 0x6c: return(!state->fiu_incmplt_mcyc);
+	case 0x6d: return(!state->fiu_mar_modified);
+	case 0x6e: return(!state->fiu_incmplt_mcyc);
+	case 0x6f: return((state->fiu_moff & 0x3f) != 0);
 	};
 	return (false);
 }
@@ -1328,9 +1327,6 @@ fiu_q1(void)
 	} else {
 		mp_macro_event &= ~0x40;
 	}
-	//if (mp_cond_sel != 0x6b) {
-	//	fiu_conditions();
-	//}
 	if ((!mp_fiut_oe || !mp_fiuv_oe)) {
 		do_tivi();
 		if (!mp_fiut_oe) {
@@ -1473,7 +1469,6 @@ fiu_q2(void)
 		mp_seq_uev &= ~UEV_MEMEX;
 	}
 	mp_clock_stop_0 = state->fiu_uev10_page_x && state->fiu_uev0_memex;
-	//fiu_conditions();
 	tcsa(false);
 	if ((!mp_fiut_oe || !mp_fiuv_oe)) {
 		do_tivi();
@@ -1981,18 +1976,23 @@ condition(void)
 	unsigned condsel = UIR_SEQ_CSEL;
 
 	switch (condsel >> 3) {
-	case 0x0: return(mp_condxf);
-	case 0x1: return(mp_condxe);
-	case 0x2: return(mp_condxd);
-	case 0x3: return(mp_condxc);
-	case 0x4: return(mp_condxb);
-	case 0x5: return(mp_condxa);
-	case 0x6: return(mp_condx9);
-	case 0x7: return(mp_condx8);
+	case 0x0: return(val_cond());
+	case 0x1: return(val_cond());
+	case 0x2: return(val_cond());
+	case 0x3: return(typ_cond());
+	case 0x4: return(typ_cond());
+	case 0x5: return(typ_cond());
+	case 0x6: return(typ_cond());
+	case 0x7: return(typ_cond());
 	case 0x8: return(seq_cond8(condsel));
 	case 0x9: return(seq_cond9(condsel));
 	case 0xa: return(seq_conda(condsel));
-	case 0xb: return(!(mp_condxc && mp_condxf));
+	case 0xb: 
+		{
+		bool tc = typ_cond();
+		bool vc = val_cond();
+		return(!(tc && vc));
+		}
 	case 0xc: return(fiu_conditions());
 	case 0xd: return(fiu_conditions());
 	case 0xf: return(ioc_cond());
@@ -2988,79 +2988,75 @@ clev(void)
 	));
 }
 
-void r1000_arch :: cond_a(bool val) { state->typ_cond = val; mp_condxc = !val; };
-void r1000_arch :: cond_b(bool val) { state->typ_cond = val; mp_condxb = !val; };
-void r1000_arch :: cond_c(bool val) { state->typ_cond = val; mp_condxa = !val; };
-void r1000_arch :: cond_d(bool val) { state->typ_cond = val; mp_condx9 = !val; };
-void r1000_arch :: cond_e(bool val) { state->typ_cond = val; mp_condx8 = !val; };
-
-void
+bool
 r1000_arch ::
-typ_cond(unsigned condsel, unsigned when)
+typ_cond()
 {
+
+	unsigned condsel = mp_cond_sel;
 
 	if ((condsel >> 3) == 0xb)
 		condsel &= ~0x40;
 
 	switch(condsel) {
 	case 0x18:	// L - TYP_ALU_ZERO
-		cond_a(state->typ_nalu != 0);
+		state->typ_cond = (state->typ_nalu != 0);
 		break;
 	case 0x19:	// L - TYP_ALU_NONZERO
-		cond_a(state->typ_nalu == 0);
+		state->typ_cond = (state->typ_nalu == 0);
 		break;
 	case 0x1a:	// L - TYP_ALU_A_GT_OR_GE_B
 		{
 		bool ovrsign = (!(((TYP_A_BIT(0) != TYP_B_BIT(0)) && state->typ_is_binary) || (!state->typ_is_binary && !TYP_A_BIT(0))));
-		cond_a(!(
+		state->typ_cond = (!(
 		    ((TYP_A_BIT(0) != TYP_B_BIT(0)) && TYP_A_BIT(0)) ||
 		    (state->typ_coh && (ovrsign ^ state->typ_sub_else_add))
 		));
 		}
 		break;
 	case 0x1b:	// SPARE
-		cond_a(true);
+		state->typ_cond = (true);
 		break;
 	case 0x1c:	// E - TYP_LOOP_COUNTER_ZERO
-		cond_a(state->typ_count != 0x3ff);
+		state->typ_cond = (state->typ_count != 0x3ff);
 		break;
 	case 0x1d:	// SPARE
-		cond_a(true);
+		state->typ_cond = (true);
 		break;
 	case 0x1e:	// L - TYP_ALU_ZERO - COMBO with VAL_ALU_NONZERO
-		cond_a(state->typ_nalu != 0);
+		state->typ_cond = (state->typ_nalu != 0);
 		break;
 	case 0x1f:	// L - TYP_ALU_32_CO - ALU 32 BIT CARRY OUT
-		cond_a(state->typ_com);
+		state->typ_cond = (state->typ_com);
 		break;
 	case 0x20:	// L - TYP_ALU_CARRY
-		cond_b(!state->typ_coh);
+		state->typ_cond = (!state->typ_coh);
 		break;
 	case 0x21:	// L - TYP_ALU_OVERFLOW
 		{
 		bool ovrsign = (!(((TYP_A_BIT(0) != TYP_B_BIT(0)) && state->typ_is_binary) || (!state->typ_is_binary && !TYP_A_BIT(0))));
-		cond_b(state->typ_ovr_en || (
+		state->typ_cond = (state->typ_ovr_en || (
 		    state->typ_coh ^ state->typ_almsb ^ state->typ_sub_else_add ^ ovrsign
 		));
 		}
 		break;
 	case 0x22:	// L - TYP_ALU_LT_ZERO
-		cond_b(state->typ_almsb);
+		state->typ_cond = (state->typ_almsb);
 		break;
 	case 0x23:	// L - TYP_ALU_LE_ZERO
-		cond_b(!(state->typ_almsb && (state->typ_nalu != 0)));
+		state->typ_cond = (!(state->typ_almsb && (state->typ_nalu != 0)));
 		break;
 	case 0x24:	// ML - TYP_SIGN_BITS_EQUAL
-		cond_b((TYP_A_BIT(0) != TYP_B_BIT(0)));
+		state->typ_cond = ((TYP_A_BIT(0) != TYP_B_BIT(0)));
 		break;
 	case 0x25:	// E - TYP_FALSE
-		cond_b(true);
+		state->typ_cond = (true);
 		break;
 	case 0x26:	// E - TYP_TRUE
-		cond_b(false);
+		state->typ_cond = (false);
 		break;
 	case 0x27:	// E - TYP_PREVIOUS
-		cond_b(state->typ_last_cond);
+		state->typ_cond = (state->typ_last_cond);
 		break;
 	case 0x28:	// ML - OF_KIND_MATCH
 		{
@@ -3073,79 +3069,80 @@ typ_cond(unsigned condsel, unsigned when)
 		bool okb = (0x7f ^ (mask_b & TYP_B_LIT())) != okpat_b;
 
 		bool okm = !(oka & okb);
-		cond_c(okm);
+		state->typ_cond = (okm);
 		}
 		break;
 	case 0x29:	// ML - CLASS_A_EQ_LIT
-		cond_c(TYP_A_LIT() != UIR_TYP_CLIT);
+		state->typ_cond = (TYP_A_LIT() != UIR_TYP_CLIT);
 		break;
 	case 0x2a:	// ML - CLASS_B_EQ_LIT
-		cond_c(TYP_B_LIT() != UIR_TYP_CLIT);
+		state->typ_cond = (TYP_B_LIT() != UIR_TYP_CLIT);
 		break;
 	case 0x2b:	// ML - CLASS_A_EQ_B
-		cond_c(TYP_A_LIT() != TYP_B_LIT());
+		state->typ_cond = (TYP_A_LIT() != TYP_B_LIT());
 		break;
 	case 0x2c:	// ML - CLASS_A_B_EQ_LIT
-		cond_c(!(TYP_A_LIT() != UIR_TYP_CLIT) || (TYP_B_LIT() != UIR_TYP_CLIT));
+		state->typ_cond = (!(TYP_A_LIT() != UIR_TYP_CLIT) || (TYP_B_LIT() != UIR_TYP_CLIT));
 		break;
 	case 0x2d:	// E - PRIVACY_A_OP_PASS
-		cond_c(a_op_pass());
+		state->typ_cond = (a_op_pass());
 		break;
 	case 0x2e:	// ML - PRIVACY_B_OP_PASS
-		cond_c(b_op_pass());
+		state->typ_cond = (b_op_pass());
 		break;
 	case 0x2f:	// ML - PRIVACY_BIN_EQ_PASS
-		cond_c(priv_path_eq() && bin_op_pass());
+		state->typ_cond = (priv_path_eq() && bin_op_pass());
 		break;
 	case 0x30:	// ML - PRIVACY_BIN_OP_PASS
-		cond_d(bin_op_pass());
+		state->typ_cond = (bin_op_pass());
 		break;
 	case 0x31:	// ML - PRIVACY_NAMES_EQ
-		cond_d(TYP_A_BITS(31) == TYP_B_BITS(31));
+		state->typ_cond = (TYP_A_BITS(31) == TYP_B_BITS(31));
 		break;
 	case 0x32:	// ML - PRIVACY_PATHS_EQ
-		cond_d(priv_path_eq());
+		state->typ_cond = (priv_path_eq());
 		break;
 	case 0x33:	// ML - PRIVACY_STRUCTURE
-		cond_d(!(bin_op_pass() || priv_path_eq()));
+		state->typ_cond = (!(bin_op_pass() || priv_path_eq()));
 		break;
 	case 0x34:	// E - PASS_PRIVACY_BIT
-		cond_d(state->typ_ppriv);
+		state->typ_cond = (state->typ_ppriv);
 		break;
 	case 0x35:	// ML - B_BUS_BIT_32
-		cond_d(TYP_B_BIT(32));
+		state->typ_cond = (TYP_B_BIT(32));
 		break;
 	case 0x36:	// ML - B_BUS_BIT_33
-		cond_d(TYP_B_BIT(33));
+		state->typ_cond = (TYP_B_BIT(33));
 		break;
 	case 0x37:	// ML - B_BUS_BIT_34
-		cond_d(TYP_B_BIT(34));
+		state->typ_cond = (TYP_B_BIT(34));
 		break;
 	case 0x38:	// ML - B_BUS_BIT_35
-		cond_e(TYP_B_BIT(35));
+		state->typ_cond = (TYP_B_BIT(35));
 		break;
 	case 0x39:	// ML - B_BUS_BIT_36
-		cond_e(TYP_B_BIT(36));
+		state->typ_cond = (TYP_B_BIT(36));
 		break;
 	case 0x3a:	// ML - B_BUS_BIT_33_34_OR_36
-		cond_e((TYP_B_BITS(36) & 0xd) != 0xd);
+		state->typ_cond = ((TYP_B_BITS(36) & 0xd) != 0xd);
 		break;
 	case 0x3b:	// SPARE
-		cond_e(true);
+		state->typ_cond = (true);
 		break;
 	case 0x3c:	// SPARE
-		cond_e(true);
+		state->typ_cond = (true);
 		break;
 	case 0x3d:	// SPARE
-		cond_e(true);
+		state->typ_cond = (true);
 		break;
 	case 0x3e:	// SPARE
-		cond_e(true);
+		state->typ_cond = (true);
 		break;
 	case 0x3f:	// ML - B_BUS_BIT_21
-		cond_e(TYP_B_BIT(21));
+		state->typ_cond = (TYP_B_BIT(21));
 		break;
 	}
+	return (!state->typ_cond);
 }
 
 void
@@ -3225,7 +3222,7 @@ typ_h1(void)
 		typ_find_b();
 		mp_typ_bus = ~state->typ_b;
 	}
-	typ_cond(mp_cond_sel, 0);
+	// typ_cond(mp_cond_sel);
 	if (mp_adr_oe & 0x6) {
 		if (marctl & 0x8) {
 			mp_spc_bus = (marctl & 0x7) ^ 0x7;
@@ -3400,7 +3397,7 @@ typ_q2(void)
 	if ((selcond & 0x0c) && b_op_pass()) {
 		mp_clock_stop_4 = false;
 	}
-	typ_cond(mp_cond_sel, 0);
+	// typ_cond(mp_cond_sel);
 	unsigned marctl = UIR_TYP_MCTL;
 	if ((mp_adr_oe & 0x6) && marctl < 0x8) {	// XXX: && ?
 		mp_spc_bus = (state->typ_b & 0x7) ^ 0x7;
@@ -3531,7 +3528,7 @@ ovrsgn(void)
 	));
 }
 
-void
+bool
 r1000_arch ::
 val_cond(void)
 {
@@ -3617,19 +3614,7 @@ val_cond(void)
 	default:
 		break;
 	}
-	switch (csel >> 3) {
-	case 0x0:
-		mp_condxf = !state->val_thiscond;
-		break;
-	case 0x1:
-		mp_condxe = !state->val_thiscond;
-		break;
-	case 0x2:
-		mp_condxd = !state->val_thiscond;
-		break;
-	default:
-		break;
-	}
+	return (!state->val_thiscond);
 }
 
 bool
@@ -3776,7 +3761,6 @@ val_h1(void)
 		val_find_b();
 		mp_val_bus = ~state->val_b;
 	}
-	val_cond();
 }
  
 void
@@ -3941,7 +3925,7 @@ val_q2(void)
 	} else {
 		assert(uirc <= 0x3f);
 	}
-	val_cond();
+	//val_cond();
 }
 
 void
@@ -4033,6 +4017,7 @@ val_q4(void)
 		state->val_csa_offset = csmux3;
 		state->val_uir = state->val_wcsram[mp_nua_bus] ^ 0xffff800000ULL;
 	}
+
 	if (csa_clk)
 		state->val_last_cond = state->val_thiscond;
 }

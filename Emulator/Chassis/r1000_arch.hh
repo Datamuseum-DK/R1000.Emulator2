@@ -57,12 +57,7 @@ class r1000_arch {
 	bool a_op_pass(void);
 	bool b_op_pass(void);
 	bool clev(void);
-	void typ_cond(unsigned condsel, unsigned when);
-	void cond_a(bool val);
-	void cond_b(bool val);
-	void cond_c(bool val);
-	void cond_d(bool val);
-	void cond_e(bool val);
+	bool typ_cond(void);
 	void typ_find_a(void);
 	void typ_find_b(void);
 	void typ_h1(void);
@@ -72,7 +67,7 @@ class r1000_arch {
 // -------------------- VAL --------------------
 
 	bool ovrsgn(void);
-	void val_cond(void);
+	bool val_cond(void);
 	bool fiu_cond(void);
 	void val_find_a(void);
 	void val_find_b(void);

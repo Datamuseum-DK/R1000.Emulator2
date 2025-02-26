@@ -74,17 +74,6 @@ void f181_alu(struct f181 *);
 	macro(unsigned, load_bot, 0) \
 	macro(unsigned, pop_down, 0) \
 	macro(unsigned, load_wdr, 0) \
-	macro(unsigned, condx0, 0) \
-	macro(unsigned, condx2, 0) \
-	macro(unsigned, condx3, 0) \
-	macro(unsigned, condx8, 0) \
-	macro(unsigned, condx9, 0) \
-	macro(unsigned, condxa, 0) \
-	macro(unsigned, condxb, 0) \
-	macro(unsigned, condxc, 0) \
-	macro(unsigned, condxd, 0) \
-	macro(unsigned, condxe, 0) \
-	macro(unsigned, condxf, 0) \
 	macro(unsigned, mem_ctl, 0) \
 	macro(unsigned, mem_continue, 0) \
 	macro(unsigned, macro_event, 0) \
