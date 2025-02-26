@@ -1450,7 +1450,6 @@ fiu_q2(void)
 	mp_csa_nve = q >> 4;
 	}
 	if ((!mp_fiut_oe || !mp_fiuv_oe)) {
-		do_tivi();
 		if (!mp_fiut_oe) {
 			mp_typ_bus = ~state->fiu_ti_bus;
 		}
