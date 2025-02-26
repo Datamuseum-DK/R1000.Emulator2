@@ -1994,7 +1994,7 @@ condition(void)
 	case 0xb: return(!(mp_condxc && mp_condxf));
 	case 0xc: return(mp_condx3);
 	case 0xd: return(mp_condx2);
-	case 0xf: return(mp_condx0);
+	case 0xf: return(ioc_cond());
 	default: return(1);
 	}
 }
@@ -2855,33 +2855,33 @@ seq_q4(void)
 		state->seq_rq = state->seq_rreg;
 		state->seq_foo7 = state->seq_treg >> 3;
 
-		unsigned lin = 0;
-		lin |= state->seq_latched_cond << 3;
-		unsigned condsel = UIR_SEQ_CSEL;
-		uint8_t pa042 = seq_pa042[condsel << 2];
-		bool is_e_ml = (pa042 >> 7) & 1;
-		lin |= is_e_ml << 2;
-		lin |= UIR_SEQ_LUIR << 1;
-		lin |= state->seq_q3cond << 0;
-
 		if (state_clock) {
+			unsigned lin = 0;
+			lin |= state->seq_latched_cond << 3;
+			unsigned condsel = UIR_SEQ_CSEL;
+			uint8_t pa042 = seq_pa042[condsel << 2];
+			bool is_e_ml = (pa042 >> 7) & 1;
+			lin |= is_e_ml << 2;
+			lin |= UIR_SEQ_LUIR << 1;
+			lin |= state->seq_q3cond << 0;
+
 			state->seq_lreg = lin;
 			if (lin & 0x4) {
-				state->seq_last_late_cond = condition();
+				state->seq_last_late_cond = state->seq_q3cond;
 			}
-		}
 
-		switch(state->seq_lreg & 0x6) {
-		case 0x0:
-		case 0x4:
-			state->seq_latched_cond = (state->seq_lreg >> 3) & 1;
-			break;
-		case 0x2:
-			state->seq_latched_cond = (state->seq_lreg >> 0) & 1;
-			break;
-		case 0x6:
-			state->seq_latched_cond = state->seq_last_late_cond;
-			break;
+			switch(state->seq_lreg & 0x6) {
+			case 0x0:
+			case 0x4:
+				state->seq_latched_cond = (state->seq_lreg >> 3) & 1;
+				break;
+			case 0x2:
+				state->seq_latched_cond = (state->seq_lreg >> 0) & 1;
+				break;
+			case 0x6:
+				state->seq_latched_cond = state->seq_last_late_cond;
+				break;
+			}
 		}
 	}
 
@@ -4175,39 +4175,40 @@ ioc_do_xact(void)
 	);
 }
 
-void
+bool
 r1000_arch ::
 ioc_cond(void)
 {
 	switch (mp_cond_sel) {
 	case 0x78:
-		mp_condx0 = true; // state->ioc_multibit_error;
+		return (true); // state->ioc_multibit_error;
 		break;
 	case 0x79:
 		{
 		uint64_t tmp = mp_typ_bus & 0x80000047;
-		mp_condx0 = tmp == 0x80000000 || tmp == 0x80000040 || tmp == 0x80000044;
+		return (tmp == 0x80000000 || tmp == 0x80000040 || tmp == 0x80000044);
 		}
 		break;
 	case 0x7a:
-		mp_condx0 = true; // state->ioc_checkbit_error;
+		return (true); // state->ioc_checkbit_error;
 		break;
 	case 0x7b:
-		mp_condx0 = state->ioc_reqwrp != state->ioc_reqrdp;
+		return (state->ioc_reqwrp != state->ioc_reqrdp);
 		break;
 	case 0x7c:
-		mp_condx0 = state->ioc_acnt == 0xfff;
+		return (state->ioc_acnt == 0xfff);
 		break;
 	case 0x7d:
-		mp_condx0 = true;
+		return (true);
 		break;
 	case 0x7e:
-		mp_condx0 = state->ioc_rspwrp != state->ioc_rsprdp;
+		return (state->ioc_rspwrp != state->ioc_rsprdp);
 		break;
 	case 0x7f:
-		mp_condx0 = true;
+		return (true);
 		break;
 	}
+	return (true);
 }
 
 void
@@ -4250,7 +4251,7 @@ ioc_h1(void)
 			break;
 		}
 	}
-	ioc_cond();
+	// ioc_cond();
 }
 
 void
@@ -4274,7 +4275,7 @@ ioc_q2(void)
 	bool below = (tmp >= 0xc);
 	bool exit_proc = rand != 0x12;
 	mp_below_tcp = !(below || exit_proc);
-	ioc_cond();
+	// ioc_cond();
 }
 
 void

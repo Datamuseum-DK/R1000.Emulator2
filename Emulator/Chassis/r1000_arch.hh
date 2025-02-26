@@ -83,7 +83,7 @@ class r1000_arch {
 // -------------------- IOC --------------------
 
 	void ioc_do_xact(void);
-	void ioc_cond(void);
+	bool ioc_cond(void);
 	void ioc_h1(void);
 	void ioc_q2(void);
 	void ioc_q4(void);
