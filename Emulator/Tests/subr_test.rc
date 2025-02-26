@@ -16,24 +16,6 @@ standard_patches() {
 	# Set the cluster id to 408459 (= PAM's machine)
 	cli firmware patch IOC_EEPROM 0x7e84 0x00 0x06 0x3b 0x8b
 
-	# Dont wiggle FIU::UIRCLK.EN~, we dont use it any more
-	cli firmware patch PA036-02 0x162 0xe1
-
-	# Dont wiggle IOC:DUIRG1:D1 (TRACE.WR)
-	cli firmware patch PA101-02 0x120 0xff
-
-	# Dont wiggle IOC:DUIRG2:D1-D4 (DIAG.UIRS[01][01])
-	cli firmware patch PA102-02 0x120 0x7f
-
-	# Dont wiggle IOC:DUIRG4:D1-D4 (DIAG.UIRS[01][01])
-	cli firmware patch PA104-02 0x120 0x27
-
-	# Dont wiggle IOC:DUIRG5:D0
-	cli firmware patch PA105-02 0x120 0x44
-
-	# Dont wiggle TYP:DUIRG3:D1 (UIR.DIAG_OFF)
-	cli firmware patch PA016-02 0x082 0x31
-
 	# Dont use "CR ESC [ 2 K" to hide experiment names
 	cli dfs patch FS_0.M200 0x8fb7 0x20
 	cli dfs patch FS_0.M200 0x8fbd 0x20
