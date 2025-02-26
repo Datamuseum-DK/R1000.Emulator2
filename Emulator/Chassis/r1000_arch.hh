@@ -24,7 +24,7 @@ class r1000_arch {
 	uint64_t read_fiu_bus(unsigned line);
 	void do_tivi(void);
 	void rotator(bool sclk);
-	void fiu_conditions(void);
+	bool fiu_conditions(void);
 	uint64_t frame(void);
 	void tcsa(bool clock);
 	void fiu_q1(void);

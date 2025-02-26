@@ -853,31 +853,32 @@ read_fiu_bus(unsigned line)
 	return (~mp_fiu_bus);
 }
 
-void
+bool
 r1000_arch ::
 fiu_conditions()
 {
 
 	switch(mp_cond_sel) {
-	case 0x60: mp_condx3 = !state->fiu_memex; 		break;
-	case 0x61: mp_condx3 = !state->fiu_phys_last; 		break;
-	case 0x62: mp_condx3 = !state->fiu_write_last; 		break;
-	case 0x63: mp_condx3 = !mp_csa_hit; 		break;
-	case 0x64: mp_condx3 = !((state->fiu_oreg >> 6) & 1); 	break;
+	case 0x60: mp_condx3 = !state->fiu_memex; 		return(mp_condx3);
+	case 0x61: mp_condx3 = !state->fiu_phys_last; 		return(mp_condx3);
+	case 0x62: mp_condx3 = !state->fiu_write_last; 		return(mp_condx3);
+	case 0x63: mp_condx3 = !mp_csa_hit; 		return(mp_condx3);
+	case 0x64: mp_condx3 = !((state->fiu_oreg >> 6) & 1); 	return(mp_condx3);
 	case 0x65: // Cross word shift
 		mp_condx3 = (state->fiu_oreg + (state->fiu_lfreg & 0x3f) + (state->fiu_lfreg & 0x80)) <= 255;
-		break;
-	case 0x66: mp_condx3 = (state->fiu_moff & 0x3f) > 0x30; 	break;
-	case 0x67: mp_condx3 = !(mp_refresh_count != 0xffff); 		break;
-	case 0x68: mp_condx2 = !state->fiu_csa_oor_next;		break;
-	case 0x69: mp_condx2 = !false; 			break; // SCAV_HIT
-	case 0x6a: mp_condx2 = !state->fiu_page_xing; 		break;
-	case 0x6b: mp_condx2 = !state->fiu_miss; 		break;
-	case 0x6c: mp_condx2 = !state->fiu_incmplt_mcyc; 	break;
-	case 0x6d: mp_condx2 = !state->fiu_mar_modified; 	break;
-	case 0x6e: mp_condx2 = !state->fiu_incmplt_mcyc; 	break;
-	case 0x6f: mp_condx2 = (state->fiu_moff & 0x3f) != 0; 	break;
+		return(mp_condx3);
+	case 0x66: mp_condx3 = (state->fiu_moff & 0x3f) > 0x30; 	return(mp_condx3);
+	case 0x67: mp_condx3 = !(mp_refresh_count != 0xffff); 		return(mp_condx3);
+	case 0x68: mp_condx2 = !state->fiu_csa_oor_next;		return(mp_condx2);
+	case 0x69: mp_condx2 = !false; 			return(mp_condx2); // SCAV_HIT
+	case 0x6a: mp_condx2 = !state->fiu_page_xing; 		return(mp_condx2);
+	case 0x6b: mp_condx2 = !state->fiu_miss; 		return(mp_condx2);
+	case 0x6c: mp_condx2 = !state->fiu_incmplt_mcyc; 	return(mp_condx2);
+	case 0x6d: mp_condx2 = !state->fiu_mar_modified; 	return(mp_condx2);
+	case 0x6e: mp_condx2 = !state->fiu_incmplt_mcyc; 	return(mp_condx2);
+	case 0x6f: mp_condx2 = (state->fiu_moff & 0x3f) != 0; 	return(mp_condx2);
 	};
+	return (false);
 }
 
 uint64_t
@@ -1327,9 +1328,9 @@ fiu_q1(void)
 	} else {
 		mp_macro_event &= ~0x40;
 	}
-	if (mp_cond_sel != 0x6b) {
-		fiu_conditions();
-	}
+	//if (mp_cond_sel != 0x6b) {
+	//	fiu_conditions();
+	//}
 	if ((!mp_fiut_oe || !mp_fiuv_oe)) {
 		do_tivi();
 		if (!mp_fiut_oe) {
@@ -1472,7 +1473,7 @@ fiu_q2(void)
 		mp_seq_uev &= ~UEV_MEMEX;
 	}
 	mp_clock_stop_0 = state->fiu_uev10_page_x && state->fiu_uev0_memex;
-	fiu_conditions();
+	//fiu_conditions();
 	tcsa(false);
 	if ((!mp_fiut_oe || !mp_fiuv_oe)) {
 		do_tivi();
@@ -1992,8 +1993,8 @@ condition(void)
 	case 0x9: return(seq_cond9(condsel));
 	case 0xa: return(seq_conda(condsel));
 	case 0xb: return(!(mp_condxc && mp_condxf));
-	case 0xc: return(mp_condx3);
-	case 0xd: return(mp_condx2);
+	case 0xc: return(fiu_conditions());
+	case 0xd: return(fiu_conditions());
 	case 0xf: return(ioc_cond());
 	default: return(1);
 	}
@@ -2276,25 +2277,18 @@ seq_q1(void)
 {
 	seq_p1();
 	state->seq_br_tim = UIR_SEQ_BRTIM;
-	unsigned bhow;
-	bool brtm3;
 	if (state->seq_bad_hint) {
-		bhow = 2;
-		brtm3 = ((state->seq_bhreg) >> 5) & 1;
+		state->seq_uadr_mux = ((state->seq_bhreg) >> 5) & 1;
 	} else {
-		bhow = state->seq_br_tim;
-		brtm3 = state->seq_br_type & 1;
-
+		switch (state->seq_br_tim) {
+		case 0: state->seq_uadr_mux = !condition(); break;
+		case 1: state->seq_uadr_mux = !state->seq_latched_cond; break;
+		case 2: state->seq_uadr_mux = false; break;
+		case 3: state->seq_uadr_mux = true; break;
+		}
+		if (state->seq_br_type & 1)
+			state->seq_uadr_mux = !state->seq_uadr_mux;
 	}
-
-	switch (bhow) {
-	case 0: state->seq_uadr_mux = !condition(); break;
-	case 1: state->seq_uadr_mux = !state->seq_latched_cond; break;
-	case 2: state->seq_uadr_mux = false; break;
-	case 3: state->seq_uadr_mux = true; break;
-	}
-	if (brtm3)
-		state->seq_uadr_mux = !state->seq_uadr_mux;
 
 	unsigned adr = 0;
 	if (state->seq_bad_hint) adr |= 0x01;
@@ -4251,7 +4245,6 @@ ioc_h1(void)
 			break;
 		}
 	}
-	// ioc_cond();
 }
 
 void
@@ -4275,7 +4268,6 @@ ioc_q2(void)
 	bool below = (tmp >= 0xc);
 	bool exit_proc = rand != 0x12;
 	mp_below_tcp = !(below || exit_proc);
-	// ioc_cond();
 }
 
 void
