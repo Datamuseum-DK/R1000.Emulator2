@@ -65,12 +65,6 @@ ${OBJDIR}/diproc_turbo_tv.o: \
     ${R1000DEP}
 	${CC} ${CFLAGS} -I${WORKDIR} -c Diag/diproc_turbo_tv.c -o ${OBJDIR}/diproc_turbo_tv.o
 
-OBJS    += ${OBJDIR}/diproc_mods.o
-${OBJDIR}/diproc_mods.o: \
-    Diag/diproc_mods.c \
-    Diag/diag.h
-	${CC} ${CFLAGS} -c Diag/diproc_mods.c -o ${OBJDIR}/diproc_mods.o
-
 OBJS    += ${OBJDIR}/dummy_diproc.o
 ${OBJDIR}/dummy_diproc.o: \
     Diag/dummy_diproc.c \
@@ -80,13 +74,3 @@ ${OBJDIR}/dummy_diproc.o: \
     Diag/diag.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Diag/dummy_diproc.c -o ${OBJDIR}/dummy_diproc.o
-
-OBJS    += ${OBJDIR}/experiment.o
-${OBJDIR}/experiment.o: \
-    Diag/experiment.c \
-    Infra/elastic.h \
-    Infra/vqueue.h \
-    Diag/diag.h \
-    ${R1000DEP}
-	${CC} ${CFLAGS} -c Diag/experiment.c -o ${OBJDIR}/experiment.o
-

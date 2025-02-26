@@ -190,8 +190,6 @@ cli_diagbus(struct cli *cli)
 
 static const struct cli_cmds cli_diproc_cmds[] = {
 	{ "dummy",		cli_diproc_dummy },
-	{ "experiment",		cli_diproc_experiment },
-	{ "status",		cli_diproc_status },
 	{ "wait",		cli_diproc_wait },
 	{ NULL,			NULL },
 };
