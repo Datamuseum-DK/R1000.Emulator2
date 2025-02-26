@@ -1570,39 +1570,33 @@ fiu_q4(void)
 
 	state->fiu_hit_offset = (0xf + state->fiu_nve - (dif & 0xf)) & 0xf;
 
-	uint64_t adr = 0;
-	adr = mp_adr_bus;
-	bool load_mar = (state->fiu_prmt >> 4) & 1;
+	if (sclk) {
+		if ((state->fiu_prmt >> 4) & 1) { // load_mar
+			state->fiu_srn = mp_adr_bus >> 32;
+			state->fiu_sro = mp_adr_bus & 0xffffff80;
+			state->fiu_sro |= mp_spc_bus << 4;
+			state->fiu_sro |= 0xf;
+			state->fiu_moff = (state->fiu_sro >> 7) & 0xffffff;
+		}
 			
-	if (sclk && load_mar) {
-		state->fiu_srn = adr >> 32;
-		state->fiu_sro = adr & 0xffffff80;
-		state->fiu_sro |= mp_spc_bus << 4;
-		state->fiu_sro |= 0xf;
-	}
-	state->fiu_moff = (state->fiu_sro >> 7) & 0xffffff;
-			
-	state->fiu_nmatch =
-	    (state->fiu_ctopn != state->fiu_srn) ||
-	    ((state->fiu_sro & 0xf8000070 ) != 0x10);
-			
-	if (sclk && (csa == 0)) {
-		state->fiu_ctopn = adr >> 32;
+		if (csa == 0) {
+			state->fiu_ctopn = mp_adr_bus >> 32;
+		}
+
 		state->fiu_nmatch =
 		    (state->fiu_ctopn != state->fiu_srn) ||
 		    ((state->fiu_sro & 0xf8000070 ) != 0x10);
-	}
 			
-	if (sclk && !(csa >> 2)) {
-		if (csa <= 1) {
-			state->fiu_ctopo = adr >> 7;
-		} else if (!(csa & 1)) {
-			state->fiu_ctopo += 1;
-		} else {
-			state->fiu_ctopo += 0xfffff;
+		if (!(csa >> 2)) {
+			if (csa <= 1) {
+				state->fiu_ctopo = mp_adr_bus >> 7;
+			} else if (!(csa & 1)) {
+				state->fiu_ctopo += 1;
+			} else {
+				state->fiu_ctopo += 0xfffff;
+			}
+			state->fiu_ctopo &= 0xfffff;
 		}
-		state->fiu_ctopo &= 0xfffff;
-			
 	}
 			
 	if (state->fiu_mem_start == 0x06) {
@@ -1611,23 +1605,16 @@ fiu_q4(void)
 		mp_refresh_count++;
 	}
 
-	bool le_abort = mp_mem_abort_el;
-	bool e_abort = mp_mem_abort_e;
-	bool eabrt = !(e_abort && le_abort);
-	bool l_abort = mp_mem_abort_l;
-	bool idum;
-	bool sel = !((!mp_state_clk_stop && state->fiu_memcyc1) || (mp_state_clk_en && !state->fiu_memcyc1));
-	if (sel) {
-		idum = (state->fiu_prmt >> 5) & 1;
+	if (!((!mp_state_clk_stop && state->fiu_memcyc1) || (mp_state_clk_en && !state->fiu_memcyc1))) {
+		state->fiu_dumon = (state->fiu_prmt >> 5) & 1;
 	} else {
-		idum = state->fiu_dumon;
+		state->fiu_dumon = state->fiu_dumon;
 	}
 	state->fiu_state0 = (state->fiu_pa025d >> 7) & 1;
 	state->fiu_state1 = (state->fiu_pa025d >> 6) & 1;
-	state->fiu_labort = !(l_abort && le_abort);
-	state->fiu_e_abort_dly = eabrt;
+	state->fiu_labort = !(mp_mem_abort_l && mp_mem_abort_el);
+	state->fiu_e_abort_dly = !(mp_mem_abort_e && mp_mem_abort_el);
 	state->fiu_pcntl_d = state->fiu_pa026d & 0xf;
-	state->fiu_dumon = idum;
 	state->fiu_csaht = !mp_csa_hit;
 
 	if (!mp_sf_stop) {
@@ -1648,16 +1635,16 @@ fiu_q4(void)
 		} else if (mp_cond_sel == 0x6d) {
 			state->fiu_mar_modified = 1;
 		} else if (state->fiu_omf20) {
-			state->fiu_mar_modified = le_abort;
-		} else if (!state->fiu_memstart && le_abort) {
-			state->fiu_mar_modified = le_abort;
+			state->fiu_mar_modified = mp_mem_abort_el;
+		} else if (!state->fiu_memstart && mp_mem_abort_el) {
+			state->fiu_mar_modified = mp_mem_abort_el;
 		}
 		if (rmarp) {
 			state->fiu_incmplt_mcyc = (state->fiu_ti_bus >> BUS64_LSB(40)) & 1;
 		} else if (state->fiu_mem_start == 0x12) {
 			state->fiu_incmplt_mcyc = true;
 		} else if (state->fiu_memcyc1) {
-			state->fiu_incmplt_mcyc = le_abort;
+			state->fiu_incmplt_mcyc = mp_mem_abort_el;
 		}
 		if (rmarp) {
 			state->fiu_phys_last = (state->fiu_ti_bus >> BUS64_LSB(37)) & 1;
@@ -1707,9 +1694,9 @@ int_reads()
 {
 	unsigned internal_reads = UIR_SEQ_IRD;
 	switch (state->seq_urand & 3) {
-	case 3:	state->seq_coff = state->seq_retrn_pc_ofs; break;
+	case 3:	state->seq_coff = state->seq_retrn_pc_ofs; break;		// Q4
 	case 2: state->seq_coff = branch_offset(); break;
-	case 1: state->seq_coff = state->seq_macro_pc_offset; break;
+	case 1: state->seq_coff = state->seq_macro_pc_offset; break;		// Q4
 	case 0: state->seq_coff = branch_offset(); break;
 	}
 	state->seq_coff ^= 0x7fff;
@@ -1983,39 +1970,44 @@ unsigned
 r1000_arch ::
 branch_offset(void)
 {
-	bool oper;
-	unsigned a;
-	if (!state->seq_wanna_dispatch && !state->seq_m_ibuff_mt) {
-		a = 0;
-		oper = true;
-	} else if (!state->seq_wanna_dispatch && state->seq_m_ibuff_mt) {
-		a = state->seq_display;
-		oper = false;
-	} else if (state->seq_wanna_dispatch && !state->seq_m_ibuff_mt) {
-		a = state->seq_curins;
-		oper = true;
-	} else {
-		a = state->seq_curins;
-		oper = true;
-	}
-	a &= 0x7ff;
-	if (a & 0x400)
-		a |= 0x7800;
-	a ^= 0x7fff;
-	unsigned b = state->seq_macro_pc_offset & 0x7fff;
-	unsigned retval;
-	if (oper) {
-		if (state->seq_wanna_dispatch)
-			a += 1;
+	if (state->seq_wanna_dispatch) {
+		unsigned a = state->seq_curins;			// Q4
+		a &= 0x7ff;
+		if (a & 0x400)
+			a |= 0x7800;
+		a ^= 0x7fff;
+		a += 1;
 		a &= 0x7fff;
-		retval = a + b;
+		unsigned b = state->seq_macro_pc_offset & 0x7fff;
+		unsigned retval = a + b;
+		retval &= 0x7fff;
+		return (retval);
 	} else {
-		if (!state->seq_wanna_dispatch)
+		bool oper;
+		unsigned a;
+		if (!state->seq_m_ibuff_mt) {
+			a = 0;
+			oper = true;
+		} else {
+			a = state->seq_display;			// Q4
+			oper = false;
+		}
+		a &= 0x7ff;
+		if (a & 0x400)
+			a |= 0x7800;
+		a ^= 0x7fff;
+		unsigned b = state->seq_macro_pc_offset & 0x7fff;
+		unsigned retval;
+		if (oper) {
+			a &= 0x7fff;
+			retval = a + b;
+		} else {
 			a += 1;
-		retval = b - a;
+			retval = b - a;
+		}
+		retval &= 0x7fff;
+		return (retval);
 	}
-	retval &= 0x7fff;
-	return (retval);
 }
 
 void
@@ -2254,7 +2246,6 @@ void
 r1000_arch ::
 seq_q1(void)
 {
-	seq_p1();
 	state->seq_br_tim = UIR_SEQ_BRTIM;
 	if (state->seq_bad_hint) {
 		state->seq_uadr_mux = ((state->seq_bhreg) >> 5) & 1;
@@ -2283,6 +2274,8 @@ seq_q1(void)
 	state->seq_stop = !(!state->seq_bad_hint && (state->seq_uev == 16) && !state->seq_late_macro_event);
 	bool evnan0d = !(UIR_SEQ_ENMIC && (state->seq_uev == 16));
 	mp_uevent_enable = !(evnan0d || state->seq_stop);
+
+	seq_p1();
 }
 
 void
@@ -2443,8 +2436,7 @@ seq_q3(void)
 			mp_adr_bus = state->seq_output_ob << 7;
 		}
 
-		uint64_t branch;
-		branch = branch_offset() & 7;
+		uint64_t branch = branch_offset() & 7;
 		branch ^= 0x7;
 		mp_adr_bus |= branch << 4;
 		if (!adr_is_code) {
