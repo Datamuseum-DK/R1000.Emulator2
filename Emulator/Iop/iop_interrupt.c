@@ -59,10 +59,11 @@ set_new_level(void)
 {
 	struct irq_vector *vp;
 	vp = VTAILQ_FIRST(&pending);
-	if (vp != NULL)
+	if (vp != NULL) {
 		irq_level = vp->level;
-	else
+	} else {
 		irq_level = 0;
+	}
 }
 
 void
@@ -87,16 +88,25 @@ irq_getvector(unsigned int arg)
 	unsigned retval;
 
 	AZ(pthread_mutex_lock(&irq_mtx));
-	vp = VTAILQ_FIRST(&pending);
-	if (vp != NULL) {
-		retval = vp->vector;
-		Trace(trace_ioc_interrupt,
-		    "VECTOR 0x%x %s (arg=0x%x)", retval,
-		    vp->name, arg);
-	} else {
-		retval = 0;
-		Trace(trace_ioc_interrupt,
-		    "VECTOR 0x%x (arg=0x%x)", 0, arg);
+	retval = 0;
+	VTAILQ_FOREACH(vp, &pending, list) {
+		if (vp->level == arg || arg == 0) {
+			retval = vp->vector;
+			Trace(trace_ioc_interrupt,
+			    "VECTOR 0x%x %s %d (arg=0x%x)", retval,
+			    vp->name, vp->level, arg);
+			break;
+		}
+	}
+	if (retval == 0) {
+		vp = VTAILQ_FIRST(&pending);
+		if (vp != NULL) {
+			Trace(trace_ioc_interrupt,
+			    "VECTOR 0x%x (arg=0x%x) [0x%x %d]", 0, arg, vp->vector, vp->level);
+		} else {
+			Trace(trace_ioc_interrupt,
+			    "VECTOR 0x%x (arg=0x%x)", 0, arg);
+		}
 	}
 	AZ(pthread_mutex_unlock(&irq_mtx));
 	return (retval);
