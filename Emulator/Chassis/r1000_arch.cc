@@ -16,6 +16,26 @@
 #include "Iop/iop_sc_68k20.hh"
 #include "Infra/vend.h"
 
+static uint8_t fiu_pa025[512];
+static uint8_t fiu_pa026[512];
+static uint8_t fiu_pa027[512];
+static uint8_t fiu_pa028[512];
+static uint8_t fiu_pa060[512];
+static uint8_t seq_pa040[512];
+static uint8_t seq_pa041[512];
+static uint8_t seq_pa042[512];
+static uint8_t seq_pa043[512];
+static uint8_t seq_pa044[512];
+static uint8_t seq_pa045[512];
+static uint8_t seq_pa046[512];
+static uint8_t seq_pa047[512];
+static uint8_t seq_pa048[512];
+static uint8_t typ_pa068[512];
+static uint8_t typ_pa059[512];
+static uint8_t val_pa011[512];
+static uint8_t ioc_pb011[32];
+static uint8_t tv_pa010[512];
+
 // -------------------- MEM --------------------
 
 #define CMD_PMW	(1<<0xf)	// PHYSICAL_MEM_WRITE
@@ -168,11 +188,6 @@ struct r1000_arch_state {
 	bool fiu_pdt;
 
 	bool fiu_state0, fiu_state1, fiu_labort, fiu_e_abort_dly;
-	uint8_t fiu_pa025[512];
-	uint8_t fiu_pa026[512];
-	uint8_t fiu_pa027[512];
-	uint8_t fiu_pa028[512];
-	uint8_t fiu_pa060[512];
 	uint8_t fiu_pcntl_d;
 	uint8_t fiu_lcntl;
 	uint8_t fiu_mcntl;
@@ -278,15 +293,6 @@ struct r1000_arch_state {
 	unsigned seq_late_u;
 	unsigned seq_uev;
 
-	uint8_t seq_pa040[512];
-	uint8_t seq_pa041[512];
-	uint8_t seq_pa042[512];
-	uint8_t seq_pa043[512];
-	uint8_t seq_pa044[512];
-	uint8_t seq_pa045[512];
-	uint8_t seq_pa046[512];
-	uint8_t seq_pa047[512];
-	uint8_t seq_pa048[512];
 	uint8_t seq_bhreg;
 	unsigned seq_rreg;
 	unsigned seq_lreg;
@@ -374,7 +380,6 @@ struct r1000_arch_state {
 // -------------------- TYP --------------------
 
 	uint64_t *typ_rfram;
-	uint8_t typ_pa010[512], typ_pa068[512], typ_pa059[512];
 	uint64_t typ_a, typ_b, c, typ_nalu, typ_alu;
 	uint64_t typ_wdr;
 	uint64_t typ_count;
@@ -439,8 +444,6 @@ struct r1000_arch_state {
 	uint64_t *val_wcsram;
 	uint64_t val_uir;
 	unsigned val_rand;
-	uint8_t val_pa010[512];
-	uint8_t val_pa011[512];
 	bool val_thiscond;
 
 #define UIR_VAL_A		((state->val_uir >> (39-5)) & 0x3f)
@@ -476,7 +479,6 @@ struct r1000_arch_state {
 	uint16_t ioc_delay, ioc_slice;
 	bool ioc_slice_ev, ioc_delay_ev;
 	bool ioc_sen, ioc_den, ioc_ten;
-	uint8_t ioc_pb011[32];
 	bool ioc_dumen;
 	bool ioc_csa_hit;
 	uint16_t *ioc_tram;
@@ -512,26 +514,26 @@ r1000_arch :: r1000_arch(void)
 
 // -------------------- FIU --------------------
 
-	load_programmable("r1000_arch", state->fiu_pa025, sizeof state->fiu_pa025, "PA025-03");
-	load_programmable("r1000_arch", state->fiu_pa026, sizeof state->fiu_pa026, "PA026-02");
-	load_programmable("r1000_arch", state->fiu_pa027, sizeof state->fiu_pa027, "PA027-01");
-	load_programmable("r1000_arch", state->fiu_pa028, sizeof state->fiu_pa028, "PA028-02");
-	load_programmable("r1000_arch", state->fiu_pa060, sizeof state->fiu_pa060, "PA060");
+	load_programmable("r1000_arch", fiu_pa025, sizeof fiu_pa025, "PA025-03");
+	load_programmable("r1000_arch", fiu_pa026, sizeof fiu_pa026, "PA026-02");
+	load_programmable("r1000_arch", fiu_pa027, sizeof fiu_pa027, "PA027-01");
+	load_programmable("r1000_arch", fiu_pa028, sizeof fiu_pa028, "PA028-02");
+	load_programmable("r1000_arch", fiu_pa060, sizeof fiu_pa060, "PA060");
 	state->fiu_wcsram = (uint64_t*)CTX_GetRaw("FIU_WCS", sizeof(uint64_t) << 14);
 	state->fiu_typwcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 
 
 // -------------------- SEQ --------------------
 
-	load_programmable("r1000_arch", state->seq_pa040, sizeof state->seq_pa040, "PA040-02");
-	load_programmable("r1000_arch", state->seq_pa041, sizeof state->seq_pa041, "PA041-01");
-	load_programmable("r1000_arch", state->seq_pa042, sizeof state->seq_pa041, "PA042-02");
-	load_programmable("r1000_arch", state->seq_pa043, sizeof state->seq_pa043, "PA043-02");
-	load_programmable("r1000_arch", state->seq_pa044, sizeof state->seq_pa044, "PA044-01");
-	load_programmable("r1000_arch", state->seq_pa045, sizeof state->seq_pa045, "PA045-03");
-	load_programmable("r1000_arch", state->seq_pa046, sizeof state->seq_pa046, "PA046-02");
-	load_programmable("r1000_arch", state->seq_pa047, sizeof state->seq_pa047, "PA047-02");
-	load_programmable("r1000_arch", state->seq_pa048, sizeof state->seq_pa048, "PA048-02");
+	load_programmable("r1000_arch", seq_pa040, sizeof seq_pa040, "PA040-02");
+	load_programmable("r1000_arch", seq_pa041, sizeof seq_pa041, "PA041-01");
+	load_programmable("r1000_arch", seq_pa042, sizeof seq_pa041, "PA042-02");
+	load_programmable("r1000_arch", seq_pa043, sizeof seq_pa043, "PA043-02");
+	load_programmable("r1000_arch", seq_pa044, sizeof seq_pa044, "PA044-01");
+	load_programmable("r1000_arch", seq_pa045, sizeof seq_pa045, "PA045-03");
+	load_programmable("r1000_arch", seq_pa046, sizeof seq_pa046, "PA046-02");
+	load_programmable("r1000_arch", seq_pa047, sizeof seq_pa047, "PA047-02");
+	load_programmable("r1000_arch", seq_pa048, sizeof seq_pa048, "PA048-02");
 	state->seq_wcsram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << UADR_WIDTH);
 	state->seq_top = (uint32_t*)CTX_GetRaw("SEQ_TOP", sizeof(uint32_t) << 10);
 	state->seq_bot = (uint32_t*)CTX_GetRaw("SEQ_BOT", sizeof(uint32_t) << 10);
@@ -539,17 +541,16 @@ r1000_arch :: r1000_arch(void)
 
 // -------------------- TYP --------------------
 
-	load_programmable("r1000_arch", state->typ_pa010, sizeof state->typ_pa010, "PA010");
-	load_programmable("r1000_arch", state->typ_pa068, sizeof state->typ_pa068, "PA068");
-	load_programmable("r1000_arch", state->typ_pa059, sizeof state->typ_pa059, "PA059-01");
+	load_programmable("r1000_arch", tv_pa010, sizeof tv_pa010, "PA010");
+	load_programmable("r1000_arch", typ_pa068, sizeof typ_pa068, "PA068");
+	load_programmable("r1000_arch", typ_pa059, sizeof typ_pa059, "PA059-01");
 	state->typ_wcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 	state->typ_rfram = (uint64_t*)CTX_GetRaw("TYP_RF", sizeof(uint64_t) << 10);
 
 
 // -------------------- VAL --------------------
 
-	load_programmable("r1000_arch", state->val_pa010, sizeof state->val_pa010, "PA010");
-	load_programmable("r1000_arch", state->val_pa011, sizeof state->val_pa011, "PA011");
+	load_programmable("r1000_arch", val_pa011, sizeof val_pa011, "PA011");
 	state->val_wcsram = (uint64_t*)CTX_GetRaw("VAL_WCS", sizeof(uint64_t) << 14);
 	state->val_rfram = (uint64_t*)CTX_GetRaw("VAL_RF", sizeof(uint64_t) << 10);
 	state->val_csa_hit = true;
@@ -558,7 +559,7 @@ r1000_arch :: r1000_arch(void)
 
 // -------------------- IOC --------------------
 
-	load_programmable("r1000_arch", state->ioc_pb011, sizeof state->ioc_pb011, "PB011");
+	load_programmable("r1000_arch", ioc_pb011, sizeof ioc_pb011, "PB011");
 	state->ioc_wcsram = (uint64_t*)CTX_GetRaw("IOC_WCS", sizeof(uint64_t) << 14);
 	state->ioc_tram = (uint16_t*)CTX_GetRaw("IOC_TRAM", sizeof(uint16_t) * 2049);
 
@@ -1188,7 +1189,7 @@ tcsa(bool clock)
 	if (state->fiu_tcsa_inval_csa)
 		adr |= (1<<7);
 
-	unsigned q = state->fiu_pa060[adr];
+	unsigned q = fiu_pa060[adr];
 	bool load_ctl_top = (q >> 3) & 0x1;
 	bool load_top_bot = (q >> 2) & 0x1;
 	bool sel_constant = (q >> 1) & 0x1;
@@ -1233,7 +1234,7 @@ fiu_q1(void)
 	pa028a |= state->fiu_state1 << 2;
 	pa028a |= state->fiu_mctl_is_read << 1;
 	pa028a |= state->fiu_dumon;
-	state->fiu_prmt = state->fiu_pa028[pa028a];
+	state->fiu_prmt = fiu_pa028[pa028a];
 	state->fiu_prmt ^= 0x02;
 	state->fiu_prmt &= 0x7b;
 
@@ -1272,7 +1273,7 @@ fiu_q1(void)
 	pa025a |= state->fiu_state1 << 7;
 	pa025a |= state->fiu_labort << 6;
 	pa025a |= state->fiu_e_abort_dly << 5;
-	state->fiu_pa025d = state->fiu_pa025[pa025a];
+	state->fiu_pa025d = fiu_pa025[pa025a];
 	state->fiu_memcyc1 = (state->fiu_pa025d >> 1) & 1;
 	state->fiu_memstart = (state->fiu_pa025d >> 0) & 1;
 
@@ -1312,7 +1313,7 @@ fiu_q1(void)
 	pa027a |= (state->fiu_omq & 0xc);
 	pa027a |= 1 << 1;
 	pa027a |= pgmod << 0;
-	state->fiu_pa027d = state->fiu_pa027[pa027a];
+	state->fiu_pa027d = fiu_pa027[pa027a];
 	state->fiu_setq = (state->fiu_pa027d >> 3) & 3;
 
 	bool mnor0b = state->fiu_drive_mru || ((state->fiu_pa027d & 3) == 0);
@@ -1350,7 +1351,7 @@ fiu_q2(void)
 	pa028a |= state->fiu_state1 << 2;
 	pa028a |= state->fiu_mctl_is_read << 1;
 	pa028a |= state->fiu_dumon;
-	state->fiu_prmt = state->fiu_pa028[pa028a];
+	state->fiu_prmt = fiu_pa028[pa028a];
 	state->fiu_prmt ^= 0x02;
 	state->fiu_prmt &= 0x7b;
 
@@ -1361,7 +1362,7 @@ fiu_q2(void)
 	pa025a |= state->fiu_state1 << 7;
 	pa025a |= state->fiu_labort << 6;
 	pa025a |= state->fiu_e_abort_dly << 5;
-	state->fiu_pa025d = state->fiu_pa025[pa025a];
+	state->fiu_pa025d = fiu_pa025[pa025a];
 	state->fiu_memcyc1 = (state->fiu_pa025d >> 1) & 1;
 	state->fiu_memstart = (state->fiu_pa025d >> 0) & 1;
 
@@ -1403,7 +1404,7 @@ fiu_q2(void)
 		pa026a |= 0x40;
 	if (state->fiu_write_last)
 		pa026a |= 0x80;
-	state->fiu_pa026d = state->fiu_pa026[pa026a];
+	state->fiu_pa026d = fiu_pa026[pa026a];
 	// INIT_MRU, ACK_REFRESH, START_IF_INCM, START_TAG_RD, PCNTL0-3
 
 	if (state->fiu_log_query) {
@@ -1501,7 +1502,7 @@ fiu_q4(void)
 	pa028a |= state->fiu_state1 << 2;
 	pa028a |= state->fiu_mctl_is_read << 1;
 	pa028a |= state->fiu_dumon;
-	state->fiu_prmt = state->fiu_pa028[pa028a];
+	state->fiu_prmt = fiu_pa028[pa028a];
 	state->fiu_prmt ^= 0x02;
 	state->fiu_prmt &= 0x7b;
 
@@ -1944,7 +1945,7 @@ nxt_lex_valid(void)
 	adr |= ((dns >> 3) & 1) << 1;
 	bool pm3 = !((dns & 0x7) && !(dlr & 1));
 	adr |= pm3;
-	nv |= (state->seq_pa041[adr] >> 4) << 12;
+	nv |= (seq_pa041[adr] >> 4) << 12;
 
 	adr = ((state->seq_lex_valid >> 8) & 0xf) << 5;
 	adr |= dra << 3;
@@ -1952,7 +1953,7 @@ nxt_lex_valid(void)
 	adr |= ((dns >> 2) & 1) << 1;
 	bool pm2 = !((dns & 0x3) && !(dlr & 1));
 	adr |= pm2;
-	nv |= (state->seq_pa041[adr] >> 4) << 8;
+	nv |= (seq_pa041[adr] >> 4) << 8;
 
 	adr = ((state->seq_lex_valid >> 4) & 0xf) << 5;
 	adr |= dra << 3;
@@ -1960,14 +1961,14 @@ nxt_lex_valid(void)
 	adr |= ((dns >> 1) & 1) << 1;
 	bool pm1 = !((dns & 0x1) && !(dlr & 1));
 	adr |= pm1;
-	nv |= (state->seq_pa041[adr] >> 4) << 4;
+	nv |= (seq_pa041[adr] >> 4) << 4;
 
 	adr = ((state->seq_lex_valid >> 0) & 0xf) << 5;
 	adr |= dra << 3;
 	adr |= ((dlr >> 2) & 1) << 2;
 	adr |= ((dns >> 0) & 1) << 1;
 	adr |= (dlr >> 0) & 1;
-	nv |= (state->seq_pa041[adr] >> 4) << 0;
+	nv |= (seq_pa041[adr] >> 4) << 0;
 
 	state->seq_lex_valid = nv;
 }
@@ -2251,10 +2252,10 @@ seq_h1(void)
 {
 
 	state->seq_urand = UIR_SEQ_URAND;
-	state->seq_rndx = state->seq_pa048[state->seq_urand | (state->seq_bad_hint ? 0x100 : 0)] << 24;
-	state->seq_rndx |= state->seq_pa046[state->seq_urand | (state->seq_bad_hint ? 0x100 : 0)] << 16;
-	state->seq_rndx |=  state->seq_pa045[state->seq_urand | 0x100] << 8;
-	state->seq_rndx |= state->seq_pa047[state->seq_urand | 0x100];
+	state->seq_rndx = seq_pa048[state->seq_urand | (state->seq_bad_hint ? 0x100 : 0)] << 24;
+	state->seq_rndx |= seq_pa046[state->seq_urand | (state->seq_bad_hint ? 0x100 : 0)] << 16;
+	state->seq_rndx |=  seq_pa045[state->seq_urand | 0x100] << 8;
+	state->seq_rndx |= seq_pa047[state->seq_urand | 0x100];
 
 	state->seq_br_type = UIR_SEQ_BRTYP;
 	state->seq_maybe_dispatch = 0xb < state->seq_br_type && state->seq_br_type < 0xf;
@@ -2301,7 +2302,7 @@ seq_q1(void)
 	if (state->seq_bhreg & 0x20) adr |= 0x20;
 	if (state->seq_bhreg & 0x40) adr |= 0x80;
 	if (state->seq_bhreg & 0x80) adr |= 0x100;
-	unsigned rom = state->seq_pa043[adr];
+	unsigned rom = seq_pa043[adr];
 	state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !state->seq_uadr_mux);	// Changes @15, 20, 60ns
 	state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
 	state->seq_push_br =    (rom >> 1) & 1;
@@ -2400,7 +2401,7 @@ seq_q3(void)
 	if (state->seq_stop) pa040a |= 0x04;
 	if (!state->seq_maybe_dispatch) pa040a |= 0x02;
 	if (state->seq_bad_hint) pa040a |= 0x01;
-	unsigned pa040d = state->seq_pa040[pa040a];
+	unsigned pa040d = seq_pa040[pa040a];
 
 	bool bar8;
 	state->seq_lmp = late_macro_pending();
@@ -2807,7 +2808,7 @@ seq_q4(void)
 			adr |= 0x04;
 		adr |= state->seq_br_tim << 3;
 		adr |= state->seq_br_type << 5;
-		unsigned rom = state->seq_pa044[adr];
+		unsigned rom = seq_pa044[adr];
 
 		if (!state_clock) {
 			rom |= 0x2;
@@ -2857,7 +2858,7 @@ seq_q4(void)
 		unsigned lin = 0;
 		lin |= state->seq_latched_cond << 3;
 		unsigned condsel = UIR_SEQ_CSEL;
-		uint8_t pa042 = state->seq_pa042[condsel << 2];
+		uint8_t pa042 = seq_pa042[condsel << 2];
 		bool is_e_ml = (pa042 >> 7) & 1;
 		lin |= is_e_ml << 2;
 		lin |= UIR_SEQ_LUIR << 1;
@@ -3069,12 +3070,12 @@ typ_cond(unsigned condsel, unsigned when)
 		break;
 	case 0x28:	// ML - OF_KIND_MATCH
 		{
-		unsigned mask_a = state->typ_pa059[UIR_TYP_CLIT] >> 1;
-		unsigned okpat_a = state->typ_pa059[UIR_TYP_CLIT + 256] >> 1;
+		unsigned mask_a = typ_pa059[UIR_TYP_CLIT] >> 1;
+		unsigned okpat_a = typ_pa059[UIR_TYP_CLIT + 256] >> 1;
 		bool oka = (0x7f ^ (mask_a & TYP_B_LIT())) != okpat_a; // XXX state->typ_b ??
 
-		unsigned mask_b = state->typ_pa059[UIR_TYP_CLIT + 128] >> 1;
-		unsigned okpat_b = state->typ_pa059[UIR_TYP_CLIT + 384] >> 1;
+		unsigned mask_b = typ_pa059[UIR_TYP_CLIT + 128] >> 1;
+		unsigned okpat_b = typ_pa059[UIR_TYP_CLIT + 384] >> 1;
 		bool okb = (0x7f ^ (mask_b & TYP_B_LIT())) != okpat_b;
 
 		bool okm = !(oka & okb);
@@ -3276,21 +3277,21 @@ typ_q2(void)
 	idx |= alurand << 5;
 	idx |= alufunc;
 		
-	tmp = state->typ_pa068[idx];
+	tmp = typ_pa068[idx];
 	state->typ_is_binary = (tmp >> 1) & 1;
 	tmp >>= 3;
 
 	f181l.ctl = tmp >> 1;
 	f181l.ctl |= (tmp & 1) << 4;
 	f181l.ctl |= (state->typ_rand != 0xf) << 5;
-	f181l.ci = (state->typ_pa068[idx] >> 2) & 1;
+	f181l.ci = (typ_pa068[idx] >> 2) & 1;
 	f181l.a = state->typ_a & 0xffffffff;
 	f181l.b = state->typ_b & 0xffffffff;
 	f181_alu(&f181l);
 	state->typ_com = f181l.co;
 	state->typ_nalu = f181l.o;
 
-	tmp = state->typ_pa010[idx];
+	tmp = tv_pa010[idx];
 	state->typ_sub_else_add = (tmp >> 2) & 1;
 	state->typ_ovr_en = (tmp >> 1) & 1;
 	tmp >>= 3;
@@ -3829,19 +3830,19 @@ val_q2(void)
 		proma |= 0x100;
 	}
 
-	tmp = state->val_pa011[proma];			// S0-4.LOW
+	tmp = val_pa011[proma];			// S0-4.LOW
 	state->val_isbin = (tmp >> 1) & 1;			// IS_BINARY
 	f181l.ctl = (tmp >> 4) & 0xf;
 	f181l.ctl |= ((tmp >> 3) & 1) << 4;
 	f181l.ctl |= 1 << 5;
-	f181l.ci = (state->val_pa011[proma] >> 2) & 1;	// ALU.C15
+	f181l.ci = (val_pa011[proma] >> 2) & 1;	// ALU.C15
 	f181l.a = state->val_a & 0xffffffff;
 	f181l.b = state->val_b & 0xffffffff;
 	f181_alu(&f181l);
 	state->val_carry_middle = f181l.co;
 	state->val_nalu = f181l.o;
 
-	tmp = state->val_pa010[proma];			// S0-4.HIGH
+	tmp = tv_pa010[proma];			// S0-4.HIGH
 	state->val_ovren = (tmp >> 1) & 1;			// OVR.EN~
 	state->val_sub_else_add = (tmp >> 2) & 1;			// SUB_ELSE_ADD
 	f181h.ctl = (tmp >> 4) & 0xf;
