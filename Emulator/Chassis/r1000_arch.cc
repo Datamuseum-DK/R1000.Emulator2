@@ -2097,7 +2097,7 @@ void
 r1000_arch ::
 seq_p1(void)
 {
-	int_reads();
+#if 1
 	unsigned lex_adr = UIR_SEQ_LAUIR;
 
 	if (state->seq_maybe_dispatch && !(state->seq_display >> 15)) {
@@ -2111,14 +2111,30 @@ seq_p1(void)
 		switch (lex_adr) {
 		case 0:	state->seq_resolve_address = state->seq_curr_lex ^ 0xf; break;
 		case 1:
-			state->seq_resolve_address = (state->seq_val_bus & 0xf) + 1; 
+			switch (UIR_SEQ_IRD) {
+			case 0x0:
+				//state->seq_resolve_address = (state->seq_val_bus & 0xf) + 1; 
+				state->seq_resolve_address = (~mp_val_bus & 0xf) + 1; 
+				break;
+			case 0x1:
+			case 0x2:
+			case 0x3:
+				printf("VAL->RESA uir %x\n", (unsigned)UIR_SEQ_IRD);
+				assert(0);
+				state->seq_resolve_address = (state->seq_val_bus & 0xf) + 1; 
+				break;
+			default:
+				//state->seq_resolve_address = (state->seq_val_bus & 0xf) + 1; 
+				state->seq_resolve_address = (~state->seq_curr_lex & 0xf) + 1; 
+				break;
+			}
 			break;
 		case 2: state->seq_resolve_address = 0xf; break;
 		case 3: state->seq_resolve_address = 0xe; break;
 		}
 	}
-	
 	state->seq_resolve_address &= 0xf;
+	
 	if (lex_adr == 1) {
 		state->seq_import_condition = true;
 		state->seq_sign_extend = true;
@@ -2128,6 +2144,7 @@ seq_p1(void)
 	}
 
 	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
+#endif
 
 	unsigned uses_tos;
 	if (!state->seq_maybe_dispatch) {
@@ -2143,6 +2160,8 @@ seq_p1(void)
 			state->seq_intreads = 1;
 		}
 	}
+
+	int_reads();
 
 	unsigned offs;
 	if (uses_tos) {
