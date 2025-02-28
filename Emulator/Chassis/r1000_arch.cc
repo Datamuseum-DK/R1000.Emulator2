@@ -319,7 +319,6 @@ struct r1000_arch_state {
 	unsigned seq_wanna_dispatch;
 	bool seq_ibld;
 	bool seq_field_number_error;
-	bool seq_import_condition;
 	bool seq_m_break_class;
 	bool seq_latched_cond;
 	bool seq_saved_latched;
@@ -360,7 +359,6 @@ struct r1000_arch_state {
 	unsigned seq_lmp;
 	bool seq_early_macro_pending;
 	bool seq_maybe_dispatch;
-	bool seq_sign_extend;
 	unsigned seq_intreads;
 	bool seq_tmp_carry_out;
 	bool uses_tos;
@@ -1858,28 +1856,28 @@ seq_cond8(unsigned condsel)
 {
 
 	switch (condsel) {
-	case 0x47: // STACK_SIZE
+	case 0x47: // E STACK_SIZE
 		return (state->seq_stack_size_zero);
 		break;
-	case 0x46: // LATCHED_COND
+	case 0x46: // E LATCHED_COND
 		return (state->seq_latched_cond);
 		break;
-	case 0x45: // SAVED_LATCHED
+	case 0x45: // L SAVED_LATCHED
 		return (state->seq_saved_latched);
 		break;
-	case 0x44: // TOS_VLD.COND
+	case 0x44: // L TOS_VLD.COND
 		return (state->seq_tos_vld_cond);
 		break;
-	case 0x43: // LEX_VLD.COND
+	case 0x43: // L LEX_VLD.COND
 		return (state->seq_lxval);
 		break;
-	case 0x42: // IMPORT.COND
-		return (state->seq_import_condition);
+	case 0x42: // E IMPORT.COND
+		return (state->seq_resolve_address != 0xf);
 		break;
-	case 0x41: // REST_PC_DEC
+	case 0x41: // E REST_PC_DEC
 		return ((state->seq_rq >> 1) & 1);
 		break;
-	case 0x40: // RESTARTABLE
+	case 0x40: // E RESTARTABLE
 		return ((state->seq_rq >> 3) & 1);
 		break;
 	default:
@@ -1971,43 +1969,29 @@ r1000_arch ::
 branch_offset(void)
 {
 	if (state->seq_wanna_dispatch) {
-		unsigned a = state->seq_curins;
-		a &= 0x7ff;
+		unsigned a = state->seq_curins & 0x7ff;
 		if (a & 0x400)
 			a |= 0x7800;
 		a ^= 0x7fff;
 		a += 1;
-		a &= 0x7fff;
-		unsigned b = state->seq_macro_pc_offset & 0x7fff;
-		unsigned retval = a + b;
-		retval &= 0x7fff;
-		return (retval);
-	} else {
-		bool oper;
-		unsigned a;
-		if (!state->seq_m_ibuff_mt) {
-			a = 0;
-			oper = true;
-		} else {
-			a = state->seq_display;
-			oper = false;
-		}
-		a &= 0x7ff;
-		if (a & 0x400)
-			a |= 0x7800;
-		a ^= 0x7fff;
-		unsigned b = state->seq_macro_pc_offset & 0x7fff;
-		unsigned retval;
-		if (oper) {
-			a &= 0x7fff;
-			retval = a + b;
-		} else {
-			a += 1;
-			retval = b - a;
-		}
+		unsigned retval = a + state->seq_macro_pc_offset;
 		retval &= 0x7fff;
 		return (retval);
 	}
+	if (!state->seq_m_ibuff_mt) {
+		unsigned retval = 0x7fff + state->seq_macro_pc_offset;
+		retval &= 0x7fff;
+		return (retval);
+	}
+	unsigned a = state->seq_display & 0x7ff;
+	if (a & 0x400)
+		a |= 0x7800;
+	a ^= 0x7fff;
+	unsigned b = state->seq_macro_pc_offset & 0x7fff;
+	a += 1;
+	unsigned retval = b - a;
+	retval &= 0x7fff;
+	return (retval);
 }
 
 void
@@ -2133,16 +2117,6 @@ seq_p1(void)
 	}
 	state->seq_resolve_address &= 0xf;
 
-	if (lex_adr == 1) {
-		state->seq_import_condition = true;
-		state->seq_sign_extend = true;
-	} else {
-		state->seq_import_condition = state->seq_resolve_address != 0xf;
-		state->seq_sign_extend = state->seq_resolve_address <= 0xd;
-	}
-
-	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
-
 	unsigned offs;
 	if (state->seq_maybe_dispatch && state->seq_uses_tos) {
 		if (RNDX(RND_TOS_VLB)) {
@@ -2162,7 +2136,7 @@ seq_p1(void)
 	unsigned sgdisp = state->seq_display & 0xff;
 	if (!d7)
 		sgdisp |= 0x100;
-	if (!(state->seq_sign_extend && d7))
+	if (!((state->seq_resolve_address <= 0xd) && d7))
 		sgdisp |= 0xffe00;
 
 	bool acin = ((state->seq_mem_start & 1) != 0);
@@ -2211,12 +2185,6 @@ seq_p1(void)
 	} else {
 		state->seq_name_bus = 0xffffffff;
 	}
-	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!condition());
-	bool ibuff_ld = !(state->seq_cload || RNDX(RND_IBUFF_LD));
-	state->seq_ibld = !ibuff_ld;
-	bool ibemp = !(ibuff_ld || (state->seq_word != 0));
-	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
-
 }
 
 void
@@ -2246,7 +2214,7 @@ seq_h1(void)
 
 	if (mp_fiu_oe == 0x8)
 		mp_fiu_bus = state->seq_topu;
-	if (!mp_seqtv_oe) {
+	if (mp_tv_oe == 5) {
 		seq_p1();
 		int_reads();	// Necessary
 		mp_typ_bus = ~state->seq_typ_bus;
@@ -2287,10 +2255,14 @@ seq_q1(void)
 	bool evnan0d = !(UIR_SEQ_ENMIC && (state->seq_uev == 16));
 	mp_uevent_enable = !(evnan0d || state->seq_stop);
 
-	if (mp_seqtv_oe) {
+	if (mp_tv_oe != 5) {
 		seq_p1();
-		int_reads();
+		int_reads();								//d int_reads()
 	}
+	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!condition());
+	state->seq_ibld = state->seq_cload || RNDX(RND_IBUFF_LD);
+	bool ibemp = !(!state->seq_ibld || (state->seq_word != 0));
+	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
 }
 
 void
@@ -2301,6 +2273,7 @@ seq_q2(void)
 	state->seq_m_tos_invld = !(state->seq_uses_tos && state->seq_tos_vld_cond);				// lmp, cond
 
 	state->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->seq_carry_out);	// q4
+	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
 	state->seq_m_res_ref = !(state->seq_lxval && !(state->seq_display >> 15));				// lmp, cond
 
 	uint64_t val = state->seq_val_bus >> 32;
@@ -2378,7 +2351,7 @@ seq_q3(void)
 	pa040a |= (state->seq_decode & 0x7) << 6;
 	if (state->seq_wanna_dispatch) pa040a |= 0x20;
 	if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
-	if (state->seq_import_condition) pa040a |= 0x08;
+	if (state->seq_resolve_address != 0xf) pa040a |= 0x08;
 	if (state->seq_stop) pa040a |= 0x04;
 	if (!state->seq_maybe_dispatch) pa040a |= 0x02;
 	if (state->seq_bad_hint) pa040a |= 0x01;
@@ -4344,7 +4317,6 @@ ioc_q4(void)
 		mp_nxt_fiu_oe = 1 << UIR_IOC_FEN;
 		state->ioc_dumen = !mp_dummy_next;
 		state->ioc_csa_hit = !mp_csa_hit;
-		unsigned tvbs = UIR_IOC_TVBS;
 
 		uint16_t tdat = mp_nua_bus;
 		if (!sclk_pos)
@@ -4358,7 +4330,6 @@ ioc_q4(void)
 			tptr &= 0x7ff;
 			state->ioc_tram[2048] = tptr;
 		}
-		mp_nxt_seqtv_oe = true;
 		mp_nxt_fiuv_oe = true;
 		mp_nxt_fiut_oe = true;
 		mp_nxt_memv_oe = true;
@@ -4366,13 +4337,14 @@ ioc_q4(void)
 		mp_nxt_ioctv_oe = true;
 		mp_nxt_valv_oe = true;
 		mp_nxt_typt_oe = true;
-		switch (tvbs) {
+		mp_nxt_tv_oe = UIR_IOC_TVBS;
+		switch (mp_nxt_tv_oe) {
 		case 0x0: mp_nxt_valv_oe = false; mp_nxt_typt_oe = false; break;
 		case 0x1: mp_nxt_fiuv_oe = false; mp_nxt_typt_oe = false; break;
 		case 0x2: mp_nxt_valv_oe = false; mp_nxt_fiut_oe = false; break;
 		case 0x3: mp_nxt_fiuv_oe = false; mp_nxt_fiut_oe = false; break;
 		case 0x4: mp_nxt_ioctv_oe = false; break;
-		case 0x5: mp_nxt_seqtv_oe = false; break;
+		case 0x5: break; // SEQ
 		case 0x8:
 		case 0x9:
 			mp_nxt_memv_oe = false; mp_nxt_typt_oe = false; break;
@@ -4384,8 +4356,10 @@ ioc_q4(void)
 		case 0xe:
 		case 0xf:
 			if (state->ioc_dumen) {
+				mp_nxt_tv_oe = 4;
 				mp_nxt_ioctv_oe = false;
 			} else if (state->ioc_csa_hit) {
+				mp_nxt_tv_oe = 0;
 				mp_nxt_typt_oe = false;
 				mp_nxt_valv_oe = false;
 			} else {
