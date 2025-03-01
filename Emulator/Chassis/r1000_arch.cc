@@ -36,6 +36,39 @@ static uint8_t val_pa011[512];
 static uint8_t ioc_pb011[32];
 static uint8_t tv_pa010[512];
 
+#define F181_ALU(ctrl, a, b, ci, o, co) 		\
+do {							\
+	uint32_t aa = (a), bb = (b);			\
+	uint64_t c;					\
+	switch ((ctrl) & 0x30) {			\
+	case 0x30: c = aa; break;			\
+	case 0x20: c = aa | bb; break;			\
+	case 0x10: c = aa | (bb^0xffffffff); break;	\
+	case 0x00: c = 0xffffffff; break;		\
+	}						\
+	c ^= 0xffffffff;				\
+							\
+	uint64_t d;					\
+	switch((ctrl) & 0xc0) {				\
+	case 0xc0: d = 0; break;			\
+	case 0x80: d = aa & (bb^0xffffffff); break;	\
+	case 0x40: d = aa & bb; break;			\
+	case 0x00: d = aa; break;			\
+	default: assert(0);				\
+	}						\
+	d ^= 0xffffffff;				\
+							\
+	uint64_t y = c + d + (ci);			\
+	co = (y >> 32) & 1;				\
+							\
+	if ((ctrl) & 0x08) {				\
+		o = c ^ d;				\
+	} else {					\
+		o = y;					\
+	}						\
+	o &= 0xffffffff;				\
+} while (0)
+
 // -------------------- MEM --------------------
 
 #define CMD_PMW	(1<<0xf)	// PHYSICAL_MEM_WRITE
@@ -3207,39 +3240,35 @@ typ_q2(void)
 	tmp = typ_pa068[idx];
 	state->typ_is_binary = (tmp >> 1) & 1;
 
-//if (state->typ_rand != 0xf) {
-	struct f181 f181l;
-	f181l.cmd = tmp & 0xf8;
-	f181l.cmd |= (state->typ_rand == 0xf);
-	f181l.ci = (typ_pa068[idx] >> 2) & 1;
-	f181l.a = state->typ_a & 0xffffffff;
-	f181l.b = state->typ_b & 0xffffffff;
-	f181_alu(&f181l);
-	state->typ_com = f181l.co;
-	state->typ_nalu = f181l.o;
-if (state->typ_rand == 0xf) {
-//} else {
-	uint32_t phk;
-	bool phkcy;
-	if (tmp >= 0xf0) {
-		phk = ~(state->typ_a + 0x80ULL);
-		phkcy = !!((phk ^ state->typ_a) & 0x80000000);
+	if (state->typ_rand != 0xf) {
+#if 0
+		struct f181 f181l;
+		f181l.cmd = tmp & 0xf8;
+		f181l.cmd |= (state->typ_rand == 0xf);
+		f181l.ci = (typ_pa068[idx] >> 2) & 1;
+		f181l.a = state->typ_a & 0xffffffff;
+		f181l.b = state->typ_b & 0xffffffff;
+		f181_alu(&f181l);
+		state->typ_com = f181l.co;
+		state->typ_nalu = f181l.o;
+#else
+		F181_ALU(tmp, state->typ_a, state->typ_b, ((tmp >> 2) & 1), state->typ_nalu, state->typ_com);
+#endif
 	} else {
-		phk = ~(state->typ_a - 0x80ULL);
-		phkcy = !((phk ^ state->typ_a) & 0x80000000);
+		if (tmp >= 0xf0) {
+			state->typ_nalu = ~(state->typ_a + 0x80ULL);
+			state->typ_com = ((state->typ_nalu ^ state->typ_a) & 0x80000000) != 0;
+		} else {
+			state->typ_nalu = ~(state->typ_a - 0x80ULL);
+			state->typ_com = ((state->typ_nalu ^ state->typ_a) & 0x80000000) == 0;
+		}
+		state->typ_nalu &= 0xffffffffULL;
 	}
-	if (phk != f181l.o || phkcy != state->typ_com) {
-		printf("ID128 %016jx %02x %08x %x %08x %x\n", (uintmax_t)state->typ_a, tmp, f181l.o, state->typ_com, phk, phkcy);
-		assert(0);
-	}
-	state->typ_nalu = phk;
-	state->typ_com = phkcy;
-}
 
 	tmp = tv_pa010[idx];
 	state->typ_sub_else_add = (tmp >> 2) & 1;
 	state->typ_ovr_en = (tmp >> 1) & 1;
-
+#if 0
 	struct f181 f181h;
 	f181h.cmd = tmp & 0xf8;
 	f181h.ci = state->typ_com;
@@ -3248,6 +3277,11 @@ if (state->typ_rand == 0xf) {
 	f181_alu(&f181h);
 	state->typ_coh = f181h.co;
 	state->typ_nalu |= ((uint64_t)f181h.o) << 32;
+#else
+	uint32_t o;
+	F181_ALU(tmp, state->typ_a >> 32, state->typ_b >> 32, state->typ_com, o, state->typ_coh);
+	state->typ_nalu |= ((uint64_t)o) << 32;
+#endif
 	state->typ_alu = ~state->typ_nalu;
 	state->typ_almsb = state->typ_alu >> 63ULL;
 
@@ -3739,7 +3773,6 @@ val_q2(void)
 		state->val_mblat = ~state->val_b;
 	}
 
-	struct f181 f181l, f181h;
 	unsigned tmp, proma, alur;
 
 	tmp = UIR_VAL_RAND;
@@ -3762,6 +3795,8 @@ val_q2(void)
 
 	tmp = val_pa011[proma];
 	state->val_isbin = (tmp >> 1) & 1;
+#if 0
+	struct f181 f181l;
 	f181l.cmd = tmp & 0xf8;
 	f181l.ci = (val_pa011[proma] >> 2) & 1;	// ALU.C15
 	f181l.a = state->val_a & 0xffffffff;
@@ -3769,10 +3804,15 @@ val_q2(void)
 	f181_alu(&f181l);
 	state->val_carry_middle = f181l.co;
 	state->val_nalu = f181l.o;
+#else
+	F181_ALU(tmp, state->val_a, state->val_b,(tmp >> 2) & 1, state->val_nalu, state->val_carry_middle);
+#endif
 
 	tmp = tv_pa010[proma];
 	state->val_ovren = (tmp >> 1) & 1;
 	state->val_sub_else_add = (tmp >> 2) & 1;
+#if 0
+	struct f181 f181h;
 	f181h.cmd = tmp & 0xf8;
 	f181h.ci = f181l.co;
 	f181h.a = state->val_a >> 32;
@@ -3780,6 +3820,11 @@ val_q2(void)
 	f181_alu(&f181h);
 	state->val_coh = f181h.co;
 	state->val_nalu |= ((uint64_t)f181h.o) << 32;
+#else
+	uint32_t o;
+	F181_ALU(tmp, state->val_a >> 32, state->val_b >> 32, state->val_carry_middle, o, state->val_coh);
+	state->val_nalu |= ((uint64_t)o) << 32;
+#endif
 	state->val_alu = ~state->val_nalu;
 	state->val_cmsb = state->val_alu >> 63;
 	if (mp_adr_oe & 0x2) {

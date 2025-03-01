@@ -444,7 +444,6 @@ f181_alu(struct f181 *priv)
 {
 
 	assert(priv != NULL);
-	unsigned mag = priv->cmd & 1;
 
 	uint64_t c;
 	switch (priv->cmd & 0x30) {
@@ -466,29 +465,12 @@ f181_alu(struct f181 *priv)
 	d ^= 0xffffffff;
 
 	uint64_t y;
-	unsigned ci = priv->ci;
-#if 1
-	if (mag) {
-		// TYP board INC/DEC128
-		y = (c & 0xff) + (d & 0xff) + ci;
-		y &= 0xff;
-		y ^= 0x80;
-		if (priv->a & 0x80)
-			ci = 0;
-		else
-			ci = 0x100;
-		y += (c & (~0xff)) + (d & (~0xff)) + ci;
-	} else {
-	y = c + d + ci;
-	}
-#endif
+	y = c + d + priv->ci;
 
 	priv->co = (y >> 32) & 1;
 
 	if (priv->cmd & 0x08) {
 		priv->o = c ^ d;
-		if (mag)
-			priv->o ^= 0x80;
 	} else {
 		priv->o = y;
 	}
