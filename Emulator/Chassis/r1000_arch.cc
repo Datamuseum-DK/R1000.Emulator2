@@ -3241,19 +3241,7 @@ typ_q2(void)
 	state->typ_is_binary = (tmp >> 1) & 1;
 
 	if (state->typ_rand != 0xf) {
-#if 0
-		struct f181 f181l;
-		f181l.cmd = tmp & 0xf8;
-		f181l.cmd |= (state->typ_rand == 0xf);
-		f181l.ci = (typ_pa068[idx] >> 2) & 1;
-		f181l.a = state->typ_a & 0xffffffff;
-		f181l.b = state->typ_b & 0xffffffff;
-		f181_alu(&f181l);
-		state->typ_com = f181l.co;
-		state->typ_nalu = f181l.o;
-#else
 		F181_ALU(tmp, state->typ_a, state->typ_b, ((tmp >> 2) & 1), state->typ_nalu, state->typ_com);
-#endif
 	} else {
 		if (tmp >= 0xf0) {
 			state->typ_nalu = ~(state->typ_a + 0x80ULL);
@@ -3268,20 +3256,10 @@ typ_q2(void)
 	tmp = tv_pa010[idx];
 	state->typ_sub_else_add = (tmp >> 2) & 1;
 	state->typ_ovr_en = (tmp >> 1) & 1;
-#if 0
-	struct f181 f181h;
-	f181h.cmd = tmp & 0xf8;
-	f181h.ci = state->typ_com;
-	f181h.a = state->typ_a >> 32;
-	f181h.b = state->typ_b >> 32;
-	f181_alu(&f181h);
-	state->typ_coh = f181h.co;
-	state->typ_nalu |= ((uint64_t)f181h.o) << 32;
-#else
+
 	uint32_t o;
 	F181_ALU(tmp, state->typ_a >> 32, state->typ_b >> 32, state->typ_com, o, state->typ_coh);
 	state->typ_nalu |= ((uint64_t)o) << 32;
-#endif
 	state->typ_alu = ~state->typ_nalu;
 	state->typ_almsb = state->typ_alu >> 63ULL;
 
@@ -3795,36 +3773,17 @@ val_q2(void)
 
 	tmp = val_pa011[proma];
 	state->val_isbin = (tmp >> 1) & 1;
-#if 0
-	struct f181 f181l;
-	f181l.cmd = tmp & 0xf8;
-	f181l.ci = (val_pa011[proma] >> 2) & 1;	// ALU.C15
-	f181l.a = state->val_a & 0xffffffff;
-	f181l.b = state->val_b & 0xffffffff;
-	f181_alu(&f181l);
-	state->val_carry_middle = f181l.co;
-	state->val_nalu = f181l.o;
-#else
+
 	F181_ALU(tmp, state->val_a, state->val_b,(tmp >> 2) & 1, state->val_nalu, state->val_carry_middle);
-#endif
 
 	tmp = tv_pa010[proma];
 	state->val_ovren = (tmp >> 1) & 1;
 	state->val_sub_else_add = (tmp >> 2) & 1;
-#if 0
-	struct f181 f181h;
-	f181h.cmd = tmp & 0xf8;
-	f181h.ci = f181l.co;
-	f181h.a = state->val_a >> 32;
-	f181h.b = state->val_b >> 32;
-	f181_alu(&f181h);
-	state->val_coh = f181h.co;
-	state->val_nalu |= ((uint64_t)f181h.o) << 32;
-#else
+
 	uint32_t o;
 	F181_ALU(tmp, state->val_a >> 32, state->val_b >> 32, state->val_carry_middle, o, state->val_coh);
 	state->val_nalu |= ((uint64_t)o) << 32;
-#endif
+
 	state->val_alu = ~state->val_nalu;
 	state->val_cmsb = state->val_alu >> 63;
 	if (mp_adr_oe & 0x2) {

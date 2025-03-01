@@ -23,14 +23,6 @@ void pit_clock(void);
 
 double sc_now(void);
 
-struct f181 {
-	uint32_t	a, b, o;
-	unsigned	ci, co;
-	unsigned	cmd;	// s[4], m[1], 0[2], mag[1]
-};
-
-void f181_alu(struct f181 *);
-
 #define UEV_MEMEX	(1<<(15-0))
 #define UEV_ECC		(1<<(15-1))
 #define UEV_BKPT	(1<<(15-2))
