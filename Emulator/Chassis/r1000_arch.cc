@@ -419,7 +419,6 @@ struct r1000_arch_state {
 	unsigned typ_botreg;
 	bool typ_csa_hit;
 	bool typ_csa_write;
-	unsigned typ_badr;
 	unsigned typ_cadr;
 	bool typ_cond;
 	bool typ_almsb;
@@ -3121,7 +3120,7 @@ typ_find_a(void)
 	unsigned uira = UIR_TYP_A; // NB: inverted
 
 	if (uira >= 0x30) {							// 0x00…0x0f	GP0…GPF
-		state->typ_a = state->typ_rfram[uira & 0x1f];			// 90+% of cycles
+		state->typ_a = state->typ_rfram[uira & 0x1f];			// also most frequent
 		return;
 	}
 
@@ -3132,8 +3131,7 @@ typ_find_a(void)
 	}
 
 	if (uira == 0x2c) {							// 0x13		[LOOP]
-		unsigned typ_aadr = state->typ_count;
-		state->typ_a = state->typ_rfram[typ_aadr];
+		state->typ_a = state->typ_rfram[state->typ_count];
 		return;
 	}
 
@@ -3157,39 +3155,66 @@ typ_find_a(void)
 	unsigned typ_aadr = state->typ_frm << 5;				// 0x20…0x30	FRAME:REG
 	typ_aadr |= uira & 0x1f;
 	state->typ_a = state->typ_rfram[typ_aadr];
-	return;
 }
 
 void
 r1000_arch ::
 typ_find_b(void)
 {
-	unsigned uirb = UIR_TYP_B;
+	unsigned uirb = UIR_TYP_B; // NB: inverted
 
-	state->typ_badr = 0;
-	if (uirb == 0x2c) {
-		state->typ_badr = state->typ_count;
-	} else if (uirb <= 0x1f) {
-		state->typ_badr = state->typ_frm << 5;
-		state->typ_badr |= uirb & 0x1f;
-	} else if (uirb <= 0x27) {
-		state->typ_badr |= (uirb + state->typ_topreg + 1) & 0xf;
-	} else if (uirb <= 0x2b) {
-		unsigned csa = state->typ_botreg + (uirb&1);
-		if (!(uirb & 2)) {
-			csa += state->typ_csa_offset;
+	if (uirb >= 0x30) {							// 0x00…0x0f	GP0…GPF
+		state->typ_b = state->typ_rfram[uirb & 0x1f];			// also most frequent
+		return;
+	}
+
+	if (uirb >= 0x2d) {							// 0x10…0x12	TOP,TOP+1,SPARE
+		unsigned typ_badr = (uirb + state->typ_topreg + 1) & 0xf;
+		state->typ_b = state->typ_rfram[typ_badr];
+		return;
+	}
+
+	if (uirb == 0x2c) {							// 0x13		[LOOP]
+		state->typ_b = state->typ_rfram[state->typ_count];
+		return;
+	}
+
+	if (uirb >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
+		unsigned typ_badr = (state->typ_botreg + (uirb&1)) & 0xf;
+		state->typ_b = state->typ_rfram[typ_badr];
+		return;
+	}
+
+	if (uirb == 0x29) {							// 0x16		CSA/TYP_BUS
+		if (mp_typt_oe) {
+			state->typ_b = ~mp_typ_bus;
+		} else {
+			unsigned typ_badr = (state->typ_botreg + (uirb&1)) & 0xf;
+			typ_badr += state->typ_csa_offset;
+			typ_badr &= 0xf;
+			state->typ_b = state->typ_rfram[typ_badr];
 		}
-		state->typ_badr |= csa & 0xf;
-	} else if (uirb <= 0x2f) {
-		state->typ_badr |= (uirb + state->typ_topreg + 1) & 0xf;
-	} else {
-		state->typ_badr |= uirb & 0x1f;
+		return;
 	}
-	if (uirb == 0x29 && mp_typt_oe) {
-		state->typ_b = ~mp_typ_bus;
-	} else {
-		state->typ_b = state->typ_rfram[state->typ_badr];
+
+	if (uirb == 0x28) {							// 0x17		SPARE
+		unsigned typ_badr = (state->typ_botreg + (uirb&1)) & 0xf;
+		typ_badr += state->typ_csa_offset;
+		typ_badr &= 0xf;
+		state->typ_b = state->typ_rfram[typ_badr];
+		state->typ_b = ~0ULL;
+		return;
 	}
+
+	if (uirb >= 0x20) {							// 0x18…0x1f	TOP-8…TOP-1
+		unsigned typ_badr = (uirb + state->typ_topreg + 1) & 0xf;
+		state->typ_b = state->typ_rfram[typ_badr];
+		return;
+	}
+
+	unsigned typ_badr = state->typ_frm << 5;				// 0x20…0x30	FRAME:REG
+	typ_badr |= uirb & 0x1f;
+	state->typ_b = state->typ_rfram[typ_badr];
 }
 
 void
