@@ -23,15 +23,10 @@ void pit_clock(void);
 
 double sc_now(void);
 
-uint8_t odd_parity(uint8_t);
-uint8_t even_parity(uint8_t);
-uint8_t odd_parity64(uint64_t);
-uint8_t offset_parity(uint64_t);
-
 struct f181 {
 	uint32_t	a, b, o;
 	unsigned	ci, co;
-	unsigned	ctl;	// mag[1], m[1], s[4]
+	unsigned	cmd;	// s[4], m[1], 0[2], mag[1]
 };
 
 void f181_alu(struct f181 *);

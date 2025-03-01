@@ -1176,8 +1176,7 @@ fiu_q1(void)
 	state->fiu_prmt ^= 0x02;
 	state->fiu_prmt &= 0x7b;
 
-	unsigned mar_cntl = mp_mar_cntl;
-	bool rmarp = (mar_cntl & 0xe) == 0x4;
+	bool rmarp = (mp_mar_cntl & 0xe) == 0x4;
 	state->fiu_mem_start = UIR_FIU_MSTRT ^ 0x1e;
 
 	do_tivi();
@@ -1244,9 +1243,8 @@ fiu_q1(void)
 	}
 
 	bool pgmod = (state->fiu_omq >> 1) & 1;
-	unsigned board_hit = mp_mem_hit;
 	unsigned pa027a = 0;
-	pa027a |= board_hit << 5;
+	pa027a |= mp_mem_hit << 5;
 	pa027a |= state->fiu_init_mru_d << 4;
 	pa027a |= (state->fiu_omq & 0xc);
 	pa027a |= 1 << 1;
@@ -1257,7 +1255,7 @@ fiu_q1(void)
 	bool mnor0b = state->fiu_drive_mru || ((state->fiu_pa027d & 3) == 0);
 	bool mnan2a = !(mnor0b && state->fiu_logrw_d);
 	state->fiu_miss = !(
-		((board_hit != 0xf) && mnan2a) ||
+		((mp_mem_hit != 0xf) && mnan2a) ||
 		(state->fiu_logrw_d && state->fiu_csaht)
 	);
 	if (mp_refresh_count == 0xffff) {
@@ -3195,7 +3193,6 @@ typ_q2(void)
 		acond = false;
 	if (!divide && mp_q_bit)
 		acond = false;
-	struct f181 f181l, f181h;
 	unsigned tmp, idx, alurand, alufunc = UIR_TYP_AFNC;
 
 	if (state->typ_rand < 8) {
@@ -3209,27 +3206,43 @@ typ_q2(void)
 
 	tmp = typ_pa068[idx];
 	state->typ_is_binary = (tmp >> 1) & 1;
-	tmp >>= 3;
 
-	f181l.ctl = tmp >> 1;
-	f181l.ctl |= (tmp & 1) << 4;
-	f181l.ctl |= (state->typ_rand != 0xf) << 5;
+//if (state->typ_rand != 0xf) {
+	struct f181 f181l;
+	f181l.cmd = tmp & 0xf8;
+	f181l.cmd |= (state->typ_rand == 0xf);
 	f181l.ci = (typ_pa068[idx] >> 2) & 1;
 	f181l.a = state->typ_a & 0xffffffff;
 	f181l.b = state->typ_b & 0xffffffff;
 	f181_alu(&f181l);
 	state->typ_com = f181l.co;
 	state->typ_nalu = f181l.o;
+if (state->typ_rand == 0xf) {
+//} else {
+	uint32_t phk;
+	bool phkcy;
+	if (tmp >= 0xf0) {
+		phk = ~(state->typ_a + 0x80ULL);
+		phkcy = !!((phk ^ state->typ_a) & 0x80000000);
+	} else {
+		phk = ~(state->typ_a - 0x80ULL);
+		phkcy = !((phk ^ state->typ_a) & 0x80000000);
+	}
+	if (phk != f181l.o || phkcy != state->typ_com) {
+		printf("ID128 %016jx %02x %08x %x %08x %x\n", (uintmax_t)state->typ_a, tmp, f181l.o, state->typ_com, phk, phkcy);
+		assert(0);
+	}
+	state->typ_nalu = phk;
+	state->typ_com = phkcy;
+}
 
 	tmp = tv_pa010[idx];
 	state->typ_sub_else_add = (tmp >> 2) & 1;
 	state->typ_ovr_en = (tmp >> 1) & 1;
-	tmp >>= 3;
 
-	f181h.ctl = tmp >> 1;
-	f181h.ctl |= (tmp & 1) << 4;
-	f181h.ctl |= 1 << 5;
-	f181h.ci = f181l.co;
+	struct f181 f181h;
+	f181h.cmd = tmp & 0xf8;
+	f181h.ci = state->typ_com;
 	f181h.a = state->typ_a >> 32;
 	f181h.b = state->typ_b >> 32;
 	f181_alu(&f181h);
@@ -3747,11 +3760,9 @@ val_q2(void)
 		proma |= 0x100;
 	}
 
-	tmp = val_pa011[proma];			// S0-4.LOW
-	state->val_isbin = (tmp >> 1) & 1;			// IS_BINARY
-	f181l.ctl = (tmp >> 4) & 0xf;
-	f181l.ctl |= ((tmp >> 3) & 1) << 4;
-	f181l.ctl |= 1 << 5;
+	tmp = val_pa011[proma];
+	state->val_isbin = (tmp >> 1) & 1;
+	f181l.cmd = tmp & 0xf8;
 	f181l.ci = (val_pa011[proma] >> 2) & 1;	// ALU.C15
 	f181l.a = state->val_a & 0xffffffff;
 	f181l.b = state->val_b & 0xffffffff;
@@ -3759,12 +3770,10 @@ val_q2(void)
 	state->val_carry_middle = f181l.co;
 	state->val_nalu = f181l.o;
 
-	tmp = tv_pa010[proma];			// S0-4.HIGH
-	state->val_ovren = (tmp >> 1) & 1;			// OVR.EN~
-	state->val_sub_else_add = (tmp >> 2) & 1;			// SUB_ELSE_ADD
-	f181h.ctl = (tmp >> 4) & 0xf;
-	f181h.ctl |= ((tmp>>3) & 1) << 4;
-	f181h.ctl |= 1 << 5;
+	tmp = tv_pa010[proma];
+	state->val_ovren = (tmp >> 1) & 1;
+	state->val_sub_else_add = (tmp >> 2) & 1;
+	f181h.cmd = tmp & 0xf8;
 	f181h.ci = f181l.co;
 	f181h.a = state->val_a >> 32;
 	f181h.b = state->val_b >> 32;
