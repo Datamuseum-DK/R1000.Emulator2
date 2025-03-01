@@ -56,8 +56,7 @@ class r1000_arch {
 	bool b_op_pass(void);
 	bool clev(void);
 	bool typ_cond(void);
-	void typ_find_a(void);
-	void typ_find_b(void);
+	uint64_t typ_find_ab(unsigned uir, bool a);
 	void typ_h1(void);
 	void typ_q2(void);
 	void typ_q4(void);

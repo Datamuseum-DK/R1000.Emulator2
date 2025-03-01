@@ -3113,108 +3113,64 @@ typ_cond()
 	return (!state->typ_cond);
 }
 
-void
+uint64_t
 r1000_arch ::
-typ_find_a(void)
+typ_find_ab(unsigned uir, bool a)
 {
-	unsigned uira = UIR_TYP_A; // NB: inverted
+	// NB: uir is inverted
 
-	if (uira >= 0x30) {							// 0x00…0x0f	GP0…GPF
-		state->typ_a = state->typ_rfram[uira & 0x1f];			// also most frequent
-		return;
+	if (uir < 0x20) { // most frequent
+		return (state->typ_rfram[(state->typ_frm << 5) | (uir & 0x1f)]);	// 0x20…0x30	FRAME:REG
 	}
 
-	if (uira >= 0x2d) {							// 0x10…0x12	TOP,TOP+1,SPARE
-		unsigned typ_aadr = (uira + state->typ_topreg + 1) & 0xf;
-		state->typ_a = state->typ_rfram[typ_aadr];
-		return;
+	if (uir >= 0x30) { // second most frequent
+		return(state->typ_rfram[uir & 0x1f]); 					// 0x00…0x0f	GP0…GPF
 	}
 
-	if (uira == 0x2c) {							// 0x13		[LOOP]
-		state->typ_a = state->typ_rfram[state->typ_count];
-		return;
+	if (uir >= 0x2d) {								// 0x10…0x12	TOP,TOP+1,SPARE
+		unsigned adr = (uir + state->typ_topreg + 1) & 0xf;
+		return (state->typ_rfram[adr]);
 	}
 
-	if (uira >= 0x29) {							// 0x14…0x16	ZERO,SPARE,SPARE
-		state->typ_a = ~0ULL;
-		return;
+	if (uir == 0x2c) {								// 0x13		[LOOP]
+		return(state->typ_rfram[state->typ_count]);
 	}
 
-	if (uira == 0x28) {							// 0x17		LOOP
-		state->typ_a = ~0ULL << 10;
-		state->typ_a |= state->typ_count;
-		return;
+	if (a && uir >= 0x29) {								// 0x14…0x16	ZERO,SPARE,SPARE
+		return(~0ULL);
 	}
 
-	if (uira >= 0x20) {							// 0x18…0x1f	TOP-8…TOP-1
-		unsigned typ_aadr = (uira + state->typ_topreg + 1) & 0xf;
-		state->typ_a = state->typ_rfram[typ_aadr];
-		return;
+	if (a && uir == 0x28) {								// 0x17		LOOP
+		return ((~0ULL << 10) | state->typ_count);
 	}
 
-	unsigned typ_aadr = state->typ_frm << 5;				// 0x20…0x30	FRAME:REG
-	typ_aadr |= uira & 0x1f;
-	state->typ_a = state->typ_rfram[typ_aadr];
-}
-
-void
-r1000_arch ::
-typ_find_b(void)
-{
-	unsigned uirb = UIR_TYP_B; // NB: inverted
-
-	if (uirb >= 0x30) {							// 0x00…0x0f	GP0…GPF
-		state->typ_b = state->typ_rfram[uirb & 0x1f];			// also most frequent
-		return;
+	if (!a && uir >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
+		unsigned adr = (state->typ_botreg + (uir&1)) & 0xf;
+		return(state->typ_rfram[adr]);
 	}
 
-	if (uirb >= 0x2d) {							// 0x10…0x12	TOP,TOP+1,SPARE
-		unsigned typ_badr = (uirb + state->typ_topreg + 1) & 0xf;
-		state->typ_b = state->typ_rfram[typ_badr];
-		return;
-	}
-
-	if (uirb == 0x2c) {							// 0x13		[LOOP]
-		state->typ_b = state->typ_rfram[state->typ_count];
-		return;
-	}
-
-	if (uirb >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
-		unsigned typ_badr = (state->typ_botreg + (uirb&1)) & 0xf;
-		state->typ_b = state->typ_rfram[typ_badr];
-		return;
-	}
-
-	if (uirb == 0x29) {							// 0x16		CSA/TYP_BUS
+	if (!a && uir == 0x29) {							// 0x16		CSA/TYP_BUS
 		if (mp_typt_oe) {
-			state->typ_b = ~mp_typ_bus;
+			return (~mp_typ_bus);
 		} else {
-			unsigned typ_badr = (state->typ_botreg + (uirb&1)) & 0xf;
-			typ_badr += state->typ_csa_offset;
-			typ_badr &= 0xf;
-			state->typ_b = state->typ_rfram[typ_badr];
+			unsigned adr = (state->typ_botreg + (uir&1)) & 0xf;
+			adr += state->typ_csa_offset;
+			adr &= 0xf;
+			return(state->typ_rfram[adr]);
 		}
-		return;
 	}
 
-	if (uirb == 0x28) {							// 0x17		SPARE
-		unsigned typ_badr = (state->typ_botreg + (uirb&1)) & 0xf;
-		typ_badr += state->typ_csa_offset;
-		typ_badr &= 0xf;
-		state->typ_b = state->typ_rfram[typ_badr];
-		state->typ_b = ~0ULL;
-		return;
+	if (!a && uir == 0x28) {							// 0x17		SPARE
+		return (~0ULL);
 	}
 
-	if (uirb >= 0x20) {							// 0x18…0x1f	TOP-8…TOP-1
-		unsigned typ_badr = (uirb + state->typ_topreg + 1) & 0xf;
-		state->typ_b = state->typ_rfram[typ_badr];
-		return;
+	if (uir >= 0x20) {								// 0x18…0x1f	TOP-8…TOP-1
+		unsigned adr = (uir + state->typ_topreg + 1) & 0xf;
+		return (state->typ_rfram[adr]);
 	}
 
-	unsigned typ_badr = state->typ_frm << 5;				// 0x20…0x30	FRAME:REG
-	typ_badr |= uirb & 0x1f;
-	state->typ_b = state->typ_rfram[typ_badr];
+	assert(false);
+	return (state->typ_rfram[(state->typ_frm << 5) | (uir & 0x1f)]);		// 0x20…0x30	FRAME:REG
 }
 
 void
@@ -3227,11 +3183,11 @@ typ_h1(void)
 	unsigned marctl = UIR_TYP_MCTL;
 
 	if (mp_fiu_oe == 0x4) {
-		typ_find_a();
+		state->typ_a = typ_find_ab(UIR_TYP_A, true);
 		mp_fiu_bus = ~state->typ_a;
 	}
 	if (!mp_typt_oe) {
-		typ_find_b();
+		state->typ_b = typ_find_ab(UIR_TYP_B, false);
 		mp_typ_bus = ~state->typ_b;
 	}
 	// typ_cond(mp_cond_sel);
@@ -3239,7 +3195,7 @@ typ_h1(void)
 		if (marctl & 0x8) {
 			mp_spc_bus = (marctl & 0x7) ^ 0x7;
 		} else {
-			typ_find_b();
+			state->typ_b = typ_find_ab(UIR_TYP_B, false);
 			mp_spc_bus = (state->typ_b & 0x7) ^ 0x7;
 		}
 	}
@@ -3253,10 +3209,10 @@ typ_q2(void)
 
 	unsigned priv_check = UIR_TYP_UPVC;
 	if (mp_fiu_oe != 0x4) {
-		typ_find_a();
+		state->typ_a = typ_find_ab(UIR_TYP_A, true);
 	}
 	if (mp_typt_oe) {
-		typ_find_b();
+		state->typ_b = typ_find_ab(UIR_TYP_B, false);
 	}
 	state->typ_wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
 	if (mp_csa_write_enable && uirc != 0x28)
