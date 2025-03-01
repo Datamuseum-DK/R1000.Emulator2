@@ -419,7 +419,6 @@ struct r1000_arch_state {
 	unsigned typ_botreg;
 	bool typ_csa_hit;
 	bool typ_csa_write;
-	unsigned typ_aadr;
 	unsigned typ_badr;
 	unsigned typ_cadr;
 	bool typ_cond;
@@ -3119,28 +3118,46 @@ void
 r1000_arch ::
 typ_find_a(void)
 {
-	unsigned uira = UIR_TYP_A;
-	if (uira == 0x28) {
+	unsigned uira = UIR_TYP_A; // NB: inverted
+
+	if (uira >= 0x30) {							// 0x00…0x0f	GP0…GPF
+		state->typ_a = state->typ_rfram[uira & 0x1f];			// 90+% of cycles
+		return;
+	}
+
+	if (uira >= 0x2d) {							// 0x10…0x12	TOP,TOP+1,SPARE
+		unsigned typ_aadr = (uira + state->typ_topreg + 1) & 0xf;
+		state->typ_a = state->typ_rfram[typ_aadr];
+		return;
+	}
+
+	if (uira == 0x2c) {							// 0x13		[LOOP]
+		unsigned typ_aadr = state->typ_count;
+		state->typ_a = state->typ_rfram[typ_aadr];
+		return;
+	}
+
+	if (uira >= 0x29) {							// 0x14…0x16	ZERO,SPARE,SPARE
+		state->typ_a = ~0ULL;
+		return;
+	}
+
+	if (uira == 0x28) {							// 0x17		LOOP
 		state->typ_a = ~0ULL << 10;
 		state->typ_a |= state->typ_count;
 		return;
 	}
-	if ((uira & 0x3c) == 0x28) {
-		state->typ_a = ~0ULL;
+
+	if (uira >= 0x20) {							// 0x18…0x1f	TOP-8…TOP-1
+		unsigned typ_aadr = (uira + state->typ_topreg + 1) & 0xf;
+		state->typ_a = state->typ_rfram[typ_aadr];
 		return;
 	}
-	state->typ_aadr = 0;
-	if (uira == 0x2c) {
-		state->typ_aadr = state->typ_count;
-	} else if (uira <= 0x1f) {
-		state->typ_aadr = state->typ_frm << 5;
-		state->typ_aadr |= uira & 0x1f;
-	} else if (uira <= 0x2f) {
-		state->typ_aadr |= (uira + state->typ_topreg + 1) & 0xf;
-	} else {
-		state->typ_aadr |= uira & 0x1f;
-	}
-	state->typ_a = state->typ_rfram[state->typ_aadr];
+
+	unsigned typ_aadr = state->typ_frm << 5;				// 0x20…0x30	FRAME:REG
+	typ_aadr |= uira & 0x1f;
+	state->typ_a = state->typ_rfram[typ_aadr];
+	return;
 }
 
 void
