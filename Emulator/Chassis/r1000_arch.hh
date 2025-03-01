@@ -66,8 +66,8 @@ class r1000_arch {
 	bool ovrsgn(void);
 	bool val_cond(void);
 	bool fiu_cond(void);
-	void val_find_a(void);
-	void val_find_b(void);
+	uint64_t val_find_ab(unsigned uir, bool a);
+	uint64_t val_find_b(unsigned uir);
 	void val_h1(void);
 	void val_q2(void);
 	void val_q4(void);
