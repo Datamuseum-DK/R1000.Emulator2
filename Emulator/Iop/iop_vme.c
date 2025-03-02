@@ -28,7 +28,7 @@ vme_window_pre_read(int debug, uint8_t *space, unsigned width, unsigned adr)
 	map = vbe16dec(resha_misc_space + 0xa) & 0x7ff;
 	data = vbe16dec(enp100ram + (map<<10) + adr);
 	vbe16enc(space + adr, data);
-	Trace(1, "VME RD %d %08x %08x %04x", width, map, adr, data);
+	Trace(trace_ioc_vme, "VME RD %d %08x %08x %04x", width, map, adr, data);
 
 	(void)debug;
 	(void)space;
@@ -47,7 +47,7 @@ vme_window_post_write(int debug, uint8_t *space, unsigned width, unsigned adr)
 	// assert(width == 2);
 	map = vbe16dec(resha_misc_space + 0xa) & 0x7ff;
 	data = vbe16dec(space + adr);
-	Trace(1, "VME WR %d %08x %08x %04x", width, map, adr, data);
+	Trace(trace_ioc_vme, "VME WR %d %08x %08x %04x", width, map, adr, data);
 	vbe16enc(enp100ram + adr + (map<<10), data);
 
 	(void)debug;

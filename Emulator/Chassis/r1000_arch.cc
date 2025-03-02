@@ -2034,25 +2034,25 @@ q3clockstop(void)
 		state->seq_diag |= 0x02;
 		// output.freze = 1;
 		mp_sync_freeze |= 2;
-		ALWAYS_TRACE(<< "THAW1 " << state->seq_diag << " " << mp_sync_freeze);
+		// ALWAYS_TRACE(<< "THAW1 " << state->seq_diag << " " << mp_sync_freeze);
 	} else if (!mp_fiu_freeze && (state->seq_diag & 0x2) && !(state->seq_diag & 0x4)) {
 		state->seq_diag |= 0x04;
 		// output.sync = 1;
 		mp_sync_freeze |= 4;
-		ALWAYS_TRACE(<< "THAW2 " << state->seq_diag << " " << mp_sync_freeze);
+		// ALWAYS_TRACE(<< "THAW2 " << state->seq_diag << " " << mp_sync_freeze);
 	} else if (!mp_fiu_freeze && (state->seq_diag & 0x2) && (state->seq_diag & 0x4)) {
 		state->seq_diag &= ~0x02;
 		// output.freze = 0;
 		mp_sync_freeze &= ~2;
 		state->seq_countdown = 5;
-		ALWAYS_TRACE(<< "THAW3 " << (state->seq_diag & 0x2) << " " << mp_sync_freeze << " " << state->seq_countdown);
+		// ALWAYS_TRACE(<< "THAW3 " << (state->seq_diag & 0x2) << " " << mp_sync_freeze << " " << state->seq_countdown);
 	} else if (!mp_fiu_freeze && !(state->seq_diag & 0x2) && (state->seq_diag & 0x4)) {
 		if (--state->seq_countdown == 0) {
 			// output.sync = 0;
 			state->seq_diag &= ~0x04;
 			mp_sync_freeze &= ~4;
 		}
-		ALWAYS_TRACE(<< "THAW4 " <<  state->seq_diag << " " << mp_sync_freeze << " " << state->seq_countdown);
+		// ALWAYS_TRACE(<< "THAW4 " <<  state->seq_diag << " " << mp_sync_freeze << " " << state->seq_countdown);
 	}
 
 	state->seq_sf_stop = !(state->seq_diag == 0);
@@ -2490,7 +2490,8 @@ seq_q4(void)
 		state->seq_late_macro_event = !(sclke || !(state->seq_macro_event && !state->seq_early_macro_pending));
 		if (!mp_seq_halted) {
 			mp_seq_halted = !(sclke || RNDX(RND_HALT));
-			if (mp_seq_halted) ALWAYS_TRACE(<< "THAW HALTED");
+			if (mp_seq_halted)
+				printf("SEQ HALTED\n");
 		}
 		state->seq_early_macro_pending = mp_macro_event != 0;
 		state->seq_emac = mp_macro_event ^ 0x7f;
@@ -3259,45 +3260,42 @@ typ_q4(void)
 	bool clo = false;
 	unsigned priv_check = UIR_TYP_UPVC;
 
-	if (!mp_sf_stop) {
-		mp_nxt_csa_write_enable = !(mp_csa_hit || mp_csa_wr);
-	}
-
-	bool c_source = UIR_TYP_CSRC;
-	bool fiu0, fiu1;
-	fiu0 = c_source;
-	fiu1 = c_source == (state->typ_rand != 0x3);
-
-	bool sel = UIR_TYP_SEL;
-
-	if (!fiu0) {
-		c |= ~mp_fiu_bus & 0xffffffff00000000ULL;
-		chi = true;
-	} else {
-		if (sel) {
-			c |= state->typ_wdr & 0xffffffff00000000ULL;
-		} else {
-			c |= state->typ_alu & 0xffffffff00000000ULL;
-		}
-		chi = true;
-	}
-	if (!fiu1) {
-		c |= ~mp_fiu_bus & 0xffffffffULL;
-		clo = true;
-	} else {
-		if (sel) {
-			c |= state->typ_wdr & 0xffffffffULL;
-		} else {
-			c |= state->typ_alu & 0xffffffffULL;
-		}
-		clo = true;
-	}
-	if (chi && !clo)
-		c |= 0xffffffff;
-	if (!chi && clo)
-		c |= 0xffffffffULL << 32;
-
         if (mp_ram_stop && !mp_freeze) {
+
+		bool c_source = UIR_TYP_CSRC;
+		bool fiu0, fiu1;
+		fiu0 = c_source;
+		fiu1 = c_source == (state->typ_rand != 0x3);
+
+		bool sel = UIR_TYP_SEL;
+
+		if (!fiu0) {
+			c |= ~mp_fiu_bus & 0xffffffff00000000ULL;
+			chi = true;
+		} else {
+			if (sel) {
+				c |= state->typ_wdr & 0xffffffff00000000ULL;
+			} else {
+				c |= state->typ_alu & 0xffffffff00000000ULL;
+			}
+			chi = true;
+		}
+		if (!fiu1) {
+			c |= ~mp_fiu_bus & 0xffffffffULL;
+			clo = true;
+		} else {
+			if (sel) {
+				c |= state->typ_wdr & 0xffffffffULL;
+			} else {
+				c |= state->typ_alu & 0xffffffffULL;
+			}
+			clo = true;
+		}
+		if (chi && !clo)
+			c |= 0xffffffff;
+		if (!chi && clo)
+			c |= 0xffffffffULL << 32;
+
 		unsigned cadr = tv_cadr(UIR_TYP_C, UIR_TYP_FRM, state->typ_count);
 		if (cadr < 0x400)
 			state->typ_rfram[cadr] = c;
@@ -3333,6 +3331,7 @@ typ_q4(void)
 		mp_nxt_mar_cntl = UIR_TYP_MCTL;
 		mp_nxt_csa_cntl = UIR_TYP_CCTL;
 		mp_nxt_csa_offset = mp_csa_this_offs;
+		mp_nxt_csa_write_enable = !(mp_csa_hit || mp_csa_wr);
 	}
 }
 
@@ -3467,12 +3466,8 @@ fiu_cond(void)
 		fcond = state->val_last_cond;
 		break;
 	default:
-		ALWAYS_TRACE(
-			<< std::hex << "BAD FIUCOND"
-			<< " csel " << csel
-		);
 		fcond = true;
-		// assert(false);
+		assert(false);
 		break;
 	}
 	return (!fcond);
@@ -3573,6 +3568,8 @@ val_q2(void)
 		mp_adr_bus = ~alu;
 	}
 
+if (0)
+{
 	uint64_t fiu = 0, mux = 0;
 	bool c_source = UIR_VAL_CSRC;
 	bool split_c_src = state->val_rand == 0x4;
@@ -3614,6 +3611,7 @@ val_q2(void)
 		state->val_c |= fiu & 0xffffffffULL << 32;
 	}
 }
+}
 
 void
 r1000_arch ::
@@ -3621,6 +3619,48 @@ val_q4(void)
 {
 
         if (mp_ram_stop && !mp_freeze) {
+{
+	uint64_t fiu = 0, mux = 0;
+	bool c_source = UIR_VAL_CSRC;
+	bool split_c_src = state->val_rand == 0x4;
+	if (split_c_src || !c_source) {
+		fiu = ~mp_fiu_bus;
+	}
+	if (!c_source && (state->val_rand == 3 || state->val_rand == 6)) {
+		fiu &= ~1ULL;
+		fiu |= fiu_cond();
+	}
+	if (c_source || split_c_src) {
+		unsigned sel = UIR_VAL_SEL;
+		switch (sel) {
+		case 0x0:
+			mux = state->val_alu << 1;
+			mux |= 1;
+			break;
+		case 0x1:
+			mux = state->val_alu >> 16;
+			mux |= 0xffffULL << 48;
+			break;
+		case 0x2:
+			mux = state->val_alu;
+			break;
+		case 0x3:
+			mux = state->val_wdr;
+			break;
+		}
+	}
+	if (!split_c_src && !c_source) {
+		state->val_c = fiu;
+	} else if (!split_c_src) {
+		state->val_c = mux;
+	} else if (c_source) {
+		state->val_c = fiu & 0xffffffffULL;
+		state->val_c |= mux & 0xffffffffULL << 32;
+	} else {
+		state->val_c = mux & 0xffffffffULL;
+		state->val_c |= fiu & 0xffffffffULL << 32;
+	}
+}
 		uint32_t a;
 		switch (state->val_msrc >> 2) {
 		case 0: a = (state->val_malat >> 48) & 0xffff; break;
@@ -3682,16 +3722,34 @@ r1000_arch ::
 tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rf)
 {
 	// NB: uir is inverted
+	// Sorted after frequency of use.
 
 	if (uir >= 0x30) { // very frequent
 		return(rf[uir & 0x1f]); 						// 0x00…0x0f	GP0…GPF
 	}
 
 	if (uir < 0x20) { // very frequent
-		return (rf [(frame << 5) | (uir & 0x1f)]);			// 0x20…0x30	FRAME:REG
+		return (rf [(frame << 5) | (uir & 0x1f)]);				// 0x20…0x30	FRAME:REG
 	}
 
 	if (uir >= 0x2d) {								// 0x10…0x12	TOP,TOP+1,SPARE
+		return (rf[(uir + state->csa_topreg + 1) & 0xf]);
+	}
+
+        if (!a && uir == 0x29) {							// 0x16		CSA/VAL_BUS
+		if ((!t) && mp_valv_oe) {
+			return (~mp_val_bus);
+		} else if ((t) && mp_typt_oe) {
+			return (~mp_typ_bus);
+		} else {
+			unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
+			adr += mp_csa_offset;
+			adr &= 0xf;
+			return(rf[adr]);
+		}
+	}
+
+	if (0x20 <= uir && uir <= 0x27) {						// 0x18…0x1f	TOP-8…TOP-1
 		return (rf[(uir + state->csa_topreg + 1) & 0xf]);
 	}
 
@@ -3740,26 +3798,11 @@ tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rf)
 		return(rf[adr]);
 	}
 
-        if (!a && uir == 0x29) {							// 0x16		CSA/VAL_BUS
-		if ((!t) && mp_valv_oe) {
-			return (~mp_val_bus);
-		} else if ((t) && mp_typt_oe) {
-			return (~mp_typ_bus);
-		} else {
-			unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
-			adr += mp_csa_offset;
-			adr &= 0xf;
-			return(rf[adr]);
-		}
-	}
 
         if (!a && uir == 0x28) {							// 0x17		SPARE
 		return(~0ULL);
 	}
 
-	if (uir >= 0x20) {								// 0x18…0x1f	TOP-8…TOP-1
-		return (rf[(uir + state->csa_topreg + 1) & 0xf]);
-	}
 	assert(0);
 }
 
@@ -3842,20 +3885,20 @@ ioc_do_xact(void)
 	if (state->ioc_xact->sc_state == 200 && state->ioc_xact->address == 0xfffff100) {
 		/* READ GET REQUEST */
 		state->ioc_xact->data = state->ioc_reqreg;
-		TRACE("RD FIFO GET REQUEST " << std::hex << state->ioc_xact->data);
+		// TRACE("RD FIFO GET REQUEST " << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff200) {
 		/* WRITE FRONT PANEL */
-		TRACE("WR FP " << std::hex << state->ioc_xact->data);
+		// TRACE("WR FP " << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff300) {
 		/* WRITE SENSE TEST */
-		TRACE("WR SENSE TEST " << std::hex << state->ioc_xact->data);
+		// TRACE("WR SENSE TEST " << std::hex << state->ioc_xact->data);
 		state->ioc_request_int_en = (state->ioc_xact->data >> 1) & 1;
 		state->ioc_response_int_en = (state->ioc_xact->data >> 0) & 1;
 		ioc_sc_bus_done(&state->ioc_xact);
@@ -3863,14 +3906,14 @@ ioc_do_xact(void)
 	}
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff400) {
 		/* WRITE CONTROL */
-		TRACE("WR CONTROL " << std::hex << state->ioc_xact->data);
+		// TRACE("WR CONTROL " << std::hex << state->ioc_xact->data);
 		state->ioc_fffff400 = (state->ioc_xact->data >> 16) & 0xf;
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff500) {
 		/* WRITE FIFO INIT */
-		TRACE("WR FIFO INIT " << std::hex << state->ioc_xact->data);
+		// TRACE("WR FIFO INIT " << std::hex << state->ioc_xact->data);
 		state->ioc_reqwrp = state->ioc_reqrdp = 0;
 		state->ioc_rspwrp = state->ioc_rsprdp = 0;
 		ioc_sc_bus_done(&state->ioc_xact);
@@ -3879,15 +3922,17 @@ ioc_do_xact(void)
 
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff600) {
 		/* WRITE FIFO CPU RSP */
-		TRACE("WR FIFO CPU RSP " << std::hex << state->ioc_xact->data);
+		// TRACE("WR FIFO CPU RSP " << std::hex << state->ioc_xact->data);
 		state->ioc_rspfifo[state->ioc_rspwrp++] = state->ioc_xact->data;
 		state->ioc_rspwrp &= 0x3ff;
 
+#if 0
 		TRACE(
 			"WR FIFO RSP " << std::hex << state->ioc_xact->data
 			<< " wr " << state->ioc_rspwrp
 			<< " rd " << state->ioc_rsprdp
 		);
+#endif
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
@@ -3896,11 +3941,13 @@ ioc_do_xact(void)
 		/* WRITE CPU REQUEST */
 		state->ioc_reqreg = state->ioc_reqfifo[state->ioc_reqrdp++];
 		state->ioc_reqrdp &= 0x3ff;
+#if 0
 		TRACE(
 			"WR FIFO CPU REQUEST " << std::hex << state->ioc_reqreg
 				<< " wr " << state->ioc_reqwrp
 				<< " rd " << state->ioc_reqrdp
 		);
+#endif
 
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
@@ -3921,29 +3968,30 @@ ioc_do_xact(void)
 		if (!mp_key_switch)		state->ioc_xact->data |= 0x00000008;
 		state->ioc_xact->data |= state->ioc_iack << 0;
 
-		TRACE("RD STATUS " << std::hex << state->ioc_xact->data);
+		//TRACE("RD STATUS " << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff900) {
 		/* WRITE CLEAR BERR */
-		TRACE("WR CLEAR BERR " << std::hex << state->ioc_xact->data);
+		//TRACE("WR CLEAR BERR " << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffffe00) {
 		/* WRITE CPU CONTROL */
-		TRACE("WR CPU CONTROL " << std::hex << state->ioc_xact->data);
+		//TRACE("WR CPU CONTROL " << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffffd00) {
-		TRACE("WR fffffd00" << std::hex << state->ioc_xact->data);
+		//TRACE("WR fffffd00" << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 
+#if 0
 	TRACE(
 		<< "BXPA state= "
 		<< state->ioc_xact->sc_state
@@ -3956,6 +4004,7 @@ ioc_do_xact(void)
 		<< " write= "
 		<< state->ioc_xact->is_write
 	);
+#endif
 }
 
 bool
@@ -4063,17 +4112,16 @@ void
 r1000_arch ::
 ioc_q4(void)
 {
-	bool sclk_pos = mp_clock_stop;
 	unsigned rand = UIR_IOC_RAND;
 
 	if (mp_ioc_trace && ((mp_sync_freeze & 0x3) == 0) && !state->ioc_is_tracing) {
 		state->ioc_is_tracing = true;
-		ALWAYS_TRACE(<< " IS TRACING");
+		// ALWAYS_TRACE(<< " IS TRACING");
 	}
 	if (mp_ioc_trace && (mp_sync_freeze & 0x3) && state->ioc_is_tracing) {
 		state->ioc_is_tracing = true;
 		mp_ioc_trace = 0;
-		ALWAYS_TRACE(<< " STOP TRACING");
+		// ALWAYS_TRACE(<< " STOP TRACING");
 	}
 
 	if ((state->ioc_request_int_en && state->ioc_reqrdp != state->ioc_reqwrp) && state->ioc_iack != 6) {
@@ -4087,7 +4135,7 @@ ioc_q4(void)
 
 	ioc_do_xact();
 
-	if (sclk_pos) {
+	if (mp_clock_stop) {
 		unsigned adr = (state->ioc_areg | state->ioc_acnt) << 2;
 		assert(adr < (512<<10));
 
@@ -4184,7 +4232,7 @@ ioc_q4(void)
 		state->ioc_csa_hit = !mp_csa_hit;
 
 		uint16_t tdat = mp_nua_bus;
-		if (!sclk_pos)
+		if (!mp_clock_stop)
 			tdat |= 0x8000;
 		if (state->ioc_csa_hit)
 			tdat |= 0x4000;

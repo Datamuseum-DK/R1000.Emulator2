@@ -89,28 +89,6 @@ MIDSTATE(DMACRO)
 #undef DMACRO
 }
 
-
-void
-sysc_trace(const char *me, const char *fmt)
-{
-	uintmax_t now = (uintmax_t)sc_now();
-
-	Trace(trace_systemc, "SC %3ju %12ju %s %s", now % 200, now, me, fmt);
-}
-
-void
-sc_tracef(const char *me, const char *fmt, ...)
-{
-	va_list ap;
-	char buf[BUFSIZ];
-	uintmax_t now = (uintmax_t)sc_now();
-
-	bprintf(buf, "SC %3ju %12ju %s ", now % 200, now, me);
-	va_start(ap, fmt);
-	Tracev(trace_systemc, buf, fmt, ap);
-	va_end(ap);
-}
-
 void
 should_i_trace(const char *me, uint32_t *p)
 {
