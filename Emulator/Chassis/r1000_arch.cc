@@ -427,7 +427,6 @@ struct r1000_arch_state {
 	uint64_t *typ_wcsram;
 	uint64_t typ_uir;
 	unsigned typ_rand;
-	unsigned typ_frm;
 
 #define UIR_TYP_A		((state->typ_uir >> 41) & 0x3f)
 #define UIR_TYP_B		((state->typ_uir >> 35) & 0x3f)
@@ -3103,89 +3102,29 @@ typ_cond()
 	return (!state->typ_cond);
 }
 
-uint64_t
-r1000_arch ::
-typ_find_ab(unsigned uir, bool a)
-{
-	// NB: uir is inverted
-
-	if (uir >= 0x30) { // very frequent
-		return(state->typ_rfram[uir & 0x1f]); 					// 0x00…0x0f	GP0…GPF
-	}
-
-	if (uir < 0x20) { // very frequent
-		return (state->typ_rfram[(state->typ_frm << 5) | (uir & 0x1f)]);	// 0x20…0x30	FRAME:REG
-	}
-
-	if (uir >= 0x2d) {								// 0x10…0x12	TOP,TOP+1,SPARE
-		unsigned adr = (uir + state->csa_topreg + 1) & 0xf;
-		return (state->typ_rfram[adr]);
-	}
-
-	if (uir == 0x2c) {								// 0x13		[LOOP]
-		return(state->typ_rfram[state->typ_count]);
-	}
-
-	if (a && uir >= 0x29) {								// 0x14…0x16	ZERO,SPARE,SPARE
-		return(~0ULL);
-	}
-
-	if (a && uir == 0x28) {								// 0x17		LOOP
-		return ((~0ULL << 10) | state->typ_count);
-	}
-
-	if (!a && uir >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
-		unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
-		return(state->typ_rfram[adr]);
-	}
-
-	if (!a && uir == 0x29) {							// 0x16		CSA/TYP_BUS
-		if (mp_typt_oe) {
-			return (~mp_typ_bus);
-		} else {
-			unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
-			adr += mp_csa_offset;
-			adr &= 0xf;
-			return(state->typ_rfram[adr]);
-		}
-	}
-
-	if (!a && uir == 0x28) {							// 0x17		SPARE
-		return (~0ULL);
-	}
-
-	if (uir >= 0x20) {								// 0x18…0x1f	TOP-8…TOP-1
-		unsigned adr = (uir + state->csa_topreg + 1) & 0xf;
-		return (state->typ_rfram[adr]);
-	}
-
-	assert(false);
-	return (state->typ_rfram[(state->typ_frm << 5) | (uir & 0x1f)]);		// 0x20…0x30	FRAME:REG
-}
 
 void
 r1000_arch ::
 typ_h1(void)
 {
 	state->typ_rand = UIR_TYP_RAND;
-	state->typ_frm = UIR_TYP_FRM;
 
 	unsigned marctl = UIR_TYP_MCTL;
 
 	if (mp_fiu_oe == 0x4) {
-		state->typ_a = typ_find_ab(UIR_TYP_A, true);
+		state->typ_a = tv_find_ab(UIR_TYP_A, UIR_TYP_FRM, true, true, state->typ_rfram);
 		mp_fiu_bus = ~state->typ_a;
 	}
 	if (!mp_typt_oe) {
-		state->typ_b = typ_find_ab(UIR_TYP_B, false);
+		state->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
 		mp_typ_bus = ~state->typ_b;
 	}
-	// typ_cond(mp_cond_sel);
+
 	if (mp_adr_oe & 0x6) {
 		if (marctl & 0x8) {
 			mp_spc_bus = (marctl & 0x7) ^ 0x7;
 		} else {
-			state->typ_b = typ_find_ab(UIR_TYP_B, false);
+			state->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
 			mp_spc_bus = (state->typ_b & 0x7) ^ 0x7;
 		}
 	}
@@ -3198,10 +3137,10 @@ typ_q2(void)
 
 	unsigned priv_check = UIR_TYP_UPVC;
 	if (mp_fiu_oe != 0x4) {
-		state->typ_a = typ_find_ab(UIR_TYP_A, true);
+		state->typ_a = tv_find_ab(UIR_TYP_A, UIR_TYP_FRM, true, true, state->typ_rfram);
 	}
 	if (mp_typt_oe) {
-		state->typ_b = typ_find_ab(UIR_TYP_B, false);
+		state->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
 	}
 
 	bool divide = state->typ_rand != 0xb;
@@ -3543,89 +3482,12 @@ uint64_t
 r1000_arch ::
 val_find_b(unsigned uir)
 {
-	uint64_t retval = val_find_ab(uir, false);
+	uint64_t retval = tv_find_ab(uir, UIR_VAL_FRM, false, false, state->val_rfram);
         if (state->val_rand == 0x6) {		// "IMMEDIATE_OP"
 		retval &= ~0xffULL;
 		retval |= ~mp_val_bus & 0xffULL;
 	}
 	return (retval);
-}
-
-uint64_t
-r1000_arch ::
-val_find_ab(unsigned uir, bool a)
-{
-	// NB: uir is inverted
-
-	if (uir >= 0x30) { // very frequent
-		return(state->val_rfram[uir & 0x1f]); 					// 0x00…0x0f	GP0…GPF
-	}
-
-	if (uir < 0x20) { // very frequent
-		return (state->val_rfram[(UIR_VAL_FRM << 5) | (uir & 0x1f)]);		// 0x20…0x30	FRAME:REG
-	}
-
-	if (uir >= 0x2d) {								// 0x10…0x12	TOP,TOP+1,SPARE
-		unsigned adr = (uir + state->csa_topreg + 1) & 0xf;
-		return (state->val_rfram[adr]);
-	}
-
-	if (uir == 0x2c) {								// 0x13		[LOOP]
-		return(state->val_rfram[state->val_count]);
-	}
-
-	if (a && uir == 0x2b) {								// 0x14		ZEROS
-		return(~0ULL);
-	}
-
-	if (a && uir == 0x2a) {								// 0x15		ZERO_COUNTER
-		return(state->val_zerocnt);
-	}
-
-	if (a && uir == 0x29) {								// 0x16		PRODUCT
-		unsigned mdst;
-		bool prod_16 = state->val_rand != 0xd;
-		bool prod_32 = state->val_rand != 0xe;
-		mdst = prod_32 << 1;
-		mdst |= prod_16;
-		switch(mdst) {
-		case 0: state->val_a = 0; break;
-		case 1: state->val_a = state->val_mprod << 32; break;
-		case 2: state->val_a = state->val_mprod << 16; break;
-		case 3: state->val_a = state->val_mprod <<  0; break;
-		}
-		return (~state->val_a);
-	}
-
-	if (a && uir == 0x28) {								// 0x17		LOOP
-		return ((~0ULL << 10) | state->val_count);
-	}
-
-        if (!a && uir >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
-		unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
-		return(state->val_rfram[adr]);
-	}
-
-        if (!a && uir == 0x29) {							// 0x16		CSA/VAL_BUS
-		if (mp_valv_oe) {
-			return (~mp_val_bus);
-		} else {
-			unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
-			adr += mp_csa_offset;
-			adr &= 0xf;
-			return(state->val_rfram[adr]);
-		}
-	}
-
-        if (!a && uir == 0x28) {							// 0x17		SPARE
-		return(~0ULL);
-	}
-
-	if (uir >= 0x20) {								// 0x18…0x1f	TOP-8…TOP-1
-		unsigned adr = (uir + state->csa_topreg + 1) & 0xf;
-		return (state->val_rfram[adr]);
-	}
-	assert(0);
 }
 
 void
@@ -3634,7 +3496,7 @@ val_h1(void)
 {
 	state->val_rand = UIR_VAL_RAND;
 	if (mp_fiu_oe == 0x2) {
-		state->val_a = val_find_ab(UIR_VAL_A, true);
+		state->val_a = tv_find_ab(UIR_VAL_A, UIR_VAL_FRM, true, false, state->val_rfram);
 		state->val_amsb = state->val_a >> 63;
 		mp_fiu_bus = ~state->val_a;
 	}
@@ -3652,7 +3514,7 @@ val_q2(void)
 
 	bool divide = state->val_rand != 0xb;
 	if (mp_fiu_oe != 0x02) {
-		state->val_a = val_find_ab(UIR_VAL_A, true);
+		state->val_a = tv_find_ab(UIR_VAL_A, UIR_VAL_FRM, true, false, state->val_rfram);
 		state->val_amsb = state->val_a >> 63;
 	}
 	if (mp_valv_oe) {
@@ -3814,6 +3676,92 @@ val_q4(void)
 
 
 // ------------------ TYP&VAL ------------------
+
+uint64_t
+r1000_arch ::
+tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rf)
+{
+	// NB: uir is inverted
+
+	if (uir >= 0x30) { // very frequent
+		return(rf[uir & 0x1f]); 						// 0x00…0x0f	GP0…GPF
+	}
+
+	if (uir < 0x20) { // very frequent
+		return (rf [(frame << 5) | (uir & 0x1f)]);			// 0x20…0x30	FRAME:REG
+	}
+
+	if (uir >= 0x2d) {								// 0x10…0x12	TOP,TOP+1,SPARE
+		return (rf[(uir + state->csa_topreg + 1) & 0xf]);
+	}
+
+	if (t && uir == 0x2c) {								// 0x13		[LOOP]
+		return(rf[state->typ_count]);
+	} else if (uir == 0x2c) {
+		return(rf[state->val_count]);
+	}
+
+	if (t && a && uir >= 0x29) {							// 0x14…0x16	ZERO,SPARE,SPARE
+		return(~0ULL);
+	}
+
+	if ((!t) && a && uir == 0x2b) {							// 0x14		ZEROS
+		return(~0ULL);
+	}
+
+	if ((!t) && a && uir == 0x2a) {							// 0x15		ZERO_COUNTER
+		return(state->val_zerocnt);
+	}
+
+	if ((!t) && a && uir == 0x29) {							// 0x16		PRODUCT
+		unsigned mdst;
+		bool prod_16 = state->val_rand != 0xd;
+		bool prod_32 = state->val_rand != 0xe;
+		mdst = prod_32 << 1;
+		mdst |= prod_16;
+		switch(mdst) {
+		case 0: state->val_a = 0; break;
+		case 1: state->val_a = state->val_mprod << 32; break;
+		case 2: state->val_a = state->val_mprod << 16; break;
+		case 3: state->val_a = state->val_mprod <<  0; break;
+		}
+		return (~state->val_a);
+	}
+
+	if (a && uir == 0x28) {								// 0x17		LOOP
+		if (t)
+			return ((~0ULL << 10) | state->typ_count);
+		else
+			return ((~0ULL << 10) | state->val_count);
+	}
+
+        if (!a && uir >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
+		unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
+		return(rf[adr]);
+	}
+
+        if (!a && uir == 0x29) {							// 0x16		CSA/VAL_BUS
+		if ((!t) && mp_valv_oe) {
+			return (~mp_val_bus);
+		} else if ((t) && mp_typt_oe) {
+			return (~mp_typ_bus);
+		} else {
+			unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
+			adr += mp_csa_offset;
+			adr &= 0xf;
+			return(rf[adr]);
+		}
+	}
+
+        if (!a && uir == 0x28) {							// 0x17		SPARE
+		return(~0ULL);
+	}
+
+	if (uir >= 0x20) {								// 0x18…0x1f	TOP-8…TOP-1
+		return (rf[(uir + state->csa_topreg + 1) & 0xf]);
+	}
+	assert(0);
+}
 
 void
 r1000_arch ::
