@@ -414,8 +414,6 @@ struct r1000_arch_state {
 	uint64_t typ_a, typ_b, c, typ_nalu, typ_alu;
 	uint64_t typ_wdr;
 	uint64_t typ_count;
-	unsigned typ_topreg;
-	unsigned typ_botreg;
 	bool typ_cond;
 	bool typ_almsb;
 	bool typ_coh;
@@ -454,8 +452,6 @@ struct r1000_arch_state {
 	uint64_t val_malat, val_mblat, val_mprod, val_msrc;
 	uint64_t val_nalu, val_alu;
 	unsigned val_count;
-	unsigned val_topreg;
-	unsigned val_botreg;
 	bool val_amsb, val_bmsb, val_cmsb, val_mbit, val_last_cond;
 	bool val_isbin, val_sub_else_add, val_ovren, val_carry_middle;
 	bool val_coh;
@@ -509,6 +505,11 @@ struct r1000_arch_state {
 #define UIR_IOC_AEN	((state->ioc_uir >>  6) & 0x3)
 #define UIR_IOC_FEN	((state->ioc_uir >>  4) & 0x3)
 #define UIR_IOC_TVBS	((state->ioc_uir >>  0) & 0xf)
+
+// -------------------- CSA --------------------
+
+	unsigned csa_topreg;
+	unsigned csa_botreg;
 };
 
 r1000_arch :: r1000_arch(void)
@@ -594,6 +595,7 @@ r1000_arch :: doit(void)
 	fiu_q4();
 	typ_q4();
 	val_q4();
+	csa_q4();
 	ioc_q4();
 	seq_q4();
 
@@ -3116,7 +3118,7 @@ typ_find_ab(unsigned uir, bool a)
 	}
 
 	if (uir >= 0x2d) {								// 0x10…0x12	TOP,TOP+1,SPARE
-		unsigned adr = (uir + state->typ_topreg + 1) & 0xf;
+		unsigned adr = (uir + state->csa_topreg + 1) & 0xf;
 		return (state->typ_rfram[adr]);
 	}
 
@@ -3133,7 +3135,7 @@ typ_find_ab(unsigned uir, bool a)
 	}
 
 	if (!a && uir >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
-		unsigned adr = (state->typ_botreg + (uir&1)) & 0xf;
+		unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
 		return(state->typ_rfram[adr]);
 	}
 
@@ -3141,7 +3143,7 @@ typ_find_ab(unsigned uir, bool a)
 		if (mp_typt_oe) {
 			return (~mp_typ_bus);
 		} else {
-			unsigned adr = (state->typ_botreg + (uir&1)) & 0xf;
+			unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
 			adr += mp_csa_offset;
 			adr &= 0xf;
 			return(state->typ_rfram[adr]);
@@ -3153,7 +3155,7 @@ typ_find_ab(unsigned uir, bool a)
 	}
 
 	if (uir >= 0x20) {								// 0x18…0x1f	TOP-8…TOP-1
-		unsigned adr = (uir + state->typ_topreg + 1) & 0xf;
+		unsigned adr = (uir + state->csa_topreg + 1) & 0xf;
 		return (state->typ_rfram[adr]);
 	}
 
@@ -3362,7 +3364,7 @@ typ_q4(void)
 	if (mp_csa_write_enable && uirc != 0x28)
 		typ_wen = !typ_wen;
 	if (mp_ram_stop && !mp_freeze && !typ_wen) {
-                unsigned cadr = tv_cadr(UIR_TYP_C, UIR_TYP_FRM, state->typ_topreg, state->typ_botreg, state->typ_count);
+                unsigned cadr = tv_cadr(UIR_TYP_C, UIR_TYP_FRM, state->typ_count);
 		state->typ_rfram[cadr] = c;
 	}
 
@@ -3384,19 +3386,6 @@ typ_q4(void)
 			state->typ_count += 0x3ff;
 			state->typ_count &= 0x3ff;
 		}
-
-		unsigned csmux0;
-		if (mp_load_top)
-			csmux0 = state->typ_botreg;
-		else
-			csmux0 = state->typ_topreg;
-
-		unsigned csalu0 = mp_csa_this_offs + csmux0 + 1;
-
-		if (!mp_load_bot)
-			state->typ_botreg = csalu0;
-		if (!(mp_load_top && mp_pop_down))
-			state->typ_topreg = csalu0;
 
 		state->typ_last_cond = state->typ_cond;
 		if (state->typ_rand == 0xc) {
@@ -3584,7 +3573,7 @@ val_find_ab(unsigned uir, bool a)
 	}
 
 	if (uir >= 0x2d) {								// 0x10…0x12	TOP,TOP+1,SPARE
-		unsigned adr = (uir + state->typ_topreg + 1) & 0xf;
+		unsigned adr = (uir + state->csa_topreg + 1) & 0xf;
 		return (state->val_rfram[adr]);
 	}
 
@@ -3620,7 +3609,7 @@ val_find_ab(unsigned uir, bool a)
 	}
 
         if (!a && uir >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
-		unsigned adr = (state->val_botreg + (uir&1)) & 0xf;
+		unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
 		return(state->val_rfram[adr]);
 	}
 
@@ -3628,7 +3617,7 @@ val_find_ab(unsigned uir, bool a)
 		if (mp_valv_oe) {
 			return (~mp_val_bus);
 		} else {
-			unsigned adr = (state->val_botreg + (uir&1)) & 0xf;
+			unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
 			adr += mp_csa_offset;
 			adr &= 0xf;
 			return(state->val_rfram[adr]);
@@ -3640,7 +3629,7 @@ val_find_ab(unsigned uir, bool a)
 	}
 
 	if (uir >= 0x20) {								// 0x18…0x1f	TOP-8…TOP-1
-		unsigned adr = (uir + state->val_topreg + 1) & 0xf;
+		unsigned adr = (uir + state->csa_topreg + 1) & 0xf;
 		return (state->val_rfram[adr]);
 	}
 	assert(0);
@@ -3804,7 +3793,7 @@ val_q4(void)
 	if (mp_csa_write_enable && uirc != 0x28)
 		val_wen = !val_wen;
 	if (mp_ram_stop && !mp_freeze && !val_wen) {
-                unsigned cadr = tv_cadr(UIR_VAL_C, UIR_VAL_FRM, state->val_topreg, state->val_botreg, state->val_count);
+                unsigned cadr = tv_cadr(UIR_VAL_C, UIR_VAL_FRM, state->val_count);
 		state->val_rfram[cadr] = state->val_c;
 	}
 
@@ -3822,20 +3811,6 @@ val_q4(void)
 			state->val_count += 0x3ff;
 			state->val_count &= 0x3ff;
 		}
-
-		unsigned csmux0;
-		if (mp_load_top)
-			csmux0 = state->val_botreg;
-		else
-			csmux0 = state->val_topreg;
-
-		unsigned csalu0 = mp_csa_this_offs + csmux0 + 1;
-
-		if (!mp_load_bot)
-			state->val_botreg = csalu0;
-		if (!(mp_load_top && mp_pop_down))
-			state->val_topreg = csalu0;
-
 		state->val_mbit = state->val_cmsb;
 	}
 	if (!mp_sf_stop) {
@@ -3854,51 +3829,69 @@ val_q4(void)
 
 // ------------------ TYP&VAL ------------------
 
+void
+r1000_arch ::
+csa_q4(void)
+{
+	bool sclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
+
+	if (sclken) {
+		unsigned csmux0;
+
+		if (mp_load_top)
+			csmux0 = state->csa_botreg;
+		else
+			csmux0 = state->csa_topreg;
+
+		unsigned csalu0 = mp_csa_this_offs + csmux0 + 1;
+
+		if (!mp_load_bot)
+			state->csa_botreg = csalu0;
+		if (!(mp_load_top && mp_pop_down))
+			state->csa_topreg = csalu0;
+	}
+}
+
 unsigned
 r1000_arch ::
-tv_cadr(unsigned uirc, unsigned frame, unsigned top, unsigned bot, unsigned count)
+tv_cadr(unsigned uirc, unsigned frame, unsigned count)
 {
-	unsigned cadr = 0;
-	if (uirc <= 0x1f) {
-		// FRAME:REG
-		cadr |= uirc & 0x1f;
-		cadr |= frame << 5;
-	} else if (uirc <= 0x27) {
-		// 0x20 = TOP-1
-		// …
-		// 0x27 = TOP-8
-		cadr = (top + (uirc & 0x7) + 1) & 0xf;
-	} else if (uirc == 0x28) {
-		// 0x28 LOOP COUNTER (RF write disabled)
-	} else if (uirc == 0x29 && mp_csa_write_enable) {
-		// 0x29 DEFAULT (RF write disabled)
-		unsigned sum = bot + mp_csa_offset + 1;
-		cadr |= sum & 0xf;
-	} else if (uirc == 0x29 && !mp_csa_write_enable) {
-		// 0x29 DEFAULT (RF write disabled)
-		cadr |= uirc & 0x1f;
-		cadr |= frame << 5;
-	} else if (uirc <= 0x2b) {
-		// 0x2a BOT
-		// 0x2b BOT-1
-		cadr |= (bot + (uirc & 1)) & 0xf;
-	} else if (uirc == 0x2c) {
-		// 0x28 = LOOP_REG
-		cadr = count;
-	} else if (uirc == 0x2d) {
-		// 0x2d SPARE
-		assert (uirc != 0x2d);
-	} else if (uirc <= 0x2f) {
-		// 0x2e = TOP+1
-		// 0x2f = TOP
-		cadr = (top + (uirc & 0x1) + 0xf) & 0xf;
-	} else if (uirc <= 0x3f) {
-		// GP[0…F]
-		cadr |= 0x10 | (uirc & 0x0f);
-	} else {
-		assert(uirc <= 0x3f);
+	if (uirc <= 0x1f) {						// 0x00…0x1f	FRAME:REG
+		return((uirc & 0x1f) | (frame << 5));
 	}
-	return (cadr);
+	if (uirc >= 0x30) {						// 0x30…0x3f	GP[0…F]
+		return(0x10 | (uirc & 0x0f));
+	}
+	if (uirc <= 0x27) {						// 0x20…0x27	TOP-1…TOP-8
+		return((state->csa_topreg + (uirc & 0x7) + 1) & 0xf);
+	}
+	if (uirc == 0x28) {						// 0x28		LOOP COUNTER (RF write disabled)
+		assert(0);
+		return(0);
+	}
+	if (uirc == 0x29 && mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled)
+		return ((state->csa_botreg + mp_csa_offset + 1) & 0xf);
+	}
+	if (uirc == 0x29 && !mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled)
+		assert(0);
+		return(0);
+		return((uirc & 0x1f) | (frame << 5));
+	}
+	if (uirc <= 0x2b) {						// 0x2a…0x2b	BOT,BOT-1
+		return ((state->csa_botreg + (uirc & 1)) & 0xf);
+	}
+	if (uirc == 0x2c) {						// 0x2c		LOOP_REG
+		return(count);
+	}
+	if (uirc == 0x2d) {						// 0x2d		SPARE
+		assert (uirc != 0x2d);
+		return (0);
+	}
+	if (uirc <= 0x2f) {						// 0x2e…0x2f	TOP+1,TOP
+		return((state->csa_topreg + (uirc & 0x1) + 0xf) & 0xf);
+	}
+	assert(0);
+	return (0);
 }
 
 // -------------------- IOC --------------------

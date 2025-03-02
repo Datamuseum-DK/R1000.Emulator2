@@ -11,7 +11,8 @@ class r1000_arch {
 	private:
 	struct r1000_arch_state *state;
 
-        unsigned tv_cadr(unsigned uirc, unsigned frame, unsigned top, unsigned bot, unsigned count);
+        unsigned tv_cadr(unsigned uirc, unsigned frame, unsigned count);
+        void csa_q4(void);
 
 // -------------------- MEM --------------------
 
