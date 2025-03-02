@@ -413,7 +413,7 @@ struct r1000_arch_state {
 	uint64_t *typ_rfram;
 	uint64_t typ_a, typ_b, c, typ_nalu, typ_alu;
 	uint64_t typ_wdr;
-	uint64_t typ_count;
+	unsigned typ_count;
 	bool typ_cond;
 	bool typ_almsb;
 	bool typ_coh;
@@ -3318,9 +3318,7 @@ typ_q4(void)
 	uint64_t c = 0;
 	bool chi = false;
 	bool clo = false;
-	bool sclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
 	unsigned priv_check = UIR_TYP_UPVC;
-	unsigned uirc = UIR_TYP_C;
 
 	if (!mp_sf_stop) {
 		mp_nxt_csa_write_enable = !(mp_csa_hit || mp_csa_wr);
@@ -3360,47 +3358,42 @@ typ_q4(void)
 	if (!chi && clo)
 		c |= 0xffffffffULL << 32;
 
-	bool typ_wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
-	if (mp_csa_write_enable && uirc != 0x28)
-		typ_wen = !typ_wen;
-	if (mp_ram_stop && !mp_freeze && !typ_wen) {
-                unsigned cadr = tv_cadr(UIR_TYP_C, UIR_TYP_FRM, state->typ_count);
-		state->typ_rfram[cadr] = c;
-	}
+        if (mp_ram_stop && !mp_freeze) {
+		unsigned cadr = tv_cadr(UIR_TYP_C, UIR_TYP_FRM, state->typ_count);
+		if (cadr < 0x400)
+			state->typ_rfram[cadr] = c;
 
-	if (!mp_sf_stop) {
-		mp_nxt_csa_offset = mp_csa_this_offs;
-	}
+		if (mp_clock_stop) {
+			if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
+				state->typ_wdr = ~mp_typ_bus;
+			}
+			if (UIR_TYP_C == 0x28) {
+				state->typ_count = c;
+				state->typ_count &= 0x3ff;
+			} else if (state->typ_rand == 0x2) {
+				state->typ_count += 1;
+				state->typ_count &= 0x3ff;
+			} else if (state->typ_rand == 0x1) {
+				state->typ_count += 0x3ff;
+				state->typ_count &= 0x3ff;
+			}
 
-	if (sclken) {
-		if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
-			state->typ_wdr = ~mp_typ_bus;
-		}
-		if (uirc == 0x28) {
-			state->typ_count = c;
-			state->typ_count &= 0x3ff;
-		} else if (state->typ_rand == 0x2) {
-			state->typ_count += 1;
-			state->typ_count &= 0x3ff;
-		} else if (state->typ_rand == 0x1) {
-			state->typ_count += 0x3ff;
-			state->typ_count &= 0x3ff;
-		}
+			state->typ_last_cond = state->typ_cond;
+			if (state->typ_rand == 0xc) {
+				state->typ_ofreg = state->typ_b >> 32;
+			}
 
-		state->typ_last_cond = state->typ_cond;
-		if (state->typ_rand == 0xc) {
-			state->typ_ofreg = state->typ_b >> 32;
-		}
-
-		if (priv_check != 7) {
-			bool set_pass_priv = state->typ_rand != 0xd;
-			state->typ_ppriv = set_pass_priv;
+			if (priv_check != 7) {
+				bool set_pass_priv = state->typ_rand != 0xd;
+				state->typ_ppriv = set_pass_priv;
+			}
 		}
 	}
 	if (!mp_sf_stop) {
 		state->typ_uir = state->typ_wcsram[mp_nua_bus] ^ 0x7fffc0000000ULL;
 		mp_nxt_mar_cntl = UIR_TYP_MCTL;
 		mp_nxt_csa_cntl = UIR_TYP_CCTL;
+		mp_nxt_csa_offset = mp_csa_this_offs;
 	}
 }
 
@@ -3764,65 +3757,58 @@ void
 r1000_arch ::
 val_q4(void)
 {
-	bool sclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
-	bool divide = state->val_rand != 0xb;
-	unsigned uirc = UIR_VAL_C;
-	if (sclken) {
-		mp_nxt_q_bit = !(((!divide) && (mp_q_bit ^ state->val_mbit ^ (!state->val_coh))) || (divide && state->val_coh));
-	}
 
-	uint32_t a;
-	switch (state->val_msrc >> 2) {
-	case 0: a = (state->val_malat >> 48) & 0xffff; break;
-	case 1: a = (state->val_malat >> 32) & 0xffff; break;
-	case 2: a = (state->val_malat >> 16) & 0xffff; break;
-	case 3: a = (state->val_malat >>  0) & 0xffff; break;
-	default: assert(false);
-	}
-	uint32_t b;
-	switch (state->val_msrc & 3) {
-	case 0: b = (state->val_mblat >> 48) & 0xffff; break;
-	case 1: b = (state->val_mblat >> 32) & 0xffff; break;
-	case 2: b = (state->val_mblat >> 16) & 0xffff; break;
-	case 3: b = (state->val_mblat >>  0) & 0xffff; break;
-	default: assert(false);
-	}
-	state->val_mprod = a * b;
-
-	bool val_wen = (uirc == 0x28 || uirc == 0x29); // LOOP_CNT + DEFAULT
-	if (mp_csa_write_enable && uirc != 0x28)
-		val_wen = !val_wen;
-	if (mp_ram_stop && !mp_freeze && !val_wen) {
-                unsigned cadr = tv_cadr(UIR_VAL_C, UIR_VAL_FRM, state->val_count);
-		state->val_rfram[cadr] = state->val_c;
-	}
-
-	if (sclken) {
-		if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
-			state->val_wdr = ~mp_val_bus;
+        if (mp_ram_stop && !mp_freeze) {
+		uint32_t a;
+		switch (state->val_msrc >> 2) {
+		case 0: a = (state->val_malat >> 48) & 0xffff; break;
+		case 1: a = (state->val_malat >> 32) & 0xffff; break;
+		case 2: a = (state->val_malat >> 16) & 0xffff; break;
+		case 3: a = (state->val_malat >>  0) & 0xffff; break;
+		default: assert(false);
 		}
-		if (uirc == 0x28) {
-			state->val_count = state->val_c;
-			state->val_count &= 0x3ff;
-	} else if (state->val_rand == 0x2 || !divide) {
-			state->val_count += 1;
-			state->val_count &= 0x3ff;
-		} else if (state->val_rand == 0x1) {
-			state->val_count += 0x3ff;
-			state->val_count &= 0x3ff;
+		uint32_t b;
+		switch (state->val_msrc & 3) {
+		case 0: b = (state->val_mblat >> 48) & 0xffff; break;
+		case 1: b = (state->val_mblat >> 32) & 0xffff; break;
+		case 2: b = (state->val_mblat >> 16) & 0xffff; break;
+		case 3: b = (state->val_mblat >>  0) & 0xffff; break;
+		default: assert(false);
 		}
-		state->val_mbit = state->val_cmsb;
+		state->val_mprod = a * b;
+
+		unsigned cadr = tv_cadr(UIR_VAL_C, UIR_VAL_FRM, state->val_count);
+		if (cadr < 0x400)
+			state->val_rfram[cadr] = state->val_c;
+
+		if (mp_clock_stop) {
+			bool divide = state->val_rand != 0xb;
+			if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
+				state->val_wdr = ~mp_val_bus;
+			}
+			if (UIR_VAL_C == 0x28) {
+				state->val_count = state->val_c;
+				state->val_count &= 0x3ff;
+			} else if (state->val_rand == 0x2 || !divide) {
+				state->val_count += 1;
+				state->val_count &= 0x3ff;
+			} else if (state->val_rand == 0x1) {
+				state->val_count += 0x3ff;
+				state->val_count &= 0x3ff;
+			}
+
+			mp_nxt_q_bit = !(((!divide) && (mp_q_bit ^ state->val_mbit ^ (!state->val_coh))) || (divide && state->val_coh));
+			state->val_mbit = state->val_cmsb;
+
+			if (state->val_rand == 0x5) {
+				uint64_t count2 = 0x40 - flsll(~state->val_alu);
+				state->val_zerocnt = ~count2;
+			}
+			state->val_last_cond = state->val_thiscond;
+		}
 	}
 	if (!mp_sf_stop) {
 		state->val_uir = state->val_wcsram[mp_nua_bus] ^ 0xffff800000ULL;
-	}
-
-	if (sclken) {
-		if (state->val_rand == 0x5) {
-			uint64_t count2 = 0x40 - flsll(~state->val_alu);
-			state->val_zerocnt = ~count2;
-		}
-		state->val_last_cond = state->val_thiscond;
 	}
 }
 
@@ -3866,16 +3852,13 @@ tv_cadr(unsigned uirc, unsigned frame, unsigned count)
 		return((state->csa_topreg + (uirc & 0x7) + 1) & 0xf);
 	}
 	if (uirc == 0x28) {						// 0x28		LOOP COUNTER (RF write disabled)
-		assert(0);
-		return(0);
+		return(0x400);
 	}
 	if (uirc == 0x29 && mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled)
 		return ((state->csa_botreg + mp_csa_offset + 1) & 0xf);
 	}
 	if (uirc == 0x29 && !mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled)
-		assert(0);
-		return(0);
-		return((uirc & 0x1f) | (frame << 5));
+		return(0x400);
 	}
 	if (uirc <= 0x2b) {						// 0x2a…0x2b	BOT,BOT-1
 		return ((state->csa_botreg + (uirc & 1)) & 0xf);
@@ -3884,14 +3867,13 @@ tv_cadr(unsigned uirc, unsigned frame, unsigned count)
 		return(count);
 	}
 	if (uirc == 0x2d) {						// 0x2d		SPARE
-		assert (uirc != 0x2d);
-		return (0);
+		return (0x400);
 	}
 	if (uirc <= 0x2f) {						// 0x2e…0x2f	TOP+1,TOP
 		return((state->csa_topreg + (uirc & 0x1) + 0xf) & 0xf);
 	}
 	assert(0);
-	return (0);
+	return (0x400);
 }
 
 // -------------------- IOC --------------------
