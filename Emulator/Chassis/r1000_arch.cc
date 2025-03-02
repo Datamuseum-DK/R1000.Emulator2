@@ -341,6 +341,7 @@ struct r1000_arch_state {
 	uint64_t seq_coff;
 	unsigned seq_uadr_decode;
 	unsigned seq_display;
+	unsigned seq_decram;
 	uint64_t seq_resolve_offset;
 	bool seq_cload;
 	bool seq_ibuf_fill;
@@ -448,7 +449,7 @@ struct r1000_arch_state {
 	uint64_t val_a, val_b;
 	uint64_t val_wdr;
 	uint64_t val_zerocnt;
-	uint64_t val_malat, val_mblat, val_mprod, val_msrc;
+	uint64_t val_malat, val_mblat, val_mprod;
 	uint64_t val_nalu, val_alu;
 	unsigned val_count;
 	bool val_amsb, val_bmsb, val_cmsb, val_mbit, val_last_cond;
@@ -2099,33 +2100,25 @@ void
 r1000_arch ::
 seq_p1(void)
 {
-	unsigned lex_adr = UIR_SEQ_LAUIR;
-
 	if (state->seq_maybe_dispatch && !(state->seq_display >> 15)) {
-		switch (lex_adr) {
-		case 0:	state->seq_resolve_address = (state->seq_display >> 9) & 0xf; break;
-		case 1: state->seq_resolve_address = 0xf; break;
-		case 2: state->seq_resolve_address = 0xf; break;
-		case 3: state->seq_resolve_address = 0xe; break;
-		}
+		state->seq_resolve_address = (state->seq_display >> 9) & 0xf;
 	} else {
-		switch (lex_adr) {
-		case 0:	state->seq_resolve_address = state->seq_curr_lex ^ 0xf; break;
+		switch (UIR_SEQ_LAUIR) {
+		case 0:
+			state->seq_resolve_address = state->seq_curr_lex ^ 0xf;
+			break;
 		case 1:
 			switch (UIR_SEQ_IRD) {
 			case 0x0:
-				//state->seq_resolve_address = (state->seq_val_bus & 0xf) + 1;
-				state->seq_resolve_address = (~mp_val_bus & 0xf) + 1;
+				state->seq_resolve_address = (~mp_val_bus + 1) & 0xf;
 				break;
 			case 0x1:
 			case 0x2:
 			case 0x3:
-				printf("VAL->RESA uir %x\n", (unsigned)UIR_SEQ_IRD);
 				assert(0);
-				state->seq_resolve_address = (state->seq_val_bus & 0xf) + 1;
 				break;
 			default:
-				state->seq_resolve_address = (~state->seq_curr_lex & 0xf) + 1;
+				state->seq_resolve_address = (~state->seq_curr_lex + 1) & 0xf;
 				break;
 			}
 			break;
@@ -2133,7 +2126,6 @@ seq_p1(void)
 		case 3: state->seq_resolve_address = 0xe; break;
 		}
 	}
-	state->seq_resolve_address &= 0xf;
 
 	unsigned offs;
 	if (state->seq_maybe_dispatch && state->seq_uses_tos) {
@@ -2157,9 +2149,7 @@ seq_p1(void)
 	if (!((state->seq_resolve_address <= 0xd) && d7))
 		sgdisp |= 0xffe00;
 
-	bool acin = ((state->seq_mem_start & 1) != 0);
-	sgdisp &= 0xfffff;
-	state->seq_resolve_offset = 0;
+	bool acin = state->seq_mem_start & 1;
 
 	switch(state->seq_mem_start) {
 	case 0:
@@ -2182,22 +2172,24 @@ seq_p1(void)
 		state->seq_resolve_offset = offs;
 		state->seq_tmp_carry_out = acin && (offs == 0);
 		break;
+	default:
+		assert(0);
 	}
 
 	state->seq_resolve_offset &= 0xfffff;
 
 	if (state->seq_intreads == 3) {
-		state->seq_output_ob = state->seq_pred;
+		state->seq_output_ob = state->seq_pred & 0xfffff;
 	} else if (state->seq_intreads == 2) {
-		state->seq_output_ob = state->seq_topcnt;
+		state->seq_output_ob = state->seq_topcnt & 0xfffff;
 	} else if (state->seq_intreads == 1) {
-		state->seq_output_ob = state->seq_resolve_offset;
+		state->seq_output_ob = state->seq_resolve_offset & 0xfffff;
 	} else if (state->seq_intreads == 0) {
-		state->seq_output_ob = state->seq_savrg;
+		state->seq_output_ob = state->seq_savrg & 0xfffff;
 	} else {
 		state->seq_output_ob = 0xfffff;
 	}
-	state->seq_output_ob &= 0xfffff;
+
 	if (!state->seq_maybe_dispatch) {
 		state->seq_name_bus = state->seq_namram[state->seq_resolve_address] ^ 0xffffffff;
 	} else {
@@ -2462,13 +2454,13 @@ r1000_arch ::
 seq_q4(void)
 {
 	bool aclk = !state->seq_sf_stop;
-	bool sclke = !(state->seq_s_state_stop && !state->seq_stop);
-	bool sclk = aclk && !sclke;
-	bool state_clock = !sclke;
+	bool state_clock = state->seq_s_state_stop && !state->seq_stop;
 
-	bool bhen = !((state->seq_late_macro_event && !state->seq_bad_hint) || (!mp_clock_stop_6));
-	bool bhcke = !(state->seq_s_state_stop && bhen);
+	//bool bhen = !((state->seq_late_macro_event && !state->seq_bad_hint) || (!mp_clock_stop_6));
+	//bool bhcke = state->seq_s_state_stop && bhen;
+	bool bhcke = state->seq_s_state_stop && mp_clock_stop_6 && (!state->seq_late_macro_event || state->seq_bad_hint);
 	bool dispatch = state->seq_wanna_dispatch || state->seq_early_macro_pending || (state->seq_lmp != 8);
+	bool update_display = false;
 	if (state_clock) {
 		nxt_lex_valid();
 		if (!RNDX(RND_RES_OFFS)) {
@@ -2477,6 +2469,7 @@ seq_q4(void)
 		if (!state->seq_ibld) {
 			state->seq_macro_ins_typ = state->seq_typ_bus;
 			state->seq_macro_ins_val = state->seq_val_bus;
+			update_display = true;
 		}
 		if (!RNDX(RND_RETRN_LD)) {
 			state->seq_retrn_pc_ofs = state->seq_macro_pc_offset;
@@ -2487,9 +2480,9 @@ seq_q4(void)
 		}
 	}
 	if (aclk) {
-		state->seq_late_macro_event = !(sclke || !(state->seq_macro_event && !state->seq_early_macro_pending));
+		state->seq_late_macro_event = !((!state_clock) || !(state->seq_macro_event && !state->seq_early_macro_pending));
 		if (!mp_seq_halted) {
-			mp_seq_halted = !(sclke || RNDX(RND_HALT));
+			mp_seq_halted = !((!state_clock) || RNDX(RND_HALT));
 			if (mp_seq_halted)
 				printf("SEQ HALTED\n");
 		}
@@ -2500,7 +2493,7 @@ seq_q4(void)
 		}
 	}
 
-	if (!bhcke && !state->seq_macro_event) {
+	if (bhcke && !state->seq_macro_event) {
 		unsigned mode = 0;
 		if (!state->seq_wanna_dispatch) {
 			mode = 1;
@@ -2517,35 +2510,40 @@ seq_q4(void)
 			if (RNDX(RND_M_PC_MD1)) mode |= 1;
 		}
 		if (mode == 3) {
-			uint64_t tmp;
 			if (!RNDX(RND_M_PC_MUX)) {
-				tmp = state->seq_val_bus;
-				state->seq_word = tmp >> 4;
-				state->seq_macro_pc_offset = (tmp >> 4) & 0x7fff;
+				state->seq_word = state->seq_val_bus >> 4;
+				state->seq_macro_pc_offset = (state->seq_val_bus >> 4) & 0x7fff;
+				state->seq_word &= 7;
+				update_display = true;
 			} else {
 				state->seq_macro_pc_offset = branch_offset();
 				state->seq_word = state->seq_macro_pc_offset;
+				state->seq_word &= 7;
+				update_display = true;
 			}
 		} else if (mode == 2) {
 			state->seq_macro_pc_offset += 1;
 			state->seq_word += 1;
+			state->seq_word &= 7;
+			update_display = true;
 		} else if (mode == 1) {
 			state->seq_macro_pc_offset -= 1;
 			state->seq_word += 7;
+			state->seq_word &= 7;
+			update_display = true;
 		}
-		state->seq_word &= 7;
 	}
 
 	bool crnana = !(RNDX(RND_INSTR_LD) && dispatch);
 
-	if (sclk) {
+	if (state_clock) {
 		unsigned dsp = 0;
 		if (!RNDX(RND_INSTR_MX)) {
 			dsp = state->seq_display;
 		} else {
 			dsp = state->seq_val_bus & 0xffff;
 		}
-		dsp ^= 0xffff;;
+		dsp ^= 0xffff;
 
 		if (crnana && state->seq_topbot)
 			state->seq_ctop = dsp;
@@ -2554,38 +2552,7 @@ seq_q4(void)
 		if (!RNDX(RND_BR_MSK_L)) {
 			state->seq_break_mask = (state->seq_val_bus >> 16) & 0xffff;
 		}
-	}
 
-	if (!bhcke) {
-		bool dmdisp = !(!state->seq_bad_hint || (state->seq_bhreg & 0x04));
-		bool crnor0a = !(crnana || dmdisp);
-		if (!crnor0a)
-			state->seq_topbot = !state->seq_topbot;
-	}
-
-	if (state->seq_topbot) {
-		state->seq_curins = state->seq_cbot;
-	} else {
-		state->seq_curins = state->seq_ctop;
-	}
-
-	uint32_t *ciptr;
-	if (state->seq_curins & 0xfc00) {
-		ciptr = &state->seq_top[state->seq_curins >> 6];
-	} else {
-		ciptr = &state->seq_bot[state->seq_curins & 0x3ff];
-	}
-
-	unsigned ccl = (*ciptr >> 4) & 0xf;
-
-	if (ccl == 0) {
-		state->seq_m_break_class = false;
-	} else {
-		state->seq_m_break_class = (state->seq_break_mask >> (15 - ccl)) & 1;
-	}
-	state->seq_m_break_class = !state->seq_m_break_class;
-
-	if (state_clock) {
 		if (!RNDX(RND_NAME_LD)) {
 			state->seq_cur_name = state->seq_typ_bus >> 32;
 		}
@@ -2606,33 +2573,51 @@ seq_q4(void)
 		}
 
 		if (!RNDX(RND_PRED_LD)) {
-			uint64_t cnb = 0;
 			if (!RNDX(RND_CNTL_MUX)) {
-				cnb = ~state->seq_typ_bus;
+				state->seq_pred = ((~state->seq_typ_bus) >> 7) & 0xfffff;
 			} else {
-				cnb = mp_fiu_bus;
+				state->seq_pred = (mp_fiu_bus >> 7) & 0xfffff;
 			}
-			cnb >>= 7;
-			cnb &= 0xfffff;
-			state->seq_pred = cnb;
 		}
 
 		if (!RNDX(RND_TOP_LD)) {
-			uint64_t cnb = 0;
 			if (!RNDX(RND_CNTL_MUX)) {
-				cnb = ~state->seq_typ_bus;
+				state->seq_topcnt = ((~state->seq_typ_bus) >> 7) & 0xfffff;
 			} else {
-				cnb = mp_fiu_bus;
+				state->seq_topcnt = (mp_fiu_bus >> 7) & 0xfffff;
 			}
-			cnb >>= 7;
-			cnb &= 0xfffff;
-			state->seq_topcnt = cnb;
 		} else if (mp_csa_cntl == 2) {
 			state->seq_topcnt += 1;
 		} else if (mp_csa_cntl == 3) {
 			state->seq_topcnt += 0xfffff;
 		}
 		state->seq_topcnt &= 0xfffff;
+	}
+
+	if (bhcke) {
+		bool dmdisp = !(!state->seq_bad_hint || (state->seq_bhreg & 0x04));
+		bool crnor0a = !(crnana || dmdisp);
+		if (!crnor0a)
+			state->seq_topbot = !state->seq_topbot;
+
+		if (state->seq_topbot) {
+			state->seq_curins = state->seq_cbot;
+		} else {
+			state->seq_curins = state->seq_ctop;
+		}
+
+		unsigned ccl;
+		if (state->seq_curins & 0xfc00) {
+			ccl = (state->seq_top[state->seq_curins >> 6] >> 4) & 0xf;
+		} else {
+			ccl = (state->seq_bot[state->seq_curins & 0x3ff] >> 4) & 0xf;
+		}
+
+		if (ccl == 0) {
+			state->seq_m_break_class = true;
+		} else {
+			state->seq_m_break_class = !((state->seq_break_mask >> (15 - ccl)) & 1);
+		}
 	}
 
 	if (state->seq_s_state_stop && state->seq_l_macro_hic) {
@@ -2697,7 +2682,7 @@ seq_q4(void)
 		state->seq_stack_size_zero = state->seq_adr == 0;
 	}
 
-	if (sclk) {
+	if (state_clock) {
 		state->seq_fiu = mp_fiu_bus;
 		state->seq_fiu &= 0x3fff;
 	}
@@ -2768,7 +2753,7 @@ seq_q4(void)
 		} else {
 			rom ^= 0x2;
 		}
-		if (!bhcke) {
+		if (bhcke) {
 			state->seq_bhreg = rom;
 		}
 
@@ -2834,6 +2819,8 @@ seq_q4(void)
 				state->seq_latched_cond = state->seq_last_late_cond;
 				break;
 			}
+			state->seq_n_in_csa = mp_csa_nve;
+			state->seq_foo9 = !RNDX(RND_TOS_VLB);
 		}
 	}
 
@@ -2850,38 +2837,32 @@ seq_q4(void)
 		state->seq_bad_hint = !state->seq_last_late_cond;
 	}
 
-	switch(state->seq_word) {
-	case 0x0: state->seq_display = state->seq_macro_ins_val >>  0; break;
-	case 0x1: state->seq_display = state->seq_macro_ins_val >> 16; break;
-	case 0x2: state->seq_display = state->seq_macro_ins_val >> 32; break;
-	case 0x3: state->seq_display = state->seq_macro_ins_val >> 48; break;
-	case 0x4: state->seq_display = state->seq_macro_ins_typ >>  0; break;
-	case 0x5: state->seq_display = state->seq_macro_ins_typ >> 16; break;
-	case 0x6: state->seq_display = state->seq_macro_ins_typ >> 32; break;
-	case 0x7: state->seq_display = state->seq_macro_ins_typ >> 48; break;
+	if (update_display) {
+		switch(state->seq_word) {
+		case 0x0: state->seq_display = state->seq_macro_ins_val >>  0; break;
+		case 0x1: state->seq_display = state->seq_macro_ins_val >> 16; break;
+		case 0x2: state->seq_display = state->seq_macro_ins_val >> 32; break;
+		case 0x3: state->seq_display = state->seq_macro_ins_val >> 48; break;
+		case 0x4: state->seq_display = state->seq_macro_ins_typ >>  0; break;
+		case 0x5: state->seq_display = state->seq_macro_ins_typ >> 16; break;
+		case 0x6: state->seq_display = state->seq_macro_ins_typ >> 32; break;
+		case 0x7: state->seq_display = state->seq_macro_ins_typ >> 48; break;
+		}
+		state->seq_display &= 0xffff;
+		if ((state->seq_display >> 10) != 0x3f) {
+			state->seq_decram = state->seq_top[(state->seq_display ^ 0xffff) >> 6];
+		} else {
+			state->seq_decram = state->seq_bot[(state->seq_display ^ 0xffff) & 0x3ff];
+		}
 	}
-	state->seq_display &= 0xffff;
 
 	if (!state->seq_early_macro_pending) {
-		unsigned ai = state->seq_display;
-		ai ^= 0xffff;
-		bool top = (state->seq_display >> 10) != 0x3f;
-		uint32_t *ptr;
-		if (top)
-			ptr = &state->seq_top[ai >> 6];
-		else
-			ptr = &state->seq_bot[ai & 0x3ff];
-		state->seq_uadr_decode = (*ptr >> 16);
-		state->seq_decode = (*ptr >> 8) & 0xff;
+		state->seq_uadr_decode = (state->seq_decram >> 16);
+		state->seq_decode = (state->seq_decram >> 8) & 0xff;
+		state->seq_uses_tos = (state->seq_uadr_decode >> 2) & 1;
+		state->seq_ibuf_fill = (state->seq_uadr_decode >> 1) & 1;
 	}
-	state->seq_uses_tos = (state->seq_uadr_decode >> 2) & 1;
-	state->seq_ibuf_fill = (state->seq_uadr_decode >> 1) & 1;
-	if (state_clock) {
-		state->seq_n_in_csa = mp_csa_nve;
-	}
-	if (aclk) {
-		state->seq_foo9 = !RNDX(RND_TOS_VLB);
-	}
+
 	mp_clock_stop_7 = !state->seq_bad_hint && state->seq_l_macro_hic;
 	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
 	if (!state->seq_sf_stop && mp_seq_prepped) {
@@ -3517,34 +3498,22 @@ val_q2(void)
 		state->val_bmsb = state->val_b >> 63;
 	}
 
-	state->val_msrc = UIR_VAL_MSRC;
-	bool start_mult = state->val_rand != 0xc;
-	if (!start_mult) {
+	if (state->val_rand == 0xc) {
 		state->val_malat = ~state->val_a;
 		state->val_mblat = ~state->val_b;
 	}
 
-	unsigned tmp, proma, alur;
-
-	tmp = UIR_VAL_RAND;
-	if (tmp < 8) {
-		alur = 7;
+	unsigned proma = UIR_VAL_AFNC;
+	if (state->val_rand < 8) {
+		proma |= 7 << 5;
 	} else {
-		alur = 15 - tmp;
+		proma |= (15 - state->val_rand) << 5;
 	}
-
-	proma = UIR_VAL_AFNC;
-	proma |= alur << 5;
-	if (
-		!(
-			(state->val_last_cond && divide) ||
-			(mp_q_bit && !divide)
-		)
-	) {
+	if (!((state->val_last_cond && divide) || (mp_q_bit && !divide))) {
 		proma |= 0x100;
 	}
 
-	tmp = val_pa011[proma];
+	unsigned tmp = val_pa011[proma];
 	state->val_isbin = (tmp >> 1) & 1;
 
 	F181_ALU(tmp, state->val_a, state->val_b,(tmp >> 2) & 1, state->val_nalu, state->val_carry_middle);
@@ -3553,9 +3522,9 @@ val_q2(void)
 	state->val_ovren = (tmp >> 1) & 1;
 	state->val_sub_else_add = (tmp >> 2) & 1;
 
-	uint32_t o;
+	uint64_t o;
 	F181_ALU(tmp, state->val_a >> 32, state->val_b >> 32, state->val_carry_middle, o, state->val_coh);
-	state->val_nalu |= ((uint64_t)o) << 32;
+	state->val_nalu |= o << 32;
 
 	state->val_alu = ~state->val_nalu;
 	state->val_cmsb = state->val_alu >> 63;
@@ -3618,7 +3587,7 @@ val_q4(void)
 		}
 
 		uint32_t a;
-		switch (state->val_msrc >> 2) {
+		switch (UIR_VAL_MSRC >> 2) {
 		case 0: a = (state->val_malat >> 48) & 0xffff; break;
 		case 1: a = (state->val_malat >> 32) & 0xffff; break;
 		case 2: a = (state->val_malat >> 16) & 0xffff; break;
@@ -3626,7 +3595,7 @@ val_q4(void)
 		default: assert(false);
 		}
 		uint32_t b;
-		switch (state->val_msrc & 3) {
+		switch (UIR_VAL_MSRC & 3) {
 		case 0: b = (state->val_mblat >> 48) & 0xffff; break;
 		case 1: b = (state->val_mblat >> 32) & 0xffff; break;
 		case 2: b = (state->val_mblat >> 16) & 0xffff; break;
