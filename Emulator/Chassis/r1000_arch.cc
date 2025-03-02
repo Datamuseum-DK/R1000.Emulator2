@@ -445,7 +445,7 @@ struct r1000_arch_state {
 // -------------------- VAL --------------------
 
 	uint64_t *val_rfram;
-	uint64_t val_a, val_b, val_c;
+	uint64_t val_a, val_b;
 	uint64_t val_wdr;
 	uint64_t val_zerocnt;
 	uint64_t val_malat, val_mblat, val_mprod, val_msrc;
@@ -3567,50 +3567,6 @@ val_q2(void)
 		}
 		mp_adr_bus = ~alu;
 	}
-
-if (0)
-{
-	uint64_t fiu = 0, mux = 0;
-	bool c_source = UIR_VAL_CSRC;
-	bool split_c_src = state->val_rand == 0x4;
-	if (split_c_src || !c_source) {
-		fiu = ~mp_fiu_bus;
-	}
-	if (!c_source && (state->val_rand == 3 || state->val_rand == 6)) {
-		fiu &= ~1ULL;
-		fiu |= fiu_cond();
-	}
-	if (c_source || split_c_src) {
-		unsigned sel = UIR_VAL_SEL;
-		switch (sel) {
-		case 0x0:
-			mux = state->val_alu << 1;
-			mux |= 1;
-			break;
-		case 0x1:
-			mux = state->val_alu >> 16;
-			mux |= 0xffffULL << 48;
-			break;
-		case 0x2:
-			mux = state->val_alu;
-			break;
-		case 0x3:
-			mux = state->val_wdr;
-			break;
-		}
-	}
-	if (!split_c_src && !c_source) {
-		state->val_c = fiu;
-	} else if (!split_c_src) {
-		state->val_c = mux;
-	} else if (c_source) {
-		state->val_c = fiu & 0xffffffffULL;
-		state->val_c |= mux & 0xffffffffULL << 32;
-	} else {
-		state->val_c = mux & 0xffffffffULL;
-		state->val_c |= fiu & 0xffffffffULL << 32;
-	}
-}
 }
 
 void
@@ -3619,48 +3575,48 @@ val_q4(void)
 {
 
         if (mp_ram_stop && !mp_freeze) {
-{
-	uint64_t fiu = 0, mux = 0;
-	bool c_source = UIR_VAL_CSRC;
-	bool split_c_src = state->val_rand == 0x4;
-	if (split_c_src || !c_source) {
-		fiu = ~mp_fiu_bus;
-	}
-	if (!c_source && (state->val_rand == 3 || state->val_rand == 6)) {
-		fiu &= ~1ULL;
-		fiu |= fiu_cond();
-	}
-	if (c_source || split_c_src) {
-		unsigned sel = UIR_VAL_SEL;
-		switch (sel) {
-		case 0x0:
-			mux = state->val_alu << 1;
-			mux |= 1;
-			break;
-		case 0x1:
-			mux = state->val_alu >> 16;
-			mux |= 0xffffULL << 48;
-			break;
-		case 0x2:
-			mux = state->val_alu;
-			break;
-		case 0x3:
-			mux = state->val_wdr;
-			break;
+		uint64_t fiu = 0, mux = 0;
+		bool c_source = UIR_VAL_CSRC;
+		bool split_c_src = state->val_rand == 0x4;
+		if (split_c_src || !c_source) {
+			fiu = ~mp_fiu_bus;
 		}
-	}
-	if (!split_c_src && !c_source) {
-		state->val_c = fiu;
-	} else if (!split_c_src) {
-		state->val_c = mux;
-	} else if (c_source) {
-		state->val_c = fiu & 0xffffffffULL;
-		state->val_c |= mux & 0xffffffffULL << 32;
-	} else {
-		state->val_c = mux & 0xffffffffULL;
-		state->val_c |= fiu & 0xffffffffULL << 32;
-	}
-}
+		if (!c_source && (state->val_rand == 3 || state->val_rand == 6)) {
+			fiu &= ~1ULL;
+			fiu |= fiu_cond();
+		}
+		if (c_source || split_c_src) {
+			unsigned sel = UIR_VAL_SEL;
+			switch (sel) {
+			case 0x0:
+				mux = state->val_alu << 1;
+				mux |= 1;
+				break;
+			case 0x1:
+				mux = state->val_alu >> 16;
+				mux |= 0xffffULL << 48;
+				break;
+			case 0x2:
+				mux = state->val_alu;
+				break;
+			case 0x3:
+				mux = state->val_wdr;
+				break;
+			}
+		}
+		uint64_t val_c;
+		if (!split_c_src && !c_source) {
+			val_c = fiu;
+		} else if (!split_c_src) {
+			val_c = mux;
+		} else if (c_source) {
+			val_c = fiu & 0xffffffffULL;
+			val_c |= mux & 0xffffffffULL << 32;
+		} else {
+			val_c = mux & 0xffffffffULL;
+			val_c |= fiu & 0xffffffffULL << 32;
+		}
+
 		uint32_t a;
 		switch (state->val_msrc >> 2) {
 		case 0: a = (state->val_malat >> 48) & 0xffff; break;
@@ -3681,7 +3637,7 @@ val_q4(void)
 
 		unsigned cadr = tv_cadr(UIR_VAL_C, UIR_VAL_FRM, state->val_count);
 		if (cadr < 0x400)
-			state->val_rfram[cadr] = state->val_c;
+			state->val_rfram[cadr] = val_c;
 
 		if (mp_clock_stop) {
 			bool divide = state->val_rand != 0xb;
@@ -3689,7 +3645,7 @@ val_q4(void)
 				state->val_wdr = ~mp_val_bus;
 			}
 			if (UIR_VAL_C == 0x28) {
-				state->val_count = state->val_c;
+				state->val_count = val_c;
 				state->val_count &= 0x3ff;
 			} else if (state->val_rand == 0x2 || !divide) {
 				state->val_count += 1;

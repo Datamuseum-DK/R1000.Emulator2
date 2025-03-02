@@ -14,9 +14,6 @@ void load_programmable(const char *who,
 
 void should_i_trace(const char *me, uint32_t *);
 
-void sysc_trace(const char *me, const char *fmt);
-void sc_tracef(const char *me, const char *fmt, ...) __printflike(2, 3);
-
 void pit_clock(void);
 
 #include "Infra/microtrace.h"
@@ -134,34 +131,6 @@ void update_state(void);
  */
 
 #ifdef __cplusplus
-
-#include <sstream>
-
-#define ALWAYS_TRACE( ...) \
-	do { \
-		char buf[4096]; \
-		buf[0] = '\0'; \
-		std::stringstream ss(buf); \
-		ss << "" __VA_ARGS__ << (uint8_t)0; \
-		sysc_trace("r1000_arch", ss.str().c_str()); \
-	} while (0)
-
-#define TRACE( ...) \
-	do { \
-		if (state->ctx.do_trace & 1) { \
-			char buf[4096]; \
-			buf[0] = '\0'; \
-			std::stringstream ss(buf); \
-			ss << "" __VA_ARGS__ << (uint8_t)0; \
-			sysc_trace("r1000_arch", ss.str().c_str()); \
-		} \
-	} while (0)
-
-#define DEBUG TRACE
-
-#define IS_H(cond) (!((cond) == sc_dt::sc_logic_0))
-#define IS_L(cond) ((cond) == sc_dt::sc_logic_0)
-#define AS(cond) ((cond) ? sc_dt::sc_logic_1 : sc_dt::sc_logic_0)
 
 #define BUS64_LSB(lsb) (63 - (lsb))
 
