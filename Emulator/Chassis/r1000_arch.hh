@@ -11,6 +11,8 @@ class r1000_arch {
 	private:
 	struct r1000_arch_state *state;
 
+        unsigned tv_cadr(unsigned uirc, unsigned frame, unsigned top, unsigned bot, unsigned count);
+
 // -------------------- MEM --------------------
 
 	unsigned find_set(unsigned cmd);

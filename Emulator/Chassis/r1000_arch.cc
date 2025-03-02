@@ -414,10 +414,8 @@ struct r1000_arch_state {
 	uint64_t typ_a, typ_b, c, typ_nalu, typ_alu;
 	uint64_t typ_wdr;
 	uint64_t typ_count;
-	unsigned typ_csa_offset;
 	unsigned typ_topreg;
 	unsigned typ_botreg;
-	unsigned typ_cadr;
 	bool typ_cond;
 	bool typ_almsb;
 	bool typ_coh;
@@ -456,10 +454,8 @@ struct r1000_arch_state {
 	uint64_t val_malat, val_mblat, val_mprod, val_msrc;
 	uint64_t val_nalu, val_alu;
 	unsigned val_count;
-	unsigned val_csa_offset;
 	unsigned val_topreg;
 	unsigned val_botreg;
-	unsigned val_cadr;
 	bool val_amsb, val_bmsb, val_cmsb, val_mbit, val_last_cond;
 	bool val_isbin, val_sub_else_add, val_ovren, val_carry_middle;
 	bool val_coh;
@@ -1456,14 +1452,15 @@ fiu_q2(void)
 	mp_pop_down = load_ctl_top && state->fiu_tcsa_tf_pred;
 
 	if (!invalidate_csa) {
-		mp_csa_offs = 0xf;
+		mp_csa_this_offs = 0xf;
 	} else if (!sel_constant && !minus_one) {
-		mp_csa_offs = 0x1;
+		mp_csa_this_offs = 0x1;
 	} else if (!sel_constant && minus_one) {
-		mp_csa_offs = 0xf;
+		mp_csa_this_offs = 0xf;
 	} else {
-		mp_csa_offs = hit_offs;
+		mp_csa_this_offs = hit_offs;
 	}
+	mp_csa_this_offs ^= 0xf;
 
 	mp_csa_nve = q >> 4;
 	}
@@ -3145,7 +3142,7 @@ typ_find_ab(unsigned uir, bool a)
 			return (~mp_typ_bus);
 		} else {
 			unsigned adr = (state->typ_botreg + (uir&1)) & 0xf;
-			adr += state->typ_csa_offset;
+			adr += mp_csa_offset;
 			adr &= 0xf;
 			return(state->typ_rfram[adr]);
 		}
@@ -3196,7 +3193,6 @@ void
 r1000_arch ::
 typ_q2(void)
 {
-	unsigned uirc = UIR_TYP_C;
 
 	unsigned priv_check = UIR_TYP_UPVC;
 	if (mp_fiu_oe != 0x4) {
@@ -3258,48 +3254,6 @@ typ_q2(void)
 		mp_adr_bus = ~alu;
 	}
 
-	state->typ_cadr = 0;
-	if (uirc <= 0x1f) {
-		// FRAME:REG
-		state->typ_cadr |= uirc & 0x1f;
-		state->typ_cadr |= state->typ_frm << 5;
-	} else if (uirc <= 0x27) {
-		// 0x20 = TOP-1
-		// …
-		// 0x27 = TOP-8
-		state->typ_cadr = (state->typ_topreg + (uirc & 0x7) + 1) & 0xf;
-	} else if (uirc == 0x28) {
-		// 0x28 LOOP COUNTER (RF write disabled)
-	} else if (uirc == 0x29 && mp_csa_write_enable) {
-		// 0x29 DEFAULT (RF write disabled)
-		unsigned sum = state->typ_botreg + state->typ_csa_offset + 1;
-		state->typ_cadr |= sum & 0xf;
-	} else if (uirc == 0x29 && !mp_csa_write_enable) {
-		// 0x29 DEFAULT (RF write disabled)
-		state->typ_cadr |= uirc & 0x1f;
-		state->typ_cadr |= state->typ_frm << 5;
-	} else if (uirc <= 0x2b) {
-		// 0x2a BOT
-		// 0x2b BOT-1
-		state->typ_cadr |= (state->typ_botreg + (uirc & 1)) & 0xf;
-		state->typ_cadr |= (state->typ_botreg + (uirc & 1)) & 0xf;
-	} else if (uirc == 0x2c) {
-		// 0x28 = LOOP_REG
-		state->typ_cadr = state->typ_count;
-	} else if (uirc == 0x2d) {
-		// 0x2d SPARE
-		assert (uirc != 0x2d);
-	} else if (uirc <= 0x2f) {
-		// 0x2e = TOP+1
-		// 0x2f = TOP
-		state->typ_cadr = (state->typ_topreg + (uirc & 0x1) + 0xf) & 0xf;
-	} else if (uirc <= 0x3f) {
-		// GP[0…F]
-		state->typ_cadr |= 0x10 | (uirc & 0x0f);
-	} else {
-		assert(uirc <= 0x3f);
-	}
-
 	bool micros_en = mp_uevent_enable;
 	mp_clock_stop_3 = true;
 	mp_clock_stop_4 = true;
@@ -3347,7 +3301,7 @@ typ_q2(void)
 	if ((selcond & 0x0c) && b_op_pass()) {
 		mp_clock_stop_4 = false;
 	}
-	// typ_cond(mp_cond_sel);
+
 	unsigned marctl = UIR_TYP_MCTL;
 	if ((mp_adr_oe & 0x6) && marctl < 0x8) {	// XXX: && ?
 		mp_spc_bus = (state->typ_b & 0x7) ^ 0x7;
@@ -3408,12 +3362,12 @@ typ_q4(void)
 	if (mp_csa_write_enable && uirc != 0x28)
 		typ_wen = !typ_wen;
 	if (mp_ram_stop && !mp_freeze && !typ_wen) {
-		state->typ_rfram[state->typ_cadr] = c;
+                unsigned cadr = tv_cadr(UIR_TYP_C, UIR_TYP_FRM, state->typ_topreg, state->typ_botreg, state->typ_count);
+		state->typ_rfram[cadr] = c;
 	}
 
-	unsigned csmux3 = mp_csa_offs ^ 0xf;
 	if (!mp_sf_stop) {
-		state->typ_csa_offset = csmux3;
+		mp_nxt_csa_offset = mp_csa_this_offs;
 	}
 
 	if (sclken) {
@@ -3437,7 +3391,7 @@ typ_q4(void)
 		else
 			csmux0 = state->typ_topreg;
 
-		unsigned csalu0 = csmux3 + csmux0 + 1;
+		unsigned csalu0 = mp_csa_this_offs + csmux0 + 1;
 
 		if (!mp_load_bot)
 			state->typ_botreg = csalu0;
@@ -3675,7 +3629,7 @@ val_find_ab(unsigned uir, bool a)
 			return (~mp_val_bus);
 		} else {
 			unsigned adr = (state->val_botreg + (uir&1)) & 0xf;
-			adr += state->val_csa_offset;
+			adr += mp_csa_offset;
 			adr &= 0xf;
 			return(state->val_rfram[adr]);
 		}
@@ -3715,7 +3669,6 @@ val_q2(void)
 {
 
 	bool divide = state->val_rand != 0xb;
-	unsigned uirc = UIR_VAL_C;
 	if (mp_fiu_oe != 0x02) {
 		state->val_a = val_find_ab(UIR_VAL_A, true);
 		state->val_amsb = state->val_a >> 63;
@@ -3816,49 +3769,6 @@ val_q2(void)
 		state->val_c = mux & 0xffffffffULL;
 		state->val_c |= fiu & 0xffffffffULL << 32;
 	}
-
-	state->val_cadr = 0;
-	if (uirc <= 0x1f) {
-		// FRAME:REG
-		state->val_cadr |= uirc & 0x1f;
-		state->val_cadr |= UIR_VAL_FRM << 5;
-	} else if (uirc <= 0x27) {
-		// 0x20 = TOP-1
-		// …
-		// 0x27 = TOP-8
-		state->val_cadr = (state->val_topreg + (uirc & 0x7) + 1) & 0xf;
-	} else if (uirc == 0x28) {
-		// 0x28 LOOP COUNTER (RF write disabled)
-	} else if (uirc == 0x29 && mp_csa_write_enable) {
-		// 0x29 DEFAULT (RF write disabled)
-		unsigned sum = state->val_botreg + state->val_csa_offset + 1;
-		state->val_cadr |= sum & 0xf;
-	} else if (uirc == 0x29 && !mp_csa_write_enable) {
-		// 0x29 DEFAULT (RF write disabled)
-		state->val_cadr |= uirc & 0x1f;
-		state->val_cadr |= UIR_VAL_FRM << 5;
-	} else if (uirc <= 0x2b) {
-		// 0x2a BOT
-		// 0x2b BOT-1
-		state->val_cadr |= (state->val_botreg + (uirc & 1)) & 0xf;
-		state->val_cadr |= (state->val_botreg + (uirc & 1)) & 0xf;
-	} else if (uirc == 0x2c) {
-		// 0x28 = LOOP_REG
-		state->val_cadr = state->val_count;
-	} else if (uirc == 0x2d) {
-		// 0x2d SPARE
-		assert (uirc != 0x2d);
-	} else if (uirc <= 0x2f) {
-		// 0x2e = TOP+1
-		// 0x2f = TOP
-		state->val_cadr = (state->val_topreg + (uirc & 0x1) + 0xf) & 0xf;
-	} else if (uirc <= 0x3f) {
-		// GP[0…F]
-		state->val_cadr |= 0x10 | (uirc & 0x0f);
-	} else {
-		assert(uirc <= 0x3f);
-	}
-	//val_cond();
 }
 
 void
@@ -3894,12 +3804,8 @@ val_q4(void)
 	if (mp_csa_write_enable && uirc != 0x28)
 		val_wen = !val_wen;
 	if (mp_ram_stop && !mp_freeze && !val_wen) {
-		state->val_rfram[state->val_cadr] = state->val_c;
-	}
-
-	unsigned csmux3 = mp_csa_offs ^ 0xf;
-	if (!mp_sf_stop) {
-		state->val_csa_offset = csmux3;
+                unsigned cadr = tv_cadr(UIR_VAL_C, UIR_VAL_FRM, state->val_topreg, state->val_botreg, state->val_count);
+		state->val_rfram[cadr] = state->val_c;
 	}
 
 	if (sclken) {
@@ -3923,7 +3829,7 @@ val_q4(void)
 		else
 			csmux0 = state->val_topreg;
 
-		unsigned csalu0 = csmux3 + csmux0 + 1;
+		unsigned csalu0 = mp_csa_this_offs + csmux0 + 1;
 
 		if (!mp_load_bot)
 			state->val_botreg = csalu0;
@@ -3945,6 +3851,55 @@ val_q4(void)
 	}
 }
 
+
+// ------------------ TYP&VAL ------------------
+
+unsigned
+r1000_arch ::
+tv_cadr(unsigned uirc, unsigned frame, unsigned top, unsigned bot, unsigned count)
+{
+	unsigned cadr = 0;
+	if (uirc <= 0x1f) {
+		// FRAME:REG
+		cadr |= uirc & 0x1f;
+		cadr |= frame << 5;
+	} else if (uirc <= 0x27) {
+		// 0x20 = TOP-1
+		// …
+		// 0x27 = TOP-8
+		cadr = (top + (uirc & 0x7) + 1) & 0xf;
+	} else if (uirc == 0x28) {
+		// 0x28 LOOP COUNTER (RF write disabled)
+	} else if (uirc == 0x29 && mp_csa_write_enable) {
+		// 0x29 DEFAULT (RF write disabled)
+		unsigned sum = bot + mp_csa_offset + 1;
+		cadr |= sum & 0xf;
+	} else if (uirc == 0x29 && !mp_csa_write_enable) {
+		// 0x29 DEFAULT (RF write disabled)
+		cadr |= uirc & 0x1f;
+		cadr |= frame << 5;
+	} else if (uirc <= 0x2b) {
+		// 0x2a BOT
+		// 0x2b BOT-1
+		cadr |= (bot + (uirc & 1)) & 0xf;
+	} else if (uirc == 0x2c) {
+		// 0x28 = LOOP_REG
+		cadr = count;
+	} else if (uirc == 0x2d) {
+		// 0x2d SPARE
+		assert (uirc != 0x2d);
+	} else if (uirc <= 0x2f) {
+		// 0x2e = TOP+1
+		// 0x2f = TOP
+		cadr = (top + (uirc & 0x1) + 0xf) & 0xf;
+	} else if (uirc <= 0x3f) {
+		// GP[0…F]
+		cadr |= 0x10 | (uirc & 0x0f);
+	} else {
+		assert(uirc <= 0x3f);
+	}
+	return (cadr);
+}
 
 // -------------------- IOC --------------------
 
