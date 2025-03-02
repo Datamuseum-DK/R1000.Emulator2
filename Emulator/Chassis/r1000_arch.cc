@@ -3842,11 +3842,20 @@ unsigned
 r1000_arch ::
 tv_cadr(unsigned uirc, unsigned frame, unsigned count)
 {
-	if (uirc <= 0x1f) {						// 0x00…0x1f	FRAME:REG
-		return((uirc & 0x1f) | (frame << 5));
+	// Ordered by frequency of use.
+	// Pay attention to the order of range comparisons when reordering
+
+	if (uirc == 0x29 && !mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled)
+		return(0x400);
 	}
 	if (uirc >= 0x30) {						// 0x30…0x3f	GP[0…F]
 		return(0x10 | (uirc & 0x0f));
+	}
+	if (uirc <= 0x1f) {						// 0x00…0x1f	FRAME:REG
+		return((uirc & 0x1f) | (frame << 5));
+	}
+	if (uirc == 0x2e || uirc == 0x2f) {				// 0x2e…0x2f	TOP+1,TOP
+		return((state->csa_topreg + (uirc & 0x1) + 0xf) & 0xf);
 	}
 	if (uirc <= 0x27) {						// 0x20…0x27	TOP-1…TOP-8
 		return((state->csa_topreg + (uirc & 0x7) + 1) & 0xf);
@@ -3857,9 +3866,6 @@ tv_cadr(unsigned uirc, unsigned frame, unsigned count)
 	if (uirc == 0x29 && mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled)
 		return ((state->csa_botreg + mp_csa_offset + 1) & 0xf);
 	}
-	if (uirc == 0x29 && !mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled)
-		return(0x400);
-	}
 	if (uirc <= 0x2b) {						// 0x2a…0x2b	BOT,BOT-1
 		return ((state->csa_botreg + (uirc & 1)) & 0xf);
 	}
@@ -3868,9 +3874,6 @@ tv_cadr(unsigned uirc, unsigned frame, unsigned count)
 	}
 	if (uirc == 0x2d) {						// 0x2d		SPARE
 		return (0x400);
-	}
-	if (uirc <= 0x2f) {						// 0x2e…0x2f	TOP+1,TOP
-		return((state->csa_topreg + (uirc & 0x1) + 0xf) & 0xf);
 	}
 	assert(0);
 	return (0x400);
