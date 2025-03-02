@@ -79,7 +79,6 @@ double sc_now(void);
 	macro(unsigned, clock_stop_4, 0) \
 	macro(unsigned, clock_stop_6, 0) \
 	macro(unsigned, clock_stop_7, 0) \
-	macro(unsigned, csa_write_enable, 0) \
 	macro(unsigned, sf_stop, 0) \
 	macro(unsigned, freeze, 0) \
 	macro(unsigned, clock_stop, 0) \
@@ -106,6 +105,7 @@ double sc_now(void);
 	macro(unsigned, valv_oe, 0) \
 	macro(unsigned, typt_oe, 0) \
 	macro(unsigned, q_bit, 0) \
+	macro(unsigned, csa_write_enable, 0) \
 
 #define DMACRO(typ, nam, val) extern volatile typ mp_##nam;
 MIDPLANE(DMACRO)
