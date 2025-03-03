@@ -18,15 +18,10 @@ static int fido_dont_bite = 0;
 static void *
 fido(void *priv)
 {
-	struct ctx *cp;
-	struct ctx ccp;
-	void *ctx_iter_priv;
-	const struct diagproc_context *dctx;
 	uint64_t last_exec = 0, last_instr = 0, last_act = 0;
 	uint64_t this_exec, this_instr, this_act;
 	struct timespec t0, t1;
 	double d, dl, e, el, dt;
-	char *p;
 
 	(void)priv;
 	sleep(fido_patience);
@@ -41,7 +36,13 @@ fido(void *priv)
 		dt += (t1.tv_sec - t0.tv_sec);
 
 		this_exec = this_instr = this_act = 0;
+#if 0
+	const struct diagproc_context *dctx;
+	void *ctx_iter_priv;
+	char *p;
 		ctx_iter_priv = NULL;
+	struct ctx *cp;
+	struct ctx ccp;
 		while(1) {
 			cp = CTX_Iter(&ctx_iter_priv);
 			if (cp == NULL)
@@ -66,6 +67,7 @@ fido(void *priv)
 			this_exec += dctx->executions;
 			this_instr += dctx->instructions;
 		}
+#endif
 
 		if (el > 0) {
 			d = 1e-9 * (t1.tv_nsec - sc_t0.tv_nsec);

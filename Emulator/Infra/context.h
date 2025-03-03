@@ -35,19 +35,12 @@ extern "C" {
 #endif
 
 struct ctx {
-	/* Keep job, do_trace and activations in a single cache line */
-	int32_t		job;
-	uint32_t	do_trace;
-	uint64_t	activations;
-	int64_t		wastage;
-
 	uint32_t	magic;
 #define CTX_MAGIC	0x6e706c8e
 	uint32_t	length;
-	char		ident[96];
+	char		ident[56];
 };
 
-void *CTX_Get(const char *ident, uint32_t length);
 void *CTX_GetRaw(const char *ident, uint32_t length);
 
 struct ctx *CTX_Iter(void **priv);

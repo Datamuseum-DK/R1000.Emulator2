@@ -183,7 +183,6 @@ dolru(unsigned lru, unsigned before, unsigned cmd)
 	#define XIOP_VARIANT 1
 
 struct r1000_arch_state {
-	struct ctx ctx;
 	unsigned pit;
 	unsigned when;
 
@@ -523,10 +522,7 @@ struct r1000_arch_state {
 
 r1000_arch :: r1000_arch(void)
 {
-	state = (struct r1000_arch_state *)
-	    CTX_Get("r1000_arch", sizeof *state);
-	should_i_trace("r1000_arch", &state->ctx.do_trace);
-
+	state = (struct r1000_arch_state *)CTX_GetRaw("R1000", sizeof *state);
 
 
 // -------------------- MEM --------------------
@@ -589,16 +585,13 @@ r1000_arch :: r1000_arch(void)
 	state->ioc_wcsram = (uint64_t*)CTX_GetRaw("IOC_WCS", sizeof(uint64_t) << 14);
 	state->ioc_tram = (uint16_t*)CTX_GetRaw("IOC_TRAM", sizeof(uint16_t) * 2049);
 
-	struct ctx *c1 = CTX_Find("IOP.ram_space");
-	assert(c1 != NULL);
-	state->ioc_ram = (uint8_t*)(c1 + 1);
+	state->ioc_ram = (uint8_t *)CTX_GetRaw("IOP.ram_space", 512<<10);
 	state->ioc_is_tracing = false;
 }
 
 void
 r1000_arch :: doit(void)
 {
-	state->ctx.activations++;
 
 	mem_q4();
 	fiu_q4();

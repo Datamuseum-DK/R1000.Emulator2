@@ -90,25 +90,6 @@ MIDSTATE(DMACRO)
 }
 
 void
-should_i_trace(const char *me, uint32_t *p)
-{
-	struct component *comp;
-
-	AN(me);
-	AN(p);
-	comp = calloc(sizeof *comp, 1);
-	AN(comp);
-	comp->name = strdup(me);
-	AN(comp->name);
-	comp->flags = p;
-	VTAILQ_INSERT_TAIL(&component_list, comp, list);
-	ncomponents++;
-
-	*p = 0;
-	return;
-}
-
-void
 load_programmable(const char *who, void *dst, size_t size, const char *arg)
 {
 	char buf[BUFSIZ];

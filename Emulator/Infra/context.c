@@ -81,17 +81,17 @@ CTX_init(const char *path)
 	context_end = context_ptr + context_size;
 }
 
-void *
+static void *
 CTX_Get(const char *ident, uint32_t length)
 {
 
 	struct ctx *ctx;
 
 	assert(context_fd > -1);
-	assert(sizeof *ctx == 128);
+	assert(sizeof *ctx == 64);
 	assert(strlen(ident) + 1 <= sizeof ctx->ident);
-	if (length & 0xf) {
-		length |= 0xf;
+	if (length & 0x3f) {
+		length |= 0x3f;
 		length += 1;
 	}
 	assert(context_ptr + length <= context_end);

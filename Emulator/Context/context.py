@@ -72,23 +72,21 @@ class Context():
 
     def from_file(self, file):
         ''' return the next activation record '''
-        buf = file.read(128)
-        if len(buf) != 128:
+        buf = file.read(64)
+        if len(buf) != 64:
             raise EOFError
-        hdr = struct.unpack("<LLQqLL96s", buf)
-        if not hdr[4]:
+        hdr = struct.unpack("<LL56s", buf)
+        if not hdr[1]:
             raise EOFError
-        if hdr[4] != 0x6e706c8e:
+        if hdr[0] != 0x6e706c8e:
             raise ValueError
-        self.length = hdr[5]
-        self.activations = hdr[2]
-        self.wastage = hdr[3]
-        self.ident = hdr[6].rstrip(b'\x00').decode("utf-8")
-        self.body = file.read(self.length - 128)
+        self.length = hdr[1]
+        self.ident = hdr[2].rstrip(b'\x00').decode("utf-8")
+        self.body = file.read(self.length - 64)
         return self
 
     def __repr__(self):
-        return self.ident
+        return "0x%08x %s" % (self.length - 64, self.ident)
 
 def contexts(filename=None, regex=None):
     ''' Filter activation records by regexp '''
@@ -114,54 +112,8 @@ def main():
     filename = sys.argv[1]
     snapshot = {}
 
-    if len(sys.argv) > 2:
-        duration = int(sys.argv[2])
-        for ctx in contexts(filename=filename):
-            snapshot[ctx.ident] = ctx.activations
-        time.sleep(duration)
-
     for ctx in contexts(filename=filename):
-        i = ctx.activations
-        if i == 0:
-            continue
-        delta = snapshot.get(ctx.ident)
-        if delta:
-            i -= delta
-        if ucycles is None and "CLKGEN" in ctx.ident:
-            ucycles = i / 7
-        nact += i
-        lines.append((i, ctx.wastage, str(ctx)))
-        j = "board " + ctx.ident.split(".")[1].split('_')[0]
-        summ[j] = summ.get(j, 0) + i
-
-
-    for i, j in summ.items():
-        lines.append((j, 0, i))
-
-    wasted = 0
-    for act, wastage, ctx in sorted(lines):
-        wastage /= ucycles
-        if wastage > .1:
-            wasted += wastage
-            i = "%12.3f" % wastage
-        else:
-            i = " " * 11 + "-"
-        if act:
-            print(
-                "%8.3f" % (act / ucycles),
-                "%12d" % act,
-                "%7.4f" % (act / nact),
-                i,
-                ctx
-            )
-    print(
-        "%8.3f" % (nact / ucycles),
-        "%12d" % nact,
-        "%7.4f" % (nact / nact),
-        "%12.3f" % wasted,
-        "Total"
-    )
-    print("UCYCLES %.1f" % ucycles)
+        print(ctx)
 
 if __name__ == "__main__":
     main()
