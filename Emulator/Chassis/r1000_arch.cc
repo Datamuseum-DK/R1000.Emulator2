@@ -198,7 +198,7 @@ struct r1000_arch_state {
 	unsigned mem_word;
 	uint64_t mem_qreg;
 	unsigned mem_hash;
-	uint64_t mem_mar, mem_mar_space, mem_mar_name, mem_mar_page;
+	uint64_t mem_mar, mem_mar_space;
 	bool mem_cstop;
 	unsigned mem_hit_lru;
 	bool mem_eabort, mem_labort;
@@ -653,7 +653,7 @@ find_set(unsigned cmd)
 
 bool
 r1000_arch ::
-is_hit(unsigned adr, unsigned eadr, unsigned set)
+is_hit(unsigned adr, unsigned set)
 {
 	if (state->mem_labort)
 		return (false);
@@ -663,7 +663,7 @@ is_hit(unsigned adr, unsigned eadr, unsigned set)
 		return (false);
 	}
 
-	unsigned tag = state->mem_rame[eadr];
+	unsigned tag = state->mem_rame[adr];
 
 	unsigned page_state = tag & 3;
 	// R1000_Micro_Arch_Mem.pdf p19:
@@ -671,24 +671,32 @@ is_hit(unsigned adr, unsigned eadr, unsigned set)
 
 	bool ts = (data & 0x7) == state->mem_mar_space;
 
-	if CMDS(CMD_LMR)
+	if (CMDS(CMD_LMR))
 		return (ts && (page_state == 1 || page_state == 2));
-	if CMDS(CMD_LMW)
-		return (ts && page_state == 1);
-	if CMDS(CMD_AVQ)
-		return (page_state == 0);
-	if CMDS(CMD_LTR)
-		return (ts && page_state != 0);
-	if CMDS(CMD_LRQ)
-		return (((tag >> 2) & 0xf) == 0);
+#if 1
+	if (CMDS(CMD_PMR|CMD_PMW|CMD_PTW|CMD_PTR))
+		return (state->mem_mar_set == set);
+#endif
 
-	bool name = (state->mem_mar_name == (data >> 32));
-	if CMDS(CMD_NMQ)
+	if (CMDS(CMD_LMW))
+		return (ts && page_state == 1);
+
+
+	if (CMDS(CMD_LRQ))
+		return (((tag >> 2) & 0xf) == 0);
+	if (CMDS(CMD_AVQ))
+		return (page_state == 0);
+	if (CMDS(CMD_LTR))
+		return (ts && page_state != 0);
+
+	bool name = !((state->mem_mar ^ data) >> 32);
+	if (CMDS(CMD_NMQ))
 		return (name && (page_state != 0));
 
-	if CMDS(CMD_IDL)
+	if (CMDS(CMD_IDL))
 		return (true);
 
+printf("MEM %04x\n", state->mem_bcmd);
 	return (state->mem_mar_set == set);
 }
 
@@ -703,8 +711,6 @@ load_mar(void)
 	a = mp_adr_bus;
 	state->mem_mar = a;
 	state->mem_mar_space = s;
-	state->mem_mar_name = (a>>32) & 0xffffffffULL;
-	state->mem_mar_page = (a>>19) & 0x1fff;
 	state->mem_mar_set = (a>>BUS64_LSB(27)) & 0xf;
 
 	state->mem_word = (a >> 7) & 0x3f;
@@ -849,49 +855,49 @@ mem_q4(void)
 			// These create at most a single hit
 			unsigned badr = state->mem_hash << 3;
 			do {
-				if (is_hit(badr | 0, badr | 0, 0)) {
-					state->mem_hits |= BSET_0;
-					break;
-				}
-				if (is_hit(badr | 1, badr | 1, 1)) {
-					state->mem_hits |= BSET_1;
-					break;
-				}
-				if (is_hit(badr | 2, badr | 2, 2)) {
-					state->mem_hits |= BSET_2;
-					break;
-				}
-				if (is_hit(badr | 3, badr | 3, 3)) {
-					state->mem_hits |= BSET_3;
-					break;
-				}
-				if (is_hit(badr | 4, badr | 4, 4)) {
+				if (is_hit(badr | 4, 4)) {
 					state->mem_hits |= BSET_4;
 					break;
 				}
-				if (is_hit(badr | 5, badr | 5, 5)) {
+				if (is_hit(badr | 5, 5)) {
 					state->mem_hits |= BSET_5;
 					break;
 				}
-				if (is_hit(badr | 6, badr | 6, 6)) {
+				if (is_hit(badr | 6, 6)) {
 					state->mem_hits |= BSET_6;
 					break;
 				}
-				if (is_hit(badr | 7, badr | 7, 7)) {
+				if (is_hit(badr | 7, 7)) {
 					state->mem_hits |= BSET_7;
+					break;
+				}
+				if (is_hit(badr | 0, 0)) {
+					state->mem_hits |= BSET_0;
+					break;
+				}
+				if (is_hit(badr | 1, 1)) {
+					state->mem_hits |= BSET_1;
+					break;
+				}
+				if (is_hit(badr | 2, 2)) {
+					state->mem_hits |= BSET_2;
+					break;
+				}
+				if (is_hit(badr | 3, 3)) {
+					state->mem_hits |= BSET_3;
 					break;
 				}
 			} while (0);
 		} else {
 			unsigned badr = state->mem_hash << 3;
-			if (is_hit(badr | 0, badr | 0, 0)) state->mem_hits |= BSET_0;
-			if (is_hit(badr | 1, badr | 1, 1)) state->mem_hits |= BSET_1;
-			if (is_hit(badr | 2, badr | 2, 2)) state->mem_hits |= BSET_2;
-			if (is_hit(badr | 3, badr | 3, 3)) state->mem_hits |= BSET_3;
-			if (is_hit(badr | 4, badr | 4, 4)) state->mem_hits |= BSET_4;
-			if (is_hit(badr | 5, badr | 5, 5)) state->mem_hits |= BSET_5;
-			if (is_hit(badr | 6, badr | 6, 6)) state->mem_hits |= BSET_6;
-			if (is_hit(badr | 7, badr | 7, 7)) state->mem_hits |= BSET_7;
+			if (is_hit(badr | 0, 0)) state->mem_hits |= BSET_0;
+			if (is_hit(badr | 1, 1)) state->mem_hits |= BSET_1;
+			if (is_hit(badr | 2, 2)) state->mem_hits |= BSET_2;
+			if (is_hit(badr | 3, 3)) state->mem_hits |= BSET_3;
+			if (is_hit(badr | 4, 4)) state->mem_hits |= BSET_4;
+			if (is_hit(badr | 5, 5)) state->mem_hits |= BSET_5;
+			if (is_hit(badr | 6, 6)) state->mem_hits |= BSET_6;
+			if (is_hit(badr | 7, 7)) state->mem_hits |= BSET_7;
 		}
 	}
 	state->mem_q4cmd = mp_mem_ctl;
@@ -2075,25 +2081,21 @@ q3clockstop(void)
 		state->seq_diag |= 0x02;
 		// output.freze = 1;
 		mp_sync_freeze |= 2;
-		// ALWAYS_TRACE(<< "THAW1 " << state->seq_diag << " " << mp_sync_freeze);
 	} else if (!mp_fiu_freeze && (state->seq_diag & 0x2) && !(state->seq_diag & 0x4)) {
 		state->seq_diag |= 0x04;
 		// output.sync = 1;
 		mp_sync_freeze |= 4;
-		// ALWAYS_TRACE(<< "THAW2 " << state->seq_diag << " " << mp_sync_freeze);
 	} else if (!mp_fiu_freeze && (state->seq_diag & 0x2) && (state->seq_diag & 0x4)) {
 		state->seq_diag &= ~0x02;
 		// output.freze = 0;
 		mp_sync_freeze &= ~2;
 		state->seq_countdown = 5;
-		// ALWAYS_TRACE(<< "THAW3 " << (state->seq_diag & 0x2) << " " << mp_sync_freeze << " " << state->seq_countdown);
 	} else if (!mp_fiu_freeze && !(state->seq_diag & 0x2) && (state->seq_diag & 0x4)) {
 		if (--state->seq_countdown == 0) {
 			// output.sync = 0;
 			state->seq_diag &= ~0x04;
 			mp_sync_freeze &= ~4;
 		}
-		// ALWAYS_TRACE(<< "THAW4 " <<  state->seq_diag << " " << mp_sync_freeze << " " << state->seq_countdown);
 	}
 
 	state->seq_sf_stop = !(state->seq_diag == 0);
@@ -2102,10 +2104,10 @@ q3clockstop(void)
 
 	unsigned clock_stop = 0;
 	state->seq_clock_stop_1 = !(mp_clock_stop_6 && mp_clock_stop_7 && mp_below_tcp);
-	if (    mp_clock_stop_0) { clock_stop |= 0x40; }
+	if (mp_clock_stop_0) { clock_stop |= 0x40; }
 	if (state->seq_clock_stop_1) { clock_stop |= 0x20; }
-	if (    mp_clock_stop_3) { clock_stop |= 0x10; }
-	if (    mp_clock_stop_4) { clock_stop |= 0x08; }
+	if (mp_clock_stop_3) { clock_stop |= 0x10; }
+	if (mp_clock_stop_4) { clock_stop |= 0x08; }
 	if (state->seq_clock_stop_5) { clock_stop |= 0x04; }
 	if (mp_clock_stop_6) { clock_stop |= 0x02; }
 	if (mp_clock_stop_7) { clock_stop |= 0x01; }
@@ -3850,20 +3852,17 @@ ioc_do_xact(void)
 	if (state->ioc_xact->sc_state == 200 && state->ioc_xact->address == 0xfffff100) {
 		/* READ GET REQUEST */
 		state->ioc_xact->data = state->ioc_reqreg;
-		// TRACE("RD FIFO GET REQUEST " << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff200) {
 		/* WRITE FRONT PANEL */
-		// TRACE("WR FP " << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff300) {
 		/* WRITE SENSE TEST */
-		// TRACE("WR SENSE TEST " << std::hex << state->ioc_xact->data);
 		state->ioc_request_int_en = (state->ioc_xact->data >> 1) & 1;
 		state->ioc_response_int_en = (state->ioc_xact->data >> 0) & 1;
 		ioc_sc_bus_done(&state->ioc_xact);
@@ -3871,14 +3870,12 @@ ioc_do_xact(void)
 	}
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff400) {
 		/* WRITE CONTROL */
-		// TRACE("WR CONTROL " << std::hex << state->ioc_xact->data);
 		state->ioc_fffff400 = (state->ioc_xact->data >> 16) & 0xf;
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff500) {
 		/* WRITE FIFO INIT */
-		// TRACE("WR FIFO INIT " << std::hex << state->ioc_xact->data);
 		state->ioc_reqwrp = state->ioc_reqrdp = 0;
 		state->ioc_rspwrp = state->ioc_rsprdp = 0;
 		ioc_sc_bus_done(&state->ioc_xact);
@@ -3887,17 +3884,9 @@ ioc_do_xact(void)
 
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff600) {
 		/* WRITE FIFO CPU RSP */
-		// TRACE("WR FIFO CPU RSP " << std::hex << state->ioc_xact->data);
 		state->ioc_rspfifo[state->ioc_rspwrp++] = state->ioc_xact->data;
 		state->ioc_rspwrp &= 0x3ff;
 
-#if 0
-		TRACE(
-			"WR FIFO RSP " << std::hex << state->ioc_xact->data
-			<< " wr " << state->ioc_rspwrp
-			<< " rd " << state->ioc_rsprdp
-		);
-#endif
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
@@ -3906,14 +3895,6 @@ ioc_do_xact(void)
 		/* WRITE CPU REQUEST */
 		state->ioc_reqreg = state->ioc_reqfifo[state->ioc_reqrdp++];
 		state->ioc_reqrdp &= 0x3ff;
-#if 0
-		TRACE(
-			"WR FIFO CPU REQUEST " << std::hex << state->ioc_reqreg
-				<< " wr " << state->ioc_reqwrp
-				<< " rd " << state->ioc_reqrdp
-		);
-#endif
-
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
@@ -3933,43 +3914,24 @@ ioc_do_xact(void)
 		if (!mp_key_switch)		state->ioc_xact->data |= 0x00000008;
 		state->ioc_xact->data |= state->ioc_iack << 0;
 
-		//TRACE("RD STATUS " << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff900) {
 		/* WRITE CLEAR BERR */
-		//TRACE("WR CLEAR BERR " << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffffe00) {
 		/* WRITE CPU CONTROL */
-		//TRACE("WR CPU CONTROL " << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
 	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffffd00) {
-		//TRACE("WR fffffd00" << std::hex << state->ioc_xact->data);
 		ioc_sc_bus_done(&state->ioc_xact);
 		return;
 	}
-
-#if 0
-	TRACE(
-		<< "BXPA state= "
-		<< state->ioc_xact->sc_state
-		<< " adr= "
-		<< std::hex << state->ioc_xact->address
-		<< " data= "
-		<< std::hex << state->ioc_xact->data
-		<< " width = "
-		<< state->ioc_xact->width
-		<< " write= "
-		<< state->ioc_xact->is_write
-	);
-#endif
 }
 
 bool
@@ -4081,12 +4043,10 @@ ioc_q4(void)
 
 	if (mp_ioc_trace && ((mp_sync_freeze & 0x3) == 0) && !state->ioc_is_tracing) {
 		state->ioc_is_tracing = true;
-		// ALWAYS_TRACE(<< " IS TRACING");
 	}
 	if (mp_ioc_trace && (mp_sync_freeze & 0x3) && state->ioc_is_tracing) {
 		state->ioc_is_tracing = true;
 		mp_ioc_trace = 0;
-		// ALWAYS_TRACE(<< " STOP TRACING");
 	}
 
 	if ((state->ioc_request_int_en && state->ioc_reqrdp != state->ioc_reqwrp) && state->ioc_iack != 6) {
