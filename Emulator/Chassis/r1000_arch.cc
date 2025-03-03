@@ -184,7 +184,6 @@ dolru(unsigned lru, unsigned before, unsigned cmd)
 
 struct r1000_arch_state {
 	unsigned pit;
-	unsigned when;
 
 
 // -------------------- MEM --------------------
@@ -199,7 +198,7 @@ struct r1000_arch_state {
 	unsigned mem_word;
 	uint64_t mem_qreg;
 	unsigned mem_hash;
-	uint64_t mem_mar_space, mem_mar_name, mem_mar_page;
+	uint64_t mem_mar, mem_mar_space, mem_mar_name, mem_mar_page;
 	bool mem_cstop;
 	unsigned mem_hit_lru;
 	bool mem_eabort, mem_labort;
@@ -657,10 +656,12 @@ r1000_arch ::
 is_hit(unsigned adr, unsigned eadr, unsigned set)
 {
 	if (state->mem_labort)
-		return false;
+		return (false);
 
-	if CMDS(CMD_IDL)
-		return (true);
+	uint64_t data = state->mem_ram[adr];
+	if (CMDS(CMD_LMR|CMD_LMW|CMD_LTR) && ((state->mem_mar ^ data) & ~0x1fffULL)) {
+		return (false);
+	}
 
 	unsigned tag = state->mem_rame[eadr];
 
@@ -668,24 +669,26 @@ is_hit(unsigned adr, unsigned eadr, unsigned set)
 	// R1000_Micro_Arch_Mem.pdf p19:
 	//    00: Loading, 01: Read-only, 10: Read-Write, 11: Invalid
 
-	uint64_t data = state->mem_ram[adr];
-	uint64_t ta = data >> 19;
-	uint64_t ts = data & 0x7;
+	bool ts = (data & 0x7) == state->mem_mar_space;
 
-	bool name = (state->mem_mar_name == (ta >> 13));
-	bool offset = (state->mem_mar_page == (ta & 0x1fff)) && (state->mem_mar_space == ts);
+	if CMDS(CMD_LMR)
+		return (ts && (page_state == 1 || page_state == 2));
+	if CMDS(CMD_LMW)
+		return (ts && page_state == 1);
 	if CMDS(CMD_AVQ)
 		return (page_state == 0);
 	if CMDS(CMD_LTR)
-		return (name && offset && page_state != 0);
+		return (ts && page_state != 0);
 	if CMDS(CMD_LRQ)
 		return (((tag >> 2) & 0xf) == 0);
+
+	bool name = (state->mem_mar_name == (data >> 32));
 	if CMDS(CMD_NMQ)
 		return (name && (page_state != 0));
-	if CMDS(CMD_LMR)
-		return (name && offset && (page_state == 1 || page_state == 2));
-	if CMDS(CMD_LMW)
-		return (name && offset && page_state == 1);
+
+	if CMDS(CMD_IDL)
+		return (true);
+
 	return (state->mem_mar_set == set);
 }
 
@@ -698,6 +701,7 @@ load_mar(void)
 
 	s = mp_spc_bus;
 	a = mp_adr_bus;
+	state->mem_mar = a;
 	state->mem_mar_space = s;
 	state->mem_mar_name = (a>>32) & 0xffffffffULL;
 	state->mem_mar_page = (a>>19) & 0x1fff;
@@ -825,8 +829,6 @@ void
 r1000_arch ::
 mem_q4(void)
 {
-	bool labort = !(mp_mem_abort_l && mp_mem_abort_el);
-
 	state->mem_cl = state->mem_hash;
 	state->mem_wd = state->mem_word;
 
@@ -843,19 +845,58 @@ mem_q4(void)
 
 	if (!state->mem_cyo) {
 		state->mem_hits = 0;
-		unsigned badr = state->mem_hash << 3;
-		if (is_hit(badr | 0, badr | 0, 0)) state->mem_hits |= BSET_0;
-		if (is_hit(badr | 1, badr | 1, 1)) state->mem_hits |= BSET_1;
-		if (is_hit(badr | 2, badr | 2, 2)) state->mem_hits |= BSET_2;
-		if (is_hit(badr | 3, badr | 3, 3)) state->mem_hits |= BSET_3;
-		if (is_hit(badr | 4, badr | 4, 4)) state->mem_hits |= BSET_4;
-		if (is_hit(badr | 5, badr | 5, 5)) state->mem_hits |= BSET_5;
-		if (is_hit(badr | 6, badr | 6, 6)) state->mem_hits |= BSET_6;
-		if (is_hit(badr | 7, badr | 7, 7)) state->mem_hits |= BSET_7;
+		if (CMDS(CMD_LMR|CMD_LMW|CMD_LTR)) {
+			// These create at most a single hit
+			unsigned badr = state->mem_hash << 3;
+			do {
+				if (is_hit(badr | 0, badr | 0, 0)) {
+					state->mem_hits |= BSET_0;
+					break;
+				}
+				if (is_hit(badr | 1, badr | 1, 1)) {
+					state->mem_hits |= BSET_1;
+					break;
+				}
+				if (is_hit(badr | 2, badr | 2, 2)) {
+					state->mem_hits |= BSET_2;
+					break;
+				}
+				if (is_hit(badr | 3, badr | 3, 3)) {
+					state->mem_hits |= BSET_3;
+					break;
+				}
+				if (is_hit(badr | 4, badr | 4, 4)) {
+					state->mem_hits |= BSET_4;
+					break;
+				}
+				if (is_hit(badr | 5, badr | 5, 5)) {
+					state->mem_hits |= BSET_5;
+					break;
+				}
+				if (is_hit(badr | 6, badr | 6, 6)) {
+					state->mem_hits |= BSET_6;
+					break;
+				}
+				if (is_hit(badr | 7, badr | 7, 7)) {
+					state->mem_hits |= BSET_7;
+					break;
+				}
+			} while (0);
+		} else {
+			unsigned badr = state->mem_hash << 3;
+			if (is_hit(badr | 0, badr | 0, 0)) state->mem_hits |= BSET_0;
+			if (is_hit(badr | 1, badr | 1, 1)) state->mem_hits |= BSET_1;
+			if (is_hit(badr | 2, badr | 2, 2)) state->mem_hits |= BSET_2;
+			if (is_hit(badr | 3, badr | 3, 3)) state->mem_hits |= BSET_3;
+			if (is_hit(badr | 4, badr | 4, 4)) state->mem_hits |= BSET_4;
+			if (is_hit(badr | 5, badr | 5, 5)) state->mem_hits |= BSET_5;
+			if (is_hit(badr | 6, badr | 6, 6)) state->mem_hits |= BSET_6;
+			if (is_hit(badr | 7, badr | 7, 7)) state->mem_hits |= BSET_7;
+		}
 	}
 	state->mem_q4cmd = mp_mem_ctl;
 	state->mem_q4cont = mp_mem_continue;
-	state->mem_labort = labort;
+	state->mem_labort = !(mp_mem_abort_l && mp_mem_abort_el);
 	state->mem_eabort = !(mp_mem_abort_e && mp_mem_abort_el);
 }
 
