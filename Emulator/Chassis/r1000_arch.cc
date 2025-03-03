@@ -69,6 +69,15 @@ do {							\
 	o &= 0xffffffff;				\
 } while (0)
 
+#define VAL_V_OE	((1<<0)       |(1<<2)                                          )
+#define TYP_T_OE	((1<<0)|(1<<1)                         |(3<<8)                 )
+#define FIU_V_OE	(       (1<<1)       |(1<<3)                                   )
+#define FIU_T_OE	(              (1<<2)|(1<<3)                  |(3<<10)         )
+#define IOC_TV_OE	(                           (1<<4)                             )
+#define SEQ_TV_OE	(                                 (1<<5)                       )
+#define MEM_V_OE	(                                       (3<<8)|(3<<10)         )
+#define MEM_TV_OE	(                                                      (15<<12))
+
 // -------------------- MEM --------------------
 
 #define CMD_PMW	(1<<0xf)	// PHYSICAL_MEM_WRITE
@@ -767,9 +776,7 @@ mem_h1(void)
 			state->mem_qreg = state->mem_ram[padr] & ~(0x7fULL << 6);
 			state->mem_qreg |= (state->mem_rame[padr] & 0x7f) << 6;
 		}
-	}
 
-	if (!state->mem_cyt) {
 		if (CMDS(CMD_LMR|CMD_PMR) && !labort) {
 			unsigned set = find_set(state->mem_cmd);
 			uint32_t radr =	(set << 18) | (state->mem_cl << 6) | state->mem_wd;
@@ -777,9 +784,7 @@ mem_h1(void)
 			state->mem_tqreg = state->mem_bitt[radr+radr];
 			state->mem_vqreg = state->mem_bitt[radr+radr+1];
 		}
-	}
 
-	if (!state->mem_cyt) {
 		bool ihit = mp_mem_hit == 0xf;
 		if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->mem_labort) {
 			unsigned set = find_set(state->mem_cmd);
@@ -806,13 +811,13 @@ mem_h1(void)
 
 	bool not_me = mp_mem_hit == 0xf;
 
-	if (!mp_memv_oe && mp_memtv_oe) {
+	if (mp_tv_oe & MEM_V_OE) {
 		if (not_me) {
 			mp_val_bus = ~0ULL;
 		} else {
 			mp_val_bus = state->mem_qreg;
 		}
-	} else if (!mp_memtv_oe) {
+	} else if (mp_tv_oe & MEM_TV_OE) {
 		if (not_me) {
 			mp_typ_bus = ~0ULL;
 			mp_val_bus = ~0ULL;
@@ -1283,12 +1288,13 @@ fiu_q1(void)
 	} else {
 		mp_macro_event &= ~0x40;
 	}
-	if ((!mp_fiut_oe || !mp_fiuv_oe)) {
+
+	if (mp_tv_oe & (FIU_T_OE|FIU_V_OE)) {
 		do_tivi();
-		if (!mp_fiut_oe) {
+		if (mp_tv_oe & FIU_T_OE) {
 			mp_typ_bus = ~state->fiu_ti_bus;
 		}
-		if (!mp_fiuv_oe) {
+		if (mp_tv_oe & FIU_V_OE) {
 			mp_val_bus = ~state->fiu_vi_bus;
 		}
 	}
@@ -1466,11 +1472,11 @@ fiu_q2(void)
 
 	mp_csa_nve = q >> 4;
 	}
-	if ((!mp_fiut_oe || !mp_fiuv_oe)) {
-		if (!mp_fiut_oe) {
+	if (mp_tv_oe & (FIU_T_OE|FIU_V_OE)) {
+		if (mp_tv_oe & FIU_T_OE) {
 			mp_typ_bus = ~state->fiu_ti_bus;
 		}
-		if (!mp_fiuv_oe) {
+		if (mp_tv_oe & FIU_V_OE) {
 			mp_val_bus = ~state->fiu_vi_bus;
 		}
 	}
@@ -2224,7 +2230,7 @@ seq_h1(void)
 
 	if (mp_fiu_oe == 0x8)
 		mp_fiu_bus = state->seq_topu;
-	if (mp_tv_oe == 5) {
+	if (mp_tv_oe & SEQ_TV_OE) {
 		seq_p1();
 		int_reads();	// Necessary
 		mp_typ_bus = ~state->seq_typ_bus;
@@ -2265,7 +2271,7 @@ seq_q1(void)
 	bool evnan0d = !(UIR_SEQ_ENMIC && (state->seq_uev == 16));
 	mp_uevent_enable = !(evnan0d || state->seq_stop);
 
-	if (mp_tv_oe != 5) {
+	if (!(mp_tv_oe & SEQ_TV_OE)) {
 		seq_p1();
 		int_reads();								//d int_reads()
 	}
@@ -3097,7 +3103,7 @@ typ_h1(void)
 		state->typ_a = tv_find_ab(UIR_TYP_A, UIR_TYP_FRM, true, true, state->typ_rfram);
 		mp_fiu_bus = ~state->typ_a;
 	}
-	if (!mp_typt_oe) {
+	if (mp_tv_oe & TYP_T_OE) {
 		state->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
 		mp_typ_bus = ~state->typ_b;
 	}
@@ -3121,7 +3127,7 @@ typ_q2(void)
 	if (mp_fiu_oe != 0x4) {
 		state->typ_a = tv_find_ab(UIR_TYP_A, UIR_TYP_FRM, true, true, state->typ_rfram);
 	}
-	if (mp_typt_oe) {
+	if (!(mp_tv_oe & TYP_T_OE)) {
 		state->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
 	}
 
@@ -3476,7 +3482,7 @@ val_h1(void)
 		state->val_amsb = state->val_a >> 63;
 		mp_fiu_bus = ~state->val_a;
 	}
-	if (!mp_valv_oe) {
+	if (mp_tv_oe & VAL_V_OE) {
 		state->val_b = val_find_b(UIR_VAL_B);
 		state->val_bmsb = state->val_b >> 63;
 		mp_val_bus = ~state->val_b;
@@ -3493,7 +3499,7 @@ val_q2(void)
 		state->val_a = tv_find_ab(UIR_VAL_A, UIR_VAL_FRM, true, false, state->val_rfram);
 		state->val_amsb = state->val_a >> 63;
 	}
-	if (mp_valv_oe) {
+	if (!(mp_tv_oe & VAL_V_OE)) {
 		state->val_b = val_find_b(UIR_VAL_B);
 		state->val_bmsb = state->val_b >> 63;
 	}
@@ -3662,9 +3668,9 @@ tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rf)
 	}
 
         if (!a && uir == 0x29) {							// 0x16		CSA/VAL_BUS
-		if ((!t) && mp_valv_oe) {
+		if ((!t) && !(mp_tv_oe & VAL_V_OE)) {
 			return (~mp_val_bus);
-		} else if ((t) && mp_typt_oe) {
+		} else if ((t) && !(mp_tv_oe & TYP_T_OE)) {
 			return (~mp_typ_bus);
 		} else {
 			unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
@@ -3980,7 +3986,7 @@ ioc_h1(void)
 
 	mp_load_wdr = UIR_IOC_ULWDR;
 
-	if (!mp_ioctv_oe) {
+	if (mp_tv_oe & IOC_TV_OE) {
 		mp_val_bus = state->ioc_dummy_val;
 
 		switch (UIR_IOC_RAND) {
@@ -4168,45 +4174,14 @@ ioc_q4(void)
 			tptr &= 0x7ff;
 			state->ioc_tram[2048] = tptr;
 		}
-		mp_nxt_fiuv_oe = true;
-		mp_nxt_fiut_oe = true;
-		mp_nxt_memv_oe = true;
-		mp_nxt_memtv_oe = true;
-		mp_nxt_ioctv_oe = true;
-		mp_nxt_valv_oe = true;
-		mp_nxt_typt_oe = true;
-		mp_nxt_tv_oe = UIR_IOC_TVBS;
-		switch (mp_nxt_tv_oe) {
-		case 0x0: mp_nxt_valv_oe = false; mp_nxt_typt_oe = false; break;
-		case 0x1: mp_nxt_fiuv_oe = false; mp_nxt_typt_oe = false; break;
-		case 0x2: mp_nxt_valv_oe = false; mp_nxt_fiut_oe = false; break;
-		case 0x3: mp_nxt_fiuv_oe = false; mp_nxt_fiut_oe = false; break;
-		case 0x4: mp_nxt_ioctv_oe = false; break;
-		case 0x5: break; // SEQ
-		case 0x8:
-		case 0x9:
-			mp_nxt_memv_oe = false; mp_nxt_typt_oe = false; break;
-		case 0xa:
-		case 0xb:
-			mp_nxt_memv_oe = false; mp_nxt_fiut_oe = false; break;
-		case 0xc:
-		case 0xd:
-		case 0xe:
-		case 0xf:
+
+		mp_nxt_tv_oe = 1 << UIR_IOC_TVBS;
+		if (mp_nxt_tv_oe & MEM_TV_OE) {
 			if (state->ioc_dumen) {
-				mp_nxt_tv_oe = 4;
-				mp_nxt_ioctv_oe = false;
+				mp_nxt_tv_oe = 1 << 4;	   // IOC_TV
 			} else if (state->ioc_csa_hit) {
-				mp_nxt_tv_oe = 0;
-				mp_nxt_typt_oe = false;
-				mp_nxt_valv_oe = false;
-			} else {
-				mp_nxt_memtv_oe = false;
-				mp_nxt_memv_oe = false;
+				mp_nxt_tv_oe = 1 << 0;	   // VAL_V|TYP_T
 			}
-			break;
-		default:
-			break;
 		}
 	}
 }

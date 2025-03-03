@@ -94,13 +94,6 @@ double sc_now(void);
 	macro(unsigned, adr_oe, 0) \
 	macro(unsigned, fiu_oe, 0) \
 	macro(unsigned, tv_oe, 0) \
-	macro(unsigned, fiuv_oe, 0) \
-	macro(unsigned, fiut_oe, 0) \
-	macro(unsigned, memv_oe, 0) \
-	macro(unsigned, memtv_oe, 0) \
-	macro(unsigned, ioctv_oe, 0) \
-	macro(unsigned, valv_oe, 0) \
-	macro(unsigned, typt_oe, 0) \
 	macro(unsigned, q_bit, 0) \
 	macro(unsigned, csa_write_enable, 0) \
 	macro(unsigned, csa_offset, 0) \
