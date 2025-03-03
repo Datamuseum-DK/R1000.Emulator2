@@ -82,6 +82,8 @@ struct ioc_sc_bus_xact *
 ioc_sc_bus_get_xact(void)
 {
 
+	if (VTAILQ_EMPTY(&bus_xact_head))
+		return(NULL);
 	AZ(pthread_mutex_lock(&bus_xact_mtx));
 	assert(in_progress == NULL);
 	in_progress = VTAILQ_FIRST(&bus_xact_head);
