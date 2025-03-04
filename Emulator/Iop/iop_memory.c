@@ -230,7 +230,7 @@ fifo_delay(void)
 {
 	int i;
 
-	for (i = 0; i < 5; i++) {
+	for (i = 0; i < 2; i++) {
 		(void)ioc_bus_xact_schedule(
 		    5,
 		    mem_desc_io_sreg8.lo,
@@ -256,7 +256,8 @@ fifo_req_oe_pre_read(int debug, uint8_t *space, unsigned width, unsigned adr)
 	    0
 	);
 	vbe32enc(space + adr, value);
-	dump_mailbox("ReqL", value & 0xffff);
+	if (trace_mailbox)
+		dump_mailbox("ReqL", value & 0xffff);
 }
 
 void
@@ -273,7 +274,8 @@ fifo_request_pre_read(int debug, uint8_t *space, unsigned width, unsigned adr)
 	    4,
 	    0
 	);
-	dump_mailbox("ReqPR", value & 0xffff);
+	if (trace_mailbox)
+		dump_mailbox("ReqPR", value & 0xffff);
 	vbe32enc(space + adr, value);
 	fifo_delay();
 }
@@ -304,7 +306,8 @@ fifo_response_post_write(int debug, uint8_t *space, unsigned width, unsigned adr
 	(void)debug;
 	assert(width == 4);
 	value = vbe32dec(space + adr);
-	dump_mailbox("Resp", value & 0xffff);
+	if (trace_mailbox)
+		dump_mailbox("Resp", value & 0xffff);
 	(void)ioc_bus_xact_schedule(
 	    5,
 	    adr + mem_desc_fifo_response.lo,
