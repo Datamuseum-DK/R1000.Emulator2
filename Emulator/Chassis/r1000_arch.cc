@@ -2273,29 +2273,40 @@ seq_q1(void)
 		seq_p1();
 		int_reads();								//d int_reads()
 	}
-	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!condition());
-	state->seq_ibld = state->seq_cload || RNDX(RND_IBUFF_LD);
-	bool ibemp = !(!state->seq_ibld || (state->seq_word != 0));
-	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
 
 }
+
 void
 r1000_arch ::
 seq_q3(void)
 {
+	// These are necessary for conditions (NB: Also? 0x4d:seq_m_ibuff_mt, others ?)
+	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
+	state->seq_m_res_ref = !(state->seq_lxval && !(state->seq_display >> 15));
+	state->seq_field_number_error = (((state->seq_val_bus >> 39) ^ state->seq_curins) & 0x3ff) != 0x3ff;
+	state->seq_tos_vld_cond = !(state->seq_foo7 || RNDX(RND_TOS_VLB));
+	state->seq_m_tos_invld = !(state->seq_uses_tos && state->seq_tos_vld_cond);
+
+	bool precond = condition();
+
+	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!precond);
+	state->seq_ibld = state->seq_cload || RNDX(RND_IBUFF_LD);
+	bool ibemp = !(!state->seq_ibld || (state->seq_word != 0));
+	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
+
 	if (state->seq_bad_hint) {
 		state->seq_uadr_mux = ((state->seq_bhreg) >> 5) & 1;
 	} else {
 		if (BRTYPE(BRANCH_TRUE|BRANCH|CALL_TRUE|CALL|RETURN_FALSE|CASE_FALSE|DISPATCH_FALSE|CASE_CALL)) {
 			switch (UIR_SEQ_BRTIM) {
-			case 0: state->seq_uadr_mux = condition(); break;
+			case 0: state->seq_uadr_mux = precond; break;
 			case 1: state->seq_uadr_mux = state->seq_latched_cond; break;
 			case 2: state->seq_uadr_mux = true; break;
 			case 3: state->seq_uadr_mux = false; break;
 			}
 		} else {
 			switch (UIR_SEQ_BRTIM) {
-			case 0: state->seq_uadr_mux = !condition(); break;
+			case 0: state->seq_uadr_mux = !precond; break;
 			case 1: state->seq_uadr_mux = !state->seq_latched_cond; break;
 			case 2: state->seq_uadr_mux = false; break;
 			case 3: state->seq_uadr_mux = true; break;
@@ -2316,20 +2327,17 @@ seq_q3(void)
 	state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
 
 
-	state->seq_tos_vld_cond = !(state->seq_foo7 || RNDX(RND_TOS_VLB));
-	state->seq_m_tos_invld = !(state->seq_uses_tos && state->seq_tos_vld_cond);
 
 	state->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->seq_carry_out);
-	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
-	state->seq_m_res_ref = !(state->seq_lxval && !(state->seq_display >> 15));
 
-	state->seq_field_number_error = (((state->seq_val_bus >> 39) ^ state->seq_curins) & 0x3ff) != 0x3ff;
 	state->seq_ferr = !(state->seq_field_number_error && !(RNDX(RND_FLD_CHK) || !mp_uevent_enable));
 
 	state->seq_ram[(state->seq_adr + 1) & 0xf] = state->seq_topu;
 
 	int_reads();
-	state->seq_q3cond = condition();
+	//state->seq_q3cond = condition();
+	//if (precond != state->seq_q3cond) { printf("PRECOND %x %x %x\n", (unsigned)UIR_SEQ_CSEL, precond, state->seq_q3cond); }
+	state->seq_q3cond = precond;
 
 	state->seq_l_macro_hic = true;
 	unsigned nua;
