@@ -2311,15 +2311,24 @@ seq_q3(void)
 		state->seq_uadr_mux = ((state->seq_bhreg) >> 5) & 1;
 		state->seq_push_br = false;
 		state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
-		state->seq_wanna_dispatch = !(0 && !state->seq_uadr_mux);
+		state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !state->seq_uadr_mux);
 		state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
 		nua = state->seq_other;
+		mp_clock_stop_6 = true;
+		state->seq_bad_hint_enable = true;
+		mp_clock_stop_7 = false;
 	} else if (state->seq_late_macro_event) {
 		// Not tested by expmon_test_seq ?
 		nua = 0x140 | ((state->seq_late_u ^ 0x7) << 3);
 		state->seq_l_macro_hic = false;
+		mp_clock_stop_6 = true;
+		state->seq_bad_hint_enable = false;
+		mp_clock_stop_7 = false;
 	} else if (state->seq_uev != 16) {
 		nua = 0x180 | (state->seq_uev << 3);
+		mp_clock_stop_6 = false;
+		state->seq_bad_hint_enable = false;
+		mp_clock_stop_7 = true;
 	} else {
 		if (BRTYPE(BRANCH_TRUE|BRANCH|CALL_TRUE|CALL|RETURN_FALSE|CASE_FALSE|DISPATCH_FALSE|CASE_CALL)) {
 			switch (UIR_SEQ_BRTIM) {
@@ -2361,6 +2370,9 @@ seq_q3(void)
 			nua = two;
 			state->seq_other = one;
 		}
+		mp_clock_stop_6 = true;
+		state->seq_bad_hint_enable = true;
+		mp_clock_stop_7 = true;
 	}
 
 	if (!state->seq_sf_stop && mp_seq_prepped) {
@@ -2368,8 +2380,8 @@ seq_q3(void)
 	}
 
 	state->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->seq_carry_out);
-
 	state->seq_ferr = !(state->seq_field_number_error && !(RNDX(RND_FLD_CHK) || !mp_uevent_enable));
+	state->seq_clock_stop_5 = (state->seq_check_exit_ue && state->seq_ferr);
 
 	state->seq_ram[(state->seq_adr + 1) & 0xf] = state->seq_topu;
 
@@ -2377,23 +2389,9 @@ seq_q3(void)
 
 	state->seq_q3cond = precond;
 
-	state->seq_clock_stop_5 = (state->seq_check_exit_ue && state->seq_ferr);
-	mp_clock_stop_6 = !(!state->seq_bad_hint && !state->seq_late_macro_event && state->seq_uev != 16);
-	mp_clock_stop_7 = !state->seq_bad_hint && state->seq_l_macro_hic;
 	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
 
 	q3clockstop();
-
-	state->seq_bad_hint_enable = !((!mp_clock_stop_6) || (state->seq_late_macro_event && !state->seq_bad_hint));
-	unsigned pa040a = 0;
-	pa040a |= (state->seq_decode & 0x7) << 6;
-	if (state->seq_wanna_dispatch) pa040a |= 0x20;
-	if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
-	if (state->seq_resolve_address != 0xf) pa040a |= 0x08;
-	if (state->seq_stop) pa040a |= 0x04;
-	if (!state->seq_maybe_dispatch) pa040a |= 0x02;
-	if (state->seq_bad_hint) pa040a |= 0x01;
-	unsigned pa040d = seq_pa040[pa040a];
 
 
 	bool bar8;
@@ -2418,11 +2416,17 @@ seq_q3(void)
 	else
 		state->seq_late_macro_pending = 8;
 	}
+
 	state->seq_macro_event = (!state->seq_wanna_dispatch) && (state->seq_early_macro_pending || (state->seq_late_macro_pending != 8));
 	if (state->seq_macro_event) {
 		bar8 = (state->seq_macro_event && !state->seq_early_macro_pending) && (state->seq_late_macro_pending >= 7);
 	} else {
-		bar8 = !((pa040d >> 1) & 1);
+		bar8 = !(
+			(((state->seq_decode & 0x7) == 4) && !state->seq_wanna_dispatch) ||
+			(((state->seq_decode & 0x7) == 4) && state->seq_maybe_dispatch) ||
+			(state->seq_wanna_dispatch && state->seq_maybe_dispatch) ||
+			(state->seq_stop)
+		);
 	}
 
 	if (!bar8) {
@@ -2463,6 +2467,16 @@ seq_q3(void)
 		state->seq_foo7 = false;
 	}
 	if (mp_adr_oe & 0x8) {
+		unsigned pa040a = 0;
+		pa040a |= (state->seq_decode & 0x7) << 6;
+		if (state->seq_wanna_dispatch) pa040a |= 0x20;
+		if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
+		if (state->seq_resolve_address != 0xf) pa040a |= 0x08;
+		if (state->seq_stop) pa040a |= 0x04;
+		if (!state->seq_maybe_dispatch) pa040a |= 0x02;
+		if (state->seq_bad_hint) pa040a |= 0x01;
+		unsigned pa040d = seq_pa040[pa040a];
+
 		if (state->seq_macro_event) {
 			mp_spc_bus = 0x6;
 		} else {
