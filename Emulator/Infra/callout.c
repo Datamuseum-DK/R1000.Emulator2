@@ -224,6 +224,7 @@ callout_poll(void)
 	nanosec rv = 0;
 
 	while (1) {
+		rv = 0;
 		AZ(pthread_mutex_lock(&callout_mtx));
 		co = VTAILQ_FIRST(&callouts);
 		if (co != NULL && co->when < simclock) {

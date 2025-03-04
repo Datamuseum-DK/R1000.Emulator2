@@ -70,6 +70,7 @@ void ioc_wait_cpu_running(void);
 
 /**********************************************************************/
 
+void ioc_wake_cpu(void);
 void ioc_stop_cpu(void);
 void ioc_breakpoint_check(uint32_t adr);
 void ioc_breakpoint(uint32_t, ioc_bpt_f *func, void *priv);

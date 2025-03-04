@@ -396,7 +396,6 @@ struct r1000_arch_state {
 	unsigned seq_urand;
 	unsigned seq_rndx;
 	unsigned seq_br_type;
-	unsigned seq_br_tim;
 	bool seq_macro_event;
 	unsigned seq_lmp;
 	bool seq_early_macro_pending;
@@ -405,6 +404,27 @@ struct r1000_arch_state {
 	bool seq_tmp_carry_out;
 	bool uses_tos;
 	unsigned seq_mem_start;
+
+#define BRANCH_FALSE	(1<<0x0)
+#define BRANCH_TRUE	(1<<0x1)
+#define PUSH		(1<<0x2)
+#define BRANCH		(1<<0x3)
+#define CALL_FALSE	(1<<0x4)
+#define CALL_TRUE	(1<<0x5)
+#define CONTINUE	(1<<0x6)
+#define CALL		(1<<0x7)
+#define RETURN_TRUE	(1<<0x8)
+#define RETURN_FALSE	(1<<0x9)
+#define RETURN		(1<<0xa)
+#define CASE_FALSE	(1<<0xb)
+#define DISPATCH_TRUE	(1<<0xc)
+#define DISPATCH_FALSE	(1<<0xd)
+#define DISPATCH	(1<<0xe)
+#define CASE_CALL	(1<<0xf)
+#define A_BRANCH (BRANCH_FALSE|BRANCH_TRUE)
+#define A_CALL (CALL_FALSE|CALL_TRUE|CALL)
+#define A_DISPATCH (DISPATCH_TRUE|DISPATCH_FALSE|DISPATCH)
+#define BRTYPE(x) (state->seq_br_type & (x))
 
 #define UIR_SEQ_BRN	((state->seq_uir >> (41-13)) & 0x3fff)
 #define UIR_SEQ_LUIR	((state->seq_uir >> (41-15)) & 0x1)
@@ -592,7 +612,6 @@ r1000_arch :: r1000_arch(void)
 void
 r1000_arch :: doit(void)
 {
-
 	mem_q4();
 	fiu_q4();
 	typ_q4();
@@ -620,9 +639,9 @@ r1000_arch :: doit(void)
 	typ_q2();
 	val_q2();
 	ioc_q2();
-	seq_q2();
 
 	seq_q3();
+
 }
 
 
@@ -714,19 +733,19 @@ mem_h1(void)
 	state->mem_cyt = p_mcyc2_next_hd;
 
 	if (state->mem_cyo && !mp_freeze && !CMDS(CMD_IDL)) {
-if (CMDS(CMD_AVQ)) {
-		if        (state->mem_hits & BSET_4) { mp_mem_set = 0;
-		} else if (state->mem_hits & BSET_5) { mp_mem_set = 1;
-		} else if (state->mem_hits & BSET_6) { mp_mem_set = 2;
-		} else if (state->mem_hits & BSET_7) { mp_mem_set = 3;
-		} else if (state->mem_hits & BSET_0) { mp_mem_set = 0;
-		} else if (state->mem_hits & BSET_1) { mp_mem_set = 1;
-		} else if (state->mem_hits & BSET_2) { mp_mem_set = 2;
-		} else                           { mp_mem_set = 3;
+		if (CMDS(CMD_AVQ)) {
+			if        (state->mem_hits & BSET_4) { mp_mem_set = 0;
+			} else if (state->mem_hits & BSET_5) { mp_mem_set = 1;
+			} else if (state->mem_hits & BSET_6) { mp_mem_set = 2;
+			} else if (state->mem_hits & BSET_7) { mp_mem_set = 3;
+			} else if (state->mem_hits & BSET_0) { mp_mem_set = 0;
+			} else if (state->mem_hits & BSET_1) { mp_mem_set = 1;
+			} else if (state->mem_hits & BSET_2) { mp_mem_set = 2;
+			} else                           { mp_mem_set = 3;
+			}
+		} else if (state->mem_hits != 0xff && mp_mem_set != (state->mem_hit_set & 3)) {
+			mp_mem_set = state->mem_hit_set & 3;
 		}
-} else if (state->mem_hits != 0xff && mp_mem_set != (state->mem_hit_set & 3)) {
-	mp_mem_set = state->mem_hit_set & 3;
-}
 
 		mp_mem_hit = 0xf;
 		if (state->mem_hits & (BSET_0|BSET_1|BSET_2|BSET_3))
@@ -1798,6 +1817,26 @@ int_reads()
 	}
 }
 
+/*
+ * SEQ schematic page 62
+ * 0000 BRANCH FALSE		3
+ * 0001 BRANCH TRUE		2
+ * 0010 PUSH (BRANCH ADDRESS)	3
+ * 0011 UNCONDITIONAL BRANCH	3
+ * 0100 CALL FALSE		3
+ * 0101 CALL TRUE		3
+ * 0110 CONTINUE		3
+ * 0111 UNCONDITIONAL CALL	3
+ * 1000 RETURN TRUE		2
+ * 1001 RETURN FALSE		2
+ * 1010 UNCONDITIONAL RETURN	2
+ * 1011 CASE FALSE		0
+ * 1100 DISPATCH TRUE		1
+ * 1101 DISPATCH FALSE		1
+ * 1110 DISPATCH		1
+ * 1111 UNCONDITIONAL CASE_CALL	0
+ */
+
 unsigned
 r1000_arch ::
 group_sel(void)
@@ -2240,7 +2279,8 @@ seq_h1(void)
 	state->seq_rndx |=  seq_pa045[state->seq_urand | 0x100] << 8;
 	state->seq_rndx |= seq_pa047[state->seq_urand | 0x100];
 
-	state->seq_maybe_dispatch = 0xb < UIR_SEQ_BRTYP && UIR_SEQ_BRTYP < 0xf;
+	state->seq_br_type = 1 << UIR_SEQ_BRTYP;
+	state->seq_maybe_dispatch = BRTYPE(A_DISPATCH);
 
 	if (!state->seq_maybe_dispatch) {
 		state->seq_mem_start = 7;
@@ -2309,24 +2349,22 @@ seq_q1(void)
 
 void
 r1000_arch ::
-seq_q2(void)
+seq_q3(void)
 {
-	state->seq_tos_vld_cond = !(state->seq_foo7 || RNDX(RND_TOS_VLB));				// cond, q4
-	state->seq_m_tos_invld = !(state->seq_uses_tos && state->seq_tos_vld_cond);				// lmp, cond
+	state->seq_tos_vld_cond = !(state->seq_foo7 || RNDX(RND_TOS_VLB));
+	state->seq_m_tos_invld = !(state->seq_uses_tos && state->seq_tos_vld_cond);
 
-	state->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->seq_carry_out);	// q4
+	state->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->seq_carry_out);
 	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
-	state->seq_m_res_ref = !(state->seq_lxval && !(state->seq_display >> 15));				// lmp, cond
+	state->seq_m_res_ref = !(state->seq_lxval && !(state->seq_display >> 15));
 
-	uint64_t val = state->seq_val_bus >> 32;
-	val &= 0xffffff;
-
-	unsigned tmp = (val >> 7) ^ state->seq_curins;
-	tmp &= 0x3ff;
-	state->seq_field_number_error = tmp != 0x3ff;
+	state->seq_field_number_error = (((state->seq_val_bus >> 39) ^ state->seq_curins) & 0x3ff) != 0x3ff;
 	state->seq_ferr = !(state->seq_field_number_error && !(RNDX(RND_FLD_CHK) || !mp_uevent_enable));
 
 	state->seq_ram[(state->seq_adr + 1) & 0xf] = state->seq_topu;
+
+	int_reads();
+	state->seq_q3cond = condition();
 
 	state->seq_l_macro_hic = true;
 	unsigned nua;
@@ -2343,28 +2381,60 @@ seq_q2(void)
 		nua <<= 3;
 		nua |= 0x0180;
 	} else {
+/*
+ * SEQ schematic page 62
+ * 0000 BRANCH FALSE		3
+ * 0001 BRANCH TRUE		2
+ * 0010 PUSH (BRANCH ADDRESS)	3
+ * 0011 UNCONDITIONAL BRANCH	3
+ * 0100 CALL FALSE		3
+ * 0101 CALL TRUE		3
+ * 0110 CONTINUE		3
+ * 0111 UNCONDITIONAL CALL	3
+ * 1000 RETURN TRUE		2
+ * 1001 RETURN FALSE		2
+ * 1010 UNCONDITIONAL RETURN	2
+ * 1011 CASE FALSE		0
+ * 1100 DISPATCH TRUE		1
+ * 1101 DISPATCH FALSE		1
+ * 1110 DISPATCH		1
+ * 1111 UNCONDITIONAL CASE_CALL	0
+ */
 		unsigned sel = group_sel();
 		switch (sel) {
-		case 0:
-			nua = UIR_SEQ_BRN;
-			nua += state->seq_fiu;
+		case 0: // CASEs
+			nua = UIR_SEQ_BRN + state->seq_fiu;
+			state->seq_other = mp_cur_uadr + 1;
 			break;
-		case 1:
-			nua = state->seq_uadr_decode >> 3;
-			nua <<= 1;
+		case 1:	// DISPATCHes
+			nua = (state->seq_uadr_decode >> 2) & ~1;
+			state->seq_other = UIR_SEQ_BRN;
 			break;
-		case 2:
+		case 2: // RETURNs
 			nua = (state->seq_topu ^ 0xffff) & 0x3fff;
+			state->seq_other = UIR_SEQ_BRN;
 			break;
-		case 3:
-		case 4:
-			nua = mp_cur_uadr;
-			nua += 1;
+		case 3: // BRANCHes
+			nua = mp_cur_uadr + 1;
+			state->seq_other = UIR_SEQ_BRN;
 			break;
-		case 5:
-		case 6:
-		case 7:
+		case 4: // CASEs bad
+			nua = mp_cur_uadr + 1;
+			state->seq_other = UIR_SEQ_BRN;
+			state->seq_other += state->seq_fiu;
+			break;
+		case 5: // DISPATCHESs bad
 			nua = UIR_SEQ_BRN;
+			state->seq_other = state->seq_decode >> 3;
+			state->seq_other <<= 1;
+			break;
+		case 6: // RETURNSs bad
+			nua = UIR_SEQ_BRN;
+			state->seq_other = (state->seq_topu ^ 0xffff) & 0x3fff;
+			break;
+		case 7: // BRANCHES bad
+			nua = UIR_SEQ_BRN;
+			state->seq_other = mp_cur_uadr + 1;
 			break;
 		default:
 			nua = 0;
@@ -2379,15 +2449,13 @@ seq_q2(void)
 	mp_clock_stop_6 = !(!state->seq_bad_hint && !state->seq_late_macro_event && state->seq_uev != 16);
 	mp_clock_stop_7 = !state->seq_bad_hint && state->seq_l_macro_hic;
 	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
-}
 
-void
-r1000_arch ::
-seq_q3(void)
-{
 	q3clockstop();
+#if 0
 	int_reads();
 	state->seq_q3cond = condition();
+#endif
+
 	state->seq_bad_hint_enable = !((!mp_clock_stop_6) || (state->seq_late_macro_event && !state->seq_bad_hint));
 	unsigned pa040a = 0;
 	pa040a |= (state->seq_decode & 0x7) << 6;
@@ -2727,32 +2795,36 @@ seq_q4(void)
 			if (state->seq_late_u == 8)
 				state->seq_late_u = 7;
 		}
+#if 0
 		unsigned sel = group_sel();
 		switch (sel) {
-		case 0:
-		case 7:
+		case 0: // CASEs
 			state->seq_other = mp_cur_uadr + 1;
 			break;
-		case 1:
-		case 2:
-		case 3:
+		case 1: // DISPATCHes
+		case 2: // RETURNs
+		case 3: // BRANCHESes
 			state->seq_other = UIR_SEQ_BRN;
 			break;
-		case 4:
+		case 4: // CASEs bad
 			state->seq_other = UIR_SEQ_BRN;
 			state->seq_other += state->seq_fiu;
 			break;
-		case 5:
+		case 5: // DISPATCHes bad
 			state->seq_other = state->seq_decode >> 3;
 			state->seq_other <<= 1;
 			break;
-		case 6:
+		case 6: // RETURNs bad
 			state->seq_other = (state->seq_topu ^ 0xffff) & 0x3fff;
+			break;
+		case 7: // BRANCHES bad
+			state->seq_other = mp_cur_uadr + 1;
 			break;
 		default:
 			assert(sel < 8);
 			break;
 		}
+#endif
 
 		mp_seq_uev &= ~(UEV_CK_EXIT|UEV_FLD_ERR|UEV_NEW_PAK);
 		if (!state->seq_check_exit_ue) {

@@ -58,12 +58,22 @@ static uintmax_t ioc_cpu_quota = 0;
 static unsigned ioc_cpu_running = 0;
 static pthread_cond_t ioc_cpu_cond_state = PTHREAD_COND_INITIALIZER;
 static pthread_cond_t ioc_cpu_cond = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t ioc_cpu_sleep = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t ioc_cpu_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 unsigned ioc_fc;
 
 unsigned int ioc_pc;
 static unsigned key_switch;
+
+/**********************************************************************
+ */
+
+void
+ioc_wake_cpu(void)
+{
+	AZ(pthread_cond_signal(&ioc_cpu_sleep));
+}
 
 /**********************************************************************
  */
@@ -334,6 +344,7 @@ main_ioc(void *priv)
 	unsigned u;
 	nanosec ns;
 	nanosec mytime = simclock;
+	struct timespec ts;
 
 	(void)priv;
 
@@ -362,18 +373,9 @@ main_ioc(void *priv)
 			io_sreg8_space[3] &= ~7;
 			io_sreg8_space[3] |= (~irq_level) & 7;
 		}
-		if (1 || !systemc_clock) {
-			i = m68k_execute(1);
-			simclock += 100ULL * i;
-			mytime = simclock;
-		} else {
-			while (simclock < mytime) {
-				ns = callout_poll();
-				usleep(1000);
-			}
-			i = m68k_execute(1);
-			mytime += 100ULL * i;
-		}
+		i = m68k_execute(1);
+		simclock += 100ULL * i;
+		mytime = simclock;
 
 		if (i == 1) {
 			ioc_t_stopped += 100ULL;
@@ -386,15 +388,28 @@ main_ioc(void *priv)
 		if (ioc_maxins && ioc_nins > ioc_maxins)
 			finish(4, "IOP maxins reached");
 		ns = callout_poll();
-		if (1 || !systemc_clock) {
-			if (i == 1) {
+		if (i == 1) {
+			if (ns > 0) {
 				ns -= simclock;
-				usleep(1 + (ns / 1000));
-				simclock += ns;
-				ioc_t_stopped += ns;
+			} else {
+				ns = 1000000;
 			}
+			AZ(clock_gettime(CLOCK_REALTIME, &ts));
+			ts.tv_nsec += ns;
+			while (ts.tv_nsec >= 1000000000) {
+				ts.tv_nsec -= 1000000000;
+				ts.tv_sec += 1;
+			}
+		} else {
+			ns = 0;
 		}
 		AZ(pthread_mutex_lock(&ioc_cpu_mtx));
+		if (ns > 0) {
+			(void)pthread_cond_timedwait(&ioc_cpu_sleep, &ioc_cpu_mtx, &ts);
+			// XXX: Correctly account for actual time slept
+			simclock += ns;
+			ioc_t_stopped += ns;
+		}
 		if (ioc_cpu_quota)
 			ioc_cpu_quota--;
 	}

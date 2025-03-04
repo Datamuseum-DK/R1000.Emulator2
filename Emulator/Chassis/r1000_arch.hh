@@ -47,7 +47,6 @@ class r1000_arch {
 	void seq_p1(void);
 	void seq_h1(void);
 	void seq_q1(void);
-	void seq_q2(void);
 	void seq_q3(void);
 	void seq_q4(void);
 

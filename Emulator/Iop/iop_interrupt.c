@@ -48,6 +48,7 @@ irq_raise(struct irq_vector *vp)
 			VTAILQ_INSERT_TAIL(&pending, vp,  list);
 		vp = VTAILQ_FIRST(&pending);
 		irq_level = vp->level;
+		ioc_wake_cpu();
 	} else {
 		Trace(trace_ioc_interrupt, "IRQ (+%s)", vp->name);
 	}
