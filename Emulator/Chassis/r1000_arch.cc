@@ -421,8 +421,9 @@ struct r1000_arch_state {
 #define DISPATCH_FALSE	(1<<0xd)
 #define DISPATCH	(1<<0xe)
 #define CASE_CALL	(1<<0xf)
-#define A_BRANCH (BRANCH_FALSE|BRANCH_TRUE)
+#define A_BRANCH (BRANCH_FALSE|BRANCH_TRUE|BRANCH)
 #define A_CALL (CALL_FALSE|CALL_TRUE|CALL)
+#define A_RETURN (RETURN_TRUE|RETURN_FALSE|RETURN)
 #define A_DISPATCH (DISPATCH_TRUE|DISPATCH_FALSE|DISPATCH)
 #define BRTYPE(x) (state->seq_br_type & (x))
 
@@ -1817,38 +1818,6 @@ int_reads()
 	}
 }
 
-/*
- * SEQ schematic page 62
- * 0000 BRANCH FALSE		3
- * 0001 BRANCH TRUE		2
- * 0010 PUSH (BRANCH ADDRESS)	3
- * 0011 UNCONDITIONAL BRANCH	3
- * 0100 CALL FALSE		3
- * 0101 CALL TRUE		3
- * 0110 CONTINUE		3
- * 0111 UNCONDITIONAL CALL	3
- * 1000 RETURN TRUE		2
- * 1001 RETURN FALSE		2
- * 1010 UNCONDITIONAL RETURN	2
- * 1011 CASE FALSE		0
- * 1100 DISPATCH TRUE		1
- * 1101 DISPATCH FALSE		1
- * 1110 DISPATCH		1
- * 1111 UNCONDITIONAL CASE_CALL	0
- */
-
-unsigned
-r1000_arch ::
-group_sel(void)
-{
-	static uint8_t tbl[16] = {3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 0, 1, 1, 1, 0};
-
-	unsigned retval = tbl[UIR_SEQ_BRTYP];
-	if (state->seq_uadr_mux) {
-		retval |= 4;
-	}
-	return (retval);
-}
 
 
 bool
@@ -2295,6 +2264,25 @@ void
 r1000_arch ::
 seq_q1(void)
 {
+
+	state->seq_stop = !(!state->seq_bad_hint && (state->seq_uev == 16) && !state->seq_late_macro_event);
+	bool evnan0d = !(UIR_SEQ_ENMIC && (state->seq_uev == 16));
+	mp_uevent_enable = !(evnan0d || state->seq_stop);
+
+	if (!(mp_tv_oe & SEQ_TV_OE)) {
+		seq_p1();
+		int_reads();								//d int_reads()
+	}
+	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!condition());
+	state->seq_ibld = state->seq_cload || RNDX(RND_IBUFF_LD);
+	bool ibemp = !(!state->seq_ibld || (state->seq_word != 0));
+	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
+
+}
+void
+r1000_arch ::
+seq_q3(void)
+{
 	if (state->seq_bad_hint) {
 		state->seq_uadr_mux = ((state->seq_bhreg) >> 5) & 1;
 	} else {
@@ -2315,25 +2303,6 @@ seq_q1(void)
 		}
 	}
 
-
-	state->seq_stop = !(!state->seq_bad_hint && (state->seq_uev == 16) && !state->seq_late_macro_event);
-	bool evnan0d = !(UIR_SEQ_ENMIC && (state->seq_uev == 16));
-	mp_uevent_enable = !(evnan0d || state->seq_stop);
-
-	if (!(mp_tv_oe & SEQ_TV_OE)) {
-		seq_p1();
-		int_reads();								//d int_reads()
-	}
-	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!condition());
-	state->seq_ibld = state->seq_cload || RNDX(RND_IBUFF_LD);
-	bool ibemp = !(!state->seq_ibld || (state->seq_word != 0));
-	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
-
-}
-void
-r1000_arch ::
-seq_q3(void)
-{
 	unsigned adr = 0;
 	if (state->seq_bad_hint) adr |= 0x01;
 	adr |= (UIR_SEQ_BRTYP << 1);
@@ -2377,64 +2346,26 @@ seq_q3(void)
 		nua <<= 3;
 		nua |= 0x0180;
 	} else {
-/*
- * SEQ schematic page 62
- * 0000 BRANCH FALSE		3
- * 0001 BRANCH TRUE		2
- * 0010 PUSH (BRANCH ADDRESS)	3
- * 0011 UNCONDITIONAL BRANCH	3
- * 0100 CALL FALSE		3
- * 0101 CALL TRUE		3
- * 0110 CONTINUE		3
- * 0111 UNCONDITIONAL CALL	3
- * 1000 RETURN TRUE		2
- * 1001 RETURN FALSE		2
- * 1010 UNCONDITIONAL RETURN	2
- * 1011 CASE FALSE		0
- * 1100 DISPATCH TRUE		1
- * 1101 DISPATCH FALSE		1
- * 1110 DISPATCH		1
- * 1111 UNCONDITIONAL CASE_CALL	0
- */
-		unsigned sel = group_sel();
-		switch (sel) {
-		case 0: // CASEs
-			nua = UIR_SEQ_BRN + state->seq_fiu;
-			state->seq_other = mp_cur_uadr + 1;
-			break;
-		case 1:	// DISPATCHes
-			nua = (state->seq_uadr_decode >> 2) & ~1;
-			state->seq_other = UIR_SEQ_BRN;
-			break;
-		case 2: // RETURNs
-			nua = (state->seq_topu ^ 0xffff) & 0x3fff;
-			state->seq_other = UIR_SEQ_BRN;
-			break;
-		case 3: // BRANCHes
-			nua = mp_cur_uadr + 1;
-			state->seq_other = UIR_SEQ_BRN;
-			break;
-		case 4: // CASEs bad
-			nua = mp_cur_uadr + 1;
-			state->seq_other = UIR_SEQ_BRN;
-			state->seq_other += state->seq_fiu;
-			break;
-		case 5: // DISPATCHESs bad
-			nua = UIR_SEQ_BRN;
-			state->seq_other = (state->seq_uadr_decode >> 2) & ~1;
-			break;
-		case 6: // RETURNSs bad
-			nua = UIR_SEQ_BRN;
-			state->seq_other = (state->seq_topu ^ 0xffff) & 0x3fff;
-			break;
-		case 7: // BRANCHES bad
-			nua = UIR_SEQ_BRN;
-			state->seq_other = mp_cur_uadr + 1;
-			break;
-		default:
-			nua = 0;
-			assert(sel < 8);
-			break;
+		unsigned one, two;
+		if (BRTYPE(A_BRANCH|PUSH|A_CALL|CONTINUE)) { // 7
+			one = UIR_SEQ_BRN;
+			two = mp_cur_uadr + 1;
+		} else if (BRTYPE(A_RETURN)) { // 6
+			one = UIR_SEQ_BRN;
+			two = (state->seq_topu ^ 0xffff) & 0x3fff;
+		} else if (BRTYPE(A_DISPATCH)) { // 5
+			one = UIR_SEQ_BRN;
+			two = (state->seq_uadr_decode >> 2) & ~1;
+		} else { // 4 CASE
+			one = mp_cur_uadr + 1;
+			two = UIR_SEQ_BRN + state->seq_fiu;
+		}
+		if (state->seq_uadr_mux) {
+			nua = one;
+			state->seq_other = two;
+		} else {
+			nua = two;
+			state->seq_other = one;
 		}
 	}
 	if (!state->seq_sf_stop && mp_seq_prepped) {

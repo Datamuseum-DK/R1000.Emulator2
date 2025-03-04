@@ -35,7 +35,6 @@ class r1000_arch {
 // -------------------- SEQ --------------------
 
 	void int_reads(void);
-	unsigned group_sel(void);
 	bool seq_conda(unsigned condsel);
 	bool seq_cond9(unsigned condsel);
 	bool seq_cond8(unsigned condsel);
