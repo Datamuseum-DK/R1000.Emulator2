@@ -397,7 +397,7 @@ struct r1000_arch_state {
 	unsigned seq_rndx;
 	unsigned seq_br_type;
 	bool seq_macro_event;
-	unsigned seq_lmp;
+	unsigned seq_late_macro_pending;
 	bool seq_early_macro_pending;
 	bool seq_maybe_dispatch;
 	unsigned seq_intreads;
@@ -1850,29 +1850,6 @@ group_sel(void)
 	return (retval);
 }
 
-unsigned
-r1000_arch ::
-late_macro_pending(void)
-{
-	unsigned csa = mp_csa_nve;
-	unsigned dec = state->seq_decode >> 3;
-
-	if (csa < (dec & 7))
-		return (0);
-	if (csa > ((dec >> 3) | 12))
-		return (1);
-	if (state->seq_stop)
-		return (2);
-	if (!state->seq_m_res_ref)
-		return (3);
-	if (!state->seq_m_tos_invld)
-		return (4);
-	if (!state->seq_m_break_class)
-		return (6);
-	if (!state->seq_m_ibuff_mt)
-		return (7);
-	return (8);
-}
 
 bool
 r1000_arch ::
@@ -2304,6 +2281,16 @@ seq_h1(void)
 	}
 }
 
+/*
+ * Seq schematic page 62:
+ * BRANCH TIMING
+ * ------ ------
+ * 00 EARLY CONDITION
+ * 01 LATCH CONDITION
+ * 10 HINT TRUE (OR UNCONDITIONAL)
+ * 11 HINT FALSE
+ */
+
 void
 r1000_arch ::
 seq_q1(void)
@@ -2311,29 +2298,25 @@ seq_q1(void)
 	if (state->seq_bad_hint) {
 		state->seq_uadr_mux = ((state->seq_bhreg) >> 5) & 1;
 	} else {
-		switch (UIR_SEQ_BRTIM) {
-		case 0: state->seq_uadr_mux = !condition(); break;
-		case 1: state->seq_uadr_mux = !state->seq_latched_cond; break;
-		case 2: state->seq_uadr_mux = false; break;
-		case 3: state->seq_uadr_mux = true; break;
+		if (BRTYPE(BRANCH_TRUE|BRANCH|CALL_TRUE|CALL|RETURN_FALSE|CASE_FALSE|DISPATCH_FALSE|CASE_CALL)) {
+			switch (UIR_SEQ_BRTIM) {
+			case 0: state->seq_uadr_mux = condition(); break;
+			case 1: state->seq_uadr_mux = state->seq_latched_cond; break;
+			case 2: state->seq_uadr_mux = true; break;
+			case 3: state->seq_uadr_mux = false; break;
+			}
+		} else {
+			switch (UIR_SEQ_BRTIM) {
+			case 0: state->seq_uadr_mux = !condition(); break;
+			case 1: state->seq_uadr_mux = !state->seq_latched_cond; break;
+			case 2: state->seq_uadr_mux = false; break;
+			case 3: state->seq_uadr_mux = true; break;
+			}
 		}
-		if (UIR_SEQ_BRTYP & 1)
-			state->seq_uadr_mux = !state->seq_uadr_mux;
 	}
 
-	unsigned adr = 0;
-	if (state->seq_bad_hint) adr |= 0x01;
-	adr |= (UIR_SEQ_BRTYP << 1);
-	if (state->seq_bhreg & 0x20) adr |= 0x20;
-	if (state->seq_bhreg & 0x40) adr |= 0x80;
-	if (state->seq_bhreg & 0x80) adr |= 0x100;
-	unsigned rom = seq_pa043[adr];
-	state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !state->seq_uadr_mux);
-	state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
-	state->seq_push_br =    (rom >> 1) & 1;
-	state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
-	state->seq_stop = !(!state->seq_bad_hint && (state->seq_uev == 16) && !state->seq_late_macro_event);
 
+	state->seq_stop = !(!state->seq_bad_hint && (state->seq_uev == 16) && !state->seq_late_macro_event);
 	bool evnan0d = !(UIR_SEQ_ENMIC && (state->seq_uev == 16));
 	mp_uevent_enable = !(evnan0d || state->seq_stop);
 
@@ -2345,12 +2328,25 @@ seq_q1(void)
 	state->seq_ibld = state->seq_cload || RNDX(RND_IBUFF_LD);
 	bool ibemp = !(!state->seq_ibld || (state->seq_word != 0));
 	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
-}
 
+}
 void
 r1000_arch ::
 seq_q3(void)
 {
+	unsigned adr = 0;
+	if (state->seq_bad_hint) adr |= 0x01;
+	adr |= (UIR_SEQ_BRTYP << 1);
+	if (state->seq_bhreg & 0x20) adr |= 0x20;
+	if (state->seq_bhreg & 0x40) adr |= 0x80;
+	if (state->seq_bhreg & 0x80) adr |= 0x100;
+	unsigned rom = seq_pa043[adr];
+	state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !state->seq_uadr_mux);
+	state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
+	state->seq_push_br =    (rom >> 1) & 1;
+	state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
+
+
 	state->seq_tos_vld_cond = !(state->seq_foo7 || RNDX(RND_TOS_VLB));
 	state->seq_m_tos_invld = !(state->seq_uses_tos && state->seq_tos_vld_cond);
 
@@ -2425,8 +2421,7 @@ seq_q3(void)
 			break;
 		case 5: // DISPATCHESs bad
 			nua = UIR_SEQ_BRN;
-			state->seq_other = state->seq_decode >> 3;
-			state->seq_other <<= 1;
+			state->seq_other = (state->seq_uadr_decode >> 2) & ~1;
 			break;
 		case 6: // RETURNSs bad
 			nua = UIR_SEQ_BRN;
@@ -2451,10 +2446,6 @@ seq_q3(void)
 	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
 
 	q3clockstop();
-#if 0
-	int_reads();
-	state->seq_q3cond = condition();
-#endif
 
 	state->seq_bad_hint_enable = !((!mp_clock_stop_6) || (state->seq_late_macro_event && !state->seq_bad_hint));
 	unsigned pa040a = 0;
@@ -2467,11 +2458,32 @@ seq_q3(void)
 	if (state->seq_bad_hint) pa040a |= 0x01;
 	unsigned pa040d = seq_pa040[pa040a];
 
+
 	bool bar8;
-	state->seq_lmp = late_macro_pending();
-	state->seq_macro_event = (!state->seq_wanna_dispatch) && (state->seq_early_macro_pending || (state->seq_lmp != 8));
+	{
+	unsigned csa = mp_csa_nve;
+	unsigned dec = state->seq_decode >> 3;
+
+	if (csa < (dec & 7))
+		state->seq_late_macro_pending = 0;
+	else if (csa > ((dec >> 3) | 12))
+		state->seq_late_macro_pending = 1;
+	else if (state->seq_stop)
+		state->seq_late_macro_pending = 2;
+	else if (!state->seq_m_res_ref)
+		state->seq_late_macro_pending = 3;
+	else if (!state->seq_m_tos_invld)
+		state->seq_late_macro_pending = 4;
+	else if (!state->seq_m_break_class)
+		state->seq_late_macro_pending = 6;
+	else if (!state->seq_m_ibuff_mt)
+		state->seq_late_macro_pending = 7;
+	else
+		state->seq_late_macro_pending = 8;
+	}
+	state->seq_macro_event = (!state->seq_wanna_dispatch) && (state->seq_early_macro_pending || (state->seq_late_macro_pending != 8));
 	if (state->seq_macro_event) {
-		bar8 = (state->seq_macro_event && !state->seq_early_macro_pending) && (state->seq_lmp >= 7);
+		bar8 = (state->seq_macro_event && !state->seq_early_macro_pending) && (state->seq_late_macro_pending >= 7);
 	} else {
 		bar8 = !((pa040d >> 1) & 1);
 	}
@@ -2559,7 +2571,7 @@ seq_q4(void)
 	//bool bhen = !((state->seq_late_macro_event && !state->seq_bad_hint) || (!mp_clock_stop_6));
 	//bool bhcke = state->seq_s_state_stop && bhen;
 	bool bhcke = state->seq_s_state_stop && mp_clock_stop_6 && (!state->seq_late_macro_event || state->seq_bad_hint);
-	bool dispatch = state->seq_wanna_dispatch || state->seq_early_macro_pending || (state->seq_lmp != 8);
+	bool dispatch = state->seq_wanna_dispatch || state->seq_early_macro_pending || (state->seq_late_macro_pending != 8);
 	bool update_display = false;
 	if (state_clock) {
 		nxt_lex_valid();
@@ -2791,40 +2803,10 @@ seq_q4(void)
 		if (!state->seq_maybe_dispatch) {
 			state->seq_late_u = 7;
 		} else {
-			state->seq_late_u = state->seq_lmp;
+			state->seq_late_u = state->seq_late_macro_pending;
 			if (state->seq_late_u == 8)
 				state->seq_late_u = 7;
 		}
-#if 0
-		unsigned sel = group_sel();
-		switch (sel) {
-		case 0: // CASEs
-			state->seq_other = mp_cur_uadr + 1;
-			break;
-		case 1: // DISPATCHes
-		case 2: // RETURNs
-		case 3: // BRANCHESes
-			state->seq_other = UIR_SEQ_BRN;
-			break;
-		case 4: // CASEs bad
-			state->seq_other = UIR_SEQ_BRN;
-			state->seq_other += state->seq_fiu;
-			break;
-		case 5: // DISPATCHes bad
-			state->seq_other = state->seq_decode >> 3;
-			state->seq_other <<= 1;
-			break;
-		case 6: // RETURNs bad
-			state->seq_other = (state->seq_topu ^ 0xffff) & 0x3fff;
-			break;
-		case 7: // BRANCHES bad
-			state->seq_other = mp_cur_uadr + 1;
-			break;
-		default:
-			assert(sel < 8);
-			break;
-		}
-#endif
 
 		mp_seq_uev &= ~(UEV_CK_EXIT|UEV_FLD_ERR|UEV_NEW_PAK);
 		if (!state->seq_check_exit_ue) {

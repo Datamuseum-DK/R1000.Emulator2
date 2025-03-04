@@ -36,7 +36,6 @@ class r1000_arch {
 
 	void int_reads(void);
 	unsigned group_sel(void);
-	unsigned late_macro_pending(void);
 	bool seq_conda(unsigned condsel);
 	bool seq_cond9(unsigned condsel);
 	bool seq_cond8(unsigned condsel);
