@@ -17,7 +17,6 @@ class r1000_arch {
 
 // -------------------- MEM --------------------
 
-	unsigned find_set(unsigned cmd);
 	bool is_hit(unsigned adr, unsigned set);
 	void load_mar(void);
 	void mem_h1(void);
