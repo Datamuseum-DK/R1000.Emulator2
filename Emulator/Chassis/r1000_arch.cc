@@ -2280,7 +2280,7 @@ void
 r1000_arch ::
 seq_q3(void)
 {
-	// These are necessary for conditions (NB: Also? 0x4d:seq_m_ibuff_mt, others ?)
+	// These are necessary for conditions
 	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
 	state->seq_m_res_ref = !(state->seq_lxval && !(state->seq_display >> 15));
 	state->seq_field_number_error = (((state->seq_val_bus >> 39) ^ state->seq_curins) & 0x3ff) != 0x3ff;
@@ -2289,13 +2289,27 @@ seq_q3(void)
 
 	bool precond = condition();
 
+	// SEQ micro arch doc, pg 29 says this can only be early cond, so there is no recursion on seq_m_ibuff_mt
 	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!precond);
+
 	state->seq_ibld = state->seq_cload || RNDX(RND_IBUFF_LD);
 	bool ibemp = !(!state->seq_ibld || (state->seq_word != 0));
 	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
 
 	if (state->seq_bad_hint) {
+		unsigned adr = 0;
+		if (state->seq_bad_hint) adr |= 0x01;
+		adr |= (UIR_SEQ_BRTYP << 1);
+		if (state->seq_bhreg & 0x20) adr |= 0x20;
+		if (state->seq_bhreg & 0x40) adr |= 0x80;
+		if (state->seq_bhreg & 0x80) adr |= 0x100;
+		unsigned rom = seq_pa043[adr];
+
 		state->seq_uadr_mux = ((state->seq_bhreg) >> 5) & 1;
+		state->seq_push_br = false;
+		state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
+		state->seq_wanna_dispatch = !(0 && !state->seq_uadr_mux);
+		state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
 	} else {
 		if (BRTYPE(BRANCH_TRUE|BRANCH|CALL_TRUE|CALL|RETURN_FALSE|CASE_FALSE|DISPATCH_FALSE|CASE_CALL)) {
 			switch (UIR_SEQ_BRTIM) {
@@ -2312,21 +2326,11 @@ seq_q3(void)
 			case 3: state->seq_uadr_mux = true; break;
 			}
 		}
+		state->seq_push_br = BRTYPE(PUSH);
+		state->seq_push = !(BRTYPE(PUSH|CASE_CALL) || (BRTYPE(A_CALL) && state->seq_uadr_mux));
+		state->seq_wanna_dispatch = !(BRTYPE(A_DISPATCH) && !state->seq_uadr_mux);
+		state->seq_preturn = BRTYPE(A_RETURN) && !state->seq_uadr_mux;
 	}
-
-	unsigned adr = 0;
-	if (state->seq_bad_hint) adr |= 0x01;
-	adr |= (UIR_SEQ_BRTYP << 1);
-	if (state->seq_bhreg & 0x20) adr |= 0x20;
-	if (state->seq_bhreg & 0x40) adr |= 0x80;
-	if (state->seq_bhreg & 0x80) adr |= 0x100;
-	unsigned rom = seq_pa043[adr];
-	state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !state->seq_uadr_mux);
-	state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
-	state->seq_push_br =    (rom >> 1) & 1;
-	state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
-
-
 
 	state->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->seq_carry_out);
 
@@ -2335,8 +2339,7 @@ seq_q3(void)
 	state->seq_ram[(state->seq_adr + 1) & 0xf] = state->seq_topu;
 
 	int_reads();
-	//state->seq_q3cond = condition();
-	//if (precond != state->seq_q3cond) { printf("PRECOND %x %x %x\n", (unsigned)UIR_SEQ_CSEL, precond, state->seq_q3cond); }
+
 	state->seq_q3cond = precond;
 
 	state->seq_l_macro_hic = true;
@@ -2345,14 +2348,10 @@ seq_q3(void)
 		nua = state->seq_other;
 	} else if (state->seq_late_macro_event) {
 		// Not tested by expmon_test_seq ?
-		nua = state->seq_late_u << 3;
-		nua ^= (7 << 3);
-		nua |= 0x0140;
+		nua = 0x140 | ((state->seq_late_u ^ 0x7) << 3);
 		state->seq_l_macro_hic = false;
 	} else if (state->seq_uev != 16) {
-		nua = state->seq_uev;
-		nua <<= 3;
-		nua |= 0x0180;
+		nua = 0x180 | (state->seq_uev << 3);
 	} else {
 		unsigned one, two;
 		if (BRTYPE(A_BRANCH|PUSH|A_CALL|CONTINUE)) { // 7
