@@ -2296,6 +2296,9 @@ seq_q3(void)
 	bool ibemp = !(!state->seq_ibld || (state->seq_word != 0));
 	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
 
+	state->seq_l_macro_hic = true;
+	unsigned nua;
+
 	if (state->seq_bad_hint) {
 		unsigned adr = 0;
 		if (state->seq_bad_hint) adr |= 0x01;
@@ -2310,6 +2313,13 @@ seq_q3(void)
 		state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
 		state->seq_wanna_dispatch = !(0 && !state->seq_uadr_mux);
 		state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
+		nua = state->seq_other;
+	} else if (state->seq_late_macro_event) {
+		// Not tested by expmon_test_seq ?
+		nua = 0x140 | ((state->seq_late_u ^ 0x7) << 3);
+		state->seq_l_macro_hic = false;
+	} else if (state->seq_uev != 16) {
+		nua = 0x180 | (state->seq_uev << 3);
 	} else {
 		if (BRTYPE(BRANCH_TRUE|BRANCH|CALL_TRUE|CALL|RETURN_FALSE|CASE_FALSE|DISPATCH_FALSE|CASE_CALL)) {
 			switch (UIR_SEQ_BRTIM) {
@@ -2330,29 +2340,6 @@ seq_q3(void)
 		state->seq_push = !(BRTYPE(PUSH|CASE_CALL) || (BRTYPE(A_CALL) && state->seq_uadr_mux));
 		state->seq_wanna_dispatch = !(BRTYPE(A_DISPATCH) && !state->seq_uadr_mux);
 		state->seq_preturn = BRTYPE(A_RETURN) && !state->seq_uadr_mux;
-	}
-
-	state->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->seq_carry_out);
-
-	state->seq_ferr = !(state->seq_field_number_error && !(RNDX(RND_FLD_CHK) || !mp_uevent_enable));
-
-	state->seq_ram[(state->seq_adr + 1) & 0xf] = state->seq_topu;
-
-	int_reads();
-
-	state->seq_q3cond = precond;
-
-	state->seq_l_macro_hic = true;
-	unsigned nua;
-	if (state->seq_bad_hint) {
-		nua = state->seq_other;
-	} else if (state->seq_late_macro_event) {
-		// Not tested by expmon_test_seq ?
-		nua = 0x140 | ((state->seq_late_u ^ 0x7) << 3);
-		state->seq_l_macro_hic = false;
-	} else if (state->seq_uev != 16) {
-		nua = 0x180 | (state->seq_uev << 3);
-	} else {
 		unsigned one, two;
 		if (BRTYPE(A_BRANCH|PUSH|A_CALL|CONTINUE)) { // 7
 			one = UIR_SEQ_BRN;
@@ -2375,9 +2362,21 @@ seq_q3(void)
 			state->seq_other = one;
 		}
 	}
+
 	if (!state->seq_sf_stop && mp_seq_prepped) {
 		mp_nua_bus = nua & 0x3fff;
 	}
+
+	state->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->seq_carry_out);
+
+	state->seq_ferr = !(state->seq_field_number_error && !(RNDX(RND_FLD_CHK) || !mp_uevent_enable));
+
+	state->seq_ram[(state->seq_adr + 1) & 0xf] = state->seq_topu;
+
+	int_reads();
+
+	state->seq_q3cond = precond;
+
 	state->seq_clock_stop_5 = (state->seq_check_exit_ue && state->seq_ferr);
 	mp_clock_stop_6 = !(!state->seq_bad_hint && !state->seq_late_macro_event && state->seq_uev != 16);
 	mp_clock_stop_7 = !state->seq_bad_hint && state->seq_l_macro_hic;
