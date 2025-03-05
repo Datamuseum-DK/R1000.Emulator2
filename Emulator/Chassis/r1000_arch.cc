@@ -341,7 +341,7 @@ struct r1000_arch_state {
 	bool seq_hint_last;
 	bool seq_hint_t_last;
 	bool seq_last_late_cond;
-	bool seq_uadr_mux, seq_preturn, seq_push_br, seq_push;
+	bool seq_preturn, seq_push_br, seq_push;
 	uint64_t seq_typ_bus;
 	uint64_t seq_val_bus;
 	uint64_t seq_output_ob;
@@ -395,7 +395,9 @@ struct r1000_arch_state {
 
 	unsigned seq_urand;
 	unsigned seq_rndx;
-	unsigned seq_br_type;
+	unsigned seq_br_typ;
+	unsigned seq_br_typb;
+	unsigned seq_br_tim;
 	bool seq_macro_event;
 	unsigned seq_late_macro_pending;
 	bool seq_early_macro_pending;
@@ -425,7 +427,7 @@ struct r1000_arch_state {
 #define A_CALL (CALL_FALSE|CALL_TRUE|CALL)
 #define A_RETURN (RETURN_TRUE|RETURN_FALSE|RETURN)
 #define A_DISPATCH (DISPATCH_TRUE|DISPATCH_FALSE|DISPATCH)
-#define BRTYPE(x) (state->seq_br_type & (x))
+#define BRTYPE(x) (state->seq_br_typb & (x))
 
 #define UIR_SEQ_BRN	((state->seq_uir >> (41-13)) & 0x3fff)
 #define UIR_SEQ_LUIR	((state->seq_uir >> (41-15)) & 0x1)
@@ -2225,7 +2227,9 @@ seq_h1(void)
 	state->seq_rndx |=  seq_pa045[state->seq_urand | 0x100] << 8;
 	state->seq_rndx |= seq_pa047[state->seq_urand | 0x100];
 
-	state->seq_br_type = 1 << UIR_SEQ_BRTYP;
+	state->seq_br_typ = UIR_SEQ_BRTYP;
+	state->seq_br_typb = 1 << state->seq_br_typ;
+
 	state->seq_maybe_dispatch = BRTYPE(A_DISPATCH);
 
 	if (!state->seq_maybe_dispatch) {
@@ -2288,6 +2292,7 @@ seq_q3(void)
 	state->seq_m_tos_invld = !(state->seq_uses_tos && state->seq_tos_vld_cond);
 
 	bool precond = condition();
+	state->seq_br_tim = UIR_SEQ_BRTIM;
 
 	// SEQ micro arch doc, pg 29 says this can only be early cond, so there is no recursion on seq_m_ibuff_mt
 	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!precond);
@@ -2302,17 +2307,17 @@ seq_q3(void)
 	if (state->seq_bad_hint) {
 		unsigned adr = 0;
 		if (state->seq_bad_hint) adr |= 0x01;
-		adr |= (UIR_SEQ_BRTYP << 1);
+		adr |= (state->seq_br_typ << 1);
 		if (state->seq_bhreg & 0x20) adr |= 0x20;
 		if (state->seq_bhreg & 0x40) adr |= 0x80;
 		if (state->seq_bhreg & 0x80) adr |= 0x100;
 		unsigned rom = seq_pa043[adr];
 
-		state->seq_uadr_mux = ((state->seq_bhreg) >> 5) & 1;
+		bool seq_uadr_mux = ((state->seq_bhreg) >> 5) & 1;
 		state->seq_push_br = false;
-		state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !state->seq_uadr_mux));
-		state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !state->seq_uadr_mux);
-		state->seq_preturn = !(((rom >> 3) & 1) ||  state->seq_uadr_mux);
+		state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !seq_uadr_mux));
+		state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !seq_uadr_mux);
+		state->seq_preturn = !(((rom >> 3) & 1) ||  seq_uadr_mux);
 		nua = state->seq_other;
 		mp_clock_stop_6 = true;
 		state->seq_bad_hint_enable = true;
@@ -2330,40 +2335,41 @@ seq_q3(void)
 		state->seq_bad_hint_enable = false;
 		mp_clock_stop_7 = true;
 	} else {
+		bool uadr_mux;
 		if (BRTYPE(BRANCH_TRUE|BRANCH|CALL_TRUE|CALL|RETURN_FALSE|CASE_FALSE|DISPATCH_FALSE|CASE_CALL)) {
-			switch (UIR_SEQ_BRTIM) {
-			case 0: state->seq_uadr_mux = precond; break;
-			case 1: state->seq_uadr_mux = state->seq_latched_cond; break;
-			case 2: state->seq_uadr_mux = true; break;
-			case 3: state->seq_uadr_mux = false; break;
+			switch (state->seq_br_tim) {
+			case 0: uadr_mux = precond; break;
+			case 1: uadr_mux = state->seq_latched_cond; break;
+			case 2: uadr_mux = true; break;
+			case 3: uadr_mux = false; break;
 			}
-		} else {
-			switch (UIR_SEQ_BRTIM) {
-			case 0: state->seq_uadr_mux = !precond; break;
-			case 1: state->seq_uadr_mux = !state->seq_latched_cond; break;
-			case 2: state->seq_uadr_mux = false; break;
-			case 3: state->seq_uadr_mux = true; break;
+		} else { // BRANCH_FALSE|PUSH|CALL_FALSE|CONTINUE|RETURN_TRUE|RETURN|DISPATCH_TRUE|DISPATCH
+			switch (state->seq_br_tim) {
+			case 0: uadr_mux = !precond; break;
+			case 1: uadr_mux = !state->seq_latched_cond; break;
+			case 2: uadr_mux = false; break;
+			case 3: uadr_mux = true; break;
 			}
 		}
 		state->seq_push_br = BRTYPE(PUSH);
-		state->seq_push = !(BRTYPE(PUSH|CASE_CALL) || (BRTYPE(A_CALL) && state->seq_uadr_mux));
-		state->seq_wanna_dispatch = !(BRTYPE(A_DISPATCH) && !state->seq_uadr_mux);
-		state->seq_preturn = BRTYPE(A_RETURN) && !state->seq_uadr_mux;
+		state->seq_push = !(BRTYPE(PUSH|CASE_CALL) || (BRTYPE(A_CALL) && uadr_mux));
+		state->seq_wanna_dispatch = !(BRTYPE(A_DISPATCH) && !uadr_mux);
+		state->seq_preturn = BRTYPE(A_RETURN) && !uadr_mux;
 		unsigned one, two;
-		if (BRTYPE(A_BRANCH|PUSH|A_CALL|CONTINUE)) { // 7
+		if (BRTYPE(A_BRANCH|PUSH|A_CALL|CONTINUE)) {
 			one = UIR_SEQ_BRN;
 			two = mp_cur_uadr + 1;
-		} else if (BRTYPE(A_RETURN)) { // 6
+		} else if (BRTYPE(A_RETURN)) {
 			one = UIR_SEQ_BRN;
 			two = (state->seq_topu ^ 0xffff) & 0x3fff;
-		} else if (BRTYPE(A_DISPATCH)) { // 5
+		} else if (BRTYPE(A_DISPATCH)) {
 			one = UIR_SEQ_BRN;
 			two = (state->seq_uadr_decode >> 2) & ~1;
-		} else { // 4 CASE
+		} else { // CASE|CASE_CALL
 			one = mp_cur_uadr + 1;
 			two = UIR_SEQ_BRN + state->seq_fiu;
 		}
-		if (state->seq_uadr_mux) {
+		if (uadr_mux) {
 			nua = one;
 			state->seq_other = two;
 		} else {
@@ -2776,22 +2782,21 @@ seq_q4(void)
 			mp_cur_uadr = mp_nua_bus;
 		}
 
-		unsigned adr = 0;
-		if (mp_clock_stop_6)
-			adr |= 0x02;
-		if (!state->seq_macro_event)
-			adr |= 0x04;
-		adr |= UIR_SEQ_BRTIM << 3;
-		adr |= UIR_SEQ_BRTYP << 5;
-		unsigned rom = seq_pa044[adr];
-
-		if (!state_clock) {
-			rom |= 0x2;
-		} else {
-			rom ^= 0x2;
-		}
 		if (bhcke) {
-			state->seq_bhreg = rom;
+			unsigned adr = 0;
+			if (mp_clock_stop_6)
+				adr |= 0x02;
+			if (!state->seq_macro_event)
+				adr |= 0x04;
+			adr |= state->seq_br_tim << 3;
+			adr |= state->seq_br_typ << 5;
+			state->seq_bhreg = seq_pa044[adr];
+
+			if (!state_clock) {
+				state->seq_bhreg |= 0x2;
+			} else {
+				state->seq_bhreg ^= 0x2;
+			}
 		}
 
 		state->seq_hint_last = (state->seq_bhreg >> 1) & 1;
@@ -2831,11 +2836,11 @@ seq_q4(void)
 		state->seq_foo7 = state->seq_treg >> 3;
 
 		if (state_clock) {
-			state->seq_lreg = 0;
-			state->seq_lreg |= state->seq_latched_cond << 3;
 			unsigned condsel = UIR_SEQ_CSEL;
 			uint8_t pa042 = seq_pa042[condsel << 2];
 			bool is_e_ml = (pa042 >> 7) & 1;
+			state->seq_lreg = 0;
+			state->seq_lreg |= state->seq_latched_cond << 3;
 			state->seq_lreg |= is_e_ml << 2;
 			state->seq_lreg |= UIR_SEQ_LUIR << 1;
 			state->seq_lreg |= state->seq_q3cond << 0;

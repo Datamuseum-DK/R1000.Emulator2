@@ -17,5 +17,6 @@
 	TRACER(scsi_cmd, "SCSI commands, both busses")			\
 	TRACER(scsi_data, "SCSI data, both busses")			\
 	TRACER(mailbox, "IOP/R1000 mailboxes")				\
+	TRACER(badhint, "Bad hint logic")				\
 
 
