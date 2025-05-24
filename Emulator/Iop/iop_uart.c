@@ -83,7 +83,7 @@ thr_console_rx(void *priv)
 	while (1) {
 		sz = elastic_get(cons->ep, buf, 1);
 		assert(sz == 1);
-		(void)vis(visbuf, buf[0], VIS_WHITE | VIS_CSTYLE, '0');
+		(void)nvis(visbuf, sizeof visbuf, buf[0], VIS_WHITE | VIS_CSTYLE, '0');
 		Trace(trace_console, "CONSOLE RX %s", visbuf);
 		AZ(pthread_mutex_lock(&uart_mtx));
 		while (!(cons->cmd & 0x04) || (cons->status & 0x02))
@@ -127,7 +127,7 @@ cons_txshift_done(void * priv)
 			cons->status |= 0x04;		// TxEmt
 		} else {
 			if (!cons->loopback) {
-				(void)vis(visbuf, cons->txhold, VIS_WHITE | VIS_CSTYLE, '0');
+				(void)nvis(visbuf, sizeof visbuf, cons->txhold, VIS_WHITE | VIS_CSTYLE, '0');
 				Trace(trace_console, "CONSOLE TX %s", visbuf);
 				elastic_put(cons->ep, &cons->txhold, 1);
 				uint8_t utrc[2];
