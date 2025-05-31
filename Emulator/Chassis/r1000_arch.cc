@@ -107,23 +107,6 @@ do {							\
 #define BSET_6	0x40
 #define BSET_7	0x80
 
-static unsigned
-dolru(unsigned lru, unsigned before, unsigned cmd)
-{
-	unsigned then = (before >> 2) & 0xf;
-	if (then < lru)
-		return(before);
-	unsigned now = then - 1;
-	if (then == lru) {
-		now = 7;
-		if (cmd == 0xd)
-			now |= 0x10;
-	}
-	if ((then & 0x8) || (now & 0x8))
-		std::cerr <<"BADLRU " << std::hex << lru << " " << before << " " << then << " " << now << " " << cmd << "\n";
-	return ((before & 0x43) | (now << 2));
-}
-
 
 // -------------------- SEQ --------------------
 
@@ -189,7 +172,6 @@ struct r1000_arch_state {
 // -------------------- MEM --------------------
 
 	uint64_t *mem_ram;
-	uint8_t *mem_rame;
 	uint64_t *mem_bitt;
 	unsigned mem_cl, mem_wd;
 	uint64_t mem_tdreg, mem_tqreg;
@@ -555,8 +537,6 @@ r1000_arch :: r1000_arch(void)
 			// Turbo 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
 	state->mem_ram = (uint64_t*)CTX_GetRaw("MEM.ram", sizeof(*state->mem_ram) << 15);
 			// Turbo 12 bit line, 3 bit set
-	state->mem_rame = (uint8_t*)CTX_GetRaw("MEM.rame", sizeof(*state->mem_rame) << 15);
-			// Turbo 12 bit line, 3 bit set
 
 
 // -------------------- FIU --------------------
@@ -650,6 +630,26 @@ r1000_arch :: doit(void)
 
 // -------------------- MEM --------------------
 
+static void
+do_lru(struct r1000_arch_state *state, unsigned padr)
+{
+	unsigned then = (state->mem_ram[padr] >> 8) & 0xf;
+	if (then < state->mem_hit_lru) {
+		return;
+	}
+	unsigned now = then - 1;
+	if (then == state->mem_hit_lru) {
+		now = 7;
+		if (state->mem_cmd == 0xd)
+			now |= 0x10;
+	}
+	if ((then & 0x8) || (now & 0x8))
+		std::cerr <<"BADLRU " << std::hex << state->mem_hit_lru << " " << then << " " << now << " " << state->mem_cmd << "\n";
+	state->mem_ram[padr] &= ~(0xf << 8);
+	state->mem_ram[padr] |= now << 8;
+}
+
+
 bool
 r1000_arch ::
 is_hit(unsigned adr, unsigned set)
@@ -659,9 +659,8 @@ is_hit(unsigned adr, unsigned set)
 		return (false);
 	}
 
-	unsigned tag = state->mem_rame[adr];
+	unsigned page_state = (state->mem_ram[adr]>>6) & 3;
 
-	unsigned page_state = tag & 3;
 	// R1000_Micro_Arch_Mem.pdf p19:
 	//    00: Loading, 01: Read-only, 10: Read-Write, 11: Invalid
 
@@ -674,7 +673,7 @@ is_hit(unsigned adr, unsigned set)
 		return (ts && page_state == 1);
 
 	if (CMDS(CMD_LRQ))
-		return (((tag >> 2) & 0xf) == 0);
+		return ((state->mem_ram[adr] & 0xf00) == 0);
 
 	if (CMDS(CMD_AVQ))
 		return (page_state == 0);
@@ -757,16 +756,14 @@ mem_h1(void)
 			mp_mem_hit &= ~8;
 		if (state->mem_hits) {
 			unsigned tadr = state->mem_hash << 3;
-			     if (state->mem_hits & BSET_0)	state->mem_hit_lru = state->mem_rame[tadr | 0];
-			else if (state->mem_hits & BSET_1)	state->mem_hit_lru = state->mem_rame[tadr | 1];
-			else if (state->mem_hits & BSET_2)	state->mem_hit_lru = state->mem_rame[tadr | 2];
-			else if (state->mem_hits & BSET_3)	state->mem_hit_lru = state->mem_rame[tadr | 3];
-			else if (state->mem_hits & BSET_4)	state->mem_hit_lru = state->mem_rame[tadr | 4];
-			else if (state->mem_hits & BSET_5)	state->mem_hit_lru = state->mem_rame[tadr | 5];
-			else if (state->mem_hits & BSET_6)	state->mem_hit_lru = state->mem_rame[tadr | 6];
-			else if (state->mem_hits & BSET_7)	state->mem_hit_lru = state->mem_rame[tadr | 7];
-			state->mem_hit_lru >>= 2;
-			state->mem_hit_lru &= 0xf;
+			     if (state->mem_hits & BSET_0)	state->mem_hit_lru = (state->mem_ram[tadr | 0] >> 8) & 0xf;
+			else if (state->mem_hits & BSET_1)	state->mem_hit_lru = (state->mem_ram[tadr | 1] >> 8) & 0xf;
+			else if (state->mem_hits & BSET_2)	state->mem_hit_lru = (state->mem_ram[tadr | 2] >> 8) & 0xf;
+			else if (state->mem_hits & BSET_3)	state->mem_hit_lru = (state->mem_ram[tadr | 3] >> 8) & 0xf;
+			else if (state->mem_hits & BSET_4)	state->mem_hit_lru = (state->mem_ram[tadr | 4] >> 8) & 0xf;
+			else if (state->mem_hits & BSET_5)	state->mem_hit_lru = (state->mem_ram[tadr | 5] >> 8) & 0xf;
+			else if (state->mem_hits & BSET_6)	state->mem_hit_lru = (state->mem_ram[tadr | 6] >> 8) & 0xf;
+			else if (state->mem_hits & BSET_7)	state->mem_hit_lru = (state->mem_ram[tadr | 7] >> 8) & 0xf;
 		} else {
 			state->mem_hit_lru = 0xf;
 		}
@@ -774,8 +771,7 @@ mem_h1(void)
 	if (!state->mem_cyt && !mp_freeze && !CMDS(CMD_IDL)) {
 		if (CMDS(CMD_PTR)) {
 			unsigned padr = (state->mem_hash << 3) | (state->mem_mar_set & 0x7);
-			state->mem_qreg = state->mem_ram[padr] & ~(0x7fULL << 6);
-			state->mem_qreg |= (state->mem_rame[padr] & 0x7f) << 6;
+			state->mem_qreg = state->mem_ram[padr];
 		}
 
 		if (CMDS(CMD_LMR|CMD_PMR) && !labort) {
@@ -798,13 +794,12 @@ mem_h1(void)
 			bool which_board = state->mem_mar_set >> 3;
 			if (which_board == my_board) {
 				unsigned padr = (state->mem_hash << 3) | (state->mem_mar_set & 0x7);
-				state->mem_ram[padr] = state->mem_vdreg & ~(0x7fULL << 6);
-				state->mem_rame[padr] = (state->mem_vdreg >> 6) & 0x7f;
+				state->mem_ram[padr] = state->mem_vdreg;
 			}
 		} else if (!state->mem_labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
 			unsigned padr = state->mem_hash << 3;
 			for (unsigned u = 0; u < 8; u++)
-				state->mem_rame[padr + u] = dolru(state->mem_hit_lru, state->mem_rame[padr + u], state->mem_cmd);
+				do_lru(state, padr + u);
 		}
 	}
 
