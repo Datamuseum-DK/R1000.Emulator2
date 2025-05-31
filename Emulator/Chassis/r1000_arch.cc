@@ -630,26 +630,6 @@ r1000_arch :: doit(void)
 
 // -------------------- MEM --------------------
 
-static void
-do_lru(struct r1000_arch_state *state, unsigned padr)
-{
-	unsigned then = (state->mem_ram[padr] >> 8) & 0xf;
-	if (then < state->mem_hit_lru) {
-		return;
-	}
-	unsigned now = then - 1;
-	if (then == state->mem_hit_lru) {
-		now = 7;
-		if (state->mem_cmd == 0xd)
-			now |= 0x10;
-	}
-	if ((then & 0x8) || (now & 0x8))
-		std::cerr <<"BADLRU " << std::hex << state->mem_hit_lru << " " << then << " " << now << " " << state->mem_cmd << "\n";
-	state->mem_ram[padr] &= ~(0xf << 8);
-	state->mem_ram[padr] |= now << 8;
-}
-
-
 bool
 r1000_arch ::
 is_hit(unsigned adr, unsigned set)
@@ -756,16 +736,16 @@ mem_h1(void)
 			mp_mem_hit &= ~8;
 		if (state->mem_hits) {
 			unsigned tadr = state->mem_hash << 3;
-			     if (state->mem_hits & BSET_0)	state->mem_hit_lru = (state->mem_ram[tadr | 0] >> 8) & 0xf;
-			else if (state->mem_hits & BSET_1)	state->mem_hit_lru = (state->mem_ram[tadr | 1] >> 8) & 0xf;
-			else if (state->mem_hits & BSET_2)	state->mem_hit_lru = (state->mem_ram[tadr | 2] >> 8) & 0xf;
-			else if (state->mem_hits & BSET_3)	state->mem_hit_lru = (state->mem_ram[tadr | 3] >> 8) & 0xf;
-			else if (state->mem_hits & BSET_4)	state->mem_hit_lru = (state->mem_ram[tadr | 4] >> 8) & 0xf;
-			else if (state->mem_hits & BSET_5)	state->mem_hit_lru = (state->mem_ram[tadr | 5] >> 8) & 0xf;
-			else if (state->mem_hits & BSET_6)	state->mem_hit_lru = (state->mem_ram[tadr | 6] >> 8) & 0xf;
-			else if (state->mem_hits & BSET_7)	state->mem_hit_lru = (state->mem_ram[tadr | 7] >> 8) & 0xf;
+			     if (state->mem_hits & BSET_0)	state->mem_hit_lru = state->mem_ram[tadr | 0] & 0xf00;
+			else if (state->mem_hits & BSET_1)	state->mem_hit_lru = state->mem_ram[tadr | 1] & 0xf00;
+			else if (state->mem_hits & BSET_2)	state->mem_hit_lru = state->mem_ram[tadr | 2] & 0xf00;
+			else if (state->mem_hits & BSET_3)	state->mem_hit_lru = state->mem_ram[tadr | 3] & 0xf00;
+			else if (state->mem_hits & BSET_4)	state->mem_hit_lru = state->mem_ram[tadr | 4] & 0xf00;
+			else if (state->mem_hits & BSET_5)	state->mem_hit_lru = state->mem_ram[tadr | 5] & 0xf00;
+			else if (state->mem_hits & BSET_6)	state->mem_hit_lru = state->mem_ram[tadr | 6] & 0xf00;
+			else if (state->mem_hits & BSET_7)	state->mem_hit_lru = state->mem_ram[tadr | 7] & 0xf00;
 		} else {
-			state->mem_hit_lru = 0xf;
+			state->mem_hit_lru = 0xf00;
 		}
 	}
 	if (!state->mem_cyt && !mp_freeze && !CMDS(CMD_IDL)) {
@@ -798,8 +778,17 @@ mem_h1(void)
 			}
 		} else if (!state->mem_labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
 			unsigned padr = state->mem_hash << 3;
-			for (unsigned u = 0; u < 8; u++)
-				do_lru(state, padr + u);
+			for (unsigned u = 0; u < 8; u++) {
+				unsigned then = state->mem_ram[padr] & 0xf00;
+				if (then == state->mem_hit_lru) {
+					state->mem_ram[padr] |= 0x700;
+					if (CMDS(CMD_LMW))
+						state->mem_ram[padr] |= 0x1000;
+				} else if (then > state->mem_hit_lru) {
+					state->mem_ram[padr] -= 0x100;
+				}
+				padr += 1;
+			}
 		}
 	}
 
