@@ -3305,7 +3305,7 @@ typ_q4(void)
 
 		unsigned cadr = tv_cadr(UIR_TYP_C, UIR_TYP_FRM, state->typ_count);
 		if (cadr < 0x400)
-			state->typ_rfram[cadr] = c;
+			state->typ_rfram[cadr] = ~c;
 
 		if (mp_clock_stop) {
 			if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
@@ -3632,7 +3632,7 @@ val_q4(void)
 
 		unsigned cadr = tv_cadr(UIR_VAL_C, UIR_VAL_FRM, state->val_count);
 		if (cadr < 0x400)
-			state->val_rfram[cadr] = val_c;
+			state->val_rfram[cadr] = ~val_c;
 
 		if (mp_clock_stop) {
 			bool divide = state->val_rand != 0xb;
@@ -3670,21 +3670,21 @@ val_q4(void)
 
 uint64_t
 r1000_arch ::
-tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rf)
+tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rfram)
 {
 	// NB: uir is inverted
 	// Sorted after frequency of use.
 
 	if (uir >= 0x30) { // very frequent
-		return(rf[uir & 0x1f]); 						// 0x00…0x0f	GP0…GPF
+		return(~(rfram[uir & 0x1f])); 						// 0x00…0x0f	GP0…GPF
 	}
 
 	if (uir < 0x20) { // very frequent
-		return (rf [(frame << 5) | (uir & 0x1f)]);				// 0x20…0x30	FRAME:REG
+		return (~(rfram[(frame << 5) | (uir & 0x1f)]));				// 0x20…0x30	FRAME:REG
 	}
 
 	if (uir >= 0x2d) {								// 0x10…0x12	TOP,TOP+1,SPARE
-		return (rf[(uir + state->csa_topreg + 1) & 0xf]);
+		return (~(rfram[(uir + state->csa_topreg + 1) & 0xf]));
 	}
 
         if (!a && uir == 0x29) {							// 0x16		CSA/VAL_BUS
@@ -3696,18 +3696,18 @@ tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rf)
 			unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
 			adr += mp_csa_offset;
 			adr &= 0xf;
-			return(rf[adr]);
+			return(~(rfram[adr]));
 		}
 	}
 
 	if (0x20 <= uir && uir <= 0x27) {						// 0x18…0x1f	TOP-8…TOP-1
-		return (rf[(uir + state->csa_topreg + 1) & 0xf]);
+		return (~(rfram[(uir + state->csa_topreg + 1) & 0xf]));
 	}
 
 	if (t && uir == 0x2c) {								// 0x13		[LOOP]
-		return(rf[state->typ_count]);
+		return(~(rfram[state->typ_count]));
 	} else if (uir == 0x2c) {
-		return(rf[state->val_count]);
+		return(~(rfram[state->val_count]));
 	}
 
 	if (t && a && uir >= 0x29) {							// 0x14…0x16	ZERO,SPARE,SPARE
@@ -3746,7 +3746,7 @@ tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rf)
 
         if (!a && uir >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
 		unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
-		return(rf[adr]);
+		return(~(rfram[adr]));
 	}
 
 

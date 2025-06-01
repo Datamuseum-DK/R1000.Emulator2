@@ -16,11 +16,10 @@ static int
 clear_tagstore_m32(const struct diagproc *dp)
 {
 
-	uint8_t *ptr;
-	uint64_t *ptr2;
+	uint64_t *ptr;
 
-	ptr2 = CTX_GetRaw("MEM.ram", sizeof(*ptr2) << 15);
-	memset(ptr2, 0x00, sizeof(*ptr2) << 15);
+	ptr = CTX_GetRaw("MEM.ram", sizeof(*ptr) << 15);
+	memset(ptr, 0x00, sizeof(*ptr) << 15);
 
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_TAGSTORE.M32");
 	return ((int)DIPROC_RESPONSE_DONE);

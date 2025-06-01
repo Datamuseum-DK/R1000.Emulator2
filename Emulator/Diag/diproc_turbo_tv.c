@@ -47,11 +47,12 @@ load_register_file_typ(const struct diagproc *dp)
 
 	if (typ_rf == NULL) {
 		typ_rf = (uint64_t*)CTX_GetRaw("TYP_RF", sizeof(uint64_t) << 10);
+		memset(typ_rf, 0xff, sizeof(uint64_t) << 10);
 	}
 
 	for (i = 0; i < 16; i++, typ_ptr++) {
 		wdr = get_wdr(dp, 0x18 + i * 12);
-		typ_rf[typ_ptr] = wdr;
+		typ_rf[typ_ptr] = ~wdr;
 
 	}
 
@@ -70,11 +71,12 @@ load_register_file_val(const struct diagproc *dp)
 
 	if (val_rf == NULL) {
 		val_rf= (uint64_t*)CTX_GetRaw("VAL_RF", sizeof(uint64_t) << 10);
+		memset(val_rf, 0xff, sizeof(uint64_t) << 10);
 	}
 	
 	for (i = 0; i < 16; i++, val_ptr++) {
 		wdr = get_wdr(dp, 0x18 + i * 12);
-		val_rf[val_ptr] = wdr;
+		val_rf[val_ptr] = ~wdr;
 	}
 
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_REGISTER_FILE_200.VAL");
@@ -352,7 +354,7 @@ diagproc_turbo_val(const struct diagproc *dp)
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_RUN.VAL");
 		unsigned uad = vbe16dec(dp->ram + 0x18);
 		if (uad == 0x100) {
-			val_rf[0x1f] = ~0;
+			val_rf[0x1f] = 0;
 		}
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
@@ -381,7 +383,7 @@ diagproc_turbo_val(const struct diagproc *dp)
 		unsigned ptr = ~vbe16dec(dp->ram + 0x31) & 0x3ff;
 		Trace(trace_diproc, "%s %s [0x%x]", dp->name, "Turbo READ_RF_B.TYP", ptr);
 		if (ptr < 1024)
-			vbe64enc(dp->ram + 0x33, ~val_rf[ptr]);
+			vbe64enc(dp->ram + 0x33, val_rf[ptr]);
 		return ((int)DIPROC_RESPONSE_DONE);
 	}
 	return (0);
