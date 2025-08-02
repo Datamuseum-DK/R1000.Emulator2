@@ -335,6 +335,7 @@ struct r1000_arch_state {
 	unsigned seq_n_in_csa;
 	unsigned seq_decode;
 	unsigned seq_wanna_dispatch;
+	unsigned seq_branch_offset;
 	bool seq_ibld;
 	bool seq_field_number_error;
 	bool seq_m_break_class;
@@ -1735,9 +1736,9 @@ int_reads()
 	unsigned internal_reads = UIR_SEQ_IRD;
 	switch (state->seq_urand & 3) {
 	case 3:	state->seq_coff = state->seq_retrn_pc_ofs; break;
-	case 2: state->seq_coff = branch_offset(); break;
+	case 2: state->seq_coff = state->seq_branch_offset; break;
 	case 1: state->seq_coff = state->seq_macro_pc_offset; break;
-	case 0: state->seq_coff = branch_offset(); break;
+	case 0: state->seq_coff = state->seq_branch_offset; break;
 	}
 	state->seq_coff ^= 0x7fff;
 	if (internal_reads == 0) {
@@ -2208,6 +2209,7 @@ seq_h1(void)
 		mp_fiu_bus = state->seq_topu;
 	if (mp_tv_oe & SEQ_TV_OE) {
 		seq_p1();
+		state->seq_branch_offset = branch_offset();
 		int_reads();	// Necessary
 		mp_typ_bus = ~state->seq_typ_bus;
 		mp_val_bus = ~state->seq_val_bus;
@@ -2235,6 +2237,7 @@ seq_q1(void)
 
 	if (!(mp_tv_oe & SEQ_TV_OE)) {
 		seq_p1();
+		state->seq_branch_offset = branch_offset();
 		int_reads();
 	}
 }
@@ -2276,6 +2279,7 @@ seq_q3(void)
 		state->seq_push_br = false;
 		state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !seq_uadr_mux));
 		state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !seq_uadr_mux);
+		state->seq_branch_offset = branch_offset();
 		state->seq_preturn = !(((rom >> 3) & 1) ||  seq_uadr_mux);
 		nua = state->seq_other;
 		mp_clock_stop_6 = true;
@@ -2313,6 +2317,7 @@ seq_q3(void)
 		state->seq_push_br = BRTYPE(PUSH);
 		state->seq_push = !(BRTYPE(PUSH|CASE_CALL) || (BRTYPE(A_CALL) && uadr_mux));
 		state->seq_wanna_dispatch = !(BRTYPE(A_DISPATCH) && !uadr_mux);
+		state->seq_branch_offset = branch_offset();
 		state->seq_preturn = BRTYPE(A_RETURN) && !uadr_mux;
 		unsigned one, two;
 		if (BRTYPE(A_BRANCH|PUSH|A_CALL|CONTINUE)) {
@@ -2462,7 +2467,7 @@ seq_q3(void)
 			mp_adr_bus = state->seq_output_ob << 7;
 		}
 
-		uint64_t branch = branch_offset() & 7;
+		uint64_t branch = state->seq_branch_offset & 7;
 		branch ^= 0x7;
 		mp_adr_bus |= branch << 4;
 		if (!adr_is_code) {
@@ -2541,7 +2546,7 @@ seq_q4(void)
 			if (!RNDX(RND_M_PC_MUX)) {
 				state->seq_macro_pc_offset = state->seq_val_bus >> 4;
 			} else {
-				state->seq_macro_pc_offset = branch_offset();
+				state->seq_macro_pc_offset = state->seq_branch_offset;
 			}
 		} else if (mode == 2) {
 			state->seq_macro_pc_offset += 1;
