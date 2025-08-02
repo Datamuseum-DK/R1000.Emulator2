@@ -15,13 +15,6 @@ class r1000_arch {
 	uint64_t tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rf);
 	void csa_q4(void);
 
-// -------------------- MEM --------------------
-
-	bool is_hit(unsigned adr, unsigned set);
-	void load_mar(void);
-	void mem_h1(void);
-	void mem_q4(void);
-
 // -------------------- FIU --------------------
 
 	void do_tivi(void);
@@ -70,13 +63,6 @@ class r1000_arch {
 	void val_q2(void);
 	void val_q4(void);
 
-// -------------------- IOC --------------------
-
-	void ioc_do_xact(void);
-	bool ioc_cond(void);
-	void ioc_h1(void);
-	void ioc_q2(void);
-	void ioc_q4(void);
 };
 
 #endif /* R1000_ARCH */

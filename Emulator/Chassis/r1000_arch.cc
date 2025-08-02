@@ -16,6 +16,19 @@
 #include "Iop/iop_sc_68k20.hh"
 #include "Infra/vend.h"
 
+static bool mem_is_hit(struct r1000_arch_state *state, unsigned adr, unsigned set);
+static void mem_load_mar(struct r1000_arch_state *state);
+static void mem_h1(struct r1000_arch_state *state);
+static void mem_q4(struct r1000_arch_state *state);
+
+
+static void ioc_h1(struct r1000_arch_state *state);
+static void ioc_q2(struct r1000_arch_state *state);
+static void ioc_q4(struct r1000_arch_state *state);
+static void ioc_do_xact(struct r1000_arch_state *state);
+static bool ioc_cond(struct r1000_arch_state *state);
+
+
 static uint8_t fiu_pa025[512];
 static uint8_t fiu_pa026[512];
 static uint8_t fiu_pa027[512];
@@ -583,12 +596,12 @@ r1000_arch :: r1000_arch(void)
 void
 r1000_arch :: doit(void)
 {
-	mem_q4();
+	mem_q4(state);
 	fiu_q4();
 	typ_q4();
 	val_q4();
 	csa_q4();
-	ioc_q4();
+	ioc_q4(state);
 	seq_q4();
 
 	if (++state->pit == 256) {
@@ -597,10 +610,10 @@ r1000_arch :: doit(void)
 	}
 	update_state();
 
-	mem_h1();
+	mem_h1(state);
 	typ_h1();
 	val_h1();
-	ioc_h1();
+	ioc_h1(state);
 	seq_h1();
 
 	fiu_q1();
@@ -609,16 +622,15 @@ r1000_arch :: doit(void)
 	fiu_q2();
 	typ_q2();
 	val_q2();
-	ioc_q2();
+	ioc_q2(state);
 
 	seq_q3();
 }
 
 // -------------------- MEM --------------------
 
-bool
-r1000_arch ::
-is_hit(unsigned adr, unsigned set)
+static bool
+mem_is_hit(struct r1000_arch_state *state, unsigned adr, unsigned set)
 {
 	uint64_t data = state->mem_ram[adr];
 	if (CMDS(CMD_LMR|CMD_LMW|CMD_LTR) && ((state->mem_mar ^ data) & ~0x1fffULL)) {
@@ -659,9 +671,8 @@ printf("MEM %04x\n", state->mem_bcmd);
 	return (state->mem_mar_set == set);
 }
 
-void
-r1000_arch ::
-load_mar(void)
+static void
+mem_load_mar(struct r1000_arch_state *state)
 {
 	uint64_t a;
 	uint32_t s;
@@ -679,9 +690,8 @@ load_mar(void)
 	state->mem_hash ^= cache_line_tbl_s[state->mem_mar_space & 0x7];
 }
 
-void
-r1000_arch ::
-mem_h1(void)
+static void
+mem_h1(struct r1000_arch_state *state)
 {
 	bool labort = !(mp_mem_abort_l && mp_mem_abort_el);
 	bool p_early_abort = state->mem_eabort;
@@ -797,9 +807,8 @@ mem_h1(void)
 	}
 }
 
-void
-r1000_arch ::
-mem_q4(void)
+static void
+mem_q4(struct r1000_arch_state *state)
 {
 	state->mem_cl = state->mem_hash;
 	state->mem_wd = state->mem_word;
@@ -812,7 +821,7 @@ mem_q4(void)
 	}
 	bool loadmar = !((mp_mar_cntl >= 4) && mp_clock_stop_7);
 	if (!loadmar && state->mem_cstop) {
-		load_mar();
+		mem_load_mar(state);
 	}
 
 	if (!state->mem_cyo) {
@@ -824,42 +833,42 @@ mem_q4(void)
 			// These create at most a single hit
 			unsigned badr = state->mem_hash << 3;
 			do {
-				if (is_hit(badr | 4, 4)) {
+				if (mem_is_hit(state, badr | 4, 4)) {
 					state->mem_hits |= BSET_4;
 					state->mem_hit_set = 4;
 					break;
 				}
-				if (is_hit(badr | 5, 5)) {
+				if (mem_is_hit(state, badr | 5, 5)) {
 					state->mem_hits |= BSET_5;
 					state->mem_hit_set = 5;
 					break;
 				}
-				if (is_hit(badr | 6, 6)) {
+				if (mem_is_hit(state, badr | 6, 6)) {
 					state->mem_hits |= BSET_6;
 					state->mem_hit_set = 6;
 					break;
 				}
-				if (is_hit(badr | 7, 7)) {
+				if (mem_is_hit(state, badr | 7, 7)) {
 					state->mem_hits |= BSET_7;
 					state->mem_hit_set = 7;
 					break;
 				}
-				if (is_hit(badr | 0, 0)) {
+				if (mem_is_hit(state, badr | 0, 0)) {
 					state->mem_hits |= BSET_0;
 					state->mem_hit_set = 0;
 					break;
 				}
-				if (is_hit(badr | 1, 1)) {
+				if (mem_is_hit(state, badr | 1, 1)) {
 					state->mem_hits |= BSET_1;
 					state->mem_hit_set = 1;
 					break;
 				}
-				if (is_hit(badr | 2, 2)) {
+				if (mem_is_hit(state, badr | 2, 2)) {
 					state->mem_hits |= BSET_2;
 					state->mem_hit_set = 2;
 					break;
 				}
-				if (is_hit(badr | 3, 3)) {
+				if (mem_is_hit(state, badr | 3, 3)) {
 					state->mem_hits |= BSET_3;
 					state->mem_hit_set = 3;
 					break;
@@ -872,14 +881,14 @@ mem_q4(void)
 			}
 		} else {
 			unsigned badr = state->mem_hash << 3;
-			if (is_hit(badr | 0, 0)) { state->mem_hits |= BSET_0; state->mem_hit_set = 0; }
-			if (is_hit(badr | 1, 1)) { state->mem_hits |= BSET_1; state->mem_hit_set = 1; }
-			if (is_hit(badr | 2, 2)) { state->mem_hits |= BSET_2; state->mem_hit_set = 2; }
-			if (is_hit(badr | 3, 3)) { state->mem_hits |= BSET_3; state->mem_hit_set = 3; }
-			if (is_hit(badr | 4, 4)) { state->mem_hits |= BSET_4; state->mem_hit_set = 4; }
-			if (is_hit(badr | 5, 5)) { state->mem_hits |= BSET_5; state->mem_hit_set = 5; }
-			if (is_hit(badr | 6, 6)) { state->mem_hits |= BSET_6; state->mem_hit_set = 6; }
-			if (is_hit(badr | 7, 7)) { state->mem_hits |= BSET_7; state->mem_hit_set = 7; }
+			if (mem_is_hit(state, badr | 0, 0)) { state->mem_hits |= BSET_0; state->mem_hit_set = 0; }
+			if (mem_is_hit(state, badr | 1, 1)) { state->mem_hits |= BSET_1; state->mem_hit_set = 1; }
+			if (mem_is_hit(state, badr | 2, 2)) { state->mem_hits |= BSET_2; state->mem_hit_set = 2; }
+			if (mem_is_hit(state, badr | 3, 3)) { state->mem_hits |= BSET_3; state->mem_hit_set = 3; }
+			if (mem_is_hit(state, badr | 4, 4)) { state->mem_hits |= BSET_4; state->mem_hit_set = 4; }
+			if (mem_is_hit(state, badr | 5, 5)) { state->mem_hits |= BSET_5; state->mem_hit_set = 5; }
+			if (mem_is_hit(state, badr | 6, 6)) { state->mem_hits |= BSET_6; state->mem_hit_set = 6; }
+			if (mem_is_hit(state, badr | 7, 7)) { state->mem_hits |= BSET_7; state->mem_hit_set = 7; }
 		}
 	}
 	state->mem_q4cmd = mp_mem_ctl;
@@ -1965,7 +1974,7 @@ condition(void)
 		}
 	case 0xc: return(fiu_conditions());
 	case 0xd: return(fiu_conditions());
-	case 0xf: return(ioc_cond());
+	case 0xf: return(ioc_cond(state));
 	default: return(1);
 	}
 }
@@ -3789,9 +3798,8 @@ tv_cadr(unsigned uirc, unsigned frame, unsigned count)
 
 // -------------------- IOC --------------------
 
-void
-r1000_arch ::
-ioc_do_xact(void)
+static void
+ioc_do_xact(struct r1000_arch_state *state)
 {
 	if (!state->ioc_xact)
 		state->ioc_xact = ioc_sc_bus_get_xact();
@@ -3884,9 +3892,8 @@ ioc_do_xact(void)
 	}
 }
 
-bool
-r1000_arch ::
-ioc_cond(void)
+static bool
+ioc_cond(struct r1000_arch_state *state)
 {
 	switch (mp_cond_sel) {
 	case 0x78:
@@ -3920,9 +3927,8 @@ ioc_cond(void)
 	return (true);
 }
 
-void
-r1000_arch ::
-ioc_h1(void)
+static void
+ioc_h1(struct r1000_arch_state *state)
 {
 	if (state->ioc_rspwrp != state->ioc_rsprdp) {
 		mp_macro_event |= 0x8;
@@ -3962,9 +3968,8 @@ ioc_h1(void)
 	}
 }
 
-void
-r1000_arch ::
-ioc_q2(void)
+static void
+ioc_q2(struct r1000_arch_state *state)
 {
 	unsigned rand = UIR_IOC_RAND;
 	if (state->ioc_slice_ev && !state->ioc_ten) {
@@ -3985,9 +3990,8 @@ ioc_q2(void)
 	mp_below_tcp = !(below || exit_proc);
 }
 
-void
-r1000_arch ::
-ioc_q4(void)
+static void
+ioc_q4(struct r1000_arch_state *state)
 {
 	unsigned rand = UIR_IOC_RAND;
 
@@ -4008,7 +4012,7 @@ ioc_q4(void)
 		ioc_sc_bus_start_iack(7);
 	}
 
-	ioc_do_xact();
+	ioc_do_xact(state);
 
 	if (mp_clock_stop) {
 		unsigned adr = (state->ioc_areg | state->ioc_acnt) << 2;

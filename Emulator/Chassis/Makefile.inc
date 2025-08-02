@@ -26,7 +26,6 @@ ${OBJDIR}/sc_watchdog.o: \
     Chassis/r1000sc_priv.h
 	${CC} ${CFLAGS} -c Chassis/sc_watchdog.c -o ${OBJDIR}/sc_watchdog.o
 
-
 OBJS += ${OBJDIR}/r1000_arch.o
 ${OBJDIR}/r1000_arch.o: \
     Chassis/r1000_arch.cc \
@@ -40,4 +39,3 @@ ${OBJDIR}/r1000_arch.o: \
     Diag/diagproc.h \
     Chassis/r1000sc_priv.h
 	${SC_CC} -c Chassis/r1000_arch.cc -o ${OBJDIR}/r1000_arch.o
-
