@@ -36,38 +36,6 @@ fido(void *priv)
 		dt += (t1.tv_sec - t0.tv_sec);
 
 		this_exec = this_instr = this_act = 0;
-#if 0
-	const struct diagproc_context *dctx;
-	void *ctx_iter_priv;
-	char *p;
-		ctx_iter_priv = NULL;
-	struct ctx *cp;
-	struct ctx ccp;
-		while(1) {
-			cp = CTX_Iter(&ctx_iter_priv);
-			if (cp == NULL)
-				break;
-			this_act += cp->activations;
-			if (strstr(cp->ident, "PROC") == NULL)
-				continue;
-			ccp = *cp;
-			p = strchr(ccp.ident, ' ');
-			if (p != NULL)
-				*p = '\0';
-
-			dctx = (const void*)(cp+1);
-			if (!fido_dont_bite) {
-				printf("FIDO barks: %s act %ju mcs51 %ju exp %ju\n",
-				    ccp.ident,
-				    (uintmax_t)cp->activations,
-				    (uintmax_t)dctx->instructions,
-				    (uintmax_t)dctx->executions
-				);
-			}
-			this_exec += dctx->executions;
-			this_instr += dctx->instructions;
-		}
-#endif
 
 		if (el > 0) {
 			d = 1e-9 * (t1.tv_nsec - sc_t0.tv_nsec);
@@ -81,7 +49,7 @@ fido(void *priv)
 			printf(" Mda %.1f",
 			    (1e-6 * (this_act - last_act)) / dt);
 			printf(" kdm %.1f",
-                            (1e-3 * (this_instr - last_instr)) / dt);
+			    (1e-3 * (this_instr - last_instr)) / dt);
 			printf("\n");
 		}
 		el = e;
@@ -104,7 +72,6 @@ fido(void *priv)
 		}
 	}
 }
-
 
 void v_matchproto_(cli_func_f)
 cli_sc_watchdog(struct cli *cli)

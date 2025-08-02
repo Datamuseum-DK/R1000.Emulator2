@@ -36,7 +36,7 @@ static uint8_t val_pa011[512];
 static uint8_t ioc_pb011[32];
 static uint8_t tv_pa010[512];
 
-#define F181_ALU(ctrl, a, b, ci, o, co) 		\
+#define F181_ALU(ctrl, a, b, ci, o, co)			\
 do {							\
 	uint32_t aa = (a), bb = (b);			\
 	uint64_t c;					\
@@ -69,14 +69,14 @@ do {							\
 	o &= 0xffffffff;				\
 } while (0)
 
-#define VAL_V_OE	((1<<0)       |(1<<2)                                          )
-#define TYP_T_OE	((1<<0)|(1<<1)                         |(3<<8)                 )
-#define FIU_V_OE	(       (1<<1)       |(1<<3)                                   )
-#define FIU_T_OE	(              (1<<2)|(1<<3)                  |(3<<10)         )
-#define IOC_TV_OE	(                           (1<<4)                             )
-#define SEQ_TV_OE	(                                 (1<<5)                       )
-#define MEM_V_OE	(                                       (3<<8)|(3<<10)         )
-#define MEM_TV_OE	(                                                      (15<<12))
+#define VAL_V_OE	((1<<0)	      |(1<<2)						  )
+#define TYP_T_OE	((1<<0)|(1<<1)				   |(3<<8)		  )
+#define FIU_V_OE	(       (1<<1)       |(1<<3)					  )
+#define FIU_T_OE	(	       (1<<2)|(1<<3)			 |(3<<10)	  )
+#define IOC_TV_OE	(			     (1<<4)				  )
+#define SEQ_TV_OE	(				    (1<<5)			  )
+#define MEM_V_OE	(					   (3<<8)|(3<<10)	  )
+#define MEM_TV_OE	(							  (15<<12))
 
 // -------------------- MEM --------------------
 
@@ -111,7 +111,7 @@ do {							\
 // -------------------- SEQ --------------------
 
 #define RND_PUSH		(1<<31)
-#define RND_POP		(1<<30)
+#define RND_POP			(1<<30)
 #define RND_CLEAR_ST		(1<<29)
 #define RND_RESTRT0		(1<<28)
 #define RND_RESTRT1		(1<<27)
@@ -150,7 +150,6 @@ do {							\
 
 // -------------------- TYP --------------------
 
-
 #define TYP_A_LSB BUS64_LSB
 #define TYP_B_LSB BUS64_LSB
 #define TYP_A_BITS(n) (state->typ_a >> TYP_A_LSB(n))
@@ -161,11 +160,10 @@ do {							\
 #define TYP_B_LIT() (state->typ_b & 0x7f)
 
 
+struct r1000_arch_state {
+
 // -------------------- IOC --------------------
 
-	#define XIOP_VARIANT 1
-
-struct r1000_arch_state {
 	unsigned pit;
 
 
@@ -264,10 +262,10 @@ struct r1000_arch_state {
 	bool fiu_memstart;
 	unsigned fiu_pa025d, fiu_pa026d, fiu_pa027d;
 
-#define UIR_FIU_OL		((state->fiu_uir >> 40) & 0x7f)
+#define UIR_FIU_OL	((state->fiu_uir >> 40) & 0x7f)
 #define UIR_FIU_LFL	((state->fiu_uir >> 32) & 0x7f)
 #define UIR_FIU_LFRC	((state->fiu_uir >> 30) & 0x3)
-#define UIR_FIU_OP		((state->fiu_uir >> 28) & 0x3)
+#define UIR_FIU_OP	((state->fiu_uir >> 28) & 0x3)
 #define UIR_FIU_SEL	((state->fiu_uir >> 26) & 0x3)
 #define UIR_FIU_FSRC	((state->fiu_uir >> 25) & 1)
 #define UIR_FIU_ORSR	((state->fiu_uir >> 24) & 1)
@@ -442,11 +440,11 @@ struct r1000_arch_state {
 	uint64_t typ_uir;
 	unsigned typ_rand;
 
-#define UIR_TYP_A		((state->typ_uir >> 41) & 0x3f)
-#define UIR_TYP_B		((state->typ_uir >> 35) & 0x3f)
+#define UIR_TYP_A	((state->typ_uir >> 41) & 0x3f)
+#define UIR_TYP_B	((state->typ_uir >> 35) & 0x3f)
 #define UIR_TYP_FRM	((state->typ_uir >> 30) & 0x1f)
 #define UIR_TYP_RAND	((state->typ_uir >> 24) & 0xf)
-#define UIR_TYP_C		((state->typ_uir >> 18) & 0x3f)
+#define UIR_TYP_C	((state->typ_uir >> 18) & 0x3f)
 #define UIR_TYP_CLIT	(((state->typ_uir >> (46-16)) & 0x1f) | (((state->typ_uir >> (46-18) & 0x3)<<5)))
 #define UIR_TYP_UPVC	((state->typ_uir >> 15) & 0x7)
 #define UIR_TYP_SEL	((state->typ_uir >> 14) & 0x1)
@@ -473,12 +471,12 @@ struct r1000_arch_state {
 	unsigned val_rand;
 	bool val_thiscond;
 
-#define UIR_VAL_A		((state->val_uir >> (39-5)) & 0x3f)
-#define UIR_VAL_B		((state->val_uir >> (39-11)) & 0x3f)
+#define UIR_VAL_A	((state->val_uir >> (39-5)) & 0x3f)
+#define UIR_VAL_B	((state->val_uir >> (39-11)) & 0x3f)
 #define UIR_VAL_FRM	((state->val_uir >> (39-16)) & 0x1f)
 #define UIR_VAL_SEL	((state->val_uir >> (39-18)) & 0x3)
 #define UIR_VAL_RAND	((state->val_uir >> (39-22)) & 0xf)
-#define UIR_VAL_C		((state->val_uir >> (39-28)) & 0x3f)
+#define UIR_VAL_C	((state->val_uir >> (39-28)) & 0x3f)
 #define UIR_VAL_MSRC	((state->val_uir >> (39-32)) & 0xf)
 #define UIR_VAL_AFNC	((state->val_uir >> (39-37)) & 0x1f)
 #define UIR_VAL_CSRC	((state->val_uir >> (39-38)) & 0x1)
@@ -534,9 +532,9 @@ r1000_arch :: r1000_arch(void)
 
 	state->mem_bcmd = 1 << state->mem_cmd;
 	state->mem_bitt = (uint64_t*)CTX_GetRaw("MEM.bitt", sizeof(*state->mem_bitt) << 22);
-			// Turbo 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
+			// 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
 	state->mem_ram = (uint64_t*)CTX_GetRaw("MEM.ram", sizeof(*state->mem_ram) << 15);
-			// Turbo 12 bit line, 3 bit set
+			// 12 bit line, 3 bit set
 
 
 // -------------------- FIU --------------------
@@ -592,6 +590,8 @@ r1000_arch :: r1000_arch(void)
 	state->ioc_is_tracing = false;
 }
 
+// ----------- One Micro Cycle -----------------
+
 void
 r1000_arch :: doit(void)
 {
@@ -624,7 +624,6 @@ r1000_arch :: doit(void)
 	ioc_q2();
 
 	seq_q3();
-
 }
 
 
@@ -716,14 +715,14 @@ mem_h1(void)
 
 	if (state->mem_cyo && !mp_freeze && !CMDS(CMD_IDL)) {
 		if (CMDS(CMD_AVQ)) {
-			if        (state->mem_hits & BSET_4) { mp_mem_set = 0;
+			if	  (state->mem_hits & BSET_4) { mp_mem_set = 0;
 			} else if (state->mem_hits & BSET_5) { mp_mem_set = 1;
 			} else if (state->mem_hits & BSET_6) { mp_mem_set = 2;
 			} else if (state->mem_hits & BSET_7) { mp_mem_set = 3;
 			} else if (state->mem_hits & BSET_0) { mp_mem_set = 0;
 			} else if (state->mem_hits & BSET_1) { mp_mem_set = 1;
 			} else if (state->mem_hits & BSET_2) { mp_mem_set = 2;
-			} else                           { mp_mem_set = 3;
+			} else				     { mp_mem_set = 3;
 			}
 		} else if (state->mem_hits != 0xff && mp_mem_set != (state->mem_hit_set & 3)) {
 			mp_mem_set = state->mem_hit_set & 3;
@@ -921,7 +920,7 @@ fiu_conditions()
 	case 0x66: return((state->fiu_moff & 0x3f) > 0x30);
 	case 0x67: return(!(mp_refresh_count != 0xffff));
 	case 0x68: return(!state->fiu_csa_oor_next);
-	case 0x69: return(!false); 			// SCAV_HIT
+	case 0x69: return(!false);			// SCAV_HIT
 	case 0x6a: return(!state->fiu_page_xing);
 	case 0x6b: return(!state->fiu_miss);
 	case 0x6c: return(!state->fiu_incmplt_mcyc);
@@ -3267,7 +3266,7 @@ typ_q4(void)
 	bool clo = false;
 	unsigned priv_check = UIR_TYP_UPVC;
 
-        if (mp_ram_stop && !mp_freeze) {
+	if (mp_ram_stop && !mp_freeze) {
 
 		bool c_source = UIR_TYP_CSRC;
 		bool fiu0, fiu1;
@@ -3485,7 +3484,7 @@ r1000_arch ::
 val_find_b(unsigned uir)
 {
 	uint64_t retval = tv_find_ab(uir, UIR_VAL_FRM, false, false, state->val_rfram);
-        if (state->val_rand == 0x6) {		// "IMMEDIATE_OP"
+	if (state->val_rand == 0x6) {		// "IMMEDIATE_OP"
 		retval &= ~0xffULL;
 		retval |= ~mp_val_bus & 0xffULL;
 	}
@@ -3569,7 +3568,7 @@ r1000_arch ::
 val_q4(void)
 {
 
-        if (mp_ram_stop && !mp_freeze) {
+	if (mp_ram_stop && !mp_freeze) {
 		uint64_t fiu = 0, mux = 0;
 		bool c_source = UIR_VAL_CSRC;
 		bool split_c_src = state->val_rand == 0x4;
@@ -3676,7 +3675,7 @@ tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rfram)
 	// Sorted after frequency of use.
 
 	if (uir >= 0x30) { // very frequent
-		return(~(rfram[uir & 0x1f])); 						// 0x00…0x0f	GP0…GPF
+		return(~(rfram[uir & 0x1f]));						// 0x00…0x0f	GP0…GPF
 	}
 
 	if (uir < 0x20) { // very frequent
@@ -3687,7 +3686,7 @@ tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rfram)
 		return (~(rfram[(uir + state->csa_topreg + 1) & 0xf]));
 	}
 
-        if (!a && uir == 0x29) {							// 0x16		CSA/VAL_BUS
+	if (!a && uir == 0x29) {							// 0x16		CSA/VAL_BUS
 		if ((!t) && !(mp_tv_oe & VAL_V_OE)) {
 			return (~mp_val_bus);
 		} else if ((t) && !(mp_tv_oe & TYP_T_OE)) {
@@ -3744,13 +3743,12 @@ tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rfram)
 			return ((~0ULL << 10) | state->val_count);
 	}
 
-        if (!a && uir >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
+	if (!a && uir >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
 		unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
 		return(~(rfram[adr]));
 	}
 
-
-        if (!a && uir == 0x28) {							// 0x17		SPARE
+	if (!a && uir == 0x28) {							// 0x17		SPARE
 		return(~0ULL);
 	}
 
@@ -3885,7 +3883,7 @@ ioc_do_xact(void)
 
 	if (state->ioc_xact->sc_state == 200 && state->ioc_xact->address == 0xfffff800) {
 		/* READ STATUS */
-		state->ioc_xact->data 			   = 0x9000ff80;
+		state->ioc_xact->data = 0x9000ff80;
 		if (state->ioc_cpu_running) {
 			state->ioc_xact->data |= 0x40000000;
 		}
