@@ -290,7 +290,6 @@ struct r1000_arch_state {
 	bool seq_topbot;
 
 	uint64_t seq_macro_ins_typ, seq_macro_ins_val;
-	unsigned seq_word;
 	unsigned seq_macro_pc_offset;
 	unsigned seq_curr_lex;
 	unsigned seq_retrn_pc_ofs;
@@ -2281,7 +2280,7 @@ seq_q3(void)
 	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!precond);
 
 	state->seq_ibld = state->seq_cload || RNDX(RND_IBUFF_LD);
-	bool ibemp = !(!state->seq_ibld || (state->seq_word != 0));
+	bool ibemp = !(!state->seq_ibld || ((state->seq_macro_pc_offset & 7) != 0));
 	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
 
 	state->seq_l_macro_hic = true;
@@ -2563,25 +2562,16 @@ seq_q4(void)
 		}
 		if (mode == 3) {
 			if (!RNDX(RND_M_PC_MUX)) {
-				state->seq_word = state->seq_val_bus >> 4;
 				state->seq_macro_pc_offset = (state->seq_val_bus >> 4) & 0x7fff;
-				state->seq_word &= 7;
-				update_display = true;
 			} else {
 				state->seq_macro_pc_offset = branch_offset();
-				state->seq_word = state->seq_macro_pc_offset;
-				state->seq_word &= 7;
-				update_display = true;
 			}
 		} else if (mode == 2) {
 			state->seq_macro_pc_offset += 1;
-			state->seq_word += 1;
-			state->seq_word &= 7;
-			update_display = true;
 		} else if (mode == 1) {
 			state->seq_macro_pc_offset -= 1;
-			state->seq_word += 7;
-			state->seq_word &= 7;
+		}
+		if (mode != 0) {
 			update_display = true;
 		}
 	}
@@ -2863,7 +2853,7 @@ seq_q4(void)
 	}
 
 	if (update_display) {
-		switch(state->seq_word) {
+		switch(state->seq_macro_pc_offset & 7) {
 		case 0x0: state->seq_display = state->seq_macro_ins_val >>  0; break;
 		case 0x1: state->seq_display = state->seq_macro_ins_val >> 16; break;
 		case 0x2: state->seq_display = state->seq_macro_ins_val >> 32; break;
