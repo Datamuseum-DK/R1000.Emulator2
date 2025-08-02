@@ -11,8 +11,6 @@ class r1000_arch {
 	private:
 	struct r1000_arch_state *state;
 
-	unsigned tv_cadr(unsigned uirc, unsigned frame, unsigned count);
-	uint64_t tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rf);
 	void csa_q4(void);
 
 // -------------------- FIU --------------------
@@ -40,28 +38,6 @@ class r1000_arch {
 	void seq_q1(void);
 	void seq_q3(void);
 	void seq_q4(void);
-
-// -------------------- TYP --------------------
-
-	bool bin_op_pass(void);
-	bool priv_path_eq(void);
-	bool a_op_pass(void);
-	bool b_op_pass(void);
-	bool clev(void);
-	bool typ_cond(void);
-	void typ_h1(void);
-	void typ_q2(void);
-	void typ_q4(void);
-
-// -------------------- VAL --------------------
-
-	bool ovrsgn(void);
-	bool val_cond(void);
-	bool fiu_cond(void);
-	uint64_t val_find_b(unsigned uir);
-	void val_h1(void);
-	void val_q2(void);
-	void val_q4(void);
 
 };
 

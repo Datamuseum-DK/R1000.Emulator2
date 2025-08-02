@@ -21,6 +21,26 @@ static void mem_load_mar(struct r1000_arch_state *state);
 static void mem_h1(struct r1000_arch_state *state);
 static void mem_q4(struct r1000_arch_state *state);
 
+static unsigned tv_cadr(struct r1000_arch_state *state, unsigned uirc, unsigned frame, unsigned count);
+static uint64_t tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a, bool t, uint64_t *rfram);
+
+static bool typ_bin_op_pass(struct r1000_arch_state *state);
+static bool typ_priv_path_eq(struct r1000_arch_state *state);
+static bool typ_a_op_pass(struct r1000_arch_state *state);
+static bool typ_b_op_pass(struct r1000_arch_state *state);
+static bool typ_clev(struct r1000_arch_state *state);
+static bool typ_cond(struct r1000_arch_state *state);
+static void typ_h1(struct r1000_arch_state *state);
+static void typ_q2(struct r1000_arch_state *state);
+static void typ_q4(struct r1000_arch_state *state);
+
+static bool val_ovrsgn(struct r1000_arch_state *state);
+static bool val_cond(struct r1000_arch_state *state);
+static bool val_fiu_cond(struct r1000_arch_state *state);
+static uint64_t val_find_b(struct r1000_arch_state *state, unsigned uir);
+static void val_h1(struct r1000_arch_state *state);
+static void val_q2(struct r1000_arch_state *state);
+static void val_q4(struct r1000_arch_state *state);
 
 static void ioc_h1(struct r1000_arch_state *state);
 static void ioc_q2(struct r1000_arch_state *state);
@@ -598,8 +618,8 @@ r1000_arch :: doit(void)
 {
 	mem_q4(state);
 	fiu_q4();
-	typ_q4();
-	val_q4();
+	typ_q4(state);
+	val_q4(state);
 	csa_q4();
 	ioc_q4(state);
 	seq_q4();
@@ -611,8 +631,8 @@ r1000_arch :: doit(void)
 	update_state();
 
 	mem_h1(state);
-	typ_h1();
-	val_h1();
+	typ_h1(state);
+	val_h1(state);
 	ioc_h1(state);
 	seq_h1();
 
@@ -620,8 +640,8 @@ r1000_arch :: doit(void)
 	seq_q1();
 
 	fiu_q2();
-	typ_q2();
-	val_q2();
+	typ_q2(state);
+	val_q2(state);
 	ioc_q2(state);
 
 	seq_q3();
@@ -1955,21 +1975,21 @@ condition(void)
 	unsigned condsel = UIR_SEQ_CSEL;
 
 	switch (condsel >> 3) {
-	case 0x0: return(val_cond());
-	case 0x1: return(val_cond());
-	case 0x2: return(val_cond());
-	case 0x3: return(typ_cond());
-	case 0x4: return(typ_cond());
-	case 0x5: return(typ_cond());
-	case 0x6: return(typ_cond());
-	case 0x7: return(typ_cond());
+	case 0x0: return(val_cond(state));
+	case 0x1: return(val_cond(state));
+	case 0x2: return(val_cond(state));
+	case 0x3: return(typ_cond(state));
+	case 0x4: return(typ_cond(state));
+	case 0x5: return(typ_cond(state));
+	case 0x6: return(typ_cond(state));
+	case 0x7: return(typ_cond(state));
 	case 0x8: return(seq_cond8(condsel));
 	case 0x9: return(seq_cond9(condsel));
 	case 0xa: return(seq_conda(condsel));
 	case 0xb:
 		{
-		bool tc = typ_cond();
-		bool vc = val_cond();
+		bool tc = typ_cond(state);
+		bool vc = val_cond(state);
 		return(!(tc && vc));
 		}
 	case 0xc: return(fiu_conditions());
@@ -2880,9 +2900,8 @@ seq_q4(void)
 
 // -------------------- TYP --------------------
 
-bool
-r1000_arch ::
-bin_op_pass(void)
+static bool
+typ_bin_op_pass(struct r1000_arch_state *state)
 {
 	bool dp = !(TYP_A_BIT(35) && TYP_B_BIT(35));
 	bool abim = !(!(TYP_A_BITS(31) == state->typ_ofreg) | dp);
@@ -2896,9 +2915,8 @@ bin_op_pass(void)
 	));
 }
 
-bool
-r1000_arch ::
-priv_path_eq(void)
+static bool
+typ_priv_path_eq(struct r1000_arch_state *state)
 {
 	return (!(
 		(TYP_A_BITS(31) == TYP_B_BITS(31)) &&
@@ -2906,23 +2924,20 @@ priv_path_eq(void)
 	));
 }
 
-bool
-r1000_arch ::
-a_op_pass(void)
+static bool
+typ_a_op_pass(struct r1000_arch_state *state)
 {
 	return (!(TYP_A_BIT(35) && ((TYP_A_BITS(31) == state->typ_ofreg) || TYP_A_BIT(34))));
 }
 
-bool
-r1000_arch ::
-b_op_pass(void)
+static bool
+typ_b_op_pass(struct r1000_arch_state *state)
 {
 	return (!(TYP_B_BIT(35) && ((TYP_B_BITS(31) == state->typ_ofreg) || TYP_B_BIT(34))));
 }
 
-bool
-r1000_arch ::
-clev(void)
+static bool
+typ_clev(struct r1000_arch_state *state)
 {
 	return (!(
 		(!(state->typ_rand != 0x4) && !(TYP_A_LIT() != UIR_TYP_CLIT)) ||
@@ -2932,9 +2947,8 @@ clev(void)
 	));
 }
 
-bool
-r1000_arch ::
-typ_cond()
+static bool
+typ_cond(struct r1000_arch_state *state)
 {
 
 	unsigned condsel = mp_cond_sel;
@@ -3029,25 +3043,25 @@ typ_cond()
 		state->typ_cond = (!(TYP_A_LIT() != UIR_TYP_CLIT) || (TYP_B_LIT() != UIR_TYP_CLIT));
 		break;
 	case 0x2d:	// E - PRIVACY_A_OP_PASS
-		state->typ_cond = (a_op_pass());
+		state->typ_cond = (typ_a_op_pass(state));
 		break;
 	case 0x2e:	// ML - PRIVACY_B_OP_PASS
-		state->typ_cond = (b_op_pass());
+		state->typ_cond = (typ_b_op_pass(state));
 		break;
 	case 0x2f:	// ML - PRIVACY_BIN_EQ_PASS
-		state->typ_cond = (priv_path_eq() && bin_op_pass());
+		state->typ_cond = (typ_priv_path_eq(state) && typ_bin_op_pass(state));
 		break;
 	case 0x30:	// ML - PRIVACY_BIN_OP_PASS
-		state->typ_cond = (bin_op_pass());
+		state->typ_cond = (typ_bin_op_pass(state));
 		break;
 	case 0x31:	// ML - PRIVACY_NAMES_EQ
 		state->typ_cond = (TYP_A_BITS(31) == TYP_B_BITS(31));
 		break;
 	case 0x32:	// ML - PRIVACY_PATHS_EQ
-		state->typ_cond = (priv_path_eq());
+		state->typ_cond = (typ_priv_path_eq(state));
 		break;
 	case 0x33:	// ML - PRIVACY_STRUCTURE
-		state->typ_cond = (!(bin_op_pass() || priv_path_eq()));
+		state->typ_cond = (!(typ_bin_op_pass(state) || typ_priv_path_eq(state)));
 		break;
 	case 0x34:	// E - PASS_PRIVACY_BIT
 		state->typ_cond = (state->typ_ppriv);
@@ -3090,20 +3104,19 @@ typ_cond()
 }
 
 
-void
-r1000_arch ::
-typ_h1(void)
+static void
+typ_h1(struct r1000_arch_state *state)
 {
 	state->typ_rand = UIR_TYP_RAND;
 
 	unsigned marctl = UIR_TYP_MCTL;
 
 	if (mp_fiu_oe == 0x4) {
-		state->typ_a = tv_find_ab(UIR_TYP_A, UIR_TYP_FRM, true, true, state->typ_rfram);
+		state->typ_a = tv_find_ab(state, UIR_TYP_A, UIR_TYP_FRM, true, true, state->typ_rfram);
 		mp_fiu_bus = ~state->typ_a;
 	}
 	if (mp_tv_oe & TYP_T_OE) {
-		state->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
+		state->typ_b = tv_find_ab(state, UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
 		mp_typ_bus = ~state->typ_b;
 	}
 
@@ -3111,23 +3124,22 @@ typ_h1(void)
 		if (marctl & 0x8) {
 			mp_spc_bus = (marctl & 0x7) ^ 0x7;
 		} else {
-			state->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
+			state->typ_b = tv_find_ab(state, UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
 			mp_spc_bus = (state->typ_b & 0x7) ^ 0x7;
 		}
 	}
 }
 
-void
-r1000_arch ::
-typ_q2(void)
+static void
+typ_q2(struct r1000_arch_state *state)
 {
 
 	unsigned priv_check = UIR_TYP_UPVC;
 	if (mp_fiu_oe != 0x4) {
-		state->typ_a = tv_find_ab(UIR_TYP_A, UIR_TYP_FRM, true, true, state->typ_rfram);
+		state->typ_a = tv_find_ab(state, UIR_TYP_A, UIR_TYP_FRM, true, true, state->typ_rfram);
 	}
 	if (!(mp_tv_oe & TYP_T_OE)) {
-		state->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
+		state->typ_b = tv_find_ab(state, UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
 	}
 
 	bool divide = state->typ_rand != 0xb;
@@ -3192,15 +3204,15 @@ typ_q2(void)
 #define TYP_UEV (UEV_CLASS|UEV_BIN_EQ|UEV_BIN_OP|UEV_TOS_OP|UEV_TOS1_OP|UEV_CHK_SYS)
 	mp_seq_uev &= ~TYP_UEV;
 	if (micros_en) {
-		if (selcond == 0x40 && bin_op_pass())
+		if (selcond == 0x40 && typ_bin_op_pass(state))
 			mp_seq_uev |= UEV_BIN_OP;
-		if (selcond == 0x80 && priv_path_eq() && bin_op_pass())
+		if (selcond == 0x80 && typ_priv_path_eq(state) && typ_bin_op_pass(state))
 			mp_seq_uev |= UEV_BIN_EQ;
-		if ((0x3 < state->typ_rand && state->typ_rand < 0x8) && clev())
+		if ((0x3 < state->typ_rand && state->typ_rand < 0x8) && typ_clev(state))
 			mp_seq_uev |= UEV_CLASS;
-		if ((selcond == 0x10 && a_op_pass()) || (selcond == 0x04 && b_op_pass()))
+		if ((selcond == 0x10 && typ_a_op_pass(state)) || (selcond == 0x04 && typ_b_op_pass(state)))
 			mp_seq_uev |= UEV_TOS1_OP;
-		if ((selcond == 0x20 && a_op_pass()) || (selcond == 0x08 && b_op_pass()))
+		if ((selcond == 0x20 && typ_a_op_pass(state)) || (selcond == 0x08 && typ_b_op_pass(state)))
 			mp_seq_uev |= UEV_TOS_OP;
 		if ((!((state->typ_rand != 0xe) || !(TYP_B_LIT() != UIR_TYP_CLIT))))
 			mp_seq_uev |= UEV_CHK_SYS;
@@ -3209,24 +3221,24 @@ typ_q2(void)
 			mp_clock_stop_3 = false;
 		}
 
-		if ((0x3 < state->typ_rand && state->typ_rand < 0x8) && clev()) {
+		if ((0x3 < state->typ_rand && state->typ_rand < 0x8) && typ_clev(state)) {
 			mp_clock_stop_3 = false;
 		}
 
-		if (priv_path_eq() && bin_op_pass() && selcond == 0x80) {
+		if (typ_priv_path_eq(state) && typ_bin_op_pass(state) && selcond == 0x80) {
 			mp_clock_stop_3 = false;
 		}
 	}
 
-	if (selcond == 0x40 && bin_op_pass()) {
+	if (selcond == 0x40 && typ_bin_op_pass(state)) {
 		mp_clock_stop_4 = false;
 	}
 
-	if ((selcond & 0x30) && a_op_pass()) {
+	if ((selcond & 0x30) && typ_a_op_pass(state)) {
 		mp_clock_stop_4 = false;
 	}
 
-	if ((selcond & 0x0c) && b_op_pass()) {
+	if ((selcond & 0x0c) && typ_b_op_pass(state)) {
 		mp_clock_stop_4 = false;
 	}
 
@@ -3237,9 +3249,8 @@ typ_q2(void)
 	}
 }
 
-void
-r1000_arch ::
-typ_q4(void)
+static void
+typ_q4(struct r1000_arch_state *state)
 {
 	uint64_t c = 0;
 	bool chi = false;
@@ -3282,7 +3293,7 @@ typ_q4(void)
 		if (!chi && clo)
 			c |= 0xffffffffULL << 32;
 
-		unsigned cadr = tv_cadr(UIR_TYP_C, UIR_TYP_FRM, state->typ_count);
+		unsigned cadr = tv_cadr(state, UIR_TYP_C, UIR_TYP_FRM, state->typ_count);
 		if (cadr < 0x400)
 			state->typ_rfram[cadr] = ~c;
 
@@ -3323,9 +3334,8 @@ typ_q4(void)
 
 // -------------------- VAL --------------------
 
-bool
-r1000_arch ::
-ovrsgn(void)
+static bool
+val_ovrsgn(struct r1000_arch_state *state)
 {
 	bool a0 = state->val_amsb;
 	bool b0 = state->val_bmsb;
@@ -3336,9 +3346,8 @@ ovrsgn(void)
 	));
 }
 
-bool
-r1000_arch ::
-val_cond(void)
+static bool
+val_cond(struct r1000_arch_state *state)
 {
 	unsigned csel = mp_cond_sel;
 	if ((csel & 0x78) == 0x58)
@@ -3353,7 +3362,7 @@ val_cond(void)
 	case 0x02:	// L VAL_ALU_A_LT_OR_LE_B
 		state->val_thiscond = !(
 			(state->val_bmsb && (state->val_amsb ^ state->val_bmsb)) ||
-			(!state->val_coh && (ovrsgn() ^ state->val_sub_else_add))
+			(!state->val_coh && (val_ovrsgn(state) ^ state->val_sub_else_add))
 		);
 		break;
 	case 0x03:	// SPARE
@@ -3375,7 +3384,7 @@ val_cond(void)
 		state->val_thiscond = !state->val_coh;
 		break;
 	case 0x09:	// L VAL_ALU_OVERFLOW
-		state->val_thiscond = state->val_ovren || !(ovrsgn() ^ state->val_sub_else_add ^ (!state->val_coh) ^ state->val_cmsb);
+		state->val_thiscond = state->val_ovren || !(val_ovrsgn(state) ^ state->val_sub_else_add ^ (!state->val_coh) ^ state->val_cmsb);
 		break;
 	case 0x0a:	// L VAL_ALU_LT_ZERO
 		state->val_thiscond = state->val_cmsb;
@@ -3425,9 +3434,8 @@ val_cond(void)
 	return (!state->val_thiscond);
 }
 
-bool
-r1000_arch ::
-fiu_cond(void)
+static bool
+val_fiu_cond(struct r1000_arch_state *state)
 {
 	unsigned csel = mp_cond_sel;
 	bool fcond;
@@ -3457,11 +3465,10 @@ fiu_cond(void)
 	return (!fcond);
 }
 
-uint64_t
-r1000_arch ::
-val_find_b(unsigned uir)
+static uint64_t
+val_find_b(struct r1000_arch_state *state, unsigned uir)
 {
-	uint64_t retval = tv_find_ab(uir, UIR_VAL_FRM, false, false, state->val_rfram);
+	uint64_t retval = tv_find_ab(state, uir, UIR_VAL_FRM, false, false, state->val_rfram);
 	if (state->val_rand == 0x6) {		// "IMMEDIATE_OP"
 		retval &= ~0xffULL;
 		retval |= ~mp_val_bus & 0xffULL;
@@ -3469,35 +3476,33 @@ val_find_b(unsigned uir)
 	return (retval);
 }
 
-void
-r1000_arch ::
-val_h1(void)
+static void
+val_h1(struct r1000_arch_state *state)
 {
 	state->val_rand = UIR_VAL_RAND;
 	if (mp_fiu_oe == 0x2) {
-		state->val_a = tv_find_ab(UIR_VAL_A, UIR_VAL_FRM, true, false, state->val_rfram);
+		state->val_a = tv_find_ab(state, UIR_VAL_A, UIR_VAL_FRM, true, false, state->val_rfram);
 		state->val_amsb = state->val_a >> 63;
 		mp_fiu_bus = ~state->val_a;
 	}
 	if (mp_tv_oe & VAL_V_OE) {
-		state->val_b = val_find_b(UIR_VAL_B);
+		state->val_b = val_find_b(state, UIR_VAL_B);
 		state->val_bmsb = state->val_b >> 63;
 		mp_val_bus = ~state->val_b;
 	}
 }
 
-void
-r1000_arch ::
-val_q2(void)
+static void
+val_q2(struct r1000_arch_state *state)
 {
 
 	bool divide = state->val_rand != 0xb;
 	if (mp_fiu_oe != 0x02) {
-		state->val_a = tv_find_ab(UIR_VAL_A, UIR_VAL_FRM, true, false, state->val_rfram);
+		state->val_a = tv_find_ab(state, UIR_VAL_A, UIR_VAL_FRM, true, false, state->val_rfram);
 		state->val_amsb = state->val_a >> 63;
 	}
 	if (!(mp_tv_oe & VAL_V_OE)) {
-		state->val_b = val_find_b(UIR_VAL_B);
+		state->val_b = val_find_b(state, UIR_VAL_B);
 		state->val_bmsb = state->val_b >> 63;
 	}
 
@@ -3541,9 +3546,8 @@ val_q2(void)
 	}
 }
 
-void
-r1000_arch ::
-val_q4(void)
+static void
+val_q4(struct r1000_arch_state *state)
 {
 
 	if (mp_ram_stop && !mp_freeze) {
@@ -3555,7 +3559,7 @@ val_q4(void)
 		}
 		if (!c_source && (state->val_rand == 3 || state->val_rand == 6)) {
 			fiu &= ~1ULL;
-			fiu |= fiu_cond();
+			fiu |= val_fiu_cond(state);
 		}
 		if (c_source || split_c_src) {
 			unsigned sel = UIR_VAL_SEL;
@@ -3607,7 +3611,7 @@ val_q4(void)
 		}
 		state->val_mprod = a * b;
 
-		unsigned cadr = tv_cadr(UIR_VAL_C, UIR_VAL_FRM, state->val_count);
+		unsigned cadr = tv_cadr(state, UIR_VAL_C, UIR_VAL_FRM, state->val_count);
 		if (cadr < 0x400)
 			state->val_rfram[cadr] = ~val_c;
 
@@ -3644,9 +3648,8 @@ val_q4(void)
 
 // ------------------ TYP&VAL ------------------
 
-uint64_t
-r1000_arch ::
-tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, uint64_t *rfram)
+static uint64_t
+tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a, bool t, uint64_t *rfram)
 {
 	// NB: uir is inverted
 	// Sorted after frequency of use.
@@ -3755,9 +3758,8 @@ csa_q4(void)
 	}
 }
 
-unsigned
-r1000_arch ::
-tv_cadr(unsigned uirc, unsigned frame, unsigned count)
+static unsigned
+tv_cadr(struct r1000_arch_state *state, unsigned uirc, unsigned frame, unsigned count)
 {
 	// Ordered by frequency of use.
 	// Pay attention to the order of range comparisons when reordering
