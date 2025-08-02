@@ -162,12 +162,11 @@ do {							\
 
 struct r1000_arch_state {
 
-// -------------------- IOC --------------------
+	// -------------------- IOC --------------------
 
 	unsigned pit;
 
-
-// -------------------- MEM --------------------
+	// -------------------- MEM --------------------
 
 	uint64_t *mem_ram;
 	uint64_t *mem_bitt;
@@ -191,8 +190,7 @@ struct r1000_arch_state {
 	unsigned mem_cmd, mem_bcmd;
 	unsigned mem_mar_set;
 
-
-// -------------------- FIU --------------------
+	// -------------------- FIU --------------------
 
 	unsigned fiu_oreg;
 	uint64_t fiu_mdreg;
@@ -262,25 +260,24 @@ struct r1000_arch_state {
 	bool fiu_memstart;
 	unsigned fiu_pa025d, fiu_pa026d, fiu_pa027d;
 
-#define UIR_FIU_OL	((state->fiu_uir >> 40) & 0x7f)
-#define UIR_FIU_LFL	((state->fiu_uir >> 32) & 0x7f)
-#define UIR_FIU_LFRC	((state->fiu_uir >> 30) & 0x3)
-#define UIR_FIU_OP	((state->fiu_uir >> 28) & 0x3)
-#define UIR_FIU_SEL	((state->fiu_uir >> 26) & 0x3)
-#define UIR_FIU_FSRC	((state->fiu_uir >> 25) & 1)
-#define UIR_FIU_ORSR	((state->fiu_uir >> 24) & 1)
-#define UIR_FIU_TIVI	((state->fiu_uir >> 20) & 0xf)
-#define UIR_FIU_OCLK	((state->fiu_uir >> 19) & 1)
-#define UIR_FIU_VCLK	((state->fiu_uir >> 18) & 1)
-#define UIR_FIU_TCLK	((state->fiu_uir >> 17) & 1)
-#define UIR_FIU_LDMDR	((state->fiu_uir >> 16) & 1)
-#define UIR_FIU_MSTRT	((state->fiu_uir >> 10) & 0x1f)
-#define UIR_FIU_RDSRC	((state->fiu_uir >> 9) & 1)
-#define UIR_FIU_LSRC	((state->fiu_uir >> 1) & 1)
-#define UIR_FIU_OSRC	((state->fiu_uir >> 0) & 1)
+	#define UIR_FIU_OL	((state->fiu_uir >> 40) & 0x7f)
+	#define UIR_FIU_LFL	((state->fiu_uir >> 32) & 0x7f)
+	#define UIR_FIU_LFRC	((state->fiu_uir >> 30) & 0x3)
+	#define UIR_FIU_OP	((state->fiu_uir >> 28) & 0x3)
+	#define UIR_FIU_SEL	((state->fiu_uir >> 26) & 0x3)
+	#define UIR_FIU_FSRC	((state->fiu_uir >> 25) & 1)
+	#define UIR_FIU_ORSR	((state->fiu_uir >> 24) & 1)
+	#define UIR_FIU_TIVI	((state->fiu_uir >> 20) & 0xf)
+	#define UIR_FIU_OCLK	((state->fiu_uir >> 19) & 1)
+	#define UIR_FIU_VCLK	((state->fiu_uir >> 18) & 1)
+	#define UIR_FIU_TCLK	((state->fiu_uir >> 17) & 1)
+	#define UIR_FIU_LDMDR	((state->fiu_uir >> 16) & 1)
+	#define UIR_FIU_MSTRT	((state->fiu_uir >> 10) & 0x1f)
+	#define UIR_FIU_RDSRC	((state->fiu_uir >> 9) & 1)
+	#define UIR_FIU_LSRC	((state->fiu_uir >> 1) & 1)
+	#define UIR_FIU_OSRC	((state->fiu_uir >> 0) & 1)
 
-
-// -------------------- SEQ --------------------
+	// -------------------- SEQ --------------------
 
 	uint32_t *seq_top;
 	uint32_t *seq_bot;
@@ -386,40 +383,39 @@ struct r1000_arch_state {
 	bool uses_tos;
 	unsigned seq_mem_start;
 
-#define BRANCH_FALSE	(1<<0x0)
-#define BRANCH_TRUE	(1<<0x1)
-#define PUSH		(1<<0x2)
-#define BRANCH		(1<<0x3)
-#define CALL_FALSE	(1<<0x4)
-#define CALL_TRUE	(1<<0x5)
-#define CONTINUE	(1<<0x6)
-#define CALL		(1<<0x7)
-#define RETURN_TRUE	(1<<0x8)
-#define RETURN_FALSE	(1<<0x9)
-#define RETURN		(1<<0xa)
-#define CASE_FALSE	(1<<0xb)
-#define DISPATCH_TRUE	(1<<0xc)
-#define DISPATCH_FALSE	(1<<0xd)
-#define DISPATCH	(1<<0xe)
-#define CASE_CALL	(1<<0xf)
-#define A_BRANCH (BRANCH_FALSE|BRANCH_TRUE|BRANCH)
-#define A_CALL (CALL_FALSE|CALL_TRUE|CALL)
-#define A_RETURN (RETURN_TRUE|RETURN_FALSE|RETURN)
-#define A_DISPATCH (DISPATCH_TRUE|DISPATCH_FALSE|DISPATCH)
-#define BRTYPE(x) (state->seq_br_typb & (x))
+	#define BRANCH_FALSE	(1<<0x0)
+	#define BRANCH_TRUE	(1<<0x1)
+	#define PUSH		(1<<0x2)
+	#define BRANCH		(1<<0x3)
+	#define CALL_FALSE	(1<<0x4)
+	#define CALL_TRUE	(1<<0x5)
+	#define CONTINUE	(1<<0x6)
+	#define CALL		(1<<0x7)
+	#define RETURN_TRUE	(1<<0x8)
+	#define RETURN_FALSE	(1<<0x9)
+	#define RETURN		(1<<0xa)
+	#define CASE_FALSE	(1<<0xb)
+	#define DISPATCH_TRUE	(1<<0xc)
+	#define DISPATCH_FALSE	(1<<0xd)
+	#define DISPATCH	(1<<0xe)
+	#define CASE_CALL	(1<<0xf)
+	#define A_BRANCH (BRANCH_FALSE|BRANCH_TRUE|BRANCH)
+	#define A_CALL (CALL_FALSE|CALL_TRUE|CALL)
+	#define A_RETURN (RETURN_TRUE|RETURN_FALSE|RETURN)
+	#define A_DISPATCH (DISPATCH_TRUE|DISPATCH_FALSE|DISPATCH)
+	#define BRTYPE(x) (state->seq_br_typb & (x))
 
-#define UIR_SEQ_BRN	((state->seq_uir >> (41-13)) & 0x3fff)
-#define UIR_SEQ_LUIR	((state->seq_uir >> (41-15)) & 0x1)
-#define UIR_SEQ_BRTYP	((state->seq_uir >> (41-19)) & 0xf)
-#define UIR_SEQ_BRTIM	((state->seq_uir >> (41-21)) & 0x3)
-#define UIR_SEQ_CSEL	((state->seq_uir >> (41-28)) & 0x7f)
-#define UIR_SEQ_LAUIR	((state->seq_uir >> (41-30)) & 0x3)
-#define UIR_SEQ_ENMIC	((state->seq_uir >> (41-31)) & 0x1)
-#define UIR_SEQ_IRD	((state->seq_uir >> (41-34)) & 0x7)
-#define UIR_SEQ_URAND	((state->seq_uir >> (41-41)) & 0x7f)
+	#define UIR_SEQ_BRN	((state->seq_uir >> (41-13)) & 0x3fff)
+	#define UIR_SEQ_LUIR	((state->seq_uir >> (41-15)) & 0x1)
+	#define UIR_SEQ_BRTYP	((state->seq_uir >> (41-19)) & 0xf)
+	#define UIR_SEQ_BRTIM	((state->seq_uir >> (41-21)) & 0x3)
+	#define UIR_SEQ_CSEL	((state->seq_uir >> (41-28)) & 0x7f)
+	#define UIR_SEQ_LAUIR	((state->seq_uir >> (41-30)) & 0x3)
+	#define UIR_SEQ_ENMIC	((state->seq_uir >> (41-31)) & 0x1)
+	#define UIR_SEQ_IRD	((state->seq_uir >> (41-34)) & 0x7)
+	#define UIR_SEQ_URAND	((state->seq_uir >> (41-41)) & 0x7f)
 
-
-// -------------------- TYP --------------------
+	// -------------------- TYP --------------------
 
 	uint64_t *typ_rfram;
 	uint64_t typ_a, typ_b, c, typ_nalu, typ_alu;
@@ -439,21 +435,20 @@ struct r1000_arch_state {
 	uint64_t typ_uir;
 	unsigned typ_rand;
 
-#define UIR_TYP_A	((state->typ_uir >> 41) & 0x3f)
-#define UIR_TYP_B	((state->typ_uir >> 35) & 0x3f)
-#define UIR_TYP_FRM	((state->typ_uir >> 30) & 0x1f)
-#define UIR_TYP_RAND	((state->typ_uir >> 24) & 0xf)
-#define UIR_TYP_C	((state->typ_uir >> 18) & 0x3f)
-#define UIR_TYP_CLIT	(((state->typ_uir >> (46-16)) & 0x1f) | (((state->typ_uir >> (46-18) & 0x3)<<5)))
-#define UIR_TYP_UPVC	((state->typ_uir >> 15) & 0x7)
-#define UIR_TYP_SEL	((state->typ_uir >> 14) & 0x1)
-#define UIR_TYP_AFNC	((state->typ_uir >> 9) & 0x1f)
-#define UIR_TYP_CSRC	((state->typ_uir >> 8) & 0x1)
-#define UIR_TYP_MCTL	((state->typ_uir >> 4) & 0xf)
-#define UIR_TYP_CCTL	((state->typ_uir >> 1) & 0x7)
+	#define UIR_TYP_A	((state->typ_uir >> 41) & 0x3f)
+	#define UIR_TYP_B	((state->typ_uir >> 35) & 0x3f)
+	#define UIR_TYP_FRM	((state->typ_uir >> 30) & 0x1f)
+	#define UIR_TYP_RAND	((state->typ_uir >> 24) & 0xf)
+	#define UIR_TYP_C	((state->typ_uir >> 18) & 0x3f)
+	#define UIR_TYP_CLIT	(((state->typ_uir >> (46-16)) & 0x1f) | (((state->typ_uir >> (46-18) & 0x3)<<5)))
+	#define UIR_TYP_UPVC	((state->typ_uir >> 15) & 0x7)
+	#define UIR_TYP_SEL	((state->typ_uir >> 14) & 0x1)
+	#define UIR_TYP_AFNC	((state->typ_uir >> 9) & 0x1f)
+	#define UIR_TYP_CSRC	((state->typ_uir >> 8) & 0x1)
+	#define UIR_TYP_MCTL	((state->typ_uir >> 4) & 0xf)
+	#define UIR_TYP_CCTL	((state->typ_uir >> 1) & 0x7)
 
-
-// -------------------- VAL --------------------
+	// -------------------- VAL --------------------
 
 	uint64_t *val_rfram;
 	uint64_t val_a, val_b;
@@ -470,18 +465,17 @@ struct r1000_arch_state {
 	unsigned val_rand;
 	bool val_thiscond;
 
-#define UIR_VAL_A	((state->val_uir >> (39-5)) & 0x3f)
-#define UIR_VAL_B	((state->val_uir >> (39-11)) & 0x3f)
-#define UIR_VAL_FRM	((state->val_uir >> (39-16)) & 0x1f)
-#define UIR_VAL_SEL	((state->val_uir >> (39-18)) & 0x3)
-#define UIR_VAL_RAND	((state->val_uir >> (39-22)) & 0xf)
-#define UIR_VAL_C	((state->val_uir >> (39-28)) & 0x3f)
-#define UIR_VAL_MSRC	((state->val_uir >> (39-32)) & 0xf)
-#define UIR_VAL_AFNC	((state->val_uir >> (39-37)) & 0x1f)
-#define UIR_VAL_CSRC	((state->val_uir >> (39-38)) & 0x1)
+	#define UIR_VAL_A	((state->val_uir >> (39-5)) & 0x3f)
+	#define UIR_VAL_B	((state->val_uir >> (39-11)) & 0x3f)
+	#define UIR_VAL_FRM	((state->val_uir >> (39-16)) & 0x1f)
+	#define UIR_VAL_SEL	((state->val_uir >> (39-18)) & 0x3)
+	#define UIR_VAL_RAND	((state->val_uir >> (39-22)) & 0xf)
+	#define UIR_VAL_C	((state->val_uir >> (39-28)) & 0x3f)
+	#define UIR_VAL_MSRC	((state->val_uir >> (39-32)) & 0xf)
+	#define UIR_VAL_AFNC	((state->val_uir >> (39-37)) & 0x1f)
+	#define UIR_VAL_CSRC	((state->val_uir >> (39-38)) & 0x1)
 
-
-// -------------------- IOC --------------------
+	// -------------------- IOC --------------------
 
 	uint64_t ioc_dummy_typ, ioc_dummy_val;
 
@@ -510,13 +504,13 @@ struct r1000_arch_state {
 	uint64_t ioc_uir;
 	bool ioc_is_tracing;
 
-#define UIR_IOC_ULWDR	((state->ioc_uir >> 13) & 0x1)
-#define UIR_IOC_RAND	((state->ioc_uir >>  8) & 0x1f)
-#define UIR_IOC_AEN	((state->ioc_uir >>  6) & 0x3)
-#define UIR_IOC_FEN	((state->ioc_uir >>  4) & 0x3)
-#define UIR_IOC_TVBS	((state->ioc_uir >>  0) & 0xf)
+	#define UIR_IOC_ULWDR	((state->ioc_uir >> 13) & 0x1)
+	#define UIR_IOC_RAND	((state->ioc_uir >>  8) & 0x1f)
+	#define UIR_IOC_AEN	((state->ioc_uir >>  6) & 0x3)
+	#define UIR_IOC_FEN	((state->ioc_uir >>  4) & 0x3)
+	#define UIR_IOC_TVBS	((state->ioc_uir >>  0) & 0xf)
 
-// -------------------- CSA --------------------
+	// -------------------- CSA --------------------
 
 	unsigned csa_topreg;
 	unsigned csa_botreg;
@@ -526,8 +520,7 @@ r1000_arch :: r1000_arch(void)
 {
 	state = (struct r1000_arch_state *)CTX_GetRaw("R1000", sizeof *state);
 
-
-// -------------------- MEM --------------------
+	// -------------------- MEM --------------------
 
 	state->mem_bcmd = 1 << state->mem_cmd;
 	state->mem_bitt = (uint64_t*)CTX_GetRaw("MEM.bitt", sizeof(*state->mem_bitt) << 22);
@@ -535,8 +528,7 @@ r1000_arch :: r1000_arch(void)
 	state->mem_ram = (uint64_t*)CTX_GetRaw("MEM.ram", sizeof(*state->mem_ram) << 15);
 			// 12 bit line, 3 bit set
 
-
-// -------------------- FIU --------------------
+	// -------------------- FIU --------------------
 
 	load_programmable("r1000_arch", fiu_pa025, sizeof fiu_pa025, "PA025-03");
 	load_programmable("r1000_arch", fiu_pa026, sizeof fiu_pa026, "PA026-02");
@@ -546,8 +538,7 @@ r1000_arch :: r1000_arch(void)
 	state->fiu_wcsram = (uint64_t*)CTX_GetRaw("FIU_WCS", sizeof(uint64_t) << 14);
 	state->fiu_typwcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 
-
-// -------------------- SEQ --------------------
+	// -------------------- SEQ --------------------
 
 	load_programmable("r1000_arch", seq_pa040, sizeof seq_pa040, "PA040-02");
 	load_programmable("r1000_arch", seq_pa041, sizeof seq_pa041, "PA041-01");
@@ -562,8 +553,7 @@ r1000_arch :: r1000_arch(void)
 	state->seq_top = (uint32_t*)CTX_GetRaw("SEQ_TOP", sizeof(uint32_t) << 10);
 	state->seq_bot = (uint32_t*)CTX_GetRaw("SEQ_BOT", sizeof(uint32_t) << 10);
 
-
-// -------------------- TYP --------------------
+	// -------------------- TYP --------------------
 
 	load_programmable("r1000_arch", tv_pa010, sizeof tv_pa010, "PA010");
 	load_programmable("r1000_arch", typ_pa068, sizeof typ_pa068, "PA068");
@@ -571,15 +561,13 @@ r1000_arch :: r1000_arch(void)
 	state->typ_wcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 	state->typ_rfram = (uint64_t*)CTX_GetRaw("TYP_RF", sizeof(uint64_t) << 10);
 
-
-// -------------------- VAL --------------------
+	// -------------------- VAL --------------------
 
 	load_programmable("r1000_arch", val_pa011, sizeof val_pa011, "PA011");
 	state->val_wcsram = (uint64_t*)CTX_GetRaw("VAL_WCS", sizeof(uint64_t) << 14);
 	state->val_rfram = (uint64_t*)CTX_GetRaw("VAL_RF", sizeof(uint64_t) << 10);
 
-
-// -------------------- IOC --------------------
+	// -------------------- IOC --------------------
 
 	load_programmable("r1000_arch", ioc_pb011, sizeof ioc_pb011, "PB011");
 	state->ioc_wcsram = (uint64_t*)CTX_GetRaw("IOC_WCS", sizeof(uint64_t) << 14);
@@ -624,7 +612,6 @@ r1000_arch :: doit(void)
 
 	seq_q3();
 }
-
 
 // -------------------- MEM --------------------
 
@@ -899,7 +886,6 @@ mem_q4(void)
 	state->mem_labort = !(mp_mem_abort_l && mp_mem_abort_el);
 	state->mem_eabort = !(mp_mem_abort_e && mp_mem_abort_el);
 }
-
 
 // -------------------- FIU --------------------
 
@@ -1214,8 +1200,6 @@ rotator(bool sclk)
 	if (sclk && !UIR_FIU_VCLK) {			// Q4~^
 		state->fiu_vreg = vout;
 	}
-
-
 }
 
 void
@@ -1742,7 +1726,6 @@ fiu_q4(void)
 	}
 }
 
-
 // -------------------- SEQ --------------------
 
 void
@@ -1801,8 +1784,6 @@ int_reads()
 		break;
 	}
 }
-
-
 
 bool
 r1000_arch ::
@@ -1992,30 +1973,27 @@ unsigned
 r1000_arch ::
 branch_offset(void)
 {
+	unsigned retval = state->seq_macro_pc_offset;
+	assert(!(retval & ~0x7fff));
+
 	if (state->seq_wanna_dispatch) {
 		unsigned a = state->seq_curins & 0x7ff;
 		if (a & 0x400)
 			a |= 0x7800;
 		a ^= 0x7fff;
 		a += 1;
-		unsigned retval = a + state->seq_macro_pc_offset;
-		retval &= 0x7fff;
-		return (retval);
+		retval += a;
+	} else if (!state->seq_m_ibuff_mt) {
+		retval += 0x7fff;
+	} else {
+		unsigned a = state->seq_display & 0x7ff;
+		if (a & 0x400)
+			a |= 0x7800;
+		a ^= 0x7fff;
+		a += 1;
+		retval -= a;
 	}
-	if (!state->seq_m_ibuff_mt) {
-		unsigned retval = 0x7fff + state->seq_macro_pc_offset;
-		retval &= 0x7fff;
-		return (retval);
-	}
-	unsigned a = state->seq_display & 0x7ff;
-	if (a & 0x400)
-		a |= 0x7800;
-	a ^= 0x7fff;
-	unsigned b = state->seq_macro_pc_offset & 0x7fff;
-	a += 1;
-	unsigned retval = b - a;
-	retval &= 0x7fff;
-	return (retval);
+	return (retval & 0x7fff);
 }
 
 void
@@ -2257,9 +2235,8 @@ seq_q1(void)
 
 	if (!(mp_tv_oe & SEQ_TV_OE)) {
 		seq_p1();
-		int_reads();								//d int_reads()
+		int_reads();
 	}
-
 }
 
 void
@@ -2562,17 +2539,18 @@ seq_q4(void)
 		}
 		if (mode == 3) {
 			if (!RNDX(RND_M_PC_MUX)) {
-				state->seq_macro_pc_offset = (state->seq_val_bus >> 4) & 0x7fff;
+				state->seq_macro_pc_offset = state->seq_val_bus >> 4;
 			} else {
 				state->seq_macro_pc_offset = branch_offset();
 			}
 		} else if (mode == 2) {
 			state->seq_macro_pc_offset += 1;
 		} else if (mode == 1) {
-			state->seq_macro_pc_offset -= 1;
+			state->seq_macro_pc_offset += 0x7fff;
 		}
 		if (mode != 0) {
 			update_display = true;
+			state->seq_macro_pc_offset &= 0x7fff;
 		}
 	}
 
@@ -2886,9 +2864,7 @@ seq_q4(void)
 	}
 }
 
-
 // -------------------- TYP --------------------
-
 
 bool
 r1000_arch ::
@@ -3331,9 +3307,7 @@ typ_q4(void)
 	}
 }
 
-
 // -------------------- VAL --------------------
-
 
 bool
 r1000_arch ::
@@ -3653,7 +3627,6 @@ val_q4(void)
 		state->val_uir = state->val_wcsram[mp_nua_bus] ^ 0xffff800000ULL;
 	}
 }
-
 
 // ------------------ TYP&VAL ------------------
 
