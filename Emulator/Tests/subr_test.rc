@@ -53,8 +53,8 @@ done
 
 cli 'console >' ${R1K_PFX}/_.console
 cli 'modem >' ${R1K_PFX}/_.modem
-cli 'console telnet :0'
-cli 'modem telnet :0'
+cli 'console telnet :1400'
+cli 'modem telnet :1416'
 
 standard_patches
 
