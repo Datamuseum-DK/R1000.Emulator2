@@ -19,11 +19,8 @@ cli dfs patch DIAG.M200_UCODE 0x5c280 \
 
 sc_boards ioc fiu mem0 seq typ val
 
-# cli sc trace seq 1
-
-# cli 'sc trace DI*PROC 4'
-cli 'sc quota add 50'
-cli 'sc quota exit'
+cli 'r1000 quota add 50'
+cli 'r1000 quota exit'
 
 cli_prompt
 

@@ -4,8 +4,8 @@
 
 sc_boards ioc fiu mem0 seq typ val
 
-cli 'sc quota add 50'
-cli 'sc quota exit'
+cli 'r1000 quota add 50'
+cli 'r1000 quota exit'
 
 # 3 => Execute diagnostics
 # 4 => Run a specific test

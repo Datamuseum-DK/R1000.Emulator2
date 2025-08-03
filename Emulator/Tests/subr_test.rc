@@ -60,7 +60,7 @@ standard_patches
 
 sc_boards() {
 	cli '# => sc_all_boards'
-	cli sc launch $*
+	cli r1000 launch $*
 	for brd in ioc fiu mem0 mem1 mem2 mem3 seq typ val
 	do
 	    echo "$*" | grep -q -i ${brd} || cli diproc dummy -TIMEOUT ${brd}
@@ -71,17 +71,17 @@ sc_boards() {
 	cli diproc dummy ioc
 	cli diproc dummy seq
 	cli diproc dummy fiu
-	cli 'sc watchdog -dont_bite 2' 
+	cli 'r1000 watchdog -dont_bite 2' 
 }
 
 cli_prompt() {
-	# cli 'sc trace DI*PROC 0x14'
+	# cli 'r1000 trace DI*PROC 0x14'
 	cli 'trace +console'
 	cli 'trace +diagbus'
 	cli "iop syscall"  
-	# cli "sc trace DUIRG 1"
+	# cli "r1000 trace DUIRG 1"
 
-	cli 'sc wait .00001'
+	cli 'r1000 wait .00001'
 	cli '# => cli_prompt'
 	cli iop reset
 	cli 'console match expect "Boot from (Tn or Dn)  [D0] : "'
@@ -125,16 +125,16 @@ fru_prompt() {
 }
 
 run_with_cli() {
-	cli 'sc wait 1e-6'
-	cli sc rate
+	cli 'r1000 wait 1e-6'
+	cli r1000 rate
 	./r1000sim \
 		-T ${R1K_PFX}/_.trace \
 		"include ${R1K_CLIFILE}" 2>&1 | tee ${R1K_PFX}/_.log
 }
 
 run() {
-	cli 'sc wait 1e-6'
-	cli sc rate
+	cli 'r1000 wait 1e-6'
+	cli r1000 rate
 	cli exit
 	echo "exit" | ./r1000sim \
 		-T ${R1K_PFX}/_ \
@@ -147,10 +147,10 @@ single() {
 
         if [ "x${single_brd}" = "xmem0" ] ; then
 		single_suff="m32"
-		cli 'sc trace DFSM 1'
+		cli 'r1000 trace DFSM 1'
 	else
 		single_suff="${single_brd}"
-		cli 'sc trace DUIRG 1'
+		cli 'r1000 trace DUIRG 1'
 	fi
 
 
@@ -158,10 +158,10 @@ single() {
 		set TEST_WCS_ADDRESS
 	fi
 
-	#cli 'sc trace DI*PROC 0x14'
+	#cli 'r1000 trace DI*PROC 0x14'
 
-	cli 'sc quota add 60'
-	cli 'sc quota exit'
+	cli 'r1000 quota add 60'
+	cli 'r1000 quota exit'
 
         for EXP in $*
 	do

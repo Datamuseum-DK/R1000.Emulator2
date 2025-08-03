@@ -4,8 +4,8 @@
 
 sc_boards ioc fiu mem0 seq typ val
 
-cli 'sc quota add 2000'
-cli 'sc quota exit'
+cli 'r1000 quota add 2000'
+cli 'r1000 quota exit'
 
 # 8 => Initialize processor state
 # 3 => Execute diagnostics
