@@ -13,29 +13,28 @@ ${OBJDIR}/diagbus.o: \
 OBJS    += ${OBJDIR}/diproc_turbo_fiu.o
 ${OBJDIR}/diproc_turbo_fiu.o: \
     Diag/diproc_turbo_fiu.c \
-    Chassis/r1000sc.h \
     Diag/diag.h \
     Diag/diagproc.h \
     Diag/exp_hash.h \
     Infra/context.h \
+    Chassis/r1000_arch.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -I${WORKDIR} -c Diag/diproc_turbo_fiu.c -o ${OBJDIR}/diproc_turbo_fiu.o
 
 OBJS    += ${OBJDIR}/diproc_turbo_ioc.o
 ${OBJDIR}/diproc_turbo_ioc.o: \
     Diag/diproc_turbo_ioc.c \
-    Chassis/r1000sc.h \
     Diag/diag.h \
     Diag/diagproc.h \
     Diag/exp_hash.h \
     Infra/context.h \
+    Chassis/r1000_arch.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -I${WORKDIR} -c Diag/diproc_turbo_ioc.c -o ${OBJDIR}/diproc_turbo_ioc.o
 
 OBJS    += ${OBJDIR}/diproc_turbo_mem32.o
 ${OBJDIR}/diproc_turbo_mem32.o: \
     Diag/diproc_turbo_mem32.c \
-    Chassis/r1000sc.h \
     Diag/diag.h \
     Diag/diagproc.h \
     Diag/exp_hash.h \
@@ -46,18 +45,17 @@ ${OBJDIR}/diproc_turbo_mem32.o: \
 OBJS    += ${OBJDIR}/diproc_turbo_seq.o
 ${OBJDIR}/diproc_turbo_seq.o: \
     Diag/diproc_turbo_seq.c \
-    Chassis/r1000sc.h \
     Diag/diag.h \
     Diag/diagproc.h \
     Diag/exp_hash.h \
     Infra/context.h \
+    Chassis/r1000_arch.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -I${WORKDIR} -c Diag/diproc_turbo_seq.c -o ${OBJDIR}/diproc_turbo_seq.o
 
 OBJS    += ${OBJDIR}/diproc_turbo_tv.o
 ${OBJDIR}/diproc_turbo_tv.o: \
     Diag/diproc_turbo_tv.c \
-    Chassis/r1000sc.h \
     Diag/diag.h \
     Diag/diagproc.h \
     Diag/exp_hash.h \
@@ -70,7 +68,7 @@ ${OBJDIR}/dummy_diproc.o: \
     Diag/dummy_diproc.c \
     Infra/vsb.h \
     Infra/elastic.h \
-    Chassis/r1000sc.h \
     Diag/diag.h \
+    Chassis/r1000_arch.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Diag/dummy_diproc.c -o ${OBJDIR}/dummy_diproc.o

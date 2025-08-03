@@ -5,12 +5,12 @@
 #include <string.h>
 
 #include "Infra/r1000.h"
-#include "Chassis/r1000sc.h"
 #include "Diag/diag.h"
 #include "Diag/diagproc.h"
 #include "Diag/exp_hash.h"
 #include "Infra/context.h"
 #include "Infra/vend.h"
+#include "Chassis/r1000_arch.h"
 
 
 static unsigned seq_ptr;

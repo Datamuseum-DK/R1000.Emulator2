@@ -43,7 +43,7 @@
 #include "Infra/r1000.h"
 #include "Iop/iop.h"
 #include "Infra/vsb.h"
-#include "Chassis/r1000sc_priv.h"	// for sc_when()
+#include "Chassis/r1000_arch.h"	// for sc_when()
 
 int optreset;		// Some have it, some not.
 

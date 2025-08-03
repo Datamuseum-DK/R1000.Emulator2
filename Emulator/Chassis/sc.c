@@ -45,8 +45,7 @@
 #include "Infra/r1000.h"
 #include "Infra/vqueue.h"
 
-#include "Chassis/r1000sc.h"
-#include "Chassis/r1000sc_priv.h"
+#include "Chassis/r1000_arch.h"
 
 struct component {
 	VTAILQ_ENTRY(component)	list;

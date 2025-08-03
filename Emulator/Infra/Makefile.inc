@@ -72,7 +72,7 @@ ${OBJDIR}/main.o: \
     Infra/main.c \
     Infra/vsb.h \
     Iop/iop.h \
-    Chassis/r1000sc_priv.h \
+    Chassis/r1000_arch.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Infra/main.c -o ${OBJDIR}/main.o
 

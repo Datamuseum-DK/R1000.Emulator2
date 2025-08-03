@@ -26,7 +26,7 @@
 #include "Infra/vsb.h"
 #include "Iop/memspace.h"
 #include "Diag/diag.h"
-#include "Chassis/r1000sc.h"
+#include "Chassis/r1000_arch.h"
 
 #define IP0_CTS		0x01
 #define IP1_DSR		0x02

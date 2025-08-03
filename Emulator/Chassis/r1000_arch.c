@@ -8,7 +8,6 @@
 #include <pthread.h>
 
 #include "Infra/r1000.h"
-#include "Chassis/r1000sc.h"
 #include "Infra/context.h"
 
 #include "Chassis/r1000_arch.h"

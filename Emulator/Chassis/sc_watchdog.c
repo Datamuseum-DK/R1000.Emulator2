@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 #include "Infra/r1000.h"
-#include "Chassis/r1000sc_priv.h"
+#include "Chassis/r1000_arch.h"
 #include "Infra/context.h"
 #include "Diag/diagproc.h"
 

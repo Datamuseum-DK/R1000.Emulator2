@@ -34,10 +34,10 @@
 #include <unistd.h>
 
 #include "Infra/r1000.h"
-#include "Chassis/r1000sc.h"
 #include "Infra/vsb.h"
 #include "Diag/diag.h"
 #include "Diag/diagproc.h"
+#include "Chassis/r1000_arch.h"
 
 #include "Infra/elastic.h"
 

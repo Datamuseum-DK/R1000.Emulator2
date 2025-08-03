@@ -2,8 +2,6 @@
 #include <stdint.h>
 
 #include "Infra/r1000.h"
-#include "Chassis/r1000sc.h"
-#include "Chassis/r1000sc_priv.h"
 #include "Chassis/r1000_arch.h"
 
 static uint64_t ucycle;
