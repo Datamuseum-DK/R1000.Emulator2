@@ -241,7 +241,18 @@ io_sreg8_pre_read(int debug, uint8_t *space, unsigned width, unsigned adr)
 	(void)debug;
 	(void)width;
 	(void)adr;
-	space[3] |= 0x20 | key_switch;
+
+	// Margining off
+	space[0] |= 0x80;
+	space[2] &= ~0x02;
+
+	// EXTID
+	space[3] &= ~0x70;
+	space[3] |= 0x20;
+
+	// KEY SWITCH
+	space[3] &= ~0x08;
+	space[3] |= key_switch;
 }
 
 /**********************************************************************/
