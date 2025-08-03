@@ -45,17 +45,8 @@
 static ioc_bpt_f Ioc_HotFix_Kernel;
 static ioc_bpt_f Ioc_HotFix_Bootloader;
 
-static void
-skip_code(unsigned int from, unsigned int to, const char *why)
-{
-	char buf[100];
-
-	bprintf(buf, ".PC ' => ' 0x%x !PC .PC ' Skipping %s'", to, why);
-	ioc_breakpoint_rpn(from, buf);
-}
-
-static void
-hotfix_ioc_functional(void)
+void
+Ioc_HotFix_Ioc(void)
 {
 
 	ioc_breakpoint_rpn(0x80000088,
@@ -67,75 +58,7 @@ hotfix_ioc_functional(void)
 	ioc_breakpoint_rpn(0x80004d08,
 	    "'Hit debugger ' regs ' ' stack ' ' finish");
 
-	skip_code(0x80000568, 0x800007d0, "Memory parity");
-	skip_code(0x800007f4, 0x800009b2, "I/O Bus control");
-	skip_code(0x800009da, 0x80000a4a, "I/O Bus map parity");
-	skip_code(0x80000a74, 0x80000b8a, "I/O bus transactions");
-	skip_code(0x80001170, 0x8000117c, "RESHA VME sub-tests");
-	skip_code(0x8000117c, 0x80001188, "RESHA LANCE sub-tests");
-	// Local interrupts test
-	skip_code(0x800011dc, 0x800011fc, "Local interrupts (vector 0x50)");
-	skip_code(0x8000127a, 0x80001298, "Local interrupts (vector 0x51)");
-	skip_code(0x80001358, 0x80001470, "Local interrupts (vector 0x52)");
-	skip_code(0x80001502, 0x800015ce, "Illegal reference protection");
-	skip_code(0x800015f2, 0x8000166c, "I/O bus parity");
-	skip_code(0x8000169c, 0x800016d8, "I/O bus spurious interrupts");
-	skip_code(0x80001700, 0x80001746, "Temperature sensors");
-	skip_code(0x80001774, 0x800017f8, "IOC diagnostic processor");
-	skip_code(0x80001880, 0x8000197c, "Clock margining");
-
-	// If this is skipped we get 'No SCSI interrupt: Hard reset'
-	// skip_code(0x80001188, 0x80001194, "RESHA DISK SUB-TESTs");
-}
-
-void
-Ioc_HotFix_Ioc(void)
-{
-
-	hotfix_ioc_functional();
-
-	skip_code(0x800001e4, 0x8000021a, "EEPROM CHECKSUM");
-	skip_code(0x800003a4, 0x800004f8, "512k RAM Test (dword based)");
-	skip_code(0x800004f8, 0x80000546, "512k RAM Test (byte steering)");
-	skip_code(0x80000ba2, 0x80000bf2, "PIT  (=> DUART)");
-	skip_code(0x80000c1a, 0x80000d20, "Modem DUART channel");
-	skip_code(0x80000d4e, 0x80000dd6, "Diagnostic DUART channel");
-	skip_code(0x80000dfc, 0x80000ec4, "Clock / Calendar");
-	skip_code(0x80000fa0, 0x80000fda, "RESHA EEProm Interface ...");
 	// skip_code(0x80001194, 0x800011a0, "RESHA TAPE SUB-TESTs");
-	skip_code(0x8000181c, 0x8000185c, "Power margining");
-	skip_code(0x80001982, 0x80001992, "final check");
-
-	/*
-	 * 80000060 20 3c 00 00 82 35          MOVE.L  #0x00008235,D0
-	 * 80000066 51 c8 ff fe                DBF     D0,0x80000066
-	 */
-	ioc_breakpoint_rpn(0x80000066, "D0 0xa min !D0");
-
-	/*
-	 * 800000fe 20 3c 00 01 04 6a          MOVE.L  #0x0001046a,D0
-	 * 80000104 53 80                      SUBQ.L  #0x1,D0
-	 */
-	ioc_breakpoint_rpn(0x80000104, "D0 0xa min !D0");
-
-	/*
-	 * 80000132 20 3c 00 00 82 35          MOVE.L  #0x00008235,D0
-	 * 80000138 51 c8 ff fe                DBF     D0,0x80000138
-	 */
-	ioc_breakpoint_rpn(0x80000138, "D0 0xa min !D0");
-
-	/*
-	 * 80000338 20 3c 00 00 82 35          MOVE.L  #0x00008235,D0
-	 * 8000033e 51 c8 ff fe                DBF     D0,0x8000033e
-	 */
-	ioc_breakpoint_rpn(0x8000033e, "D0 0xa min !D0");
-
-	/*
-	 * 80000348 20 3c 00 00 82 35          MOVE.L  #0x00008235,D0
-	 * 8000034e 51 c8 ff fe                DBF     D0,0x8000034e
-	 */
-	ioc_breakpoint_rpn(0x8000034e, "D0 0xa min !D0");
-
 }
 
 static void

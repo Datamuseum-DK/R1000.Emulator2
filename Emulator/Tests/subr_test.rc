@@ -11,33 +11,114 @@ mkdir -p ${R1K_PFX}
 
 R1K_CLIFILE=${R1K_PFX}/_.cli
 
-standard_patches() {
+mandatory_patches() {
+
+	# These mandatory patches compensate for optimized hardware
+
+	# Skip IOC test "EEPROM CHECKSUM"
+	cli firmware patch IOC_EEPROM 0x01e4 0x4e 0xf9 0x80 0x00 0x02 0x1a
+
+	# Skip IOC test "Memory parity"
+	cli firmware patch IOC_EEPROM 0x0568 0x4e 0xf9 0x80 0x00 0x07 0xd0
+
+	# Skip IOC test "I/O bus control"
+	cli firmware patch IOC_EEPROM 0x07f4 0x4e 0xf9 0x80 0x00 0x09 0xb2
+
+	# Skip IOC test "I/O bus map parity"
+	cli firmware patch IOC_EEPROM 0x09da 0x4e 0xf9 0x80 0x00 0x0a 0x4a
+
+	# Skip IOC test "I/O bus transactions"
+	cli firmware patch IOC_EEPROM 0x0a74 0x4e 0xf9 0x80 0x00 0x0b 0x8a
+
+	# Skip IOC test "PIT  (=> DUART)"
+	cli firmware patch IOC_EEPROM 0x0ba2 0x4e 0xf9 0x80 0x00 0x0b 0xf2
+
+	# Skip IOC test "RESHA VME sub-tests"
+	cli firmware patch IOC_EEPROM 0x1170 0x4e 0xf9 0x80 0x00 0x11 0x7c
+
+	# Skip IOC test "RESHA LANCE sub-tests"
+	cli firmware patch IOC_EEPROM 0x117c 0x4e 0xf9 0x80 0x00 0x11 0x88
+
+	# Skip IOC test "Local interrupts (vector 0x50)"
+	cli firmware patch IOC_EEPROM 0x11dc 0x4e 0xf9 0x80 0x00 0x11 0xfc
+
+	# Skip IOC test "Local interrupts (vector 0x51)"
+	cli firmware patch IOC_EEPROM 0x127a 0x4e 0xf9 0x80 0x00 0x12 0x98
+
+	# Skip IOC test "Local interrupts (vector 0x52)"
+	cli firmware patch IOC_EEPROM 0x1358 0x4e 0xf9 0x80 0x00 0x14 0x70
+
+	# Skip IOC test "Illegal reference protection"
+	cli firmware patch IOC_EEPROM 0x1502 0x4e 0xf9 0x80 0x00 0x15 0xce
+
+	# Skip IOC test "I/O bus parity"
+	cli firmware patch IOC_EEPROM 0x15f2 0x4e 0xf9 0x80 0x00 0x16 0x6c
+
+	# Skip IOC test "I/O bus spurious interrupts"
+	cli firmware patch IOC_EEPROM 0x169c 0x4e 0xf9 0x80 0x00 0x16 0xd8
+
+	# Skip IOC test "Temperature sensors"
+	cli firmware patch IOC_EEPROM 0x1700 0x4e 0xf9 0x80 0x00 0x17 0x46
+
+	# Skip IOC test "IOC diagnostic processor"
+	cli firmware patch IOC_EEPROM 0x1774 0x4e 0xf9 0x80 0x00 0x17 0xf8
+
+	# Skip IOC test "Clock margining"
+	cli firmware patch IOC_EEPROM 0x1880 0x4e 0xf9 0x80 0x00 0x19 0x7c
 
 	# Set the cluster id to 408459 (= PAM's machine)
 	cli firmware patch IOC_EEPROM 0x7e84 0x00 0x06 0x3b 0x8b
 
-	# Dont use "CR ESC [ 2 K" to hide experiment names
-	cli dfs patch FS_0.M200 0x8fb7 0x20
-	cli dfs patch FS_0.M200 0x8fbd 0x20
-	cli dfs patch FS_0.M200 0x827e 0x40 0x0a 0x0d
+}
 
-	# Poll experiment completion four times more often
+speedup_patches() {
+
+	# These optional patches speed things up a bit but eliminates
+	# a ton of output when tracing.
+
+	# Skip IOC test "512k RAM Test (dword based)"
+	cli firmware patch IOC_EEPROM 0x03a4 0x4e 0xf9 0x80 0x00 0x04 0xf8
+
+	# Skip IOC test "512k RAM Test (byte steering)"
+	cli firmware patch IOC_EEPROM 0x04f8 0x4e 0xf9 0x80 0x00 0x05 0x46
+
+	# Skip IOC test "Modem DUART channel"
+	cli firmware patch IOC_EEPROM 0x0c1a 0x4e 0xf9 0x80 0x00 0x0d 0x20
+
+	# Skip IOC test "Diagnostic DUART channel"
+	cli firmware patch IOC_EEPROM 0x0d4e 0x4e 0xf9 0x80 0x00 0x0d 0xd6
+
+	# Skip IOC test "Clock / Calendar"
+	cli firmware patch IOC_EEPROM 0x0dfc 0x4e 0xf9 0x80 0x00 0x0e 0xc4
+
+	# Skip IOC test "RESHA EEProm Interface ..."
+	cli firmware patch IOC_EEPROM 0x0fa0 0x4e 0xf9 0x80 0x00 0x0f 0xda
+
+	# Skip IOC test "Power margining"
+	cli firmware patch IOC_EEPROM 0x181c 0x4e 0xf9 0x80 0x00 0x18 0x5c
+
+	# Skip IOC test "final check"
+	cli firmware patch IOC_EEPROM 0x1982 0x4e 0xf9 0x80 0x00 0x19 0x92
+
+	# Speed up IOC UART loops
+	#	80000060 20 3c 00 00 82 35          MOVE.L  #0x00008235,D0
+	#	80000060 20 3c 00 00 00 0a          MOVE.L  #0x0000000a,D0
+	cli firmware patch IOC_EEPROM 0x0062 0x00 0x00 0x00 0x0a
+	#	800000fe 20 3c 00 01 04 6a          MOVE.L  #0x0001046a,D0
+	#	800000fe 20 3c 00 00 00 0a          MOVE.L  #0x0000000a,D0
+	cli firmware patch IOC_EEPROM 0x0100 0x00 0x00 0x00 0x0a
+	#	80000132 20 3c 00 00 82 35          MOVE.L  #0x00008235,D0
+	#	80000132 20 3c 00 00 00 0a          MOVE.L  #0x0000000a,D0
+	cli firmware patch IOC_EEPROM 0x0134 0x00 0x00 0x00 0x0a
+	#	80000338 20 3c 00 00 82 35          MOVE.L  #0x00008235,D0
+	#	80000338 20 3c 00 00 00 0a          MOVE.L  #0x0000000a,D0
+	cli firmware patch IOC_EEPROM 0x033a 0x00 0x00 0x00 0x0a
+	#	80000348 20 3c 00 00 82 35          MOVE.L  #0x00008235,D0
+	#	80000348 20 3c 00 00 00 0a          MOVE.L  #0x0000000a,D0
+	cli firmware patch IOC_EEPROM 0x034a 0x00 0x00 0x00 0x0a
+
+	# Poll experiment completion four times as often
 	cli 'dfs patch FS_0.M200 0x93c6 0x00 0x14'
-
-	# Allow operator to enter CLI immediately [N] ? y
-	# cli dfs patch STANDARD.M200_CONFIG 0x3 0x1
-
-	# Allow operator to enter CLI prior to starting the cluster [N] ? y
-	# cli dfs patch STANDARD.M200_CONFIG 0x5 0x1
-
-	# Wait for remote debugging on kernel crashes [Y] ? n
-	cli dfs patch STANDARD.M200_CONFIG 0x2a 0x0
-
-	# Call Rational on kernel crash [Y] ? n
-	cli dfs patch STANDARD.M200_CONFIG 0x2d 0x0
-
-	# Single MEM32 board
-	cli dfs patch HARDWARE.M200_CONFIG 0x05 0x0
 
 	# Speed up DELAY_LOOP(D1)
 	# 	00005d16 20 3c 00 00 05 00          MOVE.L  #0x00000500,D0
@@ -61,6 +142,46 @@ standard_patches() {
 	#	00009818 20 3c 00 03 ff ff          MOVE.L  #0x0003ffff,D0
 	#	00009818 20 3c 00 00 04 00          MOVE.L  #0x00000400,D0
 	cli dfs patch KERNEL_0.M200 0x0000981a 0x00 0x00 0x04 0x00
+}
+
+config_patches() {
+
+	# These patches adjust the configuration so we do not have to run
+	# CEDIT all the time.
+
+	# Allow operator to enter CLI immediately [N] ? y
+	# cli dfs patch STANDARD.M200_CONFIG 0x3 0x1
+
+	# Allow operator to enter CLI prior to starting the cluster [N] ? y
+	# cli dfs patch STANDARD.M200_CONFIG 0x5 0x1
+
+	# Wait for remote debugging on kernel crashes [Y] ? n
+	cli dfs patch STANDARD.M200_CONFIG 0x2a 0x0
+
+	# Call Rational on kernel crash [Y] ? n
+	cli dfs patch STANDARD.M200_CONFIG 0x2d 0x0
+
+	# Single MEM32 board
+	cli dfs patch HARDWARE.M200_CONFIG 0x05 0x0
+}
+
+convenience_patches() {
+
+	# Entirely a matter of taste.
+
+	# Dont use "CR ESC [ 2 K" to hide experiment names
+	cli dfs patch FS_0.M200 0x8fb7 0x20
+	cli dfs patch FS_0.M200 0x8fbd 0x20
+	cli dfs patch FS_0.M200 0x827e 0x40 0x0a 0x0d
+
+}
+
+standard_patches() {
+
+	mandatory_patches
+	speedup_patches
+	config_patches
+	convenience_patches
 }
 
 cli() {
