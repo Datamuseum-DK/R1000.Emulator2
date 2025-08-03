@@ -360,7 +360,7 @@ cli_sc_force_reset(struct cli *cli)
 	sc_forced_reset = 1;
 }
 
-static const struct cli_cmds cli_sc_cmds[] = {
+static const struct cli_cmds cli_r1000_cmds[] = {
 	{ "launch",		cli_sc_launch },
 	{ "quota",		cli_sc_quota },
 	{ "rate",		cli_sc_rate },
@@ -372,7 +372,7 @@ static const struct cli_cmds cli_sc_cmds[] = {
 };
 
 void v_matchproto_(cli_func_f)
-cli_sc(struct cli *cli)
+cli_r1000(struct cli *cli)
 {
-	Cli_Dispatch(cli, cli_sc_cmds);
+	Cli_Dispatch(cli, cli_r1000_cmds);
 }

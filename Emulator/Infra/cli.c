@@ -163,7 +163,7 @@ static const struct cli_cmds cli_cmds[] = {
 	{ "include",		cli_include },
 	{ "iop",		cli_ioc },
 	{ "modem",		cli_ioc_modem },
-	{ "sc",			cli_sc },
+	{ "r1000",		cli_r1000 },
 	{ "tape",		cli_scsi_tape },
 	{ "trace",		cli_trace },
 	{ NULL,			NULL },

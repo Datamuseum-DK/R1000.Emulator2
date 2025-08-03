@@ -131,9 +131,9 @@ void Rpn_Printf(const struct rpn *rpn, const char *fmt, ...);
 			return;					\
 	} while (0)
 
-/* SystemC ************************************************************/
+/* R1000 **************************************************************/
 
-cli_func_f cli_sc;
+cli_func_f cli_r1000;
 
 /* Tracing & Debugging ************************************************/
 
