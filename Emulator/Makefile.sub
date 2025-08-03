@@ -28,27 +28,17 @@ CFLAGS += ${CFLAGSMINUSD}
 CFLAGS += ${CFLAGSMINUSI}
 CFLAGS += ${PARANOIA}
 
-SC_API ?= -std=c++14
-
-SC_CFLAGS += ${SC_API} ${OPTIMIZE} ${PARANOIA} ${PARANOIAXX} -pthread 
-SC_CC = ${CXX} ${SC_CFLAGS} -I. ${SC_I} -c
-
-
 ${R1000BIN}:	${OBJS}
 	@echo Linking ${R1000BIN}
-	@${CXX} -o ${R1000BIN} ${R1000SIM} ${SC_CFLAGS} ${LDFLAGS} ${OBJS} ${SC_L}
+	@${CC} -pthread -lm -o ${R1000BIN} ${R1000SIM} ${LDFLAGS} ${OBJS}
 
 flint: ${OBJS}
 	flexelint flint.lnt \
-		"+cpp(cc)" \
 		${R1000SIM} ${CFLAGSMINUSI} ${CFLAGSMINUSD} \
-		-I . ${SC_I} \
-		-I /usr/include/c++/v1 \
+		-I . \
 		-I${WORKDIR}/ \
 		Dfs/*.c \
 		Diag/*.c \
 		Infra/*.c \
 		Iop/*.c \
-		Chassis/*.c \
-		Chassis/*.cc \
-		Emu/*.cc \
+		Chassis/*.c
