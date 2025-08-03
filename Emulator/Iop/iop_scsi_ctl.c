@@ -101,8 +101,11 @@ scsi_to_target(struct scsi_dev *sd, void *ptr, unsigned len)
 	assert(!(sd->ctl->regs[0x15] & 0x40));
 	xlen = vbe32dec(sd->ctl->regs + 0x11) & 0xffffff;
 	assert(len <= xlen);
-	for (xlen = 0; xlen < len; xlen += (1<<10)) {
-		dma_read(sd->ctl->dma_seg, sd->ctl->dma_adr + xlen, pp + xlen, 1<<10);
+	unsigned bite = 1<<10;
+	for (xlen = 0; xlen < len; xlen += bite) {
+		if (len - xlen < bite)
+			bite = len - xlen;
+		dma_read(sd->ctl->dma_seg, sd->ctl->dma_adr + xlen, pp + xlen, bite);
 	}
 	Trace(trace_scsi_cmd, "%s T %p <- R [%x]", sd->ctl->name, ptr, len);
 }
@@ -116,8 +119,11 @@ scsi_fm_target(struct scsi_dev *sd, void *ptr, unsigned len)
 	assert((sd->ctl->regs[0x15] & 0x40));
 	xlen = vbe32dec(sd->ctl->regs + 0x11) & 0xffffff;
 	assert(len <= xlen);
-	for (xlen = 0; xlen < len; xlen += (1<<10)) {
-		dma_write(sd->ctl->dma_seg, sd->ctl->dma_adr + xlen, pp + xlen, 1<<10);
+	unsigned bite = 1<<10;
+	for (xlen = 0; xlen < len; xlen += bite) {
+		if (len - xlen < bite)
+			bite = len - xlen;
+		dma_write(sd->ctl->dma_seg, sd->ctl->dma_adr + xlen, pp + xlen, bite);
 	}
 	Trace(trace_scsi_cmd, "%s T %p -> R [%x]", sd->ctl->name, ptr, len);
 }

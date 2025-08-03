@@ -18,7 +18,7 @@
 
 static const char MS_RESET[] = "Reset";
 static const char MS_INIT[] = "Init";
-static const char MS_FUNCTION[] = "Function";
+// static const char MS_FUNCTION[] = "Function";
 
 static struct {
 	const char	*state;

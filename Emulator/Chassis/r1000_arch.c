@@ -32,7 +32,6 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <strings.h>
 #include <stdbool.h>
 #include <pthread.h>
@@ -41,8 +40,6 @@
 #include "Infra/context.h"
 
 #include "Chassis/r1000_arch.h"
-
-#include "Diag/diagproc.h"
 
 #include "Infra/cache_line.h"
 #include "Iop/iop_sc_68k20.hh"
@@ -165,61 +162,61 @@ MIDSTATE(DMACRO)
 #undef DMACRO
 }
 
-static void csa_q4(struct r1000_arch_state *state);
+static void csa_q4(void);
 
-static bool mem_is_hit(const struct r1000_arch_state *state, unsigned adr, unsigned set);
-static void mem_load_mar(struct r1000_arch_state *state);
-static void mem_h1(struct r1000_arch_state *state);
-static void mem_q4(struct r1000_arch_state *state);
+static bool mem_is_hit(unsigned adr, unsigned set);
+static void mem_load_mar(void);
+static void mem_h1(void);
+static void mem_q4(void);
 
-static bool fiu_conditions(const struct r1000_arch_state *state);
-static void fiu_do_tivi(struct r1000_arch_state *state);
-static void fiu_rotator(struct r1000_arch_state *state, bool sclk);
-static uint64_t fiu_frame(const struct r1000_arch_state *state);
-static void fiu_q1(struct r1000_arch_state *state);
-static void fiu_q2(struct r1000_arch_state *state);
-static void fiu_q4(struct r1000_arch_state *state);
+static bool fiu_conditions(void);
+static void fiu_do_tivi(void);
+static void fiu_rotator(bool sclk);
+static uint64_t fiu_frame(void);
+static void fiu_q1(void);
+static void fiu_q2(void);
+static void fiu_q4(void);
 
-static void seq_int_reads(struct r1000_arch_state *state);
-static bool seq_conda(struct r1000_arch_state *state, unsigned condsel);
-static bool seq_cond9(struct r1000_arch_state *state, unsigned condsel);
-static bool seq_cond8(struct r1000_arch_state *state, unsigned condsel);
-static void seq_nxt_lex_valid(struct r1000_arch_state *state);
-static bool seq_condition(struct r1000_arch_state *state);
-static unsigned seq_branch_offset(struct r1000_arch_state *state);
-static void seq_q3clockstop(struct r1000_arch_state *state);
-static void seq_p1(struct r1000_arch_state *state);
-static void seq_h1(struct r1000_arch_state *state);
-static void seq_q1(struct r1000_arch_state *state);
-static void seq_q3(struct r1000_arch_state *state);
-static void seq_q4(struct r1000_arch_state *state);
+static void seq_int_reads(void);
+static bool seq_conda(unsigned condsel);
+static bool seq_cond9(unsigned condsel);
+static bool seq_cond8(unsigned condsel);
+static void seq_nxt_lex_valid(void);
+static bool seq_condition(void);
+static unsigned seq_branch_offset(void);
+static void seq_q3clockstop(void);
+static void seq_p1(void);
+static void seq_h1(void);
+static void seq_q1(void);
+static void seq_q3(void);
+static void seq_q4(void);
 
-static unsigned tv_cadr(const struct r1000_arch_state *state, unsigned uirc, unsigned frame, unsigned count);
-static uint64_t tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a, bool t, const uint64_t *rfram);
+static unsigned tv_cadr(unsigned uirc, unsigned frame, unsigned count);
+static uint64_t tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, const uint64_t *rfram);
 
-static bool typ_bin_op_pass(struct r1000_arch_state *state);
-static bool typ_priv_path_eq(struct r1000_arch_state *state);
-static bool typ_a_op_pass(struct r1000_arch_state *state);
-static bool typ_b_op_pass(struct r1000_arch_state *state);
-static bool typ_clev(struct r1000_arch_state *state);
-static bool typ_cond(struct r1000_arch_state *state);
-static void typ_h1(struct r1000_arch_state *state);
-static void typ_q2(struct r1000_arch_state *state);
-static void typ_q4(struct r1000_arch_state *state);
+static bool typ_bin_op_pass(void);
+static bool typ_priv_path_eq(void);
+static bool typ_a_op_pass(void);
+static bool typ_b_op_pass(void);
+static bool typ_clev(void);
+static bool typ_cond(void);
+static void typ_h1(void);
+static void typ_q2(void);
+static void typ_q4(void);
 
-static bool val_ovrsgn(struct r1000_arch_state *state);
-static bool val_cond(struct r1000_arch_state *state);
-static bool val_fiu_cond(struct r1000_arch_state *state);
-static uint64_t val_find_b(struct r1000_arch_state *state, unsigned uir);
-static void val_h1(struct r1000_arch_state *state);
-static void val_q2(struct r1000_arch_state *state);
-static void val_q4(struct r1000_arch_state *state);
+static bool val_ovrsgn(void);
+static bool val_cond(void);
+static bool val_fiu_cond(void);
+static uint64_t val_find_b(unsigned uir);
+static void val_h1(void);
+static void val_q2(void);
+static void val_q4(void);
 
-static void ioc_h1(const struct r1000_arch_state *state);
-static void ioc_q2(const struct r1000_arch_state *state);
-static void ioc_q4(struct r1000_arch_state *state);
-static void ioc_do_xact(struct r1000_arch_state *state);
-static bool ioc_cond(const struct r1000_arch_state *state);
+static void ioc_h1(void);
+static void ioc_q2(void);
+static void ioc_q4(void);
+static void ioc_do_xact(void);
+static bool ioc_cond(void);
 
 
 static uint8_t fiu_pa025[512];
@@ -303,7 +300,7 @@ do {							\
 #define CMD_LRQ	(1<<0x2)	// LRU QUERY
 #define CMD_AVQ	(1<<0x1)	// AVAILABLE QUERY
 #define CMD_IDL	(1<<0x0)	// IDLE
-#define CMDS(x) ((state->mem_bcmd & (x)) != 0)
+#define CMDS(x) ((r1k->mem_bcmd & (x)) != 0)
 
 #define BSET_0	0x01
 #define BSET_1	0x02
@@ -352,19 +349,19 @@ do {							\
 #define RND_IBUFF_LD		(1<< 2)
 #define RND_BR_MSK_L		(1<< 1)
 #define RND_INSTR_LD		(1<< 0)
-#define RNDX(x) ((state->seq_rndx & (x)) != 0)
+#define RNDX(x) ((r1k->seq_rndx & (x)) != 0)
 
 
 // -------------------- TYP --------------------
 
 #define TYP_A_LSB BUS64_LSB
 #define TYP_B_LSB BUS64_LSB
-#define TYP_A_BITS(n) (state->typ_a >> TYP_A_LSB(n))
-#define TYP_B_BITS(n) (state->typ_b >> TYP_B_LSB(n))
+#define TYP_A_BITS(n) (r1k->typ_a >> TYP_A_LSB(n))
+#define TYP_B_BITS(n) (r1k->typ_b >> TYP_B_LSB(n))
 #define TYP_A_BIT(n) (TYP_A_BITS(n) & 1)
 #define TYP_B_BIT(n) (TYP_B_BITS(n) & 1)
-#define TYP_A_LIT() (state->typ_a & 0x7f)
-#define TYP_B_LIT() (state->typ_b & 0x7f)
+#define TYP_A_LIT() (r1k->typ_a & 0x7f)
+#define TYP_B_LIT() (r1k->typ_b & 0x7f)
 
 
 struct r1000_arch_state {
@@ -467,22 +464,22 @@ struct r1000_arch_state {
 	bool fiu_memstart;
 	unsigned fiu_pa025d, fiu_pa026d, fiu_pa027d;
 
-	#define UIR_FIU_OL	((state->fiu_uir >> 40) & 0x7f)
-	#define UIR_FIU_LFL	((state->fiu_uir >> 32) & 0x7f)
-	#define UIR_FIU_LFRC	((state->fiu_uir >> 30) & 0x3)
-	#define UIR_FIU_OP	((state->fiu_uir >> 28) & 0x3)
-	#define UIR_FIU_SEL	((state->fiu_uir >> 26) & 0x3)
-	#define UIR_FIU_FSRC	((state->fiu_uir >> 25) & 1)
-	#define UIR_FIU_ORSR	((state->fiu_uir >> 24) & 1)
-	#define UIR_FIU_TIVI	((state->fiu_uir >> 20) & 0xf)
-	#define UIR_FIU_OCLK	((state->fiu_uir >> 19) & 1)
-	#define UIR_FIU_VCLK	((state->fiu_uir >> 18) & 1)
-	#define UIR_FIU_TCLK	((state->fiu_uir >> 17) & 1)
-	#define UIR_FIU_LDMDR	((state->fiu_uir >> 16) & 1)
-	#define UIR_FIU_MSTRT	((state->fiu_uir >> 10) & 0x1f)
-	#define UIR_FIU_RDSRC	((state->fiu_uir >> 9) & 1)
-	#define UIR_FIU_LSRC	((state->fiu_uir >> 1) & 1)
-	#define UIR_FIU_OSRC	((state->fiu_uir >> 0) & 1)
+	#define UIR_FIU_OL	((r1k->fiu_uir >> 40) & 0x7f)
+	#define UIR_FIU_LFL	((r1k->fiu_uir >> 32) & 0x7f)
+	#define UIR_FIU_LFRC	((r1k->fiu_uir >> 30) & 0x3)
+	#define UIR_FIU_OP	((r1k->fiu_uir >> 28) & 0x3)
+	#define UIR_FIU_SEL	((r1k->fiu_uir >> 26) & 0x3)
+	#define UIR_FIU_FSRC	((r1k->fiu_uir >> 25) & 1)
+	#define UIR_FIU_ORSR	((r1k->fiu_uir >> 24) & 1)
+	#define UIR_FIU_TIVI	((r1k->fiu_uir >> 20) & 0xf)
+	#define UIR_FIU_OCLK	((r1k->fiu_uir >> 19) & 1)
+	#define UIR_FIU_VCLK	((r1k->fiu_uir >> 18) & 1)
+	#define UIR_FIU_TCLK	((r1k->fiu_uir >> 17) & 1)
+	#define UIR_FIU_LDMDR	((r1k->fiu_uir >> 16) & 1)
+	#define UIR_FIU_MSTRT	((r1k->fiu_uir >> 10) & 0x1f)
+	#define UIR_FIU_RDSRC	((r1k->fiu_uir >> 9) & 1)
+	#define UIR_FIU_LSRC	((r1k->fiu_uir >> 1) & 1)
+	#define UIR_FIU_OSRC	((r1k->fiu_uir >> 0) & 1)
 
 	// -------------------- SEQ --------------------
 
@@ -610,17 +607,17 @@ struct r1000_arch_state {
 	#define A_CALL (CALL_FALSE|CALL_TRUE|CALL)
 	#define A_RETURN (RETURN_TRUE|RETURN_FALSE|RETURN)
 	#define A_DISPATCH (DISPATCH_TRUE|DISPATCH_FALSE|DISPATCH)
-	#define BRTYPE(x) (state->seq_br_typb & (x))
+	#define BRTYPE(x) (r1k->seq_br_typb & (x))
 
-	#define UIR_SEQ_BRN	((state->seq_uir >> (41-13)) & 0x3fff)
-	#define UIR_SEQ_LUIR	((state->seq_uir >> (41-15)) & 0x1)
-	#define UIR_SEQ_BRTYP	((state->seq_uir >> (41-19)) & 0xf)
-	#define UIR_SEQ_BRTIM	((state->seq_uir >> (41-21)) & 0x3)
-	#define UIR_SEQ_CSEL	((state->seq_uir >> (41-28)) & 0x7f)
-	#define UIR_SEQ_LAUIR	((state->seq_uir >> (41-30)) & 0x3)
-	#define UIR_SEQ_ENMIC	((state->seq_uir >> (41-31)) & 0x1)
-	#define UIR_SEQ_IRD	((state->seq_uir >> (41-34)) & 0x7)
-	#define UIR_SEQ_URAND	((state->seq_uir >> (41-41)) & 0x7f)
+	#define UIR_SEQ_BRN	((r1k->seq_uir >> (41-13)) & 0x3fff)
+	#define UIR_SEQ_LUIR	((r1k->seq_uir >> (41-15)) & 0x1)
+	#define UIR_SEQ_BRTYP	((r1k->seq_uir >> (41-19)) & 0xf)
+	#define UIR_SEQ_BRTIM	((r1k->seq_uir >> (41-21)) & 0x3)
+	#define UIR_SEQ_CSEL	((r1k->seq_uir >> (41-28)) & 0x7f)
+	#define UIR_SEQ_LAUIR	((r1k->seq_uir >> (41-30)) & 0x3)
+	#define UIR_SEQ_ENMIC	((r1k->seq_uir >> (41-31)) & 0x1)
+	#define UIR_SEQ_IRD	((r1k->seq_uir >> (41-34)) & 0x7)
+	#define UIR_SEQ_URAND	((r1k->seq_uir >> (41-41)) & 0x7f)
 
 	// -------------------- TYP --------------------
 
@@ -642,18 +639,18 @@ struct r1000_arch_state {
 	uint64_t typ_uir;
 	unsigned typ_rand;
 
-	#define UIR_TYP_A	((state->typ_uir >> 41) & 0x3f)
-	#define UIR_TYP_B	((state->typ_uir >> 35) & 0x3f)
-	#define UIR_TYP_FRM	((state->typ_uir >> 30) & 0x1f)
-	#define UIR_TYP_RAND	((state->typ_uir >> 24) & 0xf)
-	#define UIR_TYP_C	((state->typ_uir >> 18) & 0x3f)
-	#define UIR_TYP_CLIT	(((state->typ_uir >> (46-16)) & 0x1f) | (((state->typ_uir >> (46-18) & 0x3)<<5)))
-	#define UIR_TYP_UPVC	((state->typ_uir >> 15) & 0x7)
-	#define UIR_TYP_SEL	((state->typ_uir >> 14) & 0x1)
-	#define UIR_TYP_AFNC	((state->typ_uir >> 9) & 0x1f)
-	#define UIR_TYP_CSRC	((state->typ_uir >> 8) & 0x1)
-	#define UIR_TYP_MCTL	((state->typ_uir >> 4) & 0xf)
-	#define UIR_TYP_CCTL	((state->typ_uir >> 1) & 0x7)
+	#define UIR_TYP_A	((r1k->typ_uir >> 41) & 0x3f)
+	#define UIR_TYP_B	((r1k->typ_uir >> 35) & 0x3f)
+	#define UIR_TYP_FRM	((r1k->typ_uir >> 30) & 0x1f)
+	#define UIR_TYP_RAND	((r1k->typ_uir >> 24) & 0xf)
+	#define UIR_TYP_C	((r1k->typ_uir >> 18) & 0x3f)
+	#define UIR_TYP_CLIT	(((r1k->typ_uir >> (46-16)) & 0x1f) | (((r1k->typ_uir >> (46-18) & 0x3)<<5)))
+	#define UIR_TYP_UPVC	((r1k->typ_uir >> 15) & 0x7)
+	#define UIR_TYP_SEL	((r1k->typ_uir >> 14) & 0x1)
+	#define UIR_TYP_AFNC	((r1k->typ_uir >> 9) & 0x1f)
+	#define UIR_TYP_CSRC	((r1k->typ_uir >> 8) & 0x1)
+	#define UIR_TYP_MCTL	((r1k->typ_uir >> 4) & 0xf)
+	#define UIR_TYP_CCTL	((r1k->typ_uir >> 1) & 0x7)
 
 	// -------------------- VAL --------------------
 
@@ -672,15 +669,15 @@ struct r1000_arch_state {
 	unsigned val_rand;
 	bool val_thiscond;
 
-	#define UIR_VAL_A	((state->val_uir >> (39-5)) & 0x3f)
-	#define UIR_VAL_B	((state->val_uir >> (39-11)) & 0x3f)
-	#define UIR_VAL_FRM	((state->val_uir >> (39-16)) & 0x1f)
-	#define UIR_VAL_SEL	((state->val_uir >> (39-18)) & 0x3)
-	#define UIR_VAL_RAND	((state->val_uir >> (39-22)) & 0xf)
-	#define UIR_VAL_C	((state->val_uir >> (39-28)) & 0x3f)
-	#define UIR_VAL_MSRC	((state->val_uir >> (39-32)) & 0xf)
-	#define UIR_VAL_AFNC	((state->val_uir >> (39-37)) & 0x1f)
-	#define UIR_VAL_CSRC	((state->val_uir >> (39-38)) & 0x1)
+	#define UIR_VAL_A	((r1k->val_uir >> (39-5)) & 0x3f)
+	#define UIR_VAL_B	((r1k->val_uir >> (39-11)) & 0x3f)
+	#define UIR_VAL_FRM	((r1k->val_uir >> (39-16)) & 0x1f)
+	#define UIR_VAL_SEL	((r1k->val_uir >> (39-18)) & 0x3)
+	#define UIR_VAL_RAND	((r1k->val_uir >> (39-22)) & 0xf)
+	#define UIR_VAL_C	((r1k->val_uir >> (39-28)) & 0x3f)
+	#define UIR_VAL_MSRC	((r1k->val_uir >> (39-32)) & 0xf)
+	#define UIR_VAL_AFNC	((r1k->val_uir >> (39-37)) & 0x1f)
+	#define UIR_VAL_CSRC	((r1k->val_uir >> (39-38)) & 0x1)
 
 	// -------------------- IOC --------------------
 
@@ -711,11 +708,11 @@ struct r1000_arch_state {
 	uint64_t ioc_uir;
 	bool ioc_is_tracing;
 
-	#define UIR_IOC_ULWDR	((state->ioc_uir >> 13) & 0x1)
-	#define UIR_IOC_RAND	((state->ioc_uir >>  8) & 0x1f)
-	#define UIR_IOC_AEN	((state->ioc_uir >>  6) & 0x3)
-	#define UIR_IOC_FEN	((state->ioc_uir >>  4) & 0x3)
-	#define UIR_IOC_TVBS	((state->ioc_uir >>  0) & 0xf)
+	#define UIR_IOC_ULWDR	((r1k->ioc_uir >> 13) & 0x1)
+	#define UIR_IOC_RAND	((r1k->ioc_uir >>  8) & 0x1f)
+	#define UIR_IOC_AEN	((r1k->ioc_uir >>  6) & 0x3)
+	#define UIR_IOC_FEN	((r1k->ioc_uir >>  4) & 0x3)
+	#define UIR_IOC_TVBS	((r1k->ioc_uir >>  0) & 0xf)
 
 	// -------------------- CSA --------------------
 
@@ -723,19 +720,22 @@ struct r1000_arch_state {
 	unsigned csa_botreg;
 };
 
-struct r1000_arch_state *
+static struct r1000_arch_state *r1k;
+
+void
 r1000_arch_new(void)
 {
 	struct r1000_arch_state *state;
 
 	state = (struct r1000_arch_state *)CTX_GetRaw("R1000", sizeof *state);
+	r1k = state;
 
 	// -------------------- MEM --------------------
 
-	state->mem_bcmd = 1U << state->mem_cmd;
-	state->mem_bitt = (uint64_t*)CTX_GetRaw("MEM.bitt", sizeof(*state->mem_bitt) << 22);
+	r1k->mem_bcmd = 1U << r1k->mem_cmd;
+	r1k->mem_bitt = (uint64_t*)CTX_GetRaw("MEM.bitt", sizeof(*r1k->mem_bitt) << 22);
 			// 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
-	state->mem_ram = (uint64_t*)CTX_GetRaw("MEM.ram", sizeof(*state->mem_ram) << 15);
+	r1k->mem_ram = (uint64_t*)CTX_GetRaw("MEM.ram", sizeof(*r1k->mem_ram) << 15);
 			// 12 bit line, 3 bit set
 
 	// -------------------- FIU --------------------
@@ -745,8 +745,8 @@ r1000_arch_new(void)
 	Firmware_Copy(fiu_pa027, sizeof fiu_pa027, "PA027-01");
 	Firmware_Copy(fiu_pa028, sizeof fiu_pa028, "PA028-02");
 	Firmware_Copy(fiu_pa060, sizeof fiu_pa060, "PA060-01");
-	state->fiu_wcsram = (uint64_t*)CTX_GetRaw("FIU_WCS", sizeof(uint64_t) << 14);
-	state->fiu_typwcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
+	r1k->fiu_wcsram = (uint64_t*)CTX_GetRaw("FIU_WCS", sizeof(uint64_t) << 14);
+	r1k->fiu_typwcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 
 	// -------------------- SEQ --------------------
 
@@ -759,88 +759,87 @@ r1000_arch_new(void)
 	Firmware_Copy(seq_pa046, sizeof seq_pa046, "PA046-02");
 	Firmware_Copy(seq_pa047, sizeof seq_pa047, "PA047-02");
 	Firmware_Copy(seq_pa048, sizeof seq_pa048, "PA048-02");
-	state->seq_wcsram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << UADR_WIDTH);
-	state->seq_top = (uint32_t*)CTX_GetRaw("SEQ_TOP", sizeof(uint32_t) << 10);
-	state->seq_bot = (uint32_t*)CTX_GetRaw("SEQ_BOT", sizeof(uint32_t) << 10);
+	r1k->seq_wcsram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << UADR_WIDTH);
+	r1k->seq_top = (uint32_t*)CTX_GetRaw("SEQ_TOP", sizeof(uint32_t) << 10);
+	r1k->seq_bot = (uint32_t*)CTX_GetRaw("SEQ_BOT", sizeof(uint32_t) << 10);
 
 	// -------------------- TYP --------------------
 
 	Firmware_Copy(tv_pa010, sizeof tv_pa010, "PA010-02");
 	Firmware_Copy(typ_pa068, sizeof typ_pa068, "PA068-01");
 	Firmware_Copy(typ_pa059, sizeof typ_pa059, "PA059-01");
-	state->typ_wcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
-	state->typ_rfram = (uint64_t*)CTX_GetRaw("TYP_RF", sizeof(uint64_t) << 10);
+	r1k->typ_wcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
+	r1k->typ_rfram = (uint64_t*)CTX_GetRaw("TYP_RF", sizeof(uint64_t) << 10);
 
 	// -------------------- VAL --------------------
 
 	Firmware_Copy(val_pa011, sizeof val_pa011, "PA011-02");
-	state->val_wcsram = (uint64_t*)CTX_GetRaw("VAL_WCS", sizeof(uint64_t) << 14);
-	state->val_rfram = (uint64_t*)CTX_GetRaw("VAL_RF", sizeof(uint64_t) << 10);
+	r1k->val_wcsram = (uint64_t*)CTX_GetRaw("VAL_WCS", sizeof(uint64_t) << 14);
+	r1k->val_rfram = (uint64_t*)CTX_GetRaw("VAL_RF", sizeof(uint64_t) << 10);
 
 	// -------------------- IOC --------------------
 
 	Firmware_Copy(ioc_pb011, sizeof ioc_pb011, "PB011-01");
-	state->ioc_wcsram = (uint64_t*)CTX_GetRaw("IOC_WCS", sizeof(uint64_t) << 14);
-	state->ioc_tram = (uint16_t*)CTX_GetRaw("IOC_TRAM", sizeof(uint16_t) * 2049);
+	r1k->ioc_wcsram = (uint64_t*)CTX_GetRaw("IOC_WCS", sizeof(uint64_t) << 14);
+	r1k->ioc_tram = (uint16_t*)CTX_GetRaw("IOC_TRAM", sizeof(uint16_t) * 2049);
 
-	state->ioc_ram = (uint8_t *)CTX_GetRaw("IOP.ram_space", 512<<10);
-	state->ioc_is_tracing = false;
-
-	return (state);
+	r1k->ioc_ram = (uint8_t *)CTX_GetRaw("IOP.ram_space", 512<<10);
+	r1k->ioc_is_tracing = false;
 }
 
 // ----------- One Micro Cycle -----------------
 
 void
-r1000_arch_micro_cycle(struct r1000_arch_state *state)
+r1000_arch_micro_cycle(void)
 {
-	mem_q4(state);
-	fiu_q4(state);
-	typ_q4(state);
-	val_q4(state);
-	csa_q4(state);
-	ioc_q4(state);
-	seq_q4(state);
+	mem_q4();
+	fiu_q4();
+	typ_q4();
+	val_q4();
+	csa_q4();
+	ioc_q4();
+	seq_q4();
 
-	if (++state->pit == 256) {
+	if (++r1k->pit == 256) {
 		pit_clock();
-		state->pit = 0;
+		r1k->pit = 0;
 	}
 	update_state();
 
-	mem_h1(state);
-	typ_h1(state);
-	val_h1(state);
-	ioc_h1(state);
-	seq_h1(state);
+	mem_h1();
+	typ_h1();
+	val_h1();
+	ioc_h1();
+	seq_h1();
 
-	fiu_q1(state);
-	seq_q1(state);
+	fiu_q1();
+	seq_q1();
 
-	fiu_q2(state);
-	typ_q2(state);
-	val_q2(state);
-	ioc_q2(state);
+	fiu_q2();
+	typ_q2();
+	val_q2();
+	ioc_q2();
 
-	seq_q3(state);
+	seq_q3();
 }
 
 // -------------------- MEM --------------------
 
 static bool
-mem_is_hit(const struct r1000_arch_state *state, unsigned adr, unsigned set)
+mem_is_hit(unsigned adr, unsigned set)
 {
-	uint64_t data = state->mem_ram[adr];
-	if (CMDS(CMD_LMR|CMD_LMW|CMD_LTR) && ((state->mem_mar ^ data) & ~0x1fffULL)) {
+	(void)set;
+	uint64_t data = r1k->mem_ram[adr];
+	if (CMDS(CMD_LMR|CMD_LMW|CMD_LTR) && ((r1k->mem_mar ^ data) & ~0x1fffULL)) {
 		return (false);
 	}
 
-	unsigned page_state = (state->mem_ram[adr]>>6) & 3;
+	unsigned page_state = (r1k->mem_ram[adr]>>6) & 3;
 
 	// R1000_Micro_Arch_Mem.pdf p19:
 	//    00: Loading, 01: Read-only, 10: Read-Write, 11: Invalid
 
-	bool ts = (data & 0x7) == state->mem_mar_space;
+	bool ts = (data & 0x7) == r1k->mem_mar_space;
 
 	if (CMDS(CMD_LMR))
 		return (ts && (page_state == 1 || page_state == 2));
@@ -849,7 +848,7 @@ mem_is_hit(const struct r1000_arch_state *state, unsigned adr, unsigned set)
 		return (ts && page_state == 1);
 
 	if (CMDS(CMD_LRQ))
-		return ((state->mem_ram[adr] & 0xf00) == 0);
+		return ((r1k->mem_ram[adr] & 0xf00) == 0);
 
 	if (CMDS(CMD_AVQ))
 		return (page_state == 0);
@@ -857,129 +856,127 @@ mem_is_hit(const struct r1000_arch_state *state, unsigned adr, unsigned set)
 	if (CMDS(CMD_LTR))
 		return (ts && page_state != 0);
 
-	bool name = !((state->mem_mar ^ data) >> 32);
+	bool name = !((r1k->mem_mar ^ data) >> 32);
 	if (CMDS(CMD_NMQ))
 		return (name && (page_state != 0));
 
 	if (CMDS(CMD_IDL))
 		return (true);
 
-printf("MEM %04x\n", state->mem_bcmd);
 	assert(0);
-	return (state->mem_mar_set == set);
 }
 
 static void
-mem_load_mar(struct r1000_arch_state *state)
+mem_load_mar(void)
 {
 	uint64_t a;
 	uint32_t s;
 
 	s = mp_spc_bus;
 	a = mp_adr_bus;
-	state->mem_mar = a;
-	state->mem_mar_space = s;
-	state->mem_mar_set = (a>>BUS64_LSB(27)) & 0xf;
+	r1k->mem_mar = a;
+	r1k->mem_mar_space = s;
+	r1k->mem_mar_set = (a>>BUS64_LSB(27)) & 0xf;
 
-	state->mem_word = (a >> 7) & 0x3f;
-	state->mem_hash = 0;
-	state->mem_hash ^= cache_line_tbl_h[(a >> 42) & 0x3ff];
-	state->mem_hash ^= cache_line_tbl_l[(a >> 13) & 0xfff];
-	state->mem_hash ^= cache_line_tbl_s[state->mem_mar_space & 0x7];
+	r1k->mem_word = (a >> 7) & 0x3f;
+	r1k->mem_hash = 0;
+	r1k->mem_hash ^= cache_line_tbl_h[(a >> 42) & 0x3ff];
+	r1k->mem_hash ^= cache_line_tbl_l[(a >> 13) & 0xfff];
+	r1k->mem_hash ^= cache_line_tbl_s[r1k->mem_mar_space & 0x7];
 }
 
 static void
-mem_h1(struct r1000_arch_state *state)
+mem_h1(void)
 {
 	bool labort = !(mp_mem_abort_l && mp_mem_abort_el);
-	bool p_early_abort = state->mem_eabort;
-	bool p_mcyc2_next_hd = state->mem_p_mcyc2_next;
+	bool p_early_abort = r1k->mem_eabort;
+	bool p_mcyc2_next_hd = r1k->mem_p_mcyc2_next;
 	if (p_early_abort && p_mcyc2_next_hd) {
-		state->mem_cmd = 0;
+		r1k->mem_cmd = 0;
 	} else {
-		state->mem_cmd = state->mem_q4cmd ^ 0xf;
+		r1k->mem_cmd = r1k->mem_q4cmd ^ 0xf;
 	}
-	state->mem_bcmd = 1U << state->mem_cmd;
-	state->mem_p_mcyc2_next =
+	r1k->mem_bcmd = 1U << r1k->mem_cmd;
+	r1k->mem_p_mcyc2_next =
 		!(
-			((state->mem_q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
-			((!state->mem_q4cont) && (!p_early_abort) && (!p_mcyc2_next_hd))
+			((r1k->mem_q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
+			((!r1k->mem_q4cont) && (!p_early_abort) && (!p_mcyc2_next_hd))
 		);
-	state->mem_cyo = !((state->mem_q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd);
-	state->mem_cyt = p_mcyc2_next_hd;
+	r1k->mem_cyo = !((r1k->mem_q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd);
+	r1k->mem_cyt = p_mcyc2_next_hd;
 
-	if (state->mem_cyo && !mp_freeze && !CMDS(CMD_IDL)) {
+	if (r1k->mem_cyo && !mp_freeze && !CMDS(CMD_IDL)) {
 		if (CMDS(CMD_AVQ)) {
-			if	  (state->mem_hits & BSET_4) { mp_mem_set = 0;
-			} else if (state->mem_hits & BSET_5) { mp_mem_set = 1;
-			} else if (state->mem_hits & BSET_6) { mp_mem_set = 2;
-			} else if (state->mem_hits & BSET_7) { mp_mem_set = 3;
-			} else if (state->mem_hits & BSET_0) { mp_mem_set = 0;
-			} else if (state->mem_hits & BSET_1) { mp_mem_set = 1;
-			} else if (state->mem_hits & BSET_2) { mp_mem_set = 2;
+			if	  (r1k->mem_hits & BSET_4) { mp_mem_set = 0;
+			} else if (r1k->mem_hits & BSET_5) { mp_mem_set = 1;
+			} else if (r1k->mem_hits & BSET_6) { mp_mem_set = 2;
+			} else if (r1k->mem_hits & BSET_7) { mp_mem_set = 3;
+			} else if (r1k->mem_hits & BSET_0) { mp_mem_set = 0;
+			} else if (r1k->mem_hits & BSET_1) { mp_mem_set = 1;
+			} else if (r1k->mem_hits & BSET_2) { mp_mem_set = 2;
 			} else				     { mp_mem_set = 3;
 			}
-		} else if (state->mem_hits != 0xff && mp_mem_set != (state->mem_hit_set & 3)) {
-			mp_mem_set = state->mem_hit_set & 3;
+		} else if (r1k->mem_hits != 0xff && mp_mem_set != (r1k->mem_hit_set & 3)) {
+			mp_mem_set = r1k->mem_hit_set & 3;
 		}
 
 		mp_mem_hit = 0xf;
-		if (state->mem_hits & (BSET_0|BSET_1|BSET_2|BSET_3))
+		if (r1k->mem_hits & (BSET_0|BSET_1|BSET_2|BSET_3))
 			mp_mem_hit &= ~1;
-		if (state->mem_hits & (BSET_4|BSET_5|BSET_6|BSET_7))
+		if (r1k->mem_hits & (BSET_4|BSET_5|BSET_6|BSET_7))
 			mp_mem_hit &= ~8;
-		if (state->mem_hits) {
-			unsigned tadr = state->mem_hash << 3;
-			     if (state->mem_hits & BSET_0)	state->mem_hit_lru = state->mem_ram[tadr | 0] & 0xf00;
-			else if (state->mem_hits & BSET_1)	state->mem_hit_lru = state->mem_ram[tadr | 1] & 0xf00;
-			else if (state->mem_hits & BSET_2)	state->mem_hit_lru = state->mem_ram[tadr | 2] & 0xf00;
-			else if (state->mem_hits & BSET_3)	state->mem_hit_lru = state->mem_ram[tadr | 3] & 0xf00;
-			else if (state->mem_hits & BSET_4)	state->mem_hit_lru = state->mem_ram[tadr | 4] & 0xf00;
-			else if (state->mem_hits & BSET_5)	state->mem_hit_lru = state->mem_ram[tadr | 5] & 0xf00;
-			else if (state->mem_hits & BSET_6)	state->mem_hit_lru = state->mem_ram[tadr | 6] & 0xf00;
-			else if (state->mem_hits & BSET_7)	state->mem_hit_lru = state->mem_ram[tadr | 7] & 0xf00;
+		if (r1k->mem_hits) {
+			unsigned tadr = r1k->mem_hash << 3;
+			if      (r1k->mem_hits & BSET_0)	r1k->mem_hit_lru = r1k->mem_ram[tadr | 0] & 0xf00;
+			else if (r1k->mem_hits & BSET_1)	r1k->mem_hit_lru = r1k->mem_ram[tadr | 1] & 0xf00;
+			else if (r1k->mem_hits & BSET_2)	r1k->mem_hit_lru = r1k->mem_ram[tadr | 2] & 0xf00;
+			else if (r1k->mem_hits & BSET_3)	r1k->mem_hit_lru = r1k->mem_ram[tadr | 3] & 0xf00;
+			else if (r1k->mem_hits & BSET_4)	r1k->mem_hit_lru = r1k->mem_ram[tadr | 4] & 0xf00;
+			else if (r1k->mem_hits & BSET_5)	r1k->mem_hit_lru = r1k->mem_ram[tadr | 5] & 0xf00;
+			else if (r1k->mem_hits & BSET_6)	r1k->mem_hit_lru = r1k->mem_ram[tadr | 6] & 0xf00;
+			else if (r1k->mem_hits & BSET_7)	r1k->mem_hit_lru = r1k->mem_ram[tadr | 7] & 0xf00;
 		} else {
-			state->mem_hit_lru = 0xf00;
+			r1k->mem_hit_lru = 0xf00;
 		}
 	}
-	if (!state->mem_cyt && !mp_freeze && !CMDS(CMD_IDL)) {
+	if (!r1k->mem_cyt && !mp_freeze && !CMDS(CMD_IDL)) {
 		if (CMDS(CMD_PTR)) {
-			unsigned padr = (state->mem_hash << 3) | (state->mem_mar_set & 0x7);
-			state->mem_qreg = state->mem_ram[padr];
+			unsigned padr = (r1k->mem_hash << 3) | (r1k->mem_mar_set & 0x7);
+			r1k->mem_qreg = r1k->mem_ram[padr];
 		}
 
 		if (CMDS(CMD_LMR|CMD_PMR) && !labort) {
-			uint32_t radr =	(state->mem_hit_set << 18) | (state->mem_cl << 6) | state->mem_wd;
+			uint32_t radr =	(r1k->mem_hit_set << 18) | (r1k->mem_cl << 6) | r1k->mem_wd;
 			assert(radr < (1U << 21));
-			state->mem_tqreg = state->mem_bitt[radr+radr];
-			state->mem_vqreg = state->mem_bitt[radr+radr+1];
+			r1k->mem_tqreg = r1k->mem_bitt[radr+radr];
+			r1k->mem_vqreg = r1k->mem_bitt[radr+radr+1];
 		}
 
 		bool ihit = mp_mem_hit == 0xf;
-		if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->mem_labort) {
-			uint32_t radr = (state->mem_hit_set << 18) | (state->mem_cl << 6) | state->mem_wd;
+		if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !r1k->mem_labort) {
+			uint32_t radr = (r1k->mem_hit_set << 18) | (r1k->mem_cl << 6) | r1k->mem_wd;
 			assert(radr < (1U << 21));
-			state->mem_bitt[radr+radr] = state->mem_tdreg;
-			state->mem_bitt[radr+radr+1] = state->mem_vdreg;
+			r1k->mem_bitt[radr+radr] = r1k->mem_tdreg;
+			r1k->mem_bitt[radr+radr+1] = r1k->mem_vdreg;
 		}
 
 		if (CMDS(CMD_PTW)) {
 			bool my_board = false;
-			bool which_board = state->mem_mar_set >> 3;
+			bool which_board = r1k->mem_mar_set >> 3;
 			if (which_board == my_board) {
-				unsigned padr = (state->mem_hash << 3) | (state->mem_mar_set & 0x7);
-				state->mem_ram[padr] = state->mem_vdreg;
+				unsigned padr = (r1k->mem_hash << 3) | (r1k->mem_mar_set & 0x7);
+				r1k->mem_ram[padr] = r1k->mem_vdreg;
 			}
-		} else if (!state->mem_labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
-			unsigned padr = state->mem_hash << 3;
+		} else if (!r1k->mem_labort && CMDS(CMD_LRQ|CMD_LMW|CMD_LMR)) {
+			unsigned padr = r1k->mem_hash << 3;
 			for (unsigned u = 0; u < 8; u++) {
-				unsigned then = state->mem_ram[padr] & 0xf00;
-				if (then == state->mem_hit_lru) {
-					state->mem_ram[padr] |= 0x700;
+				unsigned then = r1k->mem_ram[padr] & 0xf00;
+				if (then == r1k->mem_hit_lru) {
+					r1k->mem_ram[padr] |= 0x700;
 					if (CMDS(CMD_LMW))
-						state->mem_ram[padr] |= 0x1000;
-				} else if (then > state->mem_hit_lru) {
-					state->mem_ram[padr] -= 0x100;
+						r1k->mem_ram[padr] |= 0x1000;
+				} else if (then > r1k->mem_hit_lru) {
+					r1k->mem_ram[padr] -= 0x100;
 				}
 				padr += 1;
 			}
@@ -992,171 +989,170 @@ mem_h1(struct r1000_arch_state *state)
 		if (not_me) {
 			mp_val_bus = ~0ULL;
 		} else {
-			mp_val_bus = state->mem_qreg;
+			mp_val_bus = r1k->mem_qreg;
 		}
 	} else if (mp_tv_oe & MEM_TV_OE) {
 		if (not_me) {
 			mp_typ_bus = ~0ULL;
 			mp_val_bus = ~0ULL;
 		} else {
-			mp_typ_bus = state->mem_tqreg;
-			mp_val_bus = state->mem_vqreg;
+			mp_typ_bus = r1k->mem_tqreg;
+			mp_val_bus = r1k->mem_vqreg;
 		}
 	}
 }
 
 static void
-mem_q4(struct r1000_arch_state *state)
+mem_q4(void)
 {
-	state->mem_cl = state->mem_hash;
-	state->mem_wd = state->mem_word;
+	r1k->mem_cl = r1k->mem_hash;
+	r1k->mem_wd = r1k->mem_word;
 
-	state->mem_cstop = mp_sync_freeze == 0;
+	r1k->mem_cstop = mp_sync_freeze == 0;
 
 	if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
-		state->mem_tdreg = mp_typ_bus;
-		state->mem_vdreg = mp_val_bus;
+		r1k->mem_tdreg = mp_typ_bus;
+		r1k->mem_vdreg = mp_val_bus;
 	}
 	bool loadmar = !((mp_mar_cntl >= 4) && mp_clock_stop_7);
-	if (!loadmar && state->mem_cstop) {
-		mem_load_mar(state);
+	if (!loadmar && r1k->mem_cstop) {
+		mem_load_mar();
 	}
 
-	if (!state->mem_cyo) {
-		state->mem_hit_set = 0x03;
-		state->mem_hits = 0;
-		if (state->mem_labort) {
+	if (!r1k->mem_cyo) {
+		r1k->mem_hit_set = 0x03;
+		r1k->mem_hits = 0;
+		if (r1k->mem_labort) {
 			// nothing
 		} else if (CMDS(CMD_LMR|CMD_LMW|CMD_LTR)) {
 			// These create at most a single hit
-			unsigned badr = state->mem_hash << 3;
+			unsigned badr = r1k->mem_hash << 3;
 			do {
-				if (mem_is_hit(state, badr | 4, 4)) {
-					state->mem_hits |= BSET_4;
-					state->mem_hit_set = 4;
+				if (mem_is_hit(badr | 4, 4)) {
+					r1k->mem_hits |= BSET_4;
+					r1k->mem_hit_set = 4;
 					break;
 				}
-				if (mem_is_hit(state, badr | 5, 5)) {
-					state->mem_hits |= BSET_5;
-					state->mem_hit_set = 5;
+				if (mem_is_hit(badr | 5, 5)) {
+					r1k->mem_hits |= BSET_5;
+					r1k->mem_hit_set = 5;
 					break;
 				}
-				if (mem_is_hit(state, badr | 6, 6)) {
-					state->mem_hits |= BSET_6;
-					state->mem_hit_set = 6;
+				if (mem_is_hit(badr | 6, 6)) {
+					r1k->mem_hits |= BSET_6;
+					r1k->mem_hit_set = 6;
 					break;
 				}
-				if (mem_is_hit(state, badr | 7, 7)) {
-					state->mem_hits |= BSET_7;
-					state->mem_hit_set = 7;
+				if (mem_is_hit(badr | 7, 7)) {
+					r1k->mem_hits |= BSET_7;
+					r1k->mem_hit_set = 7;
 					break;
 				}
-				if (mem_is_hit(state, badr | 0, 0)) {
-					state->mem_hits |= BSET_0;
-					state->mem_hit_set = 0;
+				if (mem_is_hit(badr | 0, 0)) {
+					r1k->mem_hits |= BSET_0;
+					r1k->mem_hit_set = 0;
 					break;
 				}
-				if (mem_is_hit(state, badr | 1, 1)) {
-					state->mem_hits |= BSET_1;
-					state->mem_hit_set = 1;
+				if (mem_is_hit(badr | 1, 1)) {
+					r1k->mem_hits |= BSET_1;
+					r1k->mem_hit_set = 1;
 					break;
 				}
-				if (mem_is_hit(state, badr | 2, 2)) {
-					state->mem_hits |= BSET_2;
-					state->mem_hit_set = 2;
+				if (mem_is_hit(badr | 2, 2)) {
+					r1k->mem_hits |= BSET_2;
+					r1k->mem_hit_set = 2;
 					break;
 				}
-				if (mem_is_hit(state, badr | 3, 3)) {
-					state->mem_hits |= BSET_3;
-					state->mem_hit_set = 3;
+				if (mem_is_hit(badr | 3, 3)) {
+					r1k->mem_hits |= BSET_3;
+					r1k->mem_hit_set = 3;
 					break;
 				}
 			} while (0);
 		} else if (CMDS(CMD_PMR|CMD_PMW|CMD_PTW|CMD_PTR)) {
-			if (state->mem_mar_set < 8) {
-				state->mem_hits = 1U << state->mem_mar_set;
-				state->mem_hit_set = state->mem_mar_set;
+			if (r1k->mem_mar_set < 8) {
+				r1k->mem_hits = 1U << r1k->mem_mar_set;
+				r1k->mem_hit_set = r1k->mem_mar_set;
 			}
 		} else {
-			unsigned badr = state->mem_hash << 3;
-			if (mem_is_hit(state, badr | 0, 0)) { state->mem_hits |= BSET_0; state->mem_hit_set = 0; }
-			if (mem_is_hit(state, badr | 1, 1)) { state->mem_hits |= BSET_1; state->mem_hit_set = 1; }
-			if (mem_is_hit(state, badr | 2, 2)) { state->mem_hits |= BSET_2; state->mem_hit_set = 2; }
-			if (mem_is_hit(state, badr | 3, 3)) { state->mem_hits |= BSET_3; state->mem_hit_set = 3; }
-			if (mem_is_hit(state, badr | 4, 4)) { state->mem_hits |= BSET_4; state->mem_hit_set = 4; }
-			if (mem_is_hit(state, badr | 5, 5)) { state->mem_hits |= BSET_5; state->mem_hit_set = 5; }
-			if (mem_is_hit(state, badr | 6, 6)) { state->mem_hits |= BSET_6; state->mem_hit_set = 6; }
-			if (mem_is_hit(state, badr | 7, 7)) { state->mem_hits |= BSET_7; state->mem_hit_set = 7; }
+			unsigned badr = r1k->mem_hash << 3;
+			if (mem_is_hit(badr | 0, 0)) { r1k->mem_hits |= BSET_0; r1k->mem_hit_set = 0; }
+			if (mem_is_hit(badr | 1, 1)) { r1k->mem_hits |= BSET_1; r1k->mem_hit_set = 1; }
+			if (mem_is_hit(badr | 2, 2)) { r1k->mem_hits |= BSET_2; r1k->mem_hit_set = 2; }
+			if (mem_is_hit(badr | 3, 3)) { r1k->mem_hits |= BSET_3; r1k->mem_hit_set = 3; }
+			if (mem_is_hit(badr | 4, 4)) { r1k->mem_hits |= BSET_4; r1k->mem_hit_set = 4; }
+			if (mem_is_hit(badr | 5, 5)) { r1k->mem_hits |= BSET_5; r1k->mem_hit_set = 5; }
+			if (mem_is_hit(badr | 6, 6)) { r1k->mem_hits |= BSET_6; r1k->mem_hit_set = 6; }
+			if (mem_is_hit(badr | 7, 7)) { r1k->mem_hits |= BSET_7; r1k->mem_hit_set = 7; }
 		}
 	}
-	state->mem_q4cmd = mp_mem_ctl;
-	state->mem_q4cont = mp_mem_continue;
-	state->mem_labort = !(mp_mem_abort_l && mp_mem_abort_el);
-	state->mem_eabort = !(mp_mem_abort_e && mp_mem_abort_el);
+	r1k->mem_q4cmd = mp_mem_ctl;
+	r1k->mem_q4cont = mp_mem_continue;
+	r1k->mem_labort = !(mp_mem_abort_l && mp_mem_abort_el);
+	r1k->mem_eabort = !(mp_mem_abort_e && mp_mem_abort_el);
 }
 
 // -------------------- FIU --------------------
 
 static bool
-fiu_conditions(const struct r1000_arch_state *state)
+fiu_conditions(void)
 {
 
 	switch(mp_cond_sel) {
-	case 0x60: return(!state->fiu_memex);
-	case 0x61: return(!state->fiu_phys_last);
-	case 0x62: return(!state->fiu_write_last);
+	case 0x60: return(!r1k->fiu_memex);
+	case 0x61: return(!r1k->fiu_phys_last);
+	case 0x62: return(!r1k->fiu_write_last);
 	case 0x63: return(!mp_csa_hit);
-	case 0x64: return(!((state->fiu_oreg >> 6) & 1));
+	case 0x64: return(!((r1k->fiu_oreg >> 6) & 1));
 	case 0x65: // Cross word shift
-		return((state->fiu_oreg + (state->fiu_lfreg & 0x3f) + (state->fiu_lfreg & 0x80)) <= 255);
-	case 0x66: return((state->fiu_moff & 0x3f) > 0x30);
+		return((r1k->fiu_oreg + (r1k->fiu_lfreg & 0x3f) + (r1k->fiu_lfreg & 0x80)) <= 255);
+	case 0x66: return((r1k->fiu_moff & 0x3f) > 0x30);
 	case 0x67: return(!(mp_refresh_count != 0xffff));
-	case 0x68: return(!state->fiu_csa_oor_next);
+	case 0x68: return(!r1k->fiu_csa_oor_next);
 	case 0x69: return(!false);			// SCAV_HIT
-	case 0x6a: return(!state->fiu_page_xing);
-	case 0x6b: return(!state->fiu_miss);
-	case 0x6c: return(!state->fiu_incmplt_mcyc);
-	case 0x6d: return(!state->fiu_mar_modified);
-	case 0x6e: return(!state->fiu_incmplt_mcyc);
-	case 0x6f: return((state->fiu_moff & 0x3f) != 0);
+	case 0x6a: return(!r1k->fiu_page_xing);
+	case 0x6b: return(!r1k->fiu_miss);
+	case 0x6c: return(!r1k->fiu_incmplt_mcyc);
+	case 0x6d: return(!r1k->fiu_mar_modified);
+	case 0x6e: return(!r1k->fiu_incmplt_mcyc);
+	case 0x6f: return((r1k->fiu_moff & 0x3f) != 0);
 	default: assert(0);
 	}
-	return (false);
 }
 
 static uint64_t
-fiu_frame(const struct r1000_arch_state *state)
+fiu_frame(void)
 {
 	uint64_t u = 0;
 
 	uint64_t line = 0;
-	line ^= cache_line_tbl_h[(state->fiu_srn >> 10) & 0x3ff];
-	line ^= cache_line_tbl_l[(state->fiu_moff >> (13 - 7)) & 0xfff];
-	line ^= cache_line_tbl_s[(state->fiu_sro >> 4) & 0x7];
+	line ^= cache_line_tbl_h[(r1k->fiu_srn >> 10) & 0x3ff];
+	line ^= cache_line_tbl_l[(r1k->fiu_moff >> (13 - 7)) & 0xfff];
+	line ^= cache_line_tbl_s[(r1k->fiu_sro >> 4) & 0x7];
 
 	u |= (uint64_t)mp_mem_cond_pol << BUS64_LSB(9);
 	u |= (uint64_t)mp_mem_cond << BUS64_LSB(10);
 	u |= line << BUS64_LSB(23);
-	u |= (uint64_t)state->fiu_setq << BUS64_LSB(25);
+	u |= (uint64_t)r1k->fiu_setq << BUS64_LSB(25);
 	u |= (uint64_t)mp_mem_set << BUS64_LSB(27);
-	u |= (uint64_t)((state->fiu_omq >> 2) & 0x3) << BUS64_LSB(29);
+	u |= (uint64_t)((r1k->fiu_omq >> 2) & 0x3) << BUS64_LSB(29);
 	u |= 0x3ULL << BUS64_LSB(31);
-	u |= (uint64_t)(state->fiu_uev10_page_x) << BUS64_LSB(32);
-	u |= (uint64_t)((state->fiu_prmt >> 1) & 1) << BUS64_LSB(33);
+	u |= (uint64_t)(r1k->fiu_uev10_page_x) << BUS64_LSB(32);
+	u |= (uint64_t)((r1k->fiu_prmt >> 1) & 1) << BUS64_LSB(33);
 	u |= (uint64_t)(mp_refresh_count != 0xffff) << BUS64_LSB(34);
-	u |= (uint64_t)(state->fiu_uev0_memex) << BUS64_LSB(35);
+	u |= (uint64_t)(r1k->fiu_uev0_memex) << BUS64_LSB(35);
 	u |= ((line >> 0) & 1) << BUS64_LSB(48);
 	u |= ((line >> 1) & 1) << BUS64_LSB(50);
-	u |= (uint64_t)state->fiu_nmatch << BUS64_LSB(56);
-	u |= (uint64_t)state->fiu_in_range << BUS64_LSB(57);
-	u |= (uint64_t)state->fiu_csa_oor_next << BUS64_LSB(58);
+	u |= (uint64_t)r1k->fiu_nmatch << BUS64_LSB(56);
+	u |= (uint64_t)r1k->fiu_in_range << BUS64_LSB(57);
+	u |= (uint64_t)r1k->fiu_csa_oor_next << BUS64_LSB(58);
 	u |= (uint64_t)mp_csa_hit << BUS64_LSB(59);
-	u |= (uint64_t)state->fiu_hit_offset;
+	u |= (uint64_t)r1k->fiu_hit_offset;
 	return (u);
 }
 
 static void
-fiu_do_tivi(struct r1000_arch_state *state)
+fiu_do_tivi(void)
 {
 
 	unsigned tivi = UIR_FIU_TIVI;
@@ -1164,7 +1160,7 @@ fiu_do_tivi(struct r1000_arch_state *state)
 	uint64_t vi;
 	switch (tivi) {
 	case 0x00: case 0x04: case 0x08:
-		vi = state->fiu_vreg;
+		vi = r1k->fiu_vreg;
 		break;
 	case 0x01: case 0x05: case 0x09:
 		vi = ~mp_val_bus;
@@ -1173,19 +1169,19 @@ fiu_do_tivi(struct r1000_arch_state *state)
 		vi = ~mp_fiu_bus;
 		break;
 	case 0x03: case 0x07: case 0x0b:
-		vi = fiu_frame(state) ^ ~0ULL;
+		vi = fiu_frame() ^ ~0ULL;
 		break;
 	default:
-		vi = (uint64_t)state->fiu_srn << 32;
-		vi |= state->fiu_sro & 0xffffff80;
-		vi |= state->fiu_oreg;
+		vi = (uint64_t)r1k->fiu_srn << 32;
+		vi |= r1k->fiu_sro & 0xffffff80;
+		vi |= r1k->fiu_oreg;
 		vi = ~vi;
 		break;
 	}
 	uint64_t ti;
 	switch (tivi) {
 	case 0x00: case 0x01: case 0x02: case 0x03:
-		ti = state->fiu_treg;
+		ti = r1k->fiu_treg;
 		break;
 	case 0x04: case 0x05: case 0x06: case 0x07:
 		ti = ~mp_fiu_bus;
@@ -1196,30 +1192,29 @@ fiu_do_tivi(struct r1000_arch_state *state)
 	default:
 		{
 		uint64_t tmp;
-		tmp = (state->fiu_sro >> 4) & 0x7;
-		state->fiu_marh &= ~0x07;
-		state->fiu_marh |= tmp;
-		state->fiu_marh &= ~(0x1efULL << 23ULL);
-		state->fiu_marh |= (uint64_t)(!state->fiu_incmplt_mcyc) << 23;
-		state->fiu_marh |= (uint64_t)(!state->fiu_mar_modified) << 24;
-		state->fiu_marh |= (uint64_t)(!state->fiu_write_last) << 25;
-		state->fiu_marh |= (uint64_t)(!state->fiu_phys_last) << 26;
-		state->fiu_marh |= (uint64_t)(!state->fiu_cache_miss) << 28;
-		state->fiu_marh |= (uint64_t)(!state->fiu_page_xing) << 29;
-		state->fiu_marh |= (uint64_t)(!state->fiu_csa_oor) << 30;
-		state->fiu_marh |= (uint64_t)(!state->fiu_scav_trap) << 31;
-		ti = ~state->fiu_marh;
+		tmp = (r1k->fiu_sro >> 4) & 0x7;
+		r1k->fiu_marh &= ~0x07;
+		r1k->fiu_marh |= tmp;
+		r1k->fiu_marh &= ~(0x1efULL << 23ULL);
+		r1k->fiu_marh |= (uint64_t)(!r1k->fiu_incmplt_mcyc) << 23;
+		r1k->fiu_marh |= (uint64_t)(!r1k->fiu_mar_modified) << 24;
+		r1k->fiu_marh |= (uint64_t)(!r1k->fiu_write_last) << 25;
+		r1k->fiu_marh |= (uint64_t)(!r1k->fiu_phys_last) << 26;
+		r1k->fiu_marh |= (uint64_t)(!r1k->fiu_cache_miss) << 28;
+		r1k->fiu_marh |= (uint64_t)(!r1k->fiu_page_xing) << 29;
+		r1k->fiu_marh |= (uint64_t)(!r1k->fiu_csa_oor) << 30;
+		r1k->fiu_marh |= (uint64_t)(!r1k->fiu_scav_trap) << 31;
+		ti = ~r1k->fiu_marh;
 		}
 		break;
 	}
-	state->fiu_ti_bus = ti;
-	state->fiu_vi_bus = vi;
+	r1k->fiu_ti_bus = ti;
+	r1k->fiu_vi_bus = vi;
 }
 
 static void
-fiu_rotator(struct r1000_arch_state *state, bool sclk)
+fiu_rotator(bool sclk)
 {
-	uint64_t rot = 0;
 	uint64_t vmsk = 0, tmsk = 0;
 	bool sgnbit = 0;
 	uint64_t ft, tir, vir;
@@ -1232,14 +1227,14 @@ fiu_rotator(struct r1000_arch_state *state, bool sclk)
 	if (UIR_FIU_FSRC) {				// UCODE
 		fill_mode = lfl >> 6;
 	} else {
-		fill_mode = (state->fiu_lfreg >> 6) & 1;
+		fill_mode = (r1k->fiu_lfreg >> 6) & 1;
 	}
 
 	unsigned lenone;
 	if (UIR_FIU_LSRC) {				// UCODE
 		lenone = lfl & 0x3f;
 	} else {
-		lenone = state->fiu_lfreg & 0x3f;
+		lenone = r1k->fiu_lfreg & 0x3f;
 	}
 
 	zero_length = !(fill_mode & (lenone == 0x3f));
@@ -1248,7 +1243,7 @@ fiu_rotator(struct r1000_arch_state *state, bool sclk)
 	if (UIR_FIU_OSRC) {				// UCODE
 		offset = UIR_FIU_OL;
 	} else {
-		offset = state->fiu_oreg;
+		offset = r1k->fiu_oreg;
 	}
 
 
@@ -1271,6 +1266,8 @@ fiu_rotator(struct r1000_arch_state *state, bool sclk)
 		sbit = offset;
 		ebit = (lenone & 0x3f) + (offset & 0x7f);
 		break;
+	default:
+		assert(0);
 	}
 	sbit &= 0x7f;
 	ebit &= 0x7f;
@@ -1302,13 +1299,13 @@ fiu_rotator(struct r1000_arch_state *state, bool sclk)
 
 	fs = s & 3;
 	if (fs == 0) {
-		tir = state->fiu_ti_bus;
-		vir = state->fiu_vi_bus;
+		tir = r1k->fiu_ti_bus;
+		vir = r1k->fiu_vi_bus;
 	} else {
-		tir = state->fiu_ti_bus >> fs;
-		tir |= state->fiu_vi_bus << (64 - fs);
-		vir = state->fiu_vi_bus >> fs;
-		vir |= state->fiu_ti_bus << (64 - fs);
+		tir = r1k->fiu_ti_bus >> fs;
+		tir |= r1k->fiu_vi_bus << (64 - fs);
+		vir = r1k->fiu_vi_bus >> fs;
+		vir |= r1k->fiu_ti_bus << (64 - fs);
 	}
 
 	ft = msk6 & vir;
@@ -1325,11 +1322,11 @@ fiu_rotator(struct r1000_arch_state *state, bool sclk)
 		sgnbit = (ft >> (63 - sgn)) & 1;
 	}
 
+	uint64_t rot;
 	{
-		uint64_t yl = 0, yh = 0;
 		fs = s & ~3;
-		yl = ft >> fs;
-		yh = ft << (64 - fs);
+		uint64_t yl = ft >> fs;
+		uint64_t yh = ft << (64 - fs);
 		rot = yh | yl;
 	}
 
@@ -1373,22 +1370,23 @@ fiu_rotator(struct r1000_arch_state *state, bool sclk)
 			tii = ~0ULL;
 		break;
 	case 2:
-		tii = state->fiu_vi_bus;
+		tii = r1k->fiu_vi_bus;
 		break;
 	case 3:
 		tii = ~mp_fiu_bus;
 		break;
+	default:
+		assert(0);
 	}
 
 	uint64_t rdq;
 	if (UIR_FIU_RDSRC) {				// UCODE
-		rdq = state->fiu_mdreg;
+		rdq = r1k->fiu_mdreg;
 	} else {
 		rdq = rot;
 	}
 
-	uint64_t vout = 0;
-	vout = rdq & vmsk;
+	uint64_t vout = rdq & vmsk;
 	vout |= tii & ~vmsk;
 
 	if (mp_fiu_oe == 0x1) {
@@ -1396,116 +1394,116 @@ fiu_rotator(struct r1000_arch_state *state, bool sclk)
 	}
 
 	if (sclk && UIR_FIU_LDMDR) {			// (UCODE)
-		state->fiu_mdreg = rot;
+		r1k->fiu_mdreg = rot;
 	}
 
 	if (sclk && !UIR_FIU_TCLK) {			// Q4~^
-		state->fiu_treg = rdq & tmsk;
-		state->fiu_treg |= state->fiu_ti_bus & ~tmsk;
+		r1k->fiu_treg = rdq & tmsk;
+		r1k->fiu_treg |= r1k->fiu_ti_bus & ~tmsk;
 	}
 
 	if (sclk && !UIR_FIU_VCLK) {			// Q4~^
-		state->fiu_vreg = vout;
+		r1k->fiu_vreg = vout;
 	}
 }
 
 static void
-fiu_q1(struct r1000_arch_state *state)
+fiu_q1(void)
 {
 	bool sclk = false;
 	bool carry, name_match;
 
 	unsigned pa028a = mp_mar_cntl << 5;
-	pa028a |= state->fiu_incmplt_mcyc << 4;
-	pa028a |= state->fiu_e_abort_dly << 3;
-	pa028a |= state->fiu_state1 << 2;
-	pa028a |= state->fiu_mctl_is_read << 1;
-	pa028a |= state->fiu_dumon;
-	state->fiu_prmt = fiu_pa028[pa028a];
-	state->fiu_prmt ^= 0x02;
-	state->fiu_prmt &= 0x7b;
+	pa028a |= r1k->fiu_incmplt_mcyc << 4;
+	pa028a |= r1k->fiu_e_abort_dly << 3;
+	pa028a |= r1k->fiu_state1 << 2;
+	pa028a |= r1k->fiu_mctl_is_read << 1;
+	pa028a |= r1k->fiu_dumon;
+	r1k->fiu_prmt = fiu_pa028[pa028a];
+	r1k->fiu_prmt ^= 0x02;
+	r1k->fiu_prmt &= 0x7b;
 
 	bool rmarp = (mp_mar_cntl & 0xe) == 0x4;
-	state->fiu_mem_start = UIR_FIU_MSTRT ^ 0x1e;
+	r1k->fiu_mem_start = UIR_FIU_MSTRT ^ 0x1e;
 
-	fiu_do_tivi(state);
+	fiu_do_tivi();
 	if (mp_fiu_oe == 0x1) {
-		fiu_rotator(state, sclk);
+		fiu_rotator(sclk);
 	}
 	unsigned dif;
 
-	if (state->fiu_pdt) {
-		carry = state->fiu_ctopo <= state->fiu_pdreg;
-		dif = ~0xfffff + state->fiu_pdreg - state->fiu_ctopo;
+	if (r1k->fiu_pdt) {
+		carry = r1k->fiu_ctopo <= r1k->fiu_pdreg;
+		dif = ~0xfffff + r1k->fiu_pdreg - r1k->fiu_ctopo;
 	} else {
-		carry = state->fiu_moff <= state->fiu_ctopo;
-		dif = ~0xfffff + state->fiu_ctopo - state->fiu_moff;
+		carry = r1k->fiu_moff <= r1k->fiu_ctopo;
+		dif = ~0xfffff + r1k->fiu_ctopo - r1k->fiu_moff;
 	}
 	dif &= 0xfffff;
 
 	name_match =
-		    (state->fiu_ctopn != state->fiu_srn) ||
-		    ((state->fiu_sro & 0xf8000070 ) != 0x10);
+		    (r1k->fiu_ctopn != r1k->fiu_srn) ||
+		    ((r1k->fiu_sro & 0xf8000070 ) != 0x10);
 
-	state->fiu_in_range = (!state->fiu_pdt && name_match) || (dif & 0xffff0);
+	r1k->fiu_in_range = (!r1k->fiu_pdt && name_match) || (dif & 0xffff0);
 
-	state->fiu_hit_offset = (0xf + state->fiu_nve - (dif & 0xf)) & 0xf;
+	r1k->fiu_hit_offset = (0xf + r1k->fiu_nve - (dif & 0xf)) & 0xf;
 
-	mp_csa_hit = (bool)!(carry && !(state->fiu_in_range || ((dif & 0xf) >= state->fiu_nve)));
+	mp_csa_hit = (bool)!(carry && !(r1k->fiu_in_range || ((dif & 0xf) >= r1k->fiu_nve)));
 
 	unsigned pa025a = 0;
-	pa025a |= state->fiu_mem_start;
-	pa025a |= state->fiu_state0 << 8;
-	pa025a |= state->fiu_state1 << 7;
-	pa025a |= state->fiu_labort << 6;
-	pa025a |= state->fiu_e_abort_dly << 5;
-	state->fiu_pa025d = fiu_pa025[pa025a];
-	state->fiu_memcyc1 = (state->fiu_pa025d >> 1) & 1;
-	state->fiu_memstart = (state->fiu_pa025d >> 0) & 1;
+	pa025a |= r1k->fiu_mem_start;
+	pa025a |= r1k->fiu_state0 << 8;
+	pa025a |= r1k->fiu_state1 << 7;
+	pa025a |= r1k->fiu_labort << 6;
+	pa025a |= r1k->fiu_e_abort_dly << 5;
+	r1k->fiu_pa025d = fiu_pa025[pa025a];
+	r1k->fiu_memcyc1 = (r1k->fiu_pa025d >> 1) & 1;
+	r1k->fiu_memstart = (r1k->fiu_pa025d >> 0) & 1;
 
-	if (state->fiu_memstart) {
-		state->fiu_mcntl = state->fiu_lcntl;
+	if (r1k->fiu_memstart) {
+		r1k->fiu_mcntl = r1k->fiu_lcntl;
 	} else {
-		state->fiu_mcntl = state->fiu_pcntl_d;
+		r1k->fiu_mcntl = r1k->fiu_pcntl_d;
 	}
-	state->fiu_phys_ref = !(state->fiu_mcntl & 0x6);
-	state->fiu_logrwn = !(state->fiu_logrw && state->fiu_memcyc1);
-	state->fiu_logrw = !(state->fiu_phys_ref || ((state->fiu_mcntl >> 3) & 1));
+	r1k->fiu_phys_ref = !(r1k->fiu_mcntl & 0x6);
+	r1k->fiu_logrwn = !(r1k->fiu_logrw && r1k->fiu_memcyc1);
+	r1k->fiu_logrw = !(r1k->fiu_phys_ref || ((r1k->fiu_mcntl >> 3) & 1));
 
-	state->fiu_scav_trap_next = state->fiu_scav_trap;
+	r1k->fiu_scav_trap_next = r1k->fiu_scav_trap;
 	if (mp_cond_sel == 0x69) {		// SCAVENGER_HIT
-		state->fiu_scav_trap_next = false;
+		r1k->fiu_scav_trap_next = false;
 	} else if (rmarp) {
-		state->fiu_scav_trap_next = (state->fiu_ti_bus >> BUS64_LSB(32)) & 1;
-	} else if (state->fiu_log_query) {
-		state->fiu_scav_trap_next = false;
+		r1k->fiu_scav_trap_next = (r1k->fiu_ti_bus >> BUS64_LSB(32)) & 1;
+	} else if (r1k->fiu_log_query) {
+		r1k->fiu_scav_trap_next = false;
 	}
 
 
-	state->fiu_tmp_csa_oor_next = state->fiu_csa_oor;
+	r1k->fiu_tmp_csa_oor_next = r1k->fiu_csa_oor;
 	if (mp_cond_sel == 0x68) {		// CSA_OUT_OF_RANGE
-		state->fiu_tmp_csa_oor_next = false;
+		r1k->fiu_tmp_csa_oor_next = false;
 	} else if (rmarp) {
-		state->fiu_tmp_csa_oor_next = (state->fiu_ti_bus >> BUS64_LSB(33)) & 1;
-	} else if (state->fiu_log_query) {
-		state->fiu_tmp_csa_oor_next = state->fiu_csa_oor_next;
+		r1k->fiu_tmp_csa_oor_next = (r1k->fiu_ti_bus >> BUS64_LSB(33)) & 1;
+	} else if (r1k->fiu_log_query) {
+		r1k->fiu_tmp_csa_oor_next = r1k->fiu_csa_oor_next;
 	}
 
-	bool pgmod = (state->fiu_omq >> 1) & 1;
+	bool pgmod = (r1k->fiu_omq >> 1) & 1;
 	unsigned pa027a = 0;
 	pa027a |= mp_mem_hit << 5;
-	pa027a |= state->fiu_init_mru_d << 4;
-	pa027a |= (state->fiu_omq & 0xc);
+	pa027a |= r1k->fiu_init_mru_d << 4;
+	pa027a |= (r1k->fiu_omq & 0xc);
 	pa027a |= 1U << 1;
 	pa027a |= pgmod << 0;
-	state->fiu_pa027d = fiu_pa027[pa027a];
-	state->fiu_setq = (state->fiu_pa027d >> 3) & 3;
+	r1k->fiu_pa027d = fiu_pa027[pa027a];
+	r1k->fiu_setq = (r1k->fiu_pa027d >> 3) & 3;
 
-	bool mnor0b = state->fiu_drive_mru || ((state->fiu_pa027d & 3) == 0);
-	bool mnan2a = !(mnor0b && state->fiu_logrw_d);
-	state->fiu_miss = !(
+	bool mnor0b = r1k->fiu_drive_mru || ((r1k->fiu_pa027d & 3) == 0);
+	bool mnan2a = !(mnor0b && r1k->fiu_logrw_d);
+	r1k->fiu_miss = !(
 		((mp_mem_hit != 0xf) && mnan2a) ||
-		(state->fiu_logrw_d && state->fiu_csaht)
+		(r1k->fiu_logrw_d && r1k->fiu_csaht)
 	);
 	if (mp_refresh_count == 0xffff) {
 		mp_macro_event |= 0x40;
@@ -1514,153 +1512,153 @@ fiu_q1(struct r1000_arch_state *state)
 	}
 
 	if (mp_tv_oe & (FIU_T_OE|FIU_V_OE)) {
-		fiu_do_tivi(state);
+		fiu_do_tivi();
 		if (mp_tv_oe & FIU_T_OE) {
-			mp_typ_bus = ~state->fiu_ti_bus;
+			mp_typ_bus = ~r1k->fiu_ti_bus;
 		}
 		if (mp_tv_oe & FIU_V_OE) {
-			mp_val_bus = ~state->fiu_vi_bus;
+			mp_val_bus = ~r1k->fiu_vi_bus;
 		}
 	}
 }
 
 static void
-fiu_q2(struct r1000_arch_state *state)
+fiu_q2(void)
 {
 	unsigned pa028a = mp_mar_cntl << 5;
-	pa028a |= state->fiu_incmplt_mcyc << 4;
-	pa028a |= state->fiu_e_abort_dly << 3;
-	pa028a |= state->fiu_state1 << 2;
-	pa028a |= state->fiu_mctl_is_read << 1;
-	pa028a |= state->fiu_dumon;
-	state->fiu_prmt = fiu_pa028[pa028a];
-	state->fiu_prmt ^= 0x02;
-	state->fiu_prmt &= 0x7b;
+	pa028a |= r1k->fiu_incmplt_mcyc << 4;
+	pa028a |= r1k->fiu_e_abort_dly << 3;
+	pa028a |= r1k->fiu_state1 << 2;
+	pa028a |= r1k->fiu_mctl_is_read << 1;
+	pa028a |= r1k->fiu_dumon;
+	r1k->fiu_prmt = fiu_pa028[pa028a];
+	r1k->fiu_prmt ^= 0x02;
+	r1k->fiu_prmt &= 0x7b;
 
-	fiu_do_tivi(state);
+	fiu_do_tivi();
 	unsigned pa025a = 0;
-	pa025a |= state->fiu_mem_start;
-	pa025a |= state->fiu_state0 << 8;
-	pa025a |= state->fiu_state1 << 7;
-	pa025a |= state->fiu_labort << 6;
-	pa025a |= state->fiu_e_abort_dly << 5;
-	state->fiu_pa025d = fiu_pa025[pa025a];
-	state->fiu_memcyc1 = (state->fiu_pa025d >> 1) & 1;
-	state->fiu_memstart = (state->fiu_pa025d >> 0) & 1;
+	pa025a |= r1k->fiu_mem_start;
+	pa025a |= r1k->fiu_state0 << 8;
+	pa025a |= r1k->fiu_state1 << 7;
+	pa025a |= r1k->fiu_labort << 6;
+	pa025a |= r1k->fiu_e_abort_dly << 5;
+	r1k->fiu_pa025d = fiu_pa025[pa025a];
+	r1k->fiu_memcyc1 = (r1k->fiu_pa025d >> 1) & 1;
+	r1k->fiu_memstart = (r1k->fiu_pa025d >> 0) & 1;
 
-	if (state->fiu_memstart) {
-		state->fiu_mcntl = state->fiu_lcntl;
+	if (r1k->fiu_memstart) {
+		r1k->fiu_mcntl = r1k->fiu_lcntl;
 	} else {
-		state->fiu_mcntl = state->fiu_pcntl_d;
+		r1k->fiu_mcntl = r1k->fiu_pcntl_d;
 	}
-	state->fiu_phys_ref = !(state->fiu_mcntl & 0x6);
-	state->fiu_logrwn = !(state->fiu_logrw && state->fiu_memcyc1);
-	state->fiu_logrw = !(state->fiu_phys_ref || ((state->fiu_mcntl >> 3) & 1));
+	r1k->fiu_phys_ref = !(r1k->fiu_mcntl & 0x6);
+	r1k->fiu_logrwn = !(r1k->fiu_logrw && r1k->fiu_memcyc1);
+	r1k->fiu_logrw = !(r1k->fiu_phys_ref || ((r1k->fiu_mcntl >> 3) & 1));
 
 	unsigned mar_cntl = mp_mar_cntl;
 	bool rmarp = (mar_cntl & 0xe) == 0x4;
 
-	state->fiu_scav_trap_next = state->fiu_scav_trap;
+	r1k->fiu_scav_trap_next = r1k->fiu_scav_trap;
 	if (mp_cond_sel == 0x69) {		// SCAVENGER_HIT
-		state->fiu_scav_trap_next = false;
+		r1k->fiu_scav_trap_next = false;
 	} else if (rmarp) {
-		state->fiu_scav_trap_next = (state->fiu_ti_bus >> BUS64_LSB(32)) & 1;
-	} else if (state->fiu_log_query) {
-		state->fiu_scav_trap_next = false;
+		r1k->fiu_scav_trap_next = (r1k->fiu_ti_bus >> BUS64_LSB(32)) & 1;
+	} else if (r1k->fiu_log_query) {
+		r1k->fiu_scav_trap_next = false;
 	}
 
 
-	state->fiu_tmp_csa_oor_next = state->fiu_csa_oor;
+	r1k->fiu_tmp_csa_oor_next = r1k->fiu_csa_oor;
 	if (mp_cond_sel == 0x68) {		// CSA_OUT_OF_RANGE
-		state->fiu_tmp_csa_oor_next = false;
+		r1k->fiu_tmp_csa_oor_next = false;
 	} else if (rmarp) {
-		state->fiu_tmp_csa_oor_next = (state->fiu_ti_bus >> BUS64_LSB(33)) & 1;
-	} else if (state->fiu_log_query) {
-		state->fiu_tmp_csa_oor_next = state->fiu_csa_oor_next;
+		r1k->fiu_tmp_csa_oor_next = (r1k->fiu_ti_bus >> BUS64_LSB(33)) & 1;
+	} else if (r1k->fiu_log_query) {
+		r1k->fiu_tmp_csa_oor_next = r1k->fiu_csa_oor_next;
 	}
 
-	unsigned pa026a = state->fiu_mem_start;
-	if (state->fiu_omq & 0x02)	// INIT_MRU_D
+	unsigned pa026a = r1k->fiu_mem_start;
+	if (r1k->fiu_omq & 0x02)	// INIT_MRU_D
 		pa026a |= 0x20;
-	if (state->fiu_phys_last)
+	if (r1k->fiu_phys_last)
 		pa026a |= 0x40;
-	if (state->fiu_write_last)
+	if (r1k->fiu_write_last)
 		pa026a |= 0x80;
-	state->fiu_pa026d = fiu_pa026[pa026a];
+	r1k->fiu_pa026d = fiu_pa026[pa026a];
 	// INIT_MRU, ACK_REFRESH, START_IF_INCM, START_TAG_RD, PCNTL0-3
 
-	if (state->fiu_log_query) {
+	if (r1k->fiu_log_query) {
 		// PIN_MISS instead of cache_miss_next looks suspicious
 		// but confirmed on both /200 and /400 FIU boards.
 		// 20230910/phk
-		state->fiu_memex = !(!state->fiu_miss && !state->fiu_tmp_csa_oor_next && !state->fiu_scav_trap_next);
+		r1k->fiu_memex = !(!r1k->fiu_miss && !r1k->fiu_tmp_csa_oor_next && !r1k->fiu_scav_trap_next);
 	} else {
-		state->fiu_memex = !(!state->fiu_cache_miss && !state->fiu_csa_oor && !state->fiu_scav_trap);
+		r1k->fiu_memex = !(!r1k->fiu_cache_miss && !r1k->fiu_csa_oor && !r1k->fiu_scav_trap);
 	}
-	mp_restore_rdr = (state->fiu_prmt >> 1) & 1;
-	bool sel = !((!mp_state_clk_stop && state->fiu_memcyc1) || (mp_state_clk_en && !state->fiu_memcyc1));
+	mp_restore_rdr = (r1k->fiu_prmt >> 1) & 1;
+	bool sel = !((!mp_state_clk_stop && r1k->fiu_memcyc1) || (mp_state_clk_en && !r1k->fiu_memcyc1));
 	if (sel) {
-		mp_dummy_next = !((state->fiu_prmt >> 0) & 1);
+		mp_dummy_next = !((r1k->fiu_prmt >> 0) & 1);
 	} else {
-		mp_dummy_next = !state->fiu_dumon;
+		mp_dummy_next = !r1k->fiu_dumon;
 	}
 
-	mp_csa_wr = !(mp_mem_abort_l && mp_mem_abort_el && !(state->fiu_logrwn || (state->fiu_mcntl & 1)));
+	mp_csa_wr = !(mp_mem_abort_l && mp_mem_abort_el && !(r1k->fiu_logrwn || (r1k->fiu_mcntl & 1)));
 	if (mp_adr_oe & 0x1) {
-		bool inc_mar = (state->fiu_prmt >> 3) & 1;
-		unsigned inco = state->fiu_moff & 0x1f;
+		bool inc_mar = (r1k->fiu_prmt >> 3) & 1;
+		unsigned inco = r1k->fiu_moff & 0x1f;
 		if (inc_mar && inco != 0x1f)
 			inco += 1;
 
-		mp_adr_bus = (uint64_t)state->fiu_srn << 32;
-		mp_adr_bus |= state->fiu_sro & 0xfffff000;
+		mp_adr_bus = (uint64_t)r1k->fiu_srn << 32;
+		mp_adr_bus |= r1k->fiu_sro & 0xfffff000;
 		mp_adr_bus |= (inco & 0x1f) << 7;
-		mp_adr_bus |= state->fiu_oreg;
-		mp_spc_bus = (state->fiu_sro >> 4) & 7;
+		mp_adr_bus |= r1k->fiu_oreg;
+		mp_spc_bus = (r1k->fiu_sro >> 4) & 7;
 	}
 
-	state->fiu_lcntl = state->fiu_mcntl;
-	state->fiu_drive_mru = state->fiu_init_mru_d;
-	state->fiu_memcnd = (state->fiu_pa025d >> 4) & 1;	// CM_CTL0
-	state->fiu_cndtru = (state->fiu_pa025d >> 3) & 1;	// CM_CTL1
-	mp_mem_cond= !(state->fiu_memcnd);
-	mp_mem_cond_pol = !(state->fiu_cndtru);
+	r1k->fiu_lcntl = r1k->fiu_mcntl;
+	r1k->fiu_drive_mru = r1k->fiu_init_mru_d;
+	r1k->fiu_memcnd = (r1k->fiu_pa025d >> 4) & 1;	// CM_CTL0
+	r1k->fiu_cndtru = (r1k->fiu_pa025d >> 3) & 1;	// CM_CTL1
+	mp_mem_cond= !(r1k->fiu_memcnd);
+	mp_mem_cond_pol = !(r1k->fiu_cndtru);
 
-	if (state->fiu_memcyc1) {
-		mp_mem_ctl= state->fiu_lcntl;
+	if (r1k->fiu_memcyc1) {
+		mp_mem_ctl= r1k->fiu_lcntl;
 	} else {
-		mp_mem_ctl= state->fiu_pa026d & 0xf;
+		mp_mem_ctl= r1k->fiu_pa026d & 0xf;
 	}
-	bool inc_mar = (state->fiu_prmt >> 3) & 1;
-	state->fiu_page_crossing_next = (
+	bool inc_mar = (r1k->fiu_prmt >> 3) & 1;
+	r1k->fiu_page_crossing_next = (
 		mp_cond_sel != 0x6a) && (// sel_pg_xing
 		mp_cond_sel != 0x6e) && (// sel_incyc_px
 		(
-			(state->fiu_page_xing) ||
-			(!state->fiu_page_xing && inc_mar && (state->fiu_moff & 0x1f) == 0x1f)
+			(r1k->fiu_page_xing) ||
+			(!r1k->fiu_page_xing && inc_mar && (r1k->fiu_moff & 0x1f) == 0x1f)
 		)
 	);
-	mp_mem_continue= !((state->fiu_pa025d >> 5) & 1);
-	state->fiu_uev10_page_x = !(mp_uevent_enable && state->fiu_page_xing);
-	if (mp_uevent_enable && state->fiu_page_xing) {
+	mp_mem_continue= !((r1k->fiu_pa025d >> 5) & 1);
+	r1k->fiu_uev10_page_x = !(mp_uevent_enable && r1k->fiu_page_xing);
+	if (mp_uevent_enable && r1k->fiu_page_xing) {
 		mp_seq_uev |= UEV_PAGE_X;
 	} else {
 		mp_seq_uev &= ~UEV_PAGE_X;
 	}
-	state->fiu_uev0_memex = !(mp_uevent_enable && state->fiu_memex);
-	if (mp_uevent_enable && state->fiu_memex) {
+	r1k->fiu_uev0_memex = !(mp_uevent_enable && r1k->fiu_memex);
+	if (mp_uevent_enable && r1k->fiu_memex) {
 		mp_seq_uev |= UEV_MEMEX;
 	} else {
 		mp_seq_uev &= ~UEV_MEMEX;
 	}
-	mp_clock_stop_0 = state->fiu_uev10_page_x && state->fiu_uev0_memex;
+	mp_clock_stop_0 = r1k->fiu_uev10_page_x && r1k->fiu_uev0_memex;
 	{
-	bool invalidate_csa = !(mp_csa_hit && !state->fiu_tcsa_tf_pred);
-	unsigned hit_offs = state->fiu_hit_offset;
+	bool invalidate_csa = !(mp_csa_hit && !r1k->fiu_tcsa_tf_pred);
+	unsigned hit_offs = r1k->fiu_hit_offset;
 
 	unsigned adr;
-	if (state->fiu_tcsa_tf_pred) {
-		adr = state->fiu_tcsa_sr;
+	if (r1k->fiu_tcsa_tf_pred) {
+		adr = r1k->fiu_tcsa_sr;
 		adr |= 0x100;
 	} else {
 		adr = hit_offs;
@@ -1669,7 +1667,7 @@ fiu_q2(struct r1000_arch_state *state)
 	unsigned csacntl = mp_csa_cntl;
 	adr |= csacntl << 4;
 
-	if (state->fiu_tcsa_inval_csa)
+	if (r1k->fiu_tcsa_inval_csa)
 		adr |= (1<<7);
 
 	unsigned q = fiu_pa060[adr];
@@ -1680,7 +1678,7 @@ fiu_q2(struct r1000_arch_state *state)
 
 	mp_load_top = !(load_top_bot && ((csacntl >> 1) & 1));
 	mp_load_bot = !(load_top_bot && ((csacntl >> 2) & 1));
-	mp_pop_down = load_ctl_top && state->fiu_tcsa_tf_pred;
+	mp_pop_down = load_ctl_top && r1k->fiu_tcsa_tf_pred;
 
 	if (!invalidate_csa) {
 		mp_csa_this_offs = 0xf;
@@ -1697,16 +1695,16 @@ fiu_q2(struct r1000_arch_state *state)
 	}
 	if (mp_tv_oe & (FIU_T_OE|FIU_V_OE)) {
 		if (mp_tv_oe & FIU_T_OE) {
-			mp_typ_bus = ~state->fiu_ti_bus;
+			mp_typ_bus = ~r1k->fiu_ti_bus;
 		}
 		if (mp_tv_oe & FIU_V_OE) {
-			mp_val_bus = ~state->fiu_vi_bus;
+			mp_val_bus = ~r1k->fiu_vi_bus;
 		}
 	}
 }
 
 static void
-fiu_q4(struct r1000_arch_state *state)
+fiu_q4(void)
 {
 	bool sclk = !mp_state_clk_en;
 	bool tcsa_clk = (mp_clock_stop && mp_ram_stop && !mp_freeze);
@@ -1716,41 +1714,41 @@ fiu_q4(struct r1000_arch_state *state)
 
 	unsigned csa = mp_csa_cntl;
 	unsigned pa028a = mp_mar_cntl << 5;
-	pa028a |= state->fiu_incmplt_mcyc << 4;
-	pa028a |= state->fiu_e_abort_dly << 3;
-	pa028a |= state->fiu_state1 << 2;
-	pa028a |= state->fiu_mctl_is_read << 1;
-	pa028a |= state->fiu_dumon;
-	state->fiu_prmt = fiu_pa028[pa028a];
-	state->fiu_prmt ^= 0x02;
-	state->fiu_prmt &= 0x7b;
+	pa028a |= r1k->fiu_incmplt_mcyc << 4;
+	pa028a |= r1k->fiu_e_abort_dly << 3;
+	pa028a |= r1k->fiu_state1 << 2;
+	pa028a |= r1k->fiu_mctl_is_read << 1;
+	pa028a |= r1k->fiu_dumon;
+	r1k->fiu_prmt = fiu_pa028[pa028a];
+	r1k->fiu_prmt ^= 0x02;
+	r1k->fiu_prmt &= 0x7b;
 
 	if (tcsa_clk) {
-		bool invalidate_csa = !(mp_csa_hit && !state->fiu_tcsa_tf_pred);
-		state->fiu_tcsa_inval_csa = invalidate_csa;
-		unsigned csacntl0 = (state->fiu_typwcsram[mp_nua_bus] >> 1) & 7;
-		unsigned csacntl1 = (state->fiu_typuir >> 1) & 6;
-		state->fiu_tcsa_tf_pred = !((csacntl0 == 7) && (csacntl1 == 0));
-		state->fiu_tcsa_sr = mp_csa_nve;
+		bool invalidate_csa = !(mp_csa_hit && !r1k->fiu_tcsa_tf_pred);
+		r1k->fiu_tcsa_inval_csa = invalidate_csa;
+		unsigned csacntl0 = (r1k->fiu_typwcsram[mp_nua_bus] >> 1) & 7;
+		unsigned csacntl1 = (r1k->fiu_typuir >> 1) & 6;
+		r1k->fiu_tcsa_tf_pred = !((csacntl0 == 7) && (csacntl1 == 0));
+		r1k->fiu_tcsa_sr = mp_csa_nve;
 	}
 	if (sclk) {
 		if (UIR_FIU_LDMDR || !UIR_FIU_TCLK || !UIR_FIU_VCLK) {
-			fiu_rotator(state, sclk);
+			fiu_rotator(sclk);
 		}
 
 		if (!UIR_FIU_OCLK) {			// Q4~^
 			if (UIR_FIU_ORSR) {			// UCODE
-				state->fiu_oreg = UIR_FIU_OL;
+				r1k->fiu_oreg = UIR_FIU_OL;
 			} else {
-				state->fiu_oreg = mp_adr_bus & 0x7f;
+				r1k->fiu_oreg = mp_adr_bus & 0x7f;
 			}
 		}
 
 		if (mar_cntl == 5) {
-			state->fiu_refresh_reg = state->fiu_ti_bus;
-			state->fiu_marh &= 0xffffffffULL;
-			state->fiu_marh |= (state->fiu_refresh_reg & 0xffffffff00000000ULL);
-			state->fiu_marh ^= 0xffffffff00000000ULL;
+			r1k->fiu_refresh_reg = r1k->fiu_ti_bus;
+			r1k->fiu_marh &= 0xffffffffULL;
+			r1k->fiu_marh |= (r1k->fiu_refresh_reg & 0xffffffff00000000ULL);
+			r1k->fiu_marh ^= 0xffffffff00000000ULL;
 		}
 
 		unsigned lfrc;
@@ -1758,295 +1756,296 @@ fiu_q4(struct r1000_arch_state *state)
 
 		switch(lfrc) {
 		case 0:
-			state->fiu_lfreg = (((state->fiu_vi_bus >> BUS64_LSB(31)) & 0x3f) + 1) & 0x3f;
-			if ((state->fiu_ti_bus >> BUS64_LSB(36)) & 1)
-				state->fiu_lfreg |= (1U << 6);
-			else if (!((state->fiu_vi_bus >> BUS64_LSB(25)) & 1))
-				state->fiu_lfreg |= (1U << 6);
-			state->fiu_lfreg ^= 0x7f;
+			r1k->fiu_lfreg = (((r1k->fiu_vi_bus >> BUS64_LSB(31)) & 0x3f) + 1) & 0x3f;
+			if ((r1k->fiu_ti_bus >> BUS64_LSB(36)) & 1)
+				r1k->fiu_lfreg |= (1U << 6);
+			else if (!((r1k->fiu_vi_bus >> BUS64_LSB(25)) & 1))
+				r1k->fiu_lfreg |= (1U << 6);
+			r1k->fiu_lfreg ^= 0x7f;
 			break;
 		case 1:
-			state->fiu_lfreg = UIR_FIU_LFL;
+			r1k->fiu_lfreg = UIR_FIU_LFL;
 			break;
 		case 2:
-			state->fiu_lfreg = (state->fiu_ti_bus >> BUS64_LSB(48)) & 0x3f;
-			if ((state->fiu_ti_bus >> BUS64_LSB(36)) & 1)
-				state->fiu_lfreg |= (1U << 6);
-			state->fiu_lfreg = state->fiu_lfreg ^ 0x7f;
+			r1k->fiu_lfreg = (r1k->fiu_ti_bus >> BUS64_LSB(48)) & 0x3f;
+			if ((r1k->fiu_ti_bus >> BUS64_LSB(36)) & 1)
+				r1k->fiu_lfreg |= (1U << 6);
+			r1k->fiu_lfreg = r1k->fiu_lfreg ^ 0x7f;
 			break;
 		case 3:	// No load
 			break;
 		default: assert(0);
 		}
 
-		state->fiu_marh &= ~(0x3fULL << 15);
-		state->fiu_marh |= (state->fiu_lfreg & 0x3f) << 15;
-		state->fiu_marh &= ~(1ULL << 27);
-		state->fiu_marh |= ((state->fiu_lfreg >> 6) & 1) << 27;
-		if (state->fiu_lfreg != 0x7f)
-			state->fiu_lfreg |= 1<<7;
+		r1k->fiu_marh &= ~(0x3fULL << 15);
+		r1k->fiu_marh |= (r1k->fiu_lfreg & 0x3f) << 15;
+		r1k->fiu_marh &= ~(1ULL << 27);
+		r1k->fiu_marh |= ((r1k->fiu_lfreg >> 6) & 1) << 27;
+		if (r1k->fiu_lfreg != 0x7f)
+			r1k->fiu_lfreg |= 1<<7;
 
-		unsigned csacntl0 = (state->fiu_typwcsram[mp_nua_bus] >> 1) & 7;
-		unsigned csacntl1 = (state->fiu_typuir >> 1) & 6;
-		state->fiu_pdt = (csacntl0 == 7) && (csacntl1 == 0);
-		state->fiu_nve = mp_csa_nve;
+		unsigned csacntl0 = (r1k->fiu_typwcsram[mp_nua_bus] >> 1) & 7;
+		unsigned csacntl1 = (r1k->fiu_typuir >> 1) & 6;
+		r1k->fiu_pdt = (csacntl0 == 7) && (csacntl1 == 0);
+		r1k->fiu_nve = mp_csa_nve;
 		if (!(csa >> 2)) {
-			state->fiu_pdreg = state->fiu_ctopo;
+			r1k->fiu_pdreg = r1k->fiu_ctopo;
 		}
 	}
 
 	unsigned dif;
 
-	if (state->fiu_pdt) {
-		carry = state->fiu_ctopo <= state->fiu_pdreg;
-		dif = ~0xfffff + state->fiu_pdreg - state->fiu_ctopo;
+	if (r1k->fiu_pdt) {
+		carry = r1k->fiu_ctopo <= r1k->fiu_pdreg;
+		dif = ~0xfffff + r1k->fiu_pdreg - r1k->fiu_ctopo;
 	} else {
-		carry = state->fiu_moff <= state->fiu_ctopo;
-		dif = ~0xfffff + state->fiu_ctopo - state->fiu_moff;
+		carry = r1k->fiu_moff <= r1k->fiu_ctopo;
+		dif = ~0xfffff + r1k->fiu_ctopo - r1k->fiu_moff;
 	}
 	dif &= 0xfffff;
 
 	name_match =
-		    (state->fiu_ctopn != state->fiu_srn) ||
-		    ((state->fiu_sro & 0xf8000070 ) != 0x10);
+		    (r1k->fiu_ctopn != r1k->fiu_srn) ||
+		    ((r1k->fiu_sro & 0xf8000070 ) != 0x10);
 
-	state->fiu_in_range = (!state->fiu_pdt && name_match) || (dif & 0xffff0);
+	r1k->fiu_in_range = (!r1k->fiu_pdt && name_match) || (dif & 0xffff0);
 
-	state->fiu_hit_offset = (0xf + state->fiu_nve - (dif & 0xf)) & 0xf;
+	r1k->fiu_hit_offset = (0xf + r1k->fiu_nve - (dif & 0xf)) & 0xf;
 
 	if (sclk) {
-		if ((state->fiu_prmt >> 4) & 1) { // load_mar
-			state->fiu_srn = mp_adr_bus >> 32;
-			state->fiu_sro = mp_adr_bus & 0xffffff80;
-			state->fiu_sro |= mp_spc_bus << 4;
-			state->fiu_sro |= 0xf;
-			state->fiu_moff = (state->fiu_sro >> 7) & 0xffffff;
+		if ((r1k->fiu_prmt >> 4) & 1) { // load_mar
+			r1k->fiu_srn = mp_adr_bus >> 32;
+			r1k->fiu_sro = mp_adr_bus & 0xffffff80;
+			r1k->fiu_sro |= mp_spc_bus << 4;
+			r1k->fiu_sro |= 0xf;
+			r1k->fiu_moff = (r1k->fiu_sro >> 7) & 0xffffff;
 		}
 
 		if (csa == 0) {
-			state->fiu_ctopn = mp_adr_bus >> 32;
+			r1k->fiu_ctopn = mp_adr_bus >> 32;
 		}
 
-		state->fiu_nmatch =
-		    (state->fiu_ctopn != state->fiu_srn) ||
-		    ((state->fiu_sro & 0xf8000070 ) != 0x10);
+		r1k->fiu_nmatch =
+		    (r1k->fiu_ctopn != r1k->fiu_srn) ||
+		    ((r1k->fiu_sro & 0xf8000070 ) != 0x10);
 
 		if (!(csa >> 2)) {
 			if (csa <= 1) {
-				state->fiu_ctopo = mp_adr_bus >> 7;
+				r1k->fiu_ctopo = mp_adr_bus >> 7;
 			} else if (!(csa & 1)) {
-				state->fiu_ctopo += 1;
+				r1k->fiu_ctopo += 1;
 			} else {
-				state->fiu_ctopo += 0xfffff;
+				r1k->fiu_ctopo += 0xfffff;
 			}
-			state->fiu_ctopo &= 0xfffff;
+			r1k->fiu_ctopo &= 0xfffff;
 		}
 	}
 
-	if (state->fiu_mem_start == 0x06) {
-		mp_refresh_count = state->fiu_ti_bus >> 48;
+	if (r1k->fiu_mem_start == 0x06) {
+		mp_refresh_count = r1k->fiu_ti_bus >> 48;
 	} else if (mp_refresh_count != 0xffff) {
 		mp_refresh_count++;
 	}
 
-	if (!((!mp_state_clk_stop && state->fiu_memcyc1) || (mp_state_clk_en && !state->fiu_memcyc1))) {
-		state->fiu_dumon = (state->fiu_prmt >> 5) & 1;
+	if (!((!mp_state_clk_stop && r1k->fiu_memcyc1) || (mp_state_clk_en && !r1k->fiu_memcyc1))) {
+		r1k->fiu_dumon = (r1k->fiu_prmt >> 5) & 1;
 	} else {
-		state->fiu_dumon = state->fiu_dumon;
+		r1k->fiu_dumon = r1k->fiu_dumon;
 	}
-	state->fiu_state0 = (state->fiu_pa025d >> 7) & 1;
-	state->fiu_state1 = (state->fiu_pa025d >> 6) & 1;
-	state->fiu_labort = !(mp_mem_abort_l && mp_mem_abort_el);
-	state->fiu_e_abort_dly = !(mp_mem_abort_e && mp_mem_abort_el);
-	state->fiu_pcntl_d = state->fiu_pa026d & 0xf;
-	state->fiu_csaht = !mp_csa_hit;
+	r1k->fiu_state0 = (r1k->fiu_pa025d >> 7) & 1;
+	r1k->fiu_state1 = (r1k->fiu_pa025d >> 6) & 1;
+	r1k->fiu_labort = !(mp_mem_abort_l && mp_mem_abort_el);
+	r1k->fiu_e_abort_dly = !(mp_mem_abort_e && mp_mem_abort_el);
+	r1k->fiu_pcntl_d = r1k->fiu_pa026d & 0xf;
+	r1k->fiu_csaht = !mp_csa_hit;
 
 	if (!mp_sf_stop) {
-		bool cache_miss_next = state->fiu_cache_miss;
+		bool cache_miss_next = r1k->fiu_cache_miss;
 		if (mp_cond_sel == 0x6b) {		// CACHE_MISS
 			cache_miss_next = false;
 		} else if (rmarp) {
-			cache_miss_next = (state->fiu_ti_bus >> BUS64_LSB(35)) & 1;
-		} else if (state->fiu_log_query) {
-			cache_miss_next = state->fiu_miss;
+			cache_miss_next = (r1k->fiu_ti_bus >> BUS64_LSB(35)) & 1;
+		} else if (r1k->fiu_log_query) {
+			cache_miss_next = r1k->fiu_miss;
 		}
-		state->fiu_scav_trap = state->fiu_scav_trap_next;
-		state->fiu_cache_miss = cache_miss_next;
-		state->fiu_csa_oor = state->fiu_tmp_csa_oor_next;
+		r1k->fiu_scav_trap = r1k->fiu_scav_trap_next;
+		r1k->fiu_cache_miss = cache_miss_next;
+		r1k->fiu_csa_oor = r1k->fiu_tmp_csa_oor_next;
 
 		if (rmarp) {
-			state->fiu_mar_modified = (state->fiu_ti_bus >> BUS64_LSB(39)) & 1;
+			r1k->fiu_mar_modified = (r1k->fiu_ti_bus >> BUS64_LSB(39)) & 1;
 		} else if (mp_cond_sel == 0x6d) {
-			state->fiu_mar_modified = 1;
-		} else if (state->fiu_omf20) {
-			state->fiu_mar_modified = mp_mem_abort_el;
-		} else if (!state->fiu_memstart && mp_mem_abort_el) {
-			state->fiu_mar_modified = mp_mem_abort_el;
+			r1k->fiu_mar_modified = 1;
+		} else if (r1k->fiu_omf20) {
+			r1k->fiu_mar_modified = mp_mem_abort_el;
+		} else if (!r1k->fiu_memstart && mp_mem_abort_el) {
+			r1k->fiu_mar_modified = mp_mem_abort_el;
 		}
 		if (rmarp) {
-			state->fiu_incmplt_mcyc = (state->fiu_ti_bus >> BUS64_LSB(40)) & 1;
-		} else if (state->fiu_mem_start == 0x12) {
-			state->fiu_incmplt_mcyc = true;
-		} else if (state->fiu_memcyc1) {
-			state->fiu_incmplt_mcyc = mp_mem_abort_el;
+			r1k->fiu_incmplt_mcyc = (r1k->fiu_ti_bus >> BUS64_LSB(40)) & 1;
+		} else if (r1k->fiu_mem_start == 0x12) {
+			r1k->fiu_incmplt_mcyc = true;
+		} else if (r1k->fiu_memcyc1) {
+			r1k->fiu_incmplt_mcyc = mp_mem_abort_el;
 		}
 		if (rmarp) {
-			state->fiu_phys_last = (state->fiu_ti_bus >> BUS64_LSB(37)) & 1;
-			state->fiu_write_last = (state->fiu_ti_bus >> BUS64_LSB(38)) & 1;
-		} else if (state->fiu_memcyc1) {
-			state->fiu_phys_last = state->fiu_phys_ref;
-			state->fiu_write_last = (state->fiu_mcntl & 1);
+			r1k->fiu_phys_last = (r1k->fiu_ti_bus >> BUS64_LSB(37)) & 1;
+			r1k->fiu_write_last = (r1k->fiu_ti_bus >> BUS64_LSB(38)) & 1;
+		} else if (r1k->fiu_memcyc1) {
+			r1k->fiu_phys_last = r1k->fiu_phys_ref;
+			r1k->fiu_write_last = (r1k->fiu_mcntl & 1);
 		}
 
-		state->fiu_log_query = !(state->fiu_labort || state->fiu_logrwn);
+		r1k->fiu_log_query = !(r1k->fiu_labort || r1k->fiu_logrwn);
 
-		state->fiu_omf20 = (state->fiu_memcyc1 && ((state->fiu_prmt >> 3) & 1) && !mp_state_clk_en);
+		r1k->fiu_omf20 = (r1k->fiu_memcyc1 && ((r1k->fiu_prmt >> 3) & 1) && !mp_state_clk_en);
 
-		if (state->fiu_memcyc1)
-			state->fiu_mctl_is_read = !(state->fiu_lcntl & 1);
+		if (r1k->fiu_memcyc1)
+			r1k->fiu_mctl_is_read = !(r1k->fiu_lcntl & 1);
 		else
-			state->fiu_mctl_is_read = !(state->fiu_pa026d & 1);
+			r1k->fiu_mctl_is_read = !(r1k->fiu_pa026d & 1);
 
-		state->fiu_logrw_d = state->fiu_logrw;
+		r1k->fiu_logrw_d = r1k->fiu_logrw;
 	}
 
 	if (!mp_state_clk_en) {
-		state->fiu_omq = 0;
-		state->fiu_omq |= (state->fiu_pa027d & 3) << 2;
-		state->fiu_omq |= ((state->fiu_pa027d >> 5) & 1) << 1;
+		r1k->fiu_omq = 0;
+		r1k->fiu_omq |= (r1k->fiu_pa027d & 3) << 2;
+		r1k->fiu_omq |= ((r1k->fiu_pa027d >> 5) & 1) << 1;
 		if (rmarp) {
-			state->fiu_page_xing = (state->fiu_ti_bus >> BUS64_LSB(34)) & 1;
+			r1k->fiu_page_xing = (r1k->fiu_ti_bus >> BUS64_LSB(34)) & 1;
 		} else {
-			state->fiu_page_xing = (state->fiu_page_crossing_next);
+			r1k->fiu_page_xing = (r1k->fiu_page_crossing_next);
 		}
-		state->fiu_init_mru_d = (state->fiu_pa026d >> 7) & 1;
+		r1k->fiu_init_mru_d = (r1k->fiu_pa026d >> 7) & 1;
 	}
-	state->fiu_csa_oor_next = !(carry || name_match);
+	r1k->fiu_csa_oor_next = !(carry || name_match);
 
 	if (!mp_sf_stop) {
-		state->fiu_uir = state->fiu_wcsram[mp_nua_bus];
-		state->fiu_typuir = state->fiu_typwcsram[mp_nua_bus];
+		r1k->fiu_uir = r1k->fiu_wcsram[mp_nua_bus];
+		r1k->fiu_typuir = r1k->fiu_typwcsram[mp_nua_bus];
 	}
 }
 
 // -------------------- SEQ --------------------
 
 static void
-seq_int_reads(struct r1000_arch_state *state)
+seq_int_reads(void)
 {
 	unsigned internal_reads = UIR_SEQ_IRD;
-	switch (state->seq_urand & 3) {
-	case 3:	state->seq_coff = state->seq_retrn_pc_ofs; break;
-	case 2: state->seq_coff = state->seq_branch_offset; break;
-	case 1: state->seq_coff = state->seq_macro_pc_offset; break;
-	case 0: state->seq_coff = state->seq_branch_offset; break;
+	switch (r1k->seq_urand & 3) {
+	case 3:	r1k->seq_coff = r1k->seq_retrn_pc_ofs; break;
+	case 2: r1k->seq_coff = r1k->seq_branch_offset; break;
+	case 1: r1k->seq_coff = r1k->seq_macro_pc_offset; break;
+	case 0: r1k->seq_coff = r1k->seq_branch_offset; break;
+	default: assert(0);
 	}
-	state->seq_coff ^= 0x7fff;
+	r1k->seq_coff ^= 0x7fff;
 	if (internal_reads == 0) {
-		state->seq_typ_bus = ~mp_typ_bus;
-		state->seq_val_bus = ~mp_val_bus;
+		r1k->seq_typ_bus = ~mp_typ_bus;
+		r1k->seq_val_bus = ~mp_val_bus;
 		return;
 	}
 
-	state->seq_typ_bus = state->seq_n_in_csa;
-	state->seq_typ_bus |= state->seq_output_ob << 7;
-	state->seq_typ_bus ^= 0xffffffff;
+	r1k->seq_typ_bus = r1k->seq_n_in_csa;
+	r1k->seq_typ_bus |= r1k->seq_output_ob << 7;
+	r1k->seq_typ_bus ^= 0xffffffff;
 
 	switch (internal_reads) {
 	case 5:
-		state->seq_typ_bus |= (state->seq_name_bus ^ 0xffffffff) << 32;
+		r1k->seq_typ_bus |= (r1k->seq_name_bus ^ 0xffffffff) << 32;
 		break;
 	default:
-		state->seq_typ_bus |= (uint64_t)state->seq_cur_name << 32;
+		r1k->seq_typ_bus |= (uint64_t)r1k->seq_cur_name << 32;
 		break;
 	}
 
-	if (!(state->seq_urand & 0x2)) {
-		state->seq_val_bus = state->seq_pcseg << 32;
+	if (!(r1k->seq_urand & 0x2)) {
+		r1k->seq_val_bus = r1k->seq_pcseg << 32;
 	} else {
-		state->seq_val_bus = state->seq_retseg << 32;
+		r1k->seq_val_bus = r1k->seq_retseg << 32;
 	}
-	state->seq_val_bus ^= 0xffffffffULL << 32;
-	state->seq_val_bus ^= (state->seq_coff >> 12) << 16;
-	state->seq_val_bus ^= 0xffffULL << 16;
+	r1k->seq_val_bus ^= 0xffffffffULL << 32;
+	r1k->seq_val_bus ^= (r1k->seq_coff >> 12) << 16;
+	r1k->seq_val_bus ^= 0xffffULL << 16;
 	switch (internal_reads) {
 	case 1:
-		state->seq_val_bus |= state->seq_curins ^ 0xffff;
+		r1k->seq_val_bus |= r1k->seq_curins ^ 0xffff;
 		break;
 	case 2:
-		state->seq_val_bus |= state->seq_display;
+		r1k->seq_val_bus |= r1k->seq_display;
 		break;
 	case 3:
-		state->seq_val_bus |= state->seq_topu & 0xffff;
+		r1k->seq_val_bus |= r1k->seq_topu & 0xffff;
 		break;
 	default:
-		state->seq_val_bus |= (state->seq_coff << 4) & 0xffff;
-		state->seq_val_bus |= (state->seq_curr_lex & 0xf);
-		state->seq_val_bus ^= 0xffff;
+		r1k->seq_val_bus |= (r1k->seq_coff << 4) & 0xffff;
+		r1k->seq_val_bus |= (r1k->seq_curr_lex & 0xf);
+		r1k->seq_val_bus ^= 0xffff;
 		break;
 	}
 }
 
 static bool
-seq_conda(struct r1000_arch_state *state, unsigned condsel)
+seq_conda(unsigned condsel)
 {
 
 	switch (condsel) {
 	case 0x57: // FIELD_NUM_ERR
-		return (!state->seq_field_number_error);
+		return (!r1k->seq_field_number_error);
 	case 0x56: // LATCHED_COND
-		return (!state->seq_latched_cond);
+		return (!r1k->seq_latched_cond);
 	case 0x55: // E_MACRO_PEND
-		return (!state->seq_early_macro_pending);
+		return (!r1k->seq_early_macro_pending);
 	case 0x54: // E_MACRO_EVNT~6
-		return (!((state->seq_emac >> 0) & 1));
+		return (!((r1k->seq_emac >> 0) & 1));
 	case 0x53: // E_MACRO_EVNT~5
-		return (!((state->seq_emac >> 1) & 1));
+		return (!((r1k->seq_emac >> 1) & 1));
 	case 0x52: // E_MACRO_EVNT~3
-		return (!((state->seq_emac >> 3) & 1));
+		return (!((r1k->seq_emac >> 3) & 1));
 	case 0x51: // E_MACRO_EVNT~2
-		return (!((state->seq_emac >> 4) & 1));
+		return (!((r1k->seq_emac >> 4) & 1));
 	case 0x50: // E_MACRO_EVNT~0
-		return (!((state->seq_emac >> 6) & 1));
+		return (!((r1k->seq_emac >> 6) & 1));
 	default:
 		return (false);
 	}
 }
 
 static bool
-seq_cond9(struct r1000_arch_state *state, unsigned condsel)
+seq_cond9(unsigned condsel)
 {
 
 	switch (condsel) {
 	case 0x4f: // DISP_COND0
-		return ((state->seq_decode & 0x7) == 0);
+		return ((r1k->seq_decode & 0x7) == 0);
 		break;
 	case 0x4e: // True
 		return (true);
 		break;
 	case 0x4d: // M_IBUFF_MT
-		return (state->seq_m_ibuff_mt);
+		return (r1k->seq_m_ibuff_mt);
 		break;
 	case 0x4c: // M_BRK_CLASS
-		return (state->seq_m_break_class);
+		return (r1k->seq_m_break_class);
 		break;
 	case 0x4b: // M_TOS_INVLD
-		return (state->seq_m_tos_invld);
+		return (r1k->seq_m_tos_invld);
 		break;
 	case 0x4a: // M_RES_REF
-		return (state->seq_m_res_ref);
+		return (r1k->seq_m_res_ref);
 		break;
 	case 0x49: // M_OVERFLOW
 		{
 		unsigned csa = mp_csa_nve;
-		unsigned dec = state->seq_decode >> 3;
+		unsigned dec = r1k->seq_decode >> 3;
 		return (csa <= ((dec >> 3) | 12));
 		}
 		break;
 	case 0x48: // M_UNDERFLOW
 		{
 		unsigned csa = mp_csa_nve;
-		unsigned dec = state->seq_decode >> 3;
+		unsigned dec = r1k->seq_decode >> 3;
 		return (csa >= (dec & 7));
 		}
 		break;
@@ -2056,33 +2055,33 @@ seq_cond9(struct r1000_arch_state *state, unsigned condsel)
 }
 
 static bool
-seq_cond8(struct r1000_arch_state *state, unsigned condsel)
+seq_cond8(unsigned condsel)
 {
 
 	switch (condsel) {
 	case 0x47: // E STACK_SIZE
-		return (state->seq_stack_size_zero);
+		return (r1k->seq_stack_size_zero);
 		break;
 	case 0x46: // E LATCHED_COND
-		return (state->seq_latched_cond);
+		return (r1k->seq_latched_cond);
 		break;
 	case 0x45: // L SAVED_LATCHED
-		return (state->seq_saved_latched);
+		return (r1k->seq_saved_latched);
 		break;
 	case 0x44: // L TOS_VLD.COND
-		return (state->seq_tos_vld_cond);
+		return (r1k->seq_tos_vld_cond);
 		break;
 	case 0x43: // L LEX_VLD.COND
-		return (state->seq_lxval);
+		return (r1k->seq_lxval);
 		break;
 	case 0x42: // E IMPORT.COND
-		return (state->seq_resolve_address != 0xf);
+		return (r1k->seq_resolve_address != 0xf);
 		break;
 	case 0x41: // E REST_PC_DEC
-		return ((state->seq_rq >> 1) & 1);
+		return ((r1k->seq_rq >> 1) & 1);
 		break;
 	case 0x40: // E RESTARTABLE
-		return ((state->seq_rq >> 3) & 1);
+		return ((r1k->seq_rq >> 3) & 1);
 		break;
 	default:
 		return (false);
@@ -2090,19 +2089,19 @@ seq_cond8(struct r1000_arch_state *state, unsigned condsel)
 }
 
 static void
-seq_nxt_lex_valid(struct r1000_arch_state *state)
+seq_nxt_lex_valid(void)
 {
-	unsigned lex_random = (state->seq_rndx >> 5) & 0x7;
-	uint16_t dra = state->seq_resolve_address & 3;
+	unsigned lex_random = (r1k->seq_rndx >> 5) & 0x7;
+	uint16_t dra = r1k->seq_resolve_address & 3;
 	uint16_t dlr = lex_random;
 	uint16_t dns;
 	if (lex_random & 0x2) {
 		dns = 0xf;
 	} else {
-		dns = 0xf ^ (0x8 >> (state->seq_resolve_address >> 2));
+		dns = 0xf ^ (0x8 >> (r1k->seq_resolve_address >> 2));
 	}
 	uint16_t nv = 0;
-	unsigned adr = ((state->seq_lex_valid >> 12) & 0xf) << 5;
+	unsigned adr = ((r1k->seq_lex_valid >> 12) & 0xf) << 5;
 	adr |= dra << 3;
 	adr |= ((dlr >> 2) & 1) << 2;
 	adr |= ((dns >> 3) & 1) << 1;
@@ -2110,7 +2109,7 @@ seq_nxt_lex_valid(struct r1000_arch_state *state)
 	adr |= pm3;
 	nv |= (seq_pa041[adr] >> 4) << 12;
 
-	adr = ((state->seq_lex_valid >> 8) & 0xf) << 5;
+	adr = ((r1k->seq_lex_valid >> 8) & 0xf) << 5;
 	adr |= dra << 3;
 	adr |= ((dlr >> 2) & 1) << 2;
 	adr |= ((dns >> 2) & 1) << 1;
@@ -2118,7 +2117,7 @@ seq_nxt_lex_valid(struct r1000_arch_state *state)
 	adr |= pm2;
 	nv |= (seq_pa041[adr] >> 4) << 8;
 
-	adr = ((state->seq_lex_valid >> 4) & 0xf) << 5;
+	adr = ((r1k->seq_lex_valid >> 4) & 0xf) << 5;
 	adr |= dra << 3;
 	adr |= ((dlr >> 2) & 1) << 2;
 	adr |= ((dns >> 1) & 1) << 1;
@@ -2126,63 +2125,63 @@ seq_nxt_lex_valid(struct r1000_arch_state *state)
 	adr |= pm1;
 	nv |= (seq_pa041[adr] >> 4) << 4;
 
-	adr = ((state->seq_lex_valid >> 0) & 0xf) << 5;
+	adr = ((r1k->seq_lex_valid >> 0) & 0xf) << 5;
 	adr |= dra << 3;
 	adr |= ((dlr >> 2) & 1) << 2;
 	adr |= ((dns >> 0) & 1) << 1;
 	adr |= (dlr >> 0) & 1;
 	nv |= (seq_pa041[adr] >> 4) << 0;
 
-	state->seq_lex_valid = nv;
+	r1k->seq_lex_valid = nv;
 }
 
 static bool
-seq_condition(struct r1000_arch_state *state)
+seq_condition(void)
 {
 	unsigned condsel = UIR_SEQ_CSEL;
 
 	switch (condsel >> 3) {
-	case 0x0: return(val_cond(state));
-	case 0x1: return(val_cond(state));
-	case 0x2: return(val_cond(state));
-	case 0x3: return(typ_cond(state));
-	case 0x4: return(typ_cond(state));
-	case 0x5: return(typ_cond(state));
-	case 0x6: return(typ_cond(state));
-	case 0x7: return(typ_cond(state));
-	case 0x8: return(seq_cond8(state, condsel));
-	case 0x9: return(seq_cond9(state, condsel));
-	case 0xa: return(seq_conda(state, condsel));
+	case 0x0: return(val_cond());
+	case 0x1: return(val_cond());
+	case 0x2: return(val_cond());
+	case 0x3: return(typ_cond());
+	case 0x4: return(typ_cond());
+	case 0x5: return(typ_cond());
+	case 0x6: return(typ_cond());
+	case 0x7: return(typ_cond());
+	case 0x8: return(seq_cond8(condsel));
+	case 0x9: return(seq_cond9(condsel));
+	case 0xa: return(seq_conda(condsel));
 	case 0xb:
 		{
-		bool tc = typ_cond(state);
-		bool vc = val_cond(state);
+		bool tc = typ_cond();
+		bool vc = val_cond();
 		return(!(tc && vc));
 		}
-	case 0xc: return(fiu_conditions(state));
-	case 0xd: return(fiu_conditions(state));
-	case 0xf: return(ioc_cond(state));
+	case 0xc: return(fiu_conditions());
+	case 0xd: return(fiu_conditions());
+	case 0xf: return(ioc_cond());
 	default: return(1);
 	}
 }
 
 static unsigned
-seq_branch_offset(struct r1000_arch_state *state)
+seq_branch_offset(void)
 {
-	unsigned retval = state->seq_macro_pc_offset;
+	unsigned retval = r1k->seq_macro_pc_offset;
 	assert(!(retval & ~0x7fff));
 
-	if (state->seq_wanna_dispatch) {
-		unsigned a = state->seq_curins & 0x7ff;
+	if (r1k->seq_wanna_dispatch) {
+		unsigned a = r1k->seq_curins & 0x7ff;
 		if (a & 0x400)
 			a |= 0x7800;
 		a ^= 0x7fff;
 		a += 1;
 		retval += a;
-	} else if (!state->seq_m_ibuff_mt) {
+	} else if (!r1k->seq_m_ibuff_mt) {
 		retval += 0x7fff;
 	} else {
-		unsigned a = state->seq_display & 0x7ff;
+		unsigned a = r1k->seq_display & 0x7ff;
 		if (a & 0x400)
 			a |= 0x7800;
 		a ^= 0x7fff;
@@ -2193,54 +2192,54 @@ seq_branch_offset(struct r1000_arch_state *state)
 }
 
 static void
-seq_q3clockstop(struct r1000_arch_state *state)
+seq_q3clockstop(void)
 {
 	bool event = true;
 	mp_state_clk_stop = true;
-	state->seq_s_state_stop = true;
+	r1k->seq_s_state_stop = true;
 	mp_clock_stop = true;
 	mp_ram_stop = true;
 
 	if (mp_seq_halted && mp_seq_prepped) {
-		state->seq_diag |= 0x01;
+		r1k->seq_diag |= 0x01;
 		mp_sync_freeze |= 1;
 	} else {
-		state->seq_diag &= ~0x01;
+		r1k->seq_diag &= ~0x01;
 		mp_sync_freeze &= ~1;
 	}
 
-	if (mp_fiu_freeze && !(state->seq_diag & 0x2)) {
-		state->seq_diag |= 0x02;
+	if (mp_fiu_freeze && !(r1k->seq_diag & 0x2)) {
+		r1k->seq_diag |= 0x02;
 		// output.freze = 1;
 		mp_sync_freeze |= 2;
-	} else if (!mp_fiu_freeze && (state->seq_diag & 0x2) && !(state->seq_diag & 0x4)) {
-		state->seq_diag |= 0x04;
+	} else if (!mp_fiu_freeze && (r1k->seq_diag & 0x2) && !(r1k->seq_diag & 0x4)) {
+		r1k->seq_diag |= 0x04;
 		// output.sync = 1;
 		mp_sync_freeze |= 4;
-	} else if (!mp_fiu_freeze && (state->seq_diag & 0x2) && (state->seq_diag & 0x4)) {
-		state->seq_diag &= ~0x02;
+	} else if (!mp_fiu_freeze && (r1k->seq_diag & 0x2) && (r1k->seq_diag & 0x4)) {
+		r1k->seq_diag &= ~0x02;
 		// output.freze = 0;
 		mp_sync_freeze &= ~2;
-		state->seq_countdown = 5;
-	} else if (!mp_fiu_freeze && !(state->seq_diag & 0x2) && (state->seq_diag & 0x4)) {
-		if (--state->seq_countdown == 0) {
+		r1k->seq_countdown = 5;
+	} else if (!mp_fiu_freeze && !(r1k->seq_diag & 0x2) && (r1k->seq_diag & 0x4)) {
+		if (--r1k->seq_countdown == 0) {
 			// output.sync = 0;
-			state->seq_diag &= ~0x04;
+			r1k->seq_diag &= ~0x04;
 			mp_sync_freeze &= ~4;
 		}
 	}
 
-	state->seq_sf_stop = !(state->seq_diag == 0);
-	mp_sf_stop = !(state->seq_diag == 0);
-	mp_freeze = (state->seq_diag & 3) != 0;
+	r1k->seq_sf_stop = !(r1k->seq_diag == 0);
+	mp_sf_stop = !(r1k->seq_diag == 0);
+	mp_freeze = (r1k->seq_diag & 3) != 0;
 
 	unsigned clock_stop = 0;
-	state->seq_clock_stop_1 = !(mp_clock_stop_6 && mp_clock_stop_7 && mp_below_tcp);
+	r1k->seq_clock_stop_1 = !(mp_clock_stop_6 && mp_clock_stop_7 && mp_below_tcp);
 	if (mp_clock_stop_0) { clock_stop |= 0x40; }
-	if (state->seq_clock_stop_1) { clock_stop |= 0x20; }
+	if (r1k->seq_clock_stop_1) { clock_stop |= 0x20; }
 	if (mp_clock_stop_3) { clock_stop |= 0x10; }
 	if (mp_clock_stop_4) { clock_stop |= 0x08; }
-	if (state->seq_clock_stop_5) { clock_stop |= 0x04; }
+	if (r1k->seq_clock_stop_5) { clock_stop |= 0x04; }
 	if (mp_clock_stop_6) { clock_stop |= 0x02; }
 	if (mp_clock_stop_7) { clock_stop |= 0x01; }
 
@@ -2255,13 +2254,13 @@ seq_q3clockstop(struct r1000_arch_state *state)
 		}
 	}
 	if ((clock_stop | 0x03) != 0x7f) {
-		state->seq_s_state_stop = false;
+		r1k->seq_s_state_stop = false;
 	}
 
-	if (state->seq_sf_stop) {
+	if (r1k->seq_sf_stop) {
 		mp_clock_stop = false;
 		mp_state_clk_stop = false;
-		state->seq_s_state_stop = false;
+		r1k->seq_s_state_stop = false;
 		if (!mp_csa_write_enable) {
 			mp_ram_stop = false;
 		}
@@ -2271,19 +2270,19 @@ seq_q3clockstop(struct r1000_arch_state *state)
 }
 
 static void
-seq_p1(struct r1000_arch_state *state)
+seq_p1(void)
 {
-	if (state->seq_maybe_dispatch && !(state->seq_display >> 15)) {
-		state->seq_resolve_address = (state->seq_display >> 9) & 0xf;
+	if (r1k->seq_maybe_dispatch && !(r1k->seq_display >> 15)) {
+		r1k->seq_resolve_address = (r1k->seq_display >> 9) & 0xf;
 	} else {
 		switch (UIR_SEQ_LAUIR) {
 		case 0:
-			state->seq_resolve_address = state->seq_curr_lex ^ 0xf;
+			r1k->seq_resolve_address = r1k->seq_curr_lex ^ 0xf;
 			break;
 		case 1:
 			switch (UIR_SEQ_IRD) {
 			case 0x0:
-				state->seq_resolve_address = (~mp_val_bus + 1) & 0xf;
+				r1k->seq_resolve_address = (~mp_val_bus + 1) & 0xf;
 				break;
 			case 0x1:
 			case 0x2:
@@ -2291,120 +2290,121 @@ seq_p1(struct r1000_arch_state *state)
 				assert(0);
 				break;
 			default:
-				state->seq_resolve_address = (~state->seq_curr_lex + 1) & 0xf;
+				r1k->seq_resolve_address = (~r1k->seq_curr_lex + 1) & 0xf;
 				break;
 			}
 			break;
-		case 2: state->seq_resolve_address = 0xf; break;
-		case 3: state->seq_resolve_address = 0xe; break;
+		case 2: r1k->seq_resolve_address = 0xf; break;
+		case 3: r1k->seq_resolve_address = 0xe; break;
+		default: assert(0);
 		}
 	}
 
 	unsigned offs;
-	if (state->seq_maybe_dispatch && state->seq_uses_tos) {
+	if (r1k->seq_maybe_dispatch && r1k->seq_uses_tos) {
 		if (RNDX(RND_TOS_VLB)) {
 			assert (UIR_SEQ_IRD == 0);
 			offs = ((~mp_typ_bus) >> 7) & 0xfffff;
 		} else {
-			offs = state->seq_tosof;
+			offs = r1k->seq_tosof;
 		}
 	} else {
-		offs = state->seq_tosram[state->seq_resolve_address];
+		offs = r1k->seq_tosram[r1k->seq_resolve_address];
 	}
 
 	offs ^= 0xfffff;
 	offs &= 0xfffff;
 
-	bool d7 = (state->seq_display & 0x8100) == 0;
-	unsigned sgdisp = state->seq_display & 0xff;
+	bool d7 = (r1k->seq_display & 0x8100) == 0;
+	unsigned sgdisp = r1k->seq_display & 0xff;
 	if (!d7)
 		sgdisp |= 0x100;
-	if (!((state->seq_resolve_address <= 0xd) && d7))
+	if (!((r1k->seq_resolve_address <= 0xd) && d7))
 		sgdisp |= 0xffe00;
 
-	bool acin = state->seq_mem_start & 1;
+	bool acin = r1k->seq_mem_start & 1;
 
-	switch(state->seq_mem_start) {
+	switch(r1k->seq_mem_start) {
 	case 0:
 	case 2:
-		state->seq_resolve_offset = offs + sgdisp + 1;
-		state->seq_tmp_carry_out = (state->seq_resolve_offset >> 20) == 0;
+		r1k->seq_resolve_offset = offs + sgdisp + 1;
+		r1k->seq_tmp_carry_out = (r1k->seq_resolve_offset >> 20) == 0;
 		break;
 	case 1:
 	case 3:
-		state->seq_resolve_offset = (1<<20) + offs - (sgdisp + 1);
-		state->seq_tmp_carry_out = acin && (offs == 0);
+		r1k->seq_resolve_offset = (1<<20) + offs - (sgdisp + 1);
+		r1k->seq_tmp_carry_out = acin && (offs == 0);
 		break;
 	case 4:
 	case 6:
-		state->seq_resolve_offset = sgdisp ^ 0xfffff;
+		r1k->seq_resolve_offset = sgdisp ^ 0xfffff;
 		// Carry is probably "undefined" here.
 		break;
 	case 5:
 	case 7:
-		state->seq_resolve_offset = offs;
-		state->seq_tmp_carry_out = acin && (offs == 0);
+		r1k->seq_resolve_offset = offs;
+		r1k->seq_tmp_carry_out = acin && (offs == 0);
 		break;
 	default:
 		assert(0);
 	}
 
-	state->seq_resolve_offset &= 0xfffff;
+	r1k->seq_resolve_offset &= 0xfffff;
 
-	if (state->seq_intreads == 3) {
-		state->seq_output_ob = state->seq_pred & 0xfffff;
-	} else if (state->seq_intreads == 2) {
-		state->seq_output_ob = state->seq_topcnt & 0xfffff;
-	} else if (state->seq_intreads == 1) {
-		state->seq_output_ob = state->seq_resolve_offset & 0xfffff;
-	} else if (state->seq_intreads == 0) {
-		state->seq_output_ob = state->seq_savrg & 0xfffff;
+	if (r1k->seq_intreads == 3) {
+		r1k->seq_output_ob = r1k->seq_pred & 0xfffff;
+	} else if (r1k->seq_intreads == 2) {
+		r1k->seq_output_ob = r1k->seq_topcnt & 0xfffff;
+	} else if (r1k->seq_intreads == 1) {
+		r1k->seq_output_ob = r1k->seq_resolve_offset & 0xfffff;
+	} else if (r1k->seq_intreads == 0) {
+		r1k->seq_output_ob = r1k->seq_savrg & 0xfffff;
 	} else {
-		state->seq_output_ob = 0xfffff;
+		r1k->seq_output_ob = 0xfffff;
 	}
 
-	if (!state->seq_maybe_dispatch) {
-		state->seq_name_bus = state->seq_namram[state->seq_resolve_address] ^ 0xffffffff;
+	if (!r1k->seq_maybe_dispatch) {
+		r1k->seq_name_bus = r1k->seq_namram[r1k->seq_resolve_address] ^ 0xffffffff;
 	} else {
-		state->seq_name_bus = 0xffffffff;
+		r1k->seq_name_bus = 0xffffffff;
 	}
 }
 
 static void
-seq_h1(struct r1000_arch_state *state)
+seq_h1(void)
 {
 
-	state->seq_urand = UIR_SEQ_URAND;
-	state->seq_rndx = seq_pa048[state->seq_urand | (state->seq_bad_hint ? 0x100 : 0)] << 24;
-	state->seq_rndx |= seq_pa046[state->seq_urand | (state->seq_bad_hint ? 0x100 : 0)] << 16;
-	state->seq_rndx |=  seq_pa045[state->seq_urand | 0x100] << 8;
-	state->seq_rndx |= seq_pa047[state->seq_urand | 0x100];
+	r1k->seq_urand = UIR_SEQ_URAND;
+	r1k->seq_rndx = seq_pa048[r1k->seq_urand | (r1k->seq_bad_hint ? 0x100 : 0)] << 24;
+	r1k->seq_rndx |= seq_pa046[r1k->seq_urand | (r1k->seq_bad_hint ? 0x100 : 0)] << 16;
+	r1k->seq_rndx |=  seq_pa045[r1k->seq_urand | 0x100] << 8;
+	r1k->seq_rndx |= seq_pa047[r1k->seq_urand | 0x100];
 
-	state->seq_br_typ = UIR_SEQ_BRTYP;
-	state->seq_br_typb = 1U << state->seq_br_typ;
+	r1k->seq_br_typ = UIR_SEQ_BRTYP;
+	r1k->seq_br_typb = 1U << r1k->seq_br_typ;
 
-	state->seq_maybe_dispatch = BRTYPE(A_DISPATCH);
+	r1k->seq_maybe_dispatch = BRTYPE(A_DISPATCH);
 
-	if (!state->seq_maybe_dispatch) {
-		state->seq_mem_start = 7;
-		state->seq_intreads = UIR_SEQ_IRD & 3;
+	if (!r1k->seq_maybe_dispatch) {
+		r1k->seq_mem_start = 7;
+		r1k->seq_intreads = UIR_SEQ_IRD & 3;
 	} else {
-		state->seq_mem_start = state->seq_decode & 0x7;
-		if (state->seq_mem_start == 0 || state->seq_mem_start == 4) {
-			state->seq_intreads = 3;
+		r1k->seq_mem_start = r1k->seq_decode & 0x7;
+		if (r1k->seq_mem_start == 0 || r1k->seq_mem_start == 4) {
+			r1k->seq_intreads = 3;
 		} else {
-			state->seq_intreads = 1;
+			r1k->seq_intreads = 1;
 		}
 	}
 
 	if (mp_fiu_oe == 0x8)
-		mp_fiu_bus = state->seq_topu;
+		mp_fiu_bus = r1k->seq_topu;
 	if (mp_tv_oe & SEQ_TV_OE) {
-		seq_p1(state);
-		state->seq_branch_offset = seq_branch_offset(state);
-		seq_int_reads(state);	// Necessary
-		mp_typ_bus = ~state->seq_typ_bus;
-		mp_val_bus = ~state->seq_val_bus;
+		seq_p1();
+		r1k->seq_branch_offset = seq_branch_offset();
+		seq_int_reads();	// Necessary
+		mp_typ_bus = ~r1k->seq_typ_bus;
+		mp_val_bus = ~r1k->seq_val_bus;
 	}
 }
 
@@ -2419,173 +2419,175 @@ seq_h1(struct r1000_arch_state *state)
  */
 
 static void
-seq_q1(struct r1000_arch_state *state)
+seq_q1(void)
 {
 
-	state->seq_stop = !(!state->seq_bad_hint && (state->seq_uev == 16) && !state->seq_late_macro_event);
-	bool evnan0d = !(UIR_SEQ_ENMIC && (state->seq_uev == 16));
-	mp_uevent_enable = !(evnan0d || state->seq_stop);
+	r1k->seq_stop = !(!r1k->seq_bad_hint && (r1k->seq_uev == 16) && !r1k->seq_late_macro_event);
+	bool evnan0d = !(UIR_SEQ_ENMIC && (r1k->seq_uev == 16));
+	mp_uevent_enable = !(evnan0d || r1k->seq_stop);
 
 	if (!(mp_tv_oe & SEQ_TV_OE)) {
-		seq_p1(state);
-		state->seq_branch_offset = seq_branch_offset(state);
-		seq_int_reads(state);
+		seq_p1();
+		r1k->seq_branch_offset = seq_branch_offset();
+		seq_int_reads();
 	}
 }
 
 static void
-seq_q3(struct r1000_arch_state *state)
+seq_q3(void)
 {
 	// These are necessary for conditions
-	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
-	state->seq_m_res_ref = !(state->seq_lxval && !(state->seq_display >> 15));
-	state->seq_field_number_error = (((state->seq_val_bus >> 39) ^ state->seq_curins) & 0x3ff) != 0x3ff;
-	state->seq_tos_vld_cond = !(state->seq_foo7 || RNDX(RND_TOS_VLB));
-	state->seq_m_tos_invld = !(state->seq_uses_tos && state->seq_tos_vld_cond);
+	r1k->seq_lxval = !((r1k->seq_lex_valid >> (15 - r1k->seq_resolve_address)) & 1);
+	r1k->seq_m_res_ref = !(r1k->seq_lxval && !(r1k->seq_display >> 15));
+	r1k->seq_field_number_error = (((r1k->seq_val_bus >> 39) ^ r1k->seq_curins) & 0x3ff) != 0x3ff;
+	r1k->seq_tos_vld_cond = !(r1k->seq_foo7 || RNDX(RND_TOS_VLB));
+	r1k->seq_m_tos_invld = !(r1k->seq_uses_tos && r1k->seq_tos_vld_cond);
 
-	bool precond = seq_condition(state);
-	state->seq_br_tim = UIR_SEQ_BRTIM;
+	bool precond = seq_condition();
+	r1k->seq_br_tim = UIR_SEQ_BRTIM;
 
 	// SEQ micro arch doc, pg 29 says this can only be early cond, so there is no recursion on seq_m_ibuff_mt
-	state->seq_cload = RNDX(RND_CIB_PC_L) && (!state->seq_bad_hint) && (!precond);
+	r1k->seq_cload = RNDX(RND_CIB_PC_L) && (!r1k->seq_bad_hint) && (!precond);
 
-	state->seq_ibld = state->seq_cload || RNDX(RND_IBUFF_LD);
-	bool ibemp = !(!state->seq_ibld || ((state->seq_macro_pc_offset & 7) != 0));
-	state->seq_m_ibuff_mt = !(ibemp && state->seq_ibuf_fill);
+	r1k->seq_ibld = r1k->seq_cload || RNDX(RND_IBUFF_LD);
+	bool ibemp = !(!r1k->seq_ibld || ((r1k->seq_macro_pc_offset & 7) != 0));
+	r1k->seq_m_ibuff_mt = !(ibemp && r1k->seq_ibuf_fill);
 
-	state->seq_l_macro_hic = true;
+	r1k->seq_l_macro_hic = true;
 	unsigned nua;
 
-	if (state->seq_bad_hint) {
+	if (r1k->seq_bad_hint) {
 		unsigned adr = 0;
-		if (state->seq_bad_hint) adr |= 0x01;
-		adr |= (state->seq_br_typ << 1);
-		if (state->seq_bhreg & 0x20) adr |= 0x20;
-		if (state->seq_bhreg & 0x40) adr |= 0x80;
-		if (state->seq_bhreg & 0x80) adr |= 0x100;
+		if (r1k->seq_bad_hint) adr |= 0x01;
+		adr |= (r1k->seq_br_typ << 1);
+		if (r1k->seq_bhreg & 0x20) adr |= 0x20;
+		if (r1k->seq_bhreg & 0x40) adr |= 0x80;
+		if (r1k->seq_bhreg & 0x80) adr |= 0x100;
 		unsigned rom = seq_pa043[adr];
 
-		bool seq_uadr_mux = ((state->seq_bhreg) >> 5) & 1;
-		state->seq_push_br = false;
-		state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !seq_uadr_mux));
-		state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !seq_uadr_mux);
-		state->seq_branch_offset = seq_branch_offset(state);
-		state->seq_preturn = !(((rom >> 3) & 1) ||  seq_uadr_mux);
-		nua = state->seq_other;
+		bool seq_uadr_mux = ((r1k->seq_bhreg) >> 5) & 1;
+		r1k->seq_push_br = false;
+		r1k->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !seq_uadr_mux));
+		r1k->seq_wanna_dispatch = !(((rom >> 5) & 1) && !seq_uadr_mux);
+		r1k->seq_branch_offset = seq_branch_offset();
+		r1k->seq_preturn = !(((rom >> 3) & 1) ||  seq_uadr_mux);
+		nua = r1k->seq_other;
 		mp_clock_stop_6 = true;
-		state->seq_bad_hint_enable = true;
+		r1k->seq_bad_hint_enable = true;
 		mp_clock_stop_7 = false;
-	} else if (state->seq_late_macro_event) {
+	} else if (r1k->seq_late_macro_event) {
 		// Not tested by expmon_test_seq ?
-		nua = 0x140 | ((state->seq_late_u ^ 0x7) << 3);
-		state->seq_l_macro_hic = false;
+		nua = 0x140 | ((r1k->seq_late_u ^ 0x7) << 3);
+		r1k->seq_l_macro_hic = false;
 		mp_clock_stop_6 = true;
-		state->seq_bad_hint_enable = false;
+		r1k->seq_bad_hint_enable = false;
 		mp_clock_stop_7 = false;
-	} else if (state->seq_uev != 16) {
-		nua = 0x180 | (state->seq_uev << 3);
+	} else if (r1k->seq_uev != 16) {
+		nua = 0x180 | (r1k->seq_uev << 3);
 		mp_clock_stop_6 = false;
-		state->seq_bad_hint_enable = false;
+		r1k->seq_bad_hint_enable = false;
 		mp_clock_stop_7 = true;
 	} else {
 		bool uadr_mux;
 		if (BRTYPE(BRANCH_TRUE|BRANCH|CALL_TRUE|CALL|RETURN_FALSE|CASE_FALSE|DISPATCH_FALSE|CASE_CALL)) {
-			switch (state->seq_br_tim) {
+			switch (r1k->seq_br_tim) {
 			case 0: uadr_mux = precond; break;
-			case 1: uadr_mux = state->seq_latched_cond; break;
+			case 1: uadr_mux = r1k->seq_latched_cond; break;
 			case 2: uadr_mux = true; break;
 			case 3: uadr_mux = false; break;
+			default: assert(0);
 			}
 		} else { // BRANCH_FALSE|PUSH|CALL_FALSE|CONTINUE|RETURN_TRUE|RETURN|DISPATCH_TRUE|DISPATCH
-			switch (state->seq_br_tim) {
+			switch (r1k->seq_br_tim) {
 			case 0: uadr_mux = !precond; break;
-			case 1: uadr_mux = !state->seq_latched_cond; break;
+			case 1: uadr_mux = !r1k->seq_latched_cond; break;
 			case 2: uadr_mux = false; break;
 			case 3: uadr_mux = true; break;
+			default: assert(0);
 			}
 		}
-		state->seq_push_br = BRTYPE(PUSH);
-		state->seq_push = !(BRTYPE(PUSH|CASE_CALL) || (BRTYPE(A_CALL) && uadr_mux));
-		state->seq_wanna_dispatch = !(BRTYPE(A_DISPATCH) && !uadr_mux);
-		state->seq_branch_offset = seq_branch_offset(state);
-		state->seq_preturn = BRTYPE(A_RETURN) && !uadr_mux;
+		r1k->seq_push_br = BRTYPE(PUSH);
+		r1k->seq_push = !(BRTYPE(PUSH|CASE_CALL) || (BRTYPE(A_CALL) && uadr_mux));
+		r1k->seq_wanna_dispatch = !(BRTYPE(A_DISPATCH) && !uadr_mux);
+		r1k->seq_branch_offset = seq_branch_offset();
+		r1k->seq_preturn = BRTYPE(A_RETURN) && !uadr_mux;
 		unsigned one, two;
 		if (BRTYPE(A_BRANCH|PUSH|A_CALL|CONTINUE)) {
 			one = UIR_SEQ_BRN;
 			two = mp_cur_uadr + 1;
 		} else if (BRTYPE(A_RETURN)) {
 			one = UIR_SEQ_BRN;
-			two = (state->seq_topu ^ 0xffff) & 0x3fff;
+			two = (r1k->seq_topu ^ 0xffff) & 0x3fff;
 		} else if (BRTYPE(A_DISPATCH)) {
 			one = UIR_SEQ_BRN;
-			two = (state->seq_uadr_decode >> 2) & ~1;
+			two = (r1k->seq_uadr_decode >> 2) & ~1;
 		} else { // CASE|CASE_CALL
 			one = mp_cur_uadr + 1;
-			two = UIR_SEQ_BRN + state->seq_fiu;
+			two = UIR_SEQ_BRN + r1k->seq_fiu;
 		}
 		if (uadr_mux) {
 			nua = one;
-			state->seq_other = two;
+			r1k->seq_other = two;
 		} else {
 			nua = two;
-			state->seq_other = one;
+			r1k->seq_other = one;
 		}
 		mp_clock_stop_6 = true;
-		state->seq_bad_hint_enable = true;
+		r1k->seq_bad_hint_enable = true;
 		mp_clock_stop_7 = true;
 	}
 
-	if (!state->seq_sf_stop && mp_seq_prepped) {
+	if (!r1k->seq_sf_stop && mp_seq_prepped) {
 		mp_nua_bus = nua & 0x3fff;
 	}
 
-	state->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && state->seq_carry_out);
-	state->seq_ferr = !(state->seq_field_number_error && !(RNDX(RND_FLD_CHK) || !mp_uevent_enable));
-	state->seq_clock_stop_5 = (state->seq_check_exit_ue && state->seq_ferr);
+	r1k->seq_check_exit_ue = !(mp_uevent_enable && RNDX(RND_CHK_EXIT) && r1k->seq_carry_out);
+	r1k->seq_ferr = !(r1k->seq_field_number_error && !(RNDX(RND_FLD_CHK) || !mp_uevent_enable));
+	r1k->seq_clock_stop_5 = (r1k->seq_check_exit_ue && r1k->seq_ferr);
 
-	state->seq_ram[(state->seq_adr + 1) & 0xf] = state->seq_topu;
+	r1k->seq_ram[(r1k->seq_adr + 1) & 0xf] = r1k->seq_topu;
 
-	seq_int_reads(state);
+	seq_int_reads();
 
-	state->seq_q3cond = precond;
+	r1k->seq_q3cond = precond;
 
 	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
 
-	seq_q3clockstop(state);
+	seq_q3clockstop();
 
 
 	bool bar8;
 	{
 	unsigned csa = mp_csa_nve;
-	unsigned dec = state->seq_decode >> 3;
+	unsigned dec = r1k->seq_decode >> 3;
 
 	if (csa < (dec & 7))
-		state->seq_late_macro_pending = 0;
+		r1k->seq_late_macro_pending = 0;
 	else if (csa > ((dec >> 3) | 12))
-		state->seq_late_macro_pending = 1;
-	else if (state->seq_stop)
-		state->seq_late_macro_pending = 2;
-	else if (!state->seq_m_res_ref)
-		state->seq_late_macro_pending = 3;
-	else if (!state->seq_m_tos_invld)
-		state->seq_late_macro_pending = 4;
-	else if (!state->seq_m_break_class)
-		state->seq_late_macro_pending = 6;
-	else if (!state->seq_m_ibuff_mt)
-		state->seq_late_macro_pending = 7;
+		r1k->seq_late_macro_pending = 1;
+	else if (r1k->seq_stop)
+		r1k->seq_late_macro_pending = 2;
+	else if (!r1k->seq_m_res_ref)
+		r1k->seq_late_macro_pending = 3;
+	else if (!r1k->seq_m_tos_invld)
+		r1k->seq_late_macro_pending = 4;
+	else if (!r1k->seq_m_break_class)
+		r1k->seq_late_macro_pending = 6;
+	else if (!r1k->seq_m_ibuff_mt)
+		r1k->seq_late_macro_pending = 7;
 	else
-		state->seq_late_macro_pending = 8;
+		r1k->seq_late_macro_pending = 8;
 	}
 
-	state->seq_macro_event = (!state->seq_wanna_dispatch) && (state->seq_early_macro_pending || (state->seq_late_macro_pending != 8));
-	if (state->seq_macro_event) {
-		bar8 = (state->seq_macro_event && !state->seq_early_macro_pending) && (state->seq_late_macro_pending >= 7);
+	r1k->seq_macro_event = (!r1k->seq_wanna_dispatch) && (r1k->seq_early_macro_pending || (r1k->seq_late_macro_pending != 8));
+	if (r1k->seq_macro_event) {
+		bar8 = (r1k->seq_macro_event && !r1k->seq_early_macro_pending) && (r1k->seq_late_macro_pending >= 7);
 	} else {
 		bar8 = !(
-			(((state->seq_decode & 0x7) == 4) && !state->seq_wanna_dispatch) ||
-			(((state->seq_decode & 0x7) == 4) && state->seq_maybe_dispatch) ||
-			(state->seq_wanna_dispatch && state->seq_maybe_dispatch) ||
-			(state->seq_stop)
+			(((r1k->seq_decode & 0x7) == 4) && !r1k->seq_wanna_dispatch) ||
+			(((r1k->seq_decode & 0x7) == 4) && r1k->seq_maybe_dispatch) ||
+			(r1k->seq_wanna_dispatch && r1k->seq_maybe_dispatch) ||
+			(r1k->seq_stop)
 		);
 	}
 
@@ -2593,158 +2595,158 @@ seq_q3(struct r1000_arch_state *state)
 		mp_mem_abort_e = false;
 	} else if (mp_mem_cond) {
 		mp_mem_abort_e = true;
-	} else if (mp_mem_cond_pol ^ state->seq_q3cond) {
+	} else if (mp_mem_cond_pol ^ r1k->seq_q3cond) {
 		mp_mem_abort_e = true;
 	} else {
 		mp_mem_abort_e = false;
 	}
 
-	if (RNDX(RND_TOS_VLB) && !state->seq_stop) {
-		state->seq_tost = state->seq_typ_bus >> 32;
-		state->seq_vost = state->seq_val_bus >> 32;
-		state->seq_tosof = (state->seq_typ_bus >> 7) & 0xfffff;
+	if (RNDX(RND_TOS_VLB) && !r1k->seq_stop) {
+		r1k->seq_tost = r1k->seq_typ_bus >> 32;
+		r1k->seq_vost = r1k->seq_val_bus >> 32;
+		r1k->seq_tosof = (r1k->seq_typ_bus >> 7) & 0xfffff;
 	}
-	if (state->seq_maybe_dispatch) {
-		switch (state->seq_mem_start) {
+	if (r1k->seq_maybe_dispatch) {
+		switch (r1k->seq_mem_start) {
 		case 0:
 		case 1:
 		case 2:
-			state->seq_name_bus = state->seq_namram[state->seq_resolve_address] ^ 0xffffffff;
+			r1k->seq_name_bus = r1k->seq_namram[r1k->seq_resolve_address] ^ 0xffffffff;
 			break;
 		case 3:
 		case 7:
-			state->seq_name_bus = state->seq_tost ^ 0xffffffff;
+			r1k->seq_name_bus = r1k->seq_tost ^ 0xffffffff;
 			break;
 		default:
-			state->seq_name_bus = state->seq_vost ^ 0xffffffff;
+			r1k->seq_name_bus = r1k->seq_vost ^ 0xffffffff;
 			break;
 		}
 	} else {
-		state->seq_name_bus = state->seq_namram[state->seq_resolve_address] ^ 0xffffffff;
+		r1k->seq_name_bus = r1k->seq_namram[r1k->seq_resolve_address] ^ 0xffffffff;
 	}
-	if (!(state->seq_foo9 || mp_clock_stop_6)) {
-		state->seq_treg = 0;
-		state->seq_foo7 = false;
+	if (!(r1k->seq_foo9 || mp_clock_stop_6)) {
+		r1k->seq_treg = 0;
+		r1k->seq_foo7 = false;
 	}
 	if (mp_adr_oe & 0x8) {
 		unsigned pa040a = 0;
-		pa040a |= (state->seq_decode & 0x7) << 6;
-		if (state->seq_wanna_dispatch) pa040a |= 0x20;
+		pa040a |= (r1k->seq_decode & 0x7) << 6;
+		if (r1k->seq_wanna_dispatch) pa040a |= 0x20;
 		if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
-		if (state->seq_resolve_address != 0xf) pa040a |= 0x08;
-		if (state->seq_stop) pa040a |= 0x04;
-		if (!state->seq_maybe_dispatch) pa040a |= 0x02;
-		if (state->seq_bad_hint) pa040a |= 0x01;
+		if (r1k->seq_resolve_address != 0xf) pa040a |= 0x08;
+		if (r1k->seq_stop) pa040a |= 0x04;
+		if (!r1k->seq_maybe_dispatch) pa040a |= 0x02;
+		if (r1k->seq_bad_hint) pa040a |= 0x01;
 		unsigned pa040d = seq_pa040[pa040a];
 
-		if (state->seq_macro_event) {
+		if (r1k->seq_macro_event) {
 			mp_spc_bus = 0x6;
 		} else {
 			mp_spc_bus = (pa040d >> 3) & 0x7;
 		}
-		bool adr_is_code = !((!state->seq_macro_event) && (pa040d & 0x01));
+		bool adr_is_code = !((!r1k->seq_macro_event) && (pa040d & 0x01));
 		bool resolve_drive;
-		if (!state->seq_macro_event) {
+		if (!r1k->seq_macro_event) {
 			resolve_drive = !((pa040d >> 6) & 1);
 		} else {
 			resolve_drive = true;
 		}
 		if (!resolve_drive) {
-			mp_adr_bus = state->seq_resolve_offset << 7;
+			mp_adr_bus = r1k->seq_resolve_offset << 7;
 		} else if (adr_is_code) {
-			mp_adr_bus = (state->seq_coff >> 3) << 7;
+			mp_adr_bus = (r1k->seq_coff >> 3) << 7;
 		} else {
-			mp_adr_bus = state->seq_output_ob << 7;
+			mp_adr_bus = r1k->seq_output_ob << 7;
 		}
 
-		uint64_t branch = state->seq_branch_offset & 7;
+		uint64_t branch = r1k->seq_branch_offset & 7;
 		branch ^= 0x7;
 		mp_adr_bus |= branch << 4;
 		if (!adr_is_code) {
-			mp_adr_bus |= state->seq_name_bus << 32;
-		} else if (!(state->seq_urand & 0x2)) {
-			mp_adr_bus |= state->seq_pcseg << 32;
+			mp_adr_bus |= r1k->seq_name_bus << 32;
+		} else if (!(r1k->seq_urand & 0x2)) {
+			mp_adr_bus |= r1k->seq_pcseg << 32;
 		} else {
-			mp_adr_bus |= state->seq_retseg << 32;
+			mp_adr_bus |= r1k->seq_retseg << 32;
 		}
 	}
-	bool bad_hint_disp = (!state->seq_bad_hint || (state->seq_bhreg & 0x08));
-	mp_mem_abort_l = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->seq_stop);
+	bool bad_hint_disp = (!r1k->seq_bad_hint || (r1k->seq_bhreg & 0x08));
+	mp_mem_abort_l = bad_hint_disp && !(RNDX(RND_L_ABRT) && !r1k->seq_stop);
 }
 
 static void
-seq_q4(struct r1000_arch_state *state)
+seq_q4(void)
 {
-	bool aclk = !state->seq_sf_stop;
-	bool state_clock = state->seq_s_state_stop && !state->seq_stop;
+	bool aclk = !r1k->seq_sf_stop;
+	bool state_clock = r1k->seq_s_state_stop && !r1k->seq_stop;
 
-	//bool bhen = !((state->seq_late_macro_event && !state->seq_bad_hint) || (!mp_clock_stop_6));
-	//bool bhcke = state->seq_s_state_stop && bhen;
-	bool bhcke = state->seq_s_state_stop && mp_clock_stop_6 && (!state->seq_late_macro_event || state->seq_bad_hint);
-	bool dispatch = state->seq_wanna_dispatch || state->seq_early_macro_pending || (state->seq_late_macro_pending != 8);
+	//bool bhen = !((r1k->seq_late_macro_event && !r1k->seq_bad_hint) || (!mp_clock_stop_6));
+	//bool bhcke = r1k->seq_s_state_stop && bhen;
+	bool bhcke = r1k->seq_s_state_stop && mp_clock_stop_6 && (!r1k->seq_late_macro_event || r1k->seq_bad_hint);
+	bool dispatch = r1k->seq_wanna_dispatch || r1k->seq_early_macro_pending || (r1k->seq_late_macro_pending != 8);
 	bool update_display = false;
 	if (state_clock) {
-		seq_nxt_lex_valid(state);
+		seq_nxt_lex_valid();
 		if (!RNDX(RND_RES_OFFS)) {
-			state->seq_tosram[state->seq_resolve_address] = (state->seq_typ_bus >> 7) & 0xfffff;
+			r1k->seq_tosram[r1k->seq_resolve_address] = (r1k->seq_typ_bus >> 7) & 0xfffff;
 		}
-		if (!state->seq_ibld) {
-			state->seq_macro_ins_typ = state->seq_typ_bus;
-			state->seq_macro_ins_val = state->seq_val_bus;
+		if (!r1k->seq_ibld) {
+			r1k->seq_macro_ins_typ = r1k->seq_typ_bus;
+			r1k->seq_macro_ins_val = r1k->seq_val_bus;
 			update_display = true;
 		}
 		if (!RNDX(RND_RETRN_LD)) {
-			state->seq_retrn_pc_ofs = state->seq_macro_pc_offset;
+			r1k->seq_retrn_pc_ofs = r1k->seq_macro_pc_offset;
 		}
 		if (!RNDX(RND_CUR_LEX)) {
-			state->seq_curr_lex = state->seq_val_bus & 0xf;
-			state->seq_curr_lex ^= 0xf;
+			r1k->seq_curr_lex = r1k->seq_val_bus & 0xf;
+			r1k->seq_curr_lex ^= 0xf;
 		}
 	}
 	if (aclk) {
-		state->seq_late_macro_event = !((!state_clock) || !(state->seq_macro_event && !state->seq_early_macro_pending));
+		r1k->seq_late_macro_event = !((!state_clock) || !(r1k->seq_macro_event && !r1k->seq_early_macro_pending));
 		if (!mp_seq_halted) {
 			mp_seq_halted = !((!state_clock) || RNDX(RND_HALT));
 			if (mp_seq_halted)
 				printf("SEQ HALTED\n");
 		}
-		state->seq_early_macro_pending = mp_macro_event != 0;
-		state->seq_emac = mp_macro_event ^ 0x7f;
-		if (state->seq_early_macro_pending) {
-			state->seq_uadr_decode = 0x0400 + 0x20 * fls(mp_macro_event);
+		r1k->seq_early_macro_pending = mp_macro_event != 0;
+		r1k->seq_emac = mp_macro_event ^ 0x7f;
+		if (r1k->seq_early_macro_pending) {
+			r1k->seq_uadr_decode = 0x0400 + 0x20 * fls(mp_macro_event);
 		}
 	}
 
-	if (bhcke && !state->seq_macro_event) {
+	if (bhcke && !r1k->seq_macro_event) {
 		unsigned mode = 0;
-		if (!state->seq_wanna_dispatch) {
+		if (!r1k->seq_wanna_dispatch) {
 			mode = 1;
-		} else if (state->seq_cload) {
+		} else if (r1k->seq_cload) {
 			mode = 0;
 		} else {
-			if (!state->seq_bad_hint) {
-				state->seq_m_pc_mb = RNDX(RND_M_PC_MD0);
+			if (!r1k->seq_bad_hint) {
+				r1k->seq_m_pc_mb = RNDX(RND_M_PC_MD0);
 			} else {
-				state->seq_m_pc_mb = !((state->seq_bhreg >> 2) & 1);
+				r1k->seq_m_pc_mb = !((r1k->seq_bhreg >> 2) & 1);
 			}
 
-			if (state->seq_m_pc_mb) mode |= 2;
+			if (r1k->seq_m_pc_mb) mode |= 2;
 			if (RNDX(RND_M_PC_MD1)) mode |= 1;
 		}
 		if (mode == 3) {
 			if (!RNDX(RND_M_PC_MUX)) {
-				state->seq_macro_pc_offset = state->seq_val_bus >> 4;
+				r1k->seq_macro_pc_offset = r1k->seq_val_bus >> 4;
 			} else {
-				state->seq_macro_pc_offset = state->seq_branch_offset;
+				r1k->seq_macro_pc_offset = r1k->seq_branch_offset;
 			}
 		} else if (mode == 2) {
-			state->seq_macro_pc_offset += 1;
+			r1k->seq_macro_pc_offset += 1;
 		} else if (mode == 1) {
-			state->seq_macro_pc_offset += 0x7fff;
+			r1k->seq_macro_pc_offset += 0x7fff;
 		}
 		if (mode != 0) {
 			update_display = true;
-			state->seq_macro_pc_offset &= 0x7fff;
+			r1k->seq_macro_pc_offset &= 0x7fff;
 		}
 	}
 
@@ -2753,88 +2755,88 @@ seq_q4(struct r1000_arch_state *state)
 	if (state_clock) {
 		unsigned dsp = 0;
 		if (!RNDX(RND_INSTR_MX)) {
-			dsp = state->seq_display;
+			dsp = r1k->seq_display;
 		} else {
-			dsp = state->seq_val_bus & 0xffff;
+			dsp = r1k->seq_val_bus & 0xffff;
 		}
 		dsp ^= 0xffff;
 
-		if (crnana && state->seq_topbot)
-			state->seq_ctop = dsp;
-		if (crnana && !state->seq_topbot)
-			state->seq_cbot = dsp;
+		if (crnana && r1k->seq_topbot)
+			r1k->seq_ctop = dsp;
+		if (crnana && !r1k->seq_topbot)
+			r1k->seq_cbot = dsp;
 		if (!RNDX(RND_BR_MSK_L)) {
-			state->seq_break_mask = (state->seq_val_bus >> 16) & 0xffff;
+			r1k->seq_break_mask = (r1k->seq_val_bus >> 16) & 0xffff;
 		}
 
 		if (!RNDX(RND_NAME_LD)) {
-			state->seq_cur_name = state->seq_typ_bus >> 32;
+			r1k->seq_cur_name = r1k->seq_typ_bus >> 32;
 		}
 
 		if (!RNDX(RND_RES_NAME)) {
-			state->seq_namram[state->seq_resolve_address] = state->seq_typ_bus >> 32;
+			r1k->seq_namram[r1k->seq_resolve_address] = r1k->seq_typ_bus >> 32;
 		}
 
 		if (!RNDX(RND_RETRN_LD)) {
-			state->seq_retseg = state->seq_pcseg;
+			r1k->seq_retseg = r1k->seq_pcseg;
 		}
 		if (!RNDX(RND_M_PC_LDH)) {
-			state->seq_pcseg = (~state->seq_val_bus >> 32) & 0xffffff;
+			r1k->seq_pcseg = (~r1k->seq_val_bus >> 32) & 0xffffff;
 		}
 		if (!RNDX(RND_SAVE_LD)) {
-			state->seq_savrg = state->seq_resolve_offset;
-			state->seq_carry_out = state->seq_tmp_carry_out;
+			r1k->seq_savrg = r1k->seq_resolve_offset;
+			r1k->seq_carry_out = r1k->seq_tmp_carry_out;
 		}
 
 		if (!RNDX(RND_PRED_LD)) {
 			if (!RNDX(RND_CNTL_MUX)) {
-				state->seq_pred = ((~state->seq_typ_bus) >> 7) & 0xfffff;
+				r1k->seq_pred = ((~r1k->seq_typ_bus) >> 7) & 0xfffff;
 			} else {
-				state->seq_pred = (mp_fiu_bus >> 7) & 0xfffff;
+				r1k->seq_pred = (mp_fiu_bus >> 7) & 0xfffff;
 			}
 		}
 
 		if (!RNDX(RND_TOP_LD)) {
 			if (!RNDX(RND_CNTL_MUX)) {
-				state->seq_topcnt = ((~state->seq_typ_bus) >> 7) & 0xfffff;
+				r1k->seq_topcnt = ((~r1k->seq_typ_bus) >> 7) & 0xfffff;
 			} else {
-				state->seq_topcnt = (mp_fiu_bus >> 7) & 0xfffff;
+				r1k->seq_topcnt = (mp_fiu_bus >> 7) & 0xfffff;
 			}
 		} else if (mp_csa_cntl == 2) {
-			state->seq_topcnt += 1;
+			r1k->seq_topcnt += 1;
 		} else if (mp_csa_cntl == 3) {
-			state->seq_topcnt += 0xfffff;
+			r1k->seq_topcnt += 0xfffff;
 		}
-		state->seq_topcnt &= 0xfffff;
+		r1k->seq_topcnt &= 0xfffff;
 	}
 
 	if (bhcke) {
-		bool dmdisp = !(!state->seq_bad_hint || (state->seq_bhreg & 0x04));
+		bool dmdisp = !(!r1k->seq_bad_hint || (r1k->seq_bhreg & 0x04));
 		bool crnor0a = !(crnana || dmdisp);
 		if (!crnor0a)
-			state->seq_topbot = !state->seq_topbot;
+			r1k->seq_topbot = !r1k->seq_topbot;
 
-		if (state->seq_topbot) {
-			state->seq_curins = state->seq_cbot;
+		if (r1k->seq_topbot) {
+			r1k->seq_curins = r1k->seq_cbot;
 		} else {
-			state->seq_curins = state->seq_ctop;
+			r1k->seq_curins = r1k->seq_ctop;
 		}
 
 		unsigned ccl;
-		if (state->seq_curins & 0xfc00) {
-			ccl = (state->seq_top[state->seq_curins >> 6] >> 4) & 0xf;
+		if (r1k->seq_curins & 0xfc00) {
+			ccl = (r1k->seq_top[r1k->seq_curins >> 6] >> 4) & 0xf;
 		} else {
-			ccl = (state->seq_bot[state->seq_curins & 0x3ff] >> 4) & 0xf;
+			ccl = (r1k->seq_bot[r1k->seq_curins & 0x3ff] >> 4) & 0xf;
 		}
 
 		if (ccl == 0) {
-			state->seq_m_break_class = true;
+			r1k->seq_m_break_class = true;
 		} else {
-			state->seq_m_break_class = !((state->seq_break_mask >> (15 - ccl)) & 1);
+			r1k->seq_m_break_class = !((r1k->seq_break_mask >> (15 - ccl)) & 1);
 		}
 	}
 
-	if (state->seq_s_state_stop && state->seq_l_macro_hic) {
+	if (r1k->seq_s_state_stop && r1k->seq_l_macro_hic) {
 		bool xwrite;
 		bool pop;
 		unsigned stkinpsel = 0;
@@ -2842,88 +2844,89 @@ seq_q4(struct r1000_arch_state *state)
 			xwrite = true;
 			pop = true;
 			stkinpsel = 3;
-		} else if (!state->seq_push) {
+		} else if (!r1k->seq_push) {
 			xwrite = true;
 			pop = false;
-			if (!state->seq_push_br) stkinpsel |= 2;
-			if (state->seq_bad_hint) stkinpsel |= 1;
+			if (!r1k->seq_push_br) stkinpsel |= 2;
+			if (r1k->seq_bad_hint) stkinpsel |= 1;
 		} else {
 			xwrite = !RNDX(RND_PUSH);
-			pop = state->seq_preturn || RNDX(RND_POP);
+			pop = r1k->seq_preturn || RNDX(RND_POP);
 			stkinpsel = 0x1;
 		}
 
 		if (xwrite) {
 			switch(stkinpsel) {
 			case 0:
-				state->seq_topu = UIR_SEQ_BRN;
-				if (state->seq_q3cond) state->seq_topu |= (1<<15);
-				if (state->seq_latched_cond) state->seq_topu |= (1<<14);
-				state->seq_topu ^= 0xffff;
+				r1k->seq_topu = UIR_SEQ_BRN;
+				if (r1k->seq_q3cond) r1k->seq_topu |= (1<<15);
+				if (r1k->seq_latched_cond) r1k->seq_topu |= (1<<14);
+				r1k->seq_topu ^= 0xffff;
 				break;
 			case 1:
-				state->seq_topu = mp_fiu_bus;
-				state->seq_topu &= 0xffff;
+				r1k->seq_topu = mp_fiu_bus;
+				r1k->seq_topu &= 0xffff;
 				break;
 			case 2:
-				state->seq_topu = mp_cur_uadr;
-				if (state->seq_q3cond) state->seq_topu |= (1<<15);
-				if (state->seq_latched_cond) state->seq_topu |= (1<<14);
-				state->seq_topu += 1;
-				state->seq_topu ^= 0xffff;
+				r1k->seq_topu = mp_cur_uadr;
+				if (r1k->seq_q3cond) r1k->seq_topu |= (1<<15);
+				if (r1k->seq_latched_cond) r1k->seq_topu |= (1<<14);
+				r1k->seq_topu += 1;
+				r1k->seq_topu ^= 0xffff;
 				break;
 			case 3:
-				state->seq_topu = mp_cur_uadr;
-				if (state->seq_q3cond) state->seq_topu |= (1<<15);
-				if (state->seq_latched_cond) state->seq_topu |= (1<<14);
-				state->seq_topu ^= 0xffff;
+				r1k->seq_topu = mp_cur_uadr;
+				if (r1k->seq_q3cond) r1k->seq_topu |= (1<<15);
+				if (r1k->seq_latched_cond) r1k->seq_topu |= (1<<14);
+				r1k->seq_topu ^= 0xffff;
 				break;
+			default: assert(0);
 			}
 		} else if (pop) {
-			state->seq_topu = state->seq_ram[state->seq_adr];
+			r1k->seq_topu = r1k->seq_ram[r1k->seq_adr];
 		}
-		state->seq_saved_latched = !((state->seq_topu >> 14) & 0x1);
+		r1k->seq_saved_latched = !((r1k->seq_topu >> 14) & 0x1);
 
-		if (RNDX(RND_CLEAR_ST) && !state->seq_stop) {
-			state->seq_adr = xwrite;
+		if (RNDX(RND_CLEAR_ST) && !r1k->seq_stop) {
+			r1k->seq_adr = xwrite;
 		} else if (xwrite || pop) {
 			if (xwrite) {
-				state->seq_adr = (state->seq_adr + 1) & 0xf;
+				r1k->seq_adr = (r1k->seq_adr + 1) & 0xf;
 			} else {
-				state->seq_adr = (state->seq_adr + 0xf) & 0xf;
+				r1k->seq_adr = (r1k->seq_adr + 0xf) & 0xf;
 			}
 		}
-		state->seq_stack_size_zero = state->seq_adr == 0;
+		r1k->seq_stack_size_zero = r1k->seq_adr == 0;
 	}
 
 	if (state_clock) {
-		state->seq_fiu = mp_fiu_bus;
-		state->seq_fiu &= 0x3fff;
+		r1k->seq_fiu = mp_fiu_bus;
+		r1k->seq_fiu &= 0x3fff;
 	}
 
 	if (aclk) {
-		if (!state->seq_maybe_dispatch) {
-			state->seq_late_u = 7;
+		if (!r1k->seq_maybe_dispatch) {
+			r1k->seq_late_u = 7;
 		} else {
-			state->seq_late_u = state->seq_late_macro_pending;
-			if (state->seq_late_u == 8)
-				state->seq_late_u = 7;
+			r1k->seq_late_u = r1k->seq_late_macro_pending;
+			if (r1k->seq_late_u == 8)
+				r1k->seq_late_u = 7;
 		}
 
 		mp_seq_uev &= ~(UEV_CK_EXIT|UEV_FLD_ERR|UEV_NEW_PAK);
-		if (!state->seq_check_exit_ue) {
+		if (!r1k->seq_check_exit_ue) {
 			mp_seq_uev |= UEV_CK_EXIT;
 		}
-		if (!state->seq_ferr) {
+		if (!r1k->seq_ferr) {
 			mp_seq_uev |= UEV_FLD_ERR;
 		}
-		if (!state->seq_clock_stop_1) {
+		if (!r1k->seq_clock_stop_1) {
 			mp_seq_uev |= UEV_NEW_PAK;
 		}
 
-		state->seq_uev = 16 - fls(mp_seq_uev);
+		r1k->seq_uev = 16 - fls(mp_seq_uev);
 
-		if (state->seq_s_state_stop) {
+		if (r1k->seq_s_state_stop) {
 			mp_cur_uadr = mp_nua_bus;
 		}
 
@@ -2931,129 +2934,132 @@ seq_q4(struct r1000_arch_state *state)
 			unsigned adr = 0;
 			if (mp_clock_stop_6)
 				adr |= 0x02;
-			if (!state->seq_macro_event)
+			if (!r1k->seq_macro_event)
 				adr |= 0x04;
-			adr |= state->seq_br_tim << 3;
-			adr |= state->seq_br_typ << 5;
-			state->seq_bhreg = seq_pa044[adr];
+			adr |= r1k->seq_br_tim << 3;
+			adr |= r1k->seq_br_typ << 5;
+			r1k->seq_bhreg = seq_pa044[adr];
 
 			if (!state_clock) {
-				state->seq_bhreg |= 0x2;
+				r1k->seq_bhreg |= 0x2;
 			} else {
-				state->seq_bhreg ^= 0x2;
+				r1k->seq_bhreg ^= 0x2;
 			}
 		}
 
-		state->seq_hint_last = (state->seq_bhreg >> 1) & 1;
-		state->seq_hint_t_last = (state->seq_bhreg >> 0) & 1;
+		r1k->seq_hint_last = (r1k->seq_bhreg >> 1) & 1;
+		r1k->seq_hint_t_last = (r1k->seq_bhreg >> 0) & 1;
 
-		bool bad_hint_disp = (!state->seq_bad_hint || (state->seq_bhreg & 0x08));
-		if (state->seq_s_state_stop && state->seq_bad_hint_enable && bad_hint_disp) {
+		bool bad_hint_disp = (!r1k->seq_bad_hint || (r1k->seq_bhreg & 0x08));
+		if (r1k->seq_s_state_stop && r1k->seq_bad_hint_enable && bad_hint_disp) {
 			unsigned restrt_rnd = 0;
 			restrt_rnd |= RNDX(RND_RESTRT0) ? 2 : 0;
 			restrt_rnd |= RNDX(RND_RESTRT1) ? 1 : 0;
-			if (!state->seq_wanna_dispatch) {
-				state->seq_rreg = 0xa;
+			if (!r1k->seq_wanna_dispatch) {
+				r1k->seq_rreg = 0xa;
 			} else if (restrt_rnd != 0) {
-				state->seq_rreg = (restrt_rnd & 0x3) << 1;
+				r1k->seq_rreg = (restrt_rnd & 0x3) << 1;
 			} else {
-				state->seq_rreg &= 0xa;
+				r1k->seq_rreg &= 0xa;
 			}
-			if (state->seq_macro_event) {
-				state->seq_rreg &= ~0x2;
+			if (r1k->seq_macro_event) {
+				r1k->seq_rreg &= ~0x2;
 			}
-			state->seq_treg = 0x3;
+			r1k->seq_treg = 0x3;
 			bool dnan0d = !(dispatch && RNDX(RND_PRED_LD));
-			bool tsnor0b = !(dnan0d || state->seq_tos_vld_cond);
+			bool tsnor0b = !(dnan0d || r1k->seq_tos_vld_cond);
 			if (tsnor0b)
-				state->seq_treg |= 0x8;
-			if (!state->seq_tos_vld_cond)
-				state->seq_treg |= 0x4;
-		} else if (state->seq_s_state_stop && state->seq_bad_hint_enable) {
-			state->seq_rreg <<= 1;
-			state->seq_rreg &= 0xe;
-			state->seq_rreg |= 0x1;
-			state->seq_treg <<= 1;
-			state->seq_treg &= 0xe;
-			state->seq_treg |= 0x1;
+				r1k->seq_treg |= 0x8;
+			if (!r1k->seq_tos_vld_cond)
+				r1k->seq_treg |= 0x4;
+		} else if (r1k->seq_s_state_stop && r1k->seq_bad_hint_enable) {
+			r1k->seq_rreg <<= 1;
+			r1k->seq_rreg &= 0xe;
+			r1k->seq_rreg |= 0x1;
+			r1k->seq_treg <<= 1;
+			r1k->seq_treg &= 0xe;
+			r1k->seq_treg |= 0x1;
 		}
-		state->seq_rq = state->seq_rreg;
-		state->seq_foo7 = state->seq_treg >> 3;
+		r1k->seq_rq = r1k->seq_rreg;
+		r1k->seq_foo7 = r1k->seq_treg >> 3;
 
 		if (state_clock) {
 			unsigned condsel = UIR_SEQ_CSEL;
 			uint8_t pa042 = seq_pa042[condsel << 2];
 			bool is_e_ml = (pa042 >> 7) & 1;
-			state->seq_lreg = 0;
-			state->seq_lreg |= state->seq_latched_cond << 3;
-			state->seq_lreg |= is_e_ml << 2;
-			state->seq_lreg |= UIR_SEQ_LUIR << 1;
-			state->seq_lreg |= state->seq_q3cond << 0;
+			r1k->seq_lreg = 0;
+			r1k->seq_lreg |= r1k->seq_latched_cond << 3;
+			r1k->seq_lreg |= is_e_ml << 2;
+			r1k->seq_lreg |= UIR_SEQ_LUIR << 1;
+			r1k->seq_lreg |= r1k->seq_q3cond << 0;
 
-			if (state->seq_lreg & 0x4) {
-				state->seq_last_late_cond = state->seq_q3cond;
+			if (r1k->seq_lreg & 0x4) {
+				r1k->seq_last_late_cond = r1k->seq_q3cond;
 			}
 
-			switch(state->seq_lreg & 0x6) {
+			switch(r1k->seq_lreg & 0x6) {
 			case 0x0:
 			case 0x4:
-				state->seq_latched_cond = (state->seq_lreg >> 3) & 1;
+				r1k->seq_latched_cond = (r1k->seq_lreg >> 3) & 1;
 				break;
 			case 0x2:
-				state->seq_latched_cond = (state->seq_lreg >> 0) & 1;
+				r1k->seq_latched_cond = (r1k->seq_lreg >> 0) & 1;
 				break;
 			case 0x6:
-				state->seq_latched_cond = state->seq_last_late_cond;
+				r1k->seq_latched_cond = r1k->seq_last_late_cond;
 				break;
+			default:
+				assert(0);
 			}
-			state->seq_n_in_csa = mp_csa_nve;
-			state->seq_foo9 = !RNDX(RND_TOS_VLB);
+			r1k->seq_n_in_csa = mp_csa_nve;
+			r1k->seq_foo9 = !RNDX(RND_TOS_VLB);
 		}
 	}
 
-	bool last_cond_late = (state->seq_lreg >> 2) & 1;
-	if (state->seq_hint_last) {
-		state->seq_bad_hint = false;
-	} else if (!last_cond_late && !state->seq_hint_t_last) {
-		state->seq_bad_hint = state->seq_lreg & 1;
-	} else if (!last_cond_late &&  state->seq_hint_t_last) {
-		state->seq_bad_hint = !(state->seq_lreg & 1);
-	} else if ( last_cond_late && !state->seq_hint_t_last) {
-		state->seq_bad_hint = state->seq_last_late_cond;
-	} else if ( last_cond_late &&  state->seq_hint_t_last) {
-		state->seq_bad_hint = !state->seq_last_late_cond;
+	bool last_cond_late = (r1k->seq_lreg >> 2) & 1;
+	if (r1k->seq_hint_last) {
+		r1k->seq_bad_hint = false;
+	} else if (!last_cond_late && !r1k->seq_hint_t_last) {
+		r1k->seq_bad_hint = r1k->seq_lreg & 1;
+	} else if (!last_cond_late &&  r1k->seq_hint_t_last) {
+		r1k->seq_bad_hint = !(r1k->seq_lreg & 1);
+	} else if ( last_cond_late && !r1k->seq_hint_t_last) {
+		r1k->seq_bad_hint = r1k->seq_last_late_cond;
+	} else if ( last_cond_late &&  r1k->seq_hint_t_last) {
+		r1k->seq_bad_hint = !r1k->seq_last_late_cond;
 	}
 
 	if (update_display) {
-		switch(state->seq_macro_pc_offset & 7) {
-		case 0x0: state->seq_display = state->seq_macro_ins_val >>  0; break;
-		case 0x1: state->seq_display = state->seq_macro_ins_val >> 16; break;
-		case 0x2: state->seq_display = state->seq_macro_ins_val >> 32; break;
-		case 0x3: state->seq_display = state->seq_macro_ins_val >> 48; break;
-		case 0x4: state->seq_display = state->seq_macro_ins_typ >>  0; break;
-		case 0x5: state->seq_display = state->seq_macro_ins_typ >> 16; break;
-		case 0x6: state->seq_display = state->seq_macro_ins_typ >> 32; break;
-		case 0x7: state->seq_display = state->seq_macro_ins_typ >> 48; break;
+		switch(r1k->seq_macro_pc_offset & 7) {
+		case 0x0: r1k->seq_display = r1k->seq_macro_ins_val >>  0; break;
+		case 0x1: r1k->seq_display = r1k->seq_macro_ins_val >> 16; break;
+		case 0x2: r1k->seq_display = r1k->seq_macro_ins_val >> 32; break;
+		case 0x3: r1k->seq_display = r1k->seq_macro_ins_val >> 48; break;
+		case 0x4: r1k->seq_display = r1k->seq_macro_ins_typ >>  0; break;
+		case 0x5: r1k->seq_display = r1k->seq_macro_ins_typ >> 16; break;
+		case 0x6: r1k->seq_display = r1k->seq_macro_ins_typ >> 32; break;
+		case 0x7: r1k->seq_display = r1k->seq_macro_ins_typ >> 48; break;
+		default: assert(0);
 		}
-		state->seq_display &= 0xffff;
-		if ((state->seq_display >> 10) != 0x3f) {
-			state->seq_decram = state->seq_top[(state->seq_display ^ 0xffff) >> 6];
+		r1k->seq_display &= 0xffff;
+		if ((r1k->seq_display >> 10) != 0x3f) {
+			r1k->seq_decram = r1k->seq_top[(r1k->seq_display ^ 0xffff) >> 6];
 		} else {
-			state->seq_decram = state->seq_bot[(state->seq_display ^ 0xffff) & 0x3ff];
+			r1k->seq_decram = r1k->seq_bot[(r1k->seq_display ^ 0xffff) & 0x3ff];
 		}
 	}
 
-	if (!state->seq_early_macro_pending) {
-		state->seq_uadr_decode = (state->seq_decram >> 16);
-		state->seq_decode = (state->seq_decram >> 8) & 0xff;
-		state->seq_uses_tos = (state->seq_uadr_decode >> 2) & 1;
-		state->seq_ibuf_fill = (state->seq_uadr_decode >> 1) & 1;
+	if (!r1k->seq_early_macro_pending) {
+		r1k->seq_uadr_decode = (r1k->seq_decram >> 16);
+		r1k->seq_decode = (r1k->seq_decram >> 8) & 0xff;
+		r1k->seq_uses_tos = (r1k->seq_uadr_decode >> 2) & 1;
+		r1k->seq_ibuf_fill = (r1k->seq_uadr_decode >> 1) & 1;
 	}
 
-	mp_clock_stop_7 = !state->seq_bad_hint && state->seq_l_macro_hic;
+	mp_clock_stop_7 = !r1k->seq_bad_hint && r1k->seq_l_macro_hic;
 	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
-	if (!state->seq_sf_stop && mp_seq_prepped) {
-		state->seq_uir = state->seq_wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
+	if (!r1k->seq_sf_stop && mp_seq_prepped) {
+		r1k->seq_uir = r1k->seq_wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
 		mp_nxt_cond_sel = UIR_SEQ_CSEL;
 	}
 }
@@ -3061,11 +3067,11 @@ seq_q4(struct r1000_arch_state *state)
 // -------------------- TYP --------------------
 
 static bool
-typ_bin_op_pass(struct r1000_arch_state *state)
+typ_bin_op_pass(void)
 {
 	bool dp = !(TYP_A_BIT(35) && TYP_B_BIT(35));
-	bool abim = !(!(TYP_A_BITS(31) == state->typ_ofreg) | dp);
-	bool bbim = !(!(TYP_B_BITS(31) == state->typ_ofreg) | dp);
+	bool abim = !(!(TYP_A_BITS(31) == r1k->typ_ofreg) | dp);
+	bool bbim = !(!(TYP_B_BITS(31) == r1k->typ_ofreg) | dp);
 
 	return (!(
 		(abim && bbim) ||
@@ -3076,7 +3082,7 @@ typ_bin_op_pass(struct r1000_arch_state *state)
 }
 
 static bool
-typ_priv_path_eq(struct r1000_arch_state *state)
+typ_priv_path_eq(void)
 {
 	return (!(
 		(TYP_A_BITS(31) == TYP_B_BITS(31)) &&
@@ -3085,30 +3091,30 @@ typ_priv_path_eq(struct r1000_arch_state *state)
 }
 
 static bool
-typ_a_op_pass(struct r1000_arch_state *state)
+typ_a_op_pass(void)
 {
-	return (!(TYP_A_BIT(35) && ((TYP_A_BITS(31) == state->typ_ofreg) || TYP_A_BIT(34))));
+	return (!(TYP_A_BIT(35) && ((TYP_A_BITS(31) == r1k->typ_ofreg) || TYP_A_BIT(34))));
 }
 
 static bool
-typ_b_op_pass(struct r1000_arch_state *state)
+typ_b_op_pass(void)
 {
-	return (!(TYP_B_BIT(35) && ((TYP_B_BITS(31) == state->typ_ofreg) || TYP_B_BIT(34))));
+	return (!(TYP_B_BIT(35) && ((TYP_B_BITS(31) == r1k->typ_ofreg) || TYP_B_BIT(34))));
 }
 
 static bool
-typ_clev(struct r1000_arch_state *state)
+typ_clev(void)
 {
 	return (!(
-		(!(state->typ_rand != 0x4) && !(TYP_A_LIT() != UIR_TYP_CLIT)) ||
-		(!(state->typ_rand != 0x6) && !(TYP_A_LIT() != TYP_B_LIT())) ||
-		(!(state->typ_rand != 0x5) && !(TYP_B_LIT() != UIR_TYP_CLIT)) ||
-		(!(state->typ_rand != 0x7) && !(TYP_A_LIT() != TYP_B_LIT()) && !(TYP_B_LIT() != UIR_TYP_CLIT))
+		(!(r1k->typ_rand != 0x4) && !(TYP_A_LIT() != UIR_TYP_CLIT)) ||
+		(!(r1k->typ_rand != 0x6) && !(TYP_A_LIT() != TYP_B_LIT())) ||
+		(!(r1k->typ_rand != 0x5) && !(TYP_B_LIT() != UIR_TYP_CLIT)) ||
+		(!(r1k->typ_rand != 0x7) && !(TYP_A_LIT() != TYP_B_LIT()) && !(TYP_B_LIT() != UIR_TYP_CLIT))
 	));
 }
 
 static bool
-typ_cond(struct r1000_arch_state *state)
+typ_cond(void)
 {
 
 	unsigned condsel = mp_cond_sel;
@@ -3118,235 +3124,236 @@ typ_cond(struct r1000_arch_state *state)
 
 	switch(condsel) {
 	case 0x18:	// L - TYP_ALU_ZERO
-		state->typ_cond = (state->typ_nalu != 0);
+		r1k->typ_cond = (r1k->typ_nalu != 0);
 		break;
 	case 0x19:	// L - TYP_ALU_NONZERO
-		state->typ_cond = (state->typ_nalu == 0);
+		r1k->typ_cond = (r1k->typ_nalu == 0);
 		break;
 	case 0x1a:	// L - TYP_ALU_A_GT_OR_GE_B
 		{
-		bool ovrsign = (!(((TYP_A_BIT(0) != TYP_B_BIT(0)) && state->typ_is_binary) || (!state->typ_is_binary && !TYP_A_BIT(0))));
-		state->typ_cond = (!(
+		bool ovrsign = (!(((TYP_A_BIT(0) != TYP_B_BIT(0)) && r1k->typ_is_binary) || (!r1k->typ_is_binary && !TYP_A_BIT(0))));
+		r1k->typ_cond = (!(
 		    ((TYP_A_BIT(0) != TYP_B_BIT(0)) && TYP_A_BIT(0)) ||
-		    (state->typ_coh && (ovrsign ^ state->typ_sub_else_add))
+		    (r1k->typ_coh && (ovrsign ^ r1k->typ_sub_else_add))
 		));
 		}
 		break;
 	case 0x1b:	// SPARE
-		state->typ_cond = (true);
+		r1k->typ_cond = (true);
 		break;
 	case 0x1c:	// E - TYP_LOOP_COUNTER_ZERO
-		state->typ_cond = (state->typ_count != 0x3ff);
+		r1k->typ_cond = (r1k->typ_count != 0x3ff);
 		break;
 	case 0x1d:	// SPARE
-		state->typ_cond = (true);
+		r1k->typ_cond = (true);
 		break;
 	case 0x1e:	// L - TYP_ALU_ZERO - COMBO with VAL_ALU_NONZERO
-		state->typ_cond = (state->typ_nalu != 0);
+		r1k->typ_cond = (r1k->typ_nalu != 0);
 		break;
 	case 0x1f:	// L - TYP_ALU_32_CO - ALU 32 BIT CARRY OUT
-		state->typ_cond = (state->typ_com);
+		r1k->typ_cond = (r1k->typ_com);
 		break;
 	case 0x20:	// L - TYP_ALU_CARRY
-		state->typ_cond = (!state->typ_coh);
+		r1k->typ_cond = (!r1k->typ_coh);
 		break;
 	case 0x21:	// L - TYP_ALU_OVERFLOW
 		{
-		bool ovrsign = (!(((TYP_A_BIT(0) != TYP_B_BIT(0)) && state->typ_is_binary) || (!state->typ_is_binary && !TYP_A_BIT(0))));
-		state->typ_cond = (state->typ_ovr_en || (
-		    state->typ_coh ^ state->typ_almsb ^ state->typ_sub_else_add ^ ovrsign
+		bool ovrsign = (!(((TYP_A_BIT(0) != TYP_B_BIT(0)) && r1k->typ_is_binary) || (!r1k->typ_is_binary && !TYP_A_BIT(0))));
+		r1k->typ_cond = (r1k->typ_ovr_en || (
+		    r1k->typ_coh ^ r1k->typ_almsb ^ r1k->typ_sub_else_add ^ ovrsign
 		));
 		}
 		break;
 	case 0x22:	// L - TYP_ALU_LT_ZERO
-		state->typ_cond = (state->typ_almsb);
+		r1k->typ_cond = (r1k->typ_almsb);
 		break;
 	case 0x23:	// L - TYP_ALU_LE_ZERO
-		state->typ_cond = (!(state->typ_almsb && (state->typ_nalu != 0)));
+		r1k->typ_cond = (!(r1k->typ_almsb && (r1k->typ_nalu != 0)));
 		break;
 	case 0x24:	// ML - TYP_SIGN_BITS_EQUAL
-		state->typ_cond = ((TYP_A_BIT(0) != TYP_B_BIT(0)));
+		r1k->typ_cond = ((TYP_A_BIT(0) != TYP_B_BIT(0)));
 		break;
 	case 0x25:	// E - TYP_FALSE
-		state->typ_cond = (true);
+		r1k->typ_cond = (true);
 		break;
 	case 0x26:	// E - TYP_TRUE
-		state->typ_cond = (false);
+		r1k->typ_cond = (false);
 		break;
 	case 0x27:	// E - TYP_PREVIOUS
-		state->typ_cond = (state->typ_last_cond);
+		r1k->typ_cond = (r1k->typ_last_cond);
 		break;
 	case 0x28:	// ML - OF_KIND_MATCH
 		{
 		unsigned mask_a = typ_pa059[UIR_TYP_CLIT] >> 1;
 		unsigned okpat_a = typ_pa059[UIR_TYP_CLIT + 256] >> 1;
-		bool oka = (0x7f ^ (mask_a & TYP_B_LIT())) != okpat_a; // XXX state->typ_b ??
+		bool oka = (0x7f ^ (mask_a & TYP_B_LIT())) != okpat_a; // XXX r1k->typ_b ??
 
 		unsigned mask_b = typ_pa059[UIR_TYP_CLIT + 128] >> 1;
 		unsigned okpat_b = typ_pa059[UIR_TYP_CLIT + 384] >> 1;
 		bool okb = (0x7f ^ (mask_b & TYP_B_LIT())) != okpat_b;
 
 		bool okm = !(oka & okb);
-		state->typ_cond = (okm);
+		r1k->typ_cond = (okm);
 		}
 		break;
 	case 0x29:	// ML - CLASS_A_EQ_LIT
-		state->typ_cond = (TYP_A_LIT() != UIR_TYP_CLIT);
+		r1k->typ_cond = (TYP_A_LIT() != UIR_TYP_CLIT);
 		break;
 	case 0x2a:	// ML - CLASS_B_EQ_LIT
-		state->typ_cond = (TYP_B_LIT() != UIR_TYP_CLIT);
+		r1k->typ_cond = (TYP_B_LIT() != UIR_TYP_CLIT);
 		break;
 	case 0x2b:	// ML - CLASS_A_EQ_B
-		state->typ_cond = (TYP_A_LIT() != TYP_B_LIT());
+		r1k->typ_cond = (TYP_A_LIT() != TYP_B_LIT());
 		break;
 	case 0x2c:	// ML - CLASS_A_B_EQ_LIT
-		state->typ_cond = (!(TYP_A_LIT() != UIR_TYP_CLIT) || (TYP_B_LIT() != UIR_TYP_CLIT));
+		r1k->typ_cond = (!(TYP_A_LIT() != UIR_TYP_CLIT) || (TYP_B_LIT() != UIR_TYP_CLIT));
 		break;
 	case 0x2d:	// E - PRIVACY_A_OP_PASS
-		state->typ_cond = (typ_a_op_pass(state));
+		r1k->typ_cond = (typ_a_op_pass());
 		break;
 	case 0x2e:	// ML - PRIVACY_B_OP_PASS
-		state->typ_cond = (typ_b_op_pass(state));
+		r1k->typ_cond = (typ_b_op_pass());
 		break;
 	case 0x2f:	// ML - PRIVACY_BIN_EQ_PASS
-		state->typ_cond = (typ_priv_path_eq(state) && typ_bin_op_pass(state));
+		r1k->typ_cond = (typ_priv_path_eq() && typ_bin_op_pass());
 		break;
 	case 0x30:	// ML - PRIVACY_BIN_OP_PASS
-		state->typ_cond = (typ_bin_op_pass(state));
+		r1k->typ_cond = (typ_bin_op_pass());
 		break;
 	case 0x31:	// ML - PRIVACY_NAMES_EQ
-		state->typ_cond = (TYP_A_BITS(31) == TYP_B_BITS(31));
+		r1k->typ_cond = (TYP_A_BITS(31) == TYP_B_BITS(31));
 		break;
 	case 0x32:	// ML - PRIVACY_PATHS_EQ
-		state->typ_cond = (typ_priv_path_eq(state));
+		r1k->typ_cond = (typ_priv_path_eq());
 		break;
 	case 0x33:	// ML - PRIVACY_STRUCTURE
-		state->typ_cond = (!(typ_bin_op_pass(state) || typ_priv_path_eq(state)));
+		r1k->typ_cond = (!(typ_bin_op_pass() || typ_priv_path_eq()));
 		break;
 	case 0x34:	// E - PASS_PRIVACY_BIT
-		state->typ_cond = (state->typ_ppriv);
+		r1k->typ_cond = (r1k->typ_ppriv);
 		break;
 	case 0x35:	// ML - B_BUS_BIT_32
-		state->typ_cond = (TYP_B_BIT(32));
+		r1k->typ_cond = (TYP_B_BIT(32));
 		break;
 	case 0x36:	// ML - B_BUS_BIT_33
-		state->typ_cond = (TYP_B_BIT(33));
+		r1k->typ_cond = (TYP_B_BIT(33));
 		break;
 	case 0x37:	// ML - B_BUS_BIT_34
-		state->typ_cond = (TYP_B_BIT(34));
+		r1k->typ_cond = (TYP_B_BIT(34));
 		break;
 	case 0x38:	// ML - B_BUS_BIT_35
-		state->typ_cond = (TYP_B_BIT(35));
+		r1k->typ_cond = (TYP_B_BIT(35));
 		break;
 	case 0x39:	// ML - B_BUS_BIT_36
-		state->typ_cond = (TYP_B_BIT(36));
+		r1k->typ_cond = (TYP_B_BIT(36));
 		break;
 	case 0x3a:	// ML - B_BUS_BIT_33_34_OR_36
-		state->typ_cond = ((TYP_B_BITS(36) & 0xd) != 0xd);
+		r1k->typ_cond = ((TYP_B_BITS(36) & 0xd) != 0xd);
 		break;
 	case 0x3b:	// SPARE
-		state->typ_cond = (true);
+		r1k->typ_cond = (true);
 		break;
 	case 0x3c:	// SPARE
-		state->typ_cond = (true);
+		r1k->typ_cond = (true);
 		break;
 	case 0x3d:	// SPARE
-		state->typ_cond = (true);
+		r1k->typ_cond = (true);
 		break;
 	case 0x3e:	// SPARE
-		state->typ_cond = (true);
+		r1k->typ_cond = (true);
 		break;
 	case 0x3f:	// ML - B_BUS_BIT_21
-		state->typ_cond = (TYP_B_BIT(21));
+		r1k->typ_cond = (TYP_B_BIT(21));
 		break;
+	default: assert(0);
 	}
-	return (!state->typ_cond);
+	return (!r1k->typ_cond);
 }
 
 
 static void
-typ_h1(struct r1000_arch_state *state)
+typ_h1(void)
 {
-	state->typ_rand = UIR_TYP_RAND;
+	r1k->typ_rand = UIR_TYP_RAND;
 
 	unsigned marctl = UIR_TYP_MCTL;
 
 	if (mp_fiu_oe == 0x4) {
-		state->typ_a = tv_find_ab(state, UIR_TYP_A, UIR_TYP_FRM, true, true, state->typ_rfram);
-		mp_fiu_bus = ~state->typ_a;
+		r1k->typ_a = tv_find_ab(UIR_TYP_A, UIR_TYP_FRM, true, true, r1k->typ_rfram);
+		mp_fiu_bus = ~r1k->typ_a;
 	}
 	if (mp_tv_oe & TYP_T_OE) {
-		state->typ_b = tv_find_ab(state, UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
-		mp_typ_bus = ~state->typ_b;
+		r1k->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, r1k->typ_rfram);
+		mp_typ_bus = ~r1k->typ_b;
 	}
 
 	if (mp_adr_oe & 0x6) {
 		if (marctl & 0x8) {
 			mp_spc_bus = (marctl & 0x7) ^ 0x7;
 		} else {
-			state->typ_b = tv_find_ab(state, UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
-			mp_spc_bus = (state->typ_b & 0x7) ^ 0x7;
+			r1k->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, r1k->typ_rfram);
+			mp_spc_bus = (r1k->typ_b & 0x7) ^ 0x7;
 		}
 	}
 }
 
 static void
-typ_q2(struct r1000_arch_state *state)
+typ_q2(void)
 {
 
 	unsigned priv_check = UIR_TYP_UPVC;
 	if (mp_fiu_oe != 0x4) {
-		state->typ_a = tv_find_ab(state, UIR_TYP_A, UIR_TYP_FRM, true, true, state->typ_rfram);
+		r1k->typ_a = tv_find_ab(UIR_TYP_A, UIR_TYP_FRM, true, true, r1k->typ_rfram);
 	}
 	if (!(mp_tv_oe & TYP_T_OE)) {
-		state->typ_b = tv_find_ab(state, UIR_TYP_B, UIR_TYP_FRM, false, true, state->typ_rfram);
+		r1k->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, r1k->typ_rfram);
 	}
 
-	bool divide = state->typ_rand != 0xb;
+	bool divide = r1k->typ_rand != 0xb;
 	bool acond = true;
-	if (divide && state->typ_last_cond)
+	if (divide && r1k->typ_last_cond)
 		acond = false;
 	if (!divide && mp_q_bit)
 		acond = false;
 	unsigned tmp, idx, alurand, alufunc = UIR_TYP_AFNC;
 
-	if (state->typ_rand < 8) {
+	if (r1k->typ_rand < 8) {
 		alurand = 7;
 	} else {
-		alurand = 15 - state->typ_rand;
+		alurand = 15 - r1k->typ_rand;
 	}
 	idx = acond << 8;
 	idx |= alurand << 5;
 	idx |= alufunc;
 
 	tmp = typ_pa068[idx];
-	state->typ_is_binary = (tmp >> 1) & 1;
+	r1k->typ_is_binary = (tmp >> 1) & 1;
 
-	if (state->typ_rand != 0xf) {
-		F181_ALU(tmp, state->typ_a, state->typ_b, ((tmp >> 2) & 1), state->typ_nalu, state->typ_com);
+	if (r1k->typ_rand != 0xf) {
+		F181_ALU(tmp, r1k->typ_a, r1k->typ_b, ((tmp >> 2) & 1), r1k->typ_nalu, r1k->typ_com);
 	} else {
 		if (tmp >= 0xf0) {
-			state->typ_nalu = ~(state->typ_a + 0x80ULL);
-			state->typ_com = ((state->typ_nalu ^ state->typ_a) & 0x80000000) != 0;
+			r1k->typ_nalu = ~(r1k->typ_a + 0x80ULL);
+			r1k->typ_com = ((r1k->typ_nalu ^ r1k->typ_a) & 0x80000000) != 0;
 		} else {
-			state->typ_nalu = ~(state->typ_a - 0x80ULL);
-			state->typ_com = ((state->typ_nalu ^ state->typ_a) & 0x80000000) == 0;
+			r1k->typ_nalu = ~(r1k->typ_a - 0x80ULL);
+			r1k->typ_com = ((r1k->typ_nalu ^ r1k->typ_a) & 0x80000000) == 0;
 		}
-		state->typ_nalu &= 0xffffffffULL;
+		r1k->typ_nalu &= 0xffffffffULL;
 	}
 
 	tmp = tv_pa010[idx];
-	state->typ_sub_else_add = (tmp >> 2) & 1;
-	state->typ_ovr_en = (tmp >> 1) & 1;
+	r1k->typ_sub_else_add = (tmp >> 2) & 1;
+	r1k->typ_ovr_en = (tmp >> 1) & 1;
 
 	uint32_t o;
-	F181_ALU(tmp, state->typ_a >> 32, state->typ_b >> 32, state->typ_com, o, state->typ_coh);
-	state->typ_nalu |= ((uint64_t)o) << 32;
-	state->typ_alu = ~state->typ_nalu;
-	state->typ_almsb = state->typ_alu >> 63ULL;
+	F181_ALU(tmp, r1k->typ_a >> 32, r1k->typ_b >> 32, r1k->typ_com, o, r1k->typ_coh);
+	r1k->typ_nalu |= ((uint64_t)o) << 32;
+	r1k->typ_alu = ~r1k->typ_nalu;
+	r1k->typ_almsb = r1k->typ_alu >> 63ULL;
 
 	if (mp_adr_oe & 0x4) {
-		uint64_t alu = state->typ_alu;
+		uint64_t alu = r1k->typ_alu;
 		unsigned spc = mp_spc_bus;
 		if (spc != 4) {
 			alu |=0xf8000000ULL;
@@ -3358,59 +3365,59 @@ typ_q2(struct r1000_arch_state *state)
 	mp_clock_stop_3 = true;
 	mp_clock_stop_4 = true;
 	unsigned selcond = 0x00;
-	if (state->typ_ppriv) {
+	if (r1k->typ_ppriv) {
 		selcond = 0x80 >> priv_check;
 	}
 #define TYP_UEV (UEV_CLASS|UEV_BIN_EQ|UEV_BIN_OP|UEV_TOS_OP|UEV_TOS1_OP|UEV_CHK_SYS)
 	mp_seq_uev &= ~TYP_UEV;
 	if (micros_en) {
-		if (selcond == 0x40 && typ_bin_op_pass(state))
+		if (selcond == 0x40 && typ_bin_op_pass())
 			mp_seq_uev |= UEV_BIN_OP;
-		if (selcond == 0x80 && typ_priv_path_eq(state) && typ_bin_op_pass(state))
+		if (selcond == 0x80 && typ_priv_path_eq() && typ_bin_op_pass())
 			mp_seq_uev |= UEV_BIN_EQ;
-		if ((0x3 < state->typ_rand && state->typ_rand < 0x8) && typ_clev(state))
+		if ((0x3 < r1k->typ_rand && r1k->typ_rand < 0x8) && typ_clev())
 			mp_seq_uev |= UEV_CLASS;
-		if ((selcond == 0x10 && typ_a_op_pass(state)) || (selcond == 0x04 && typ_b_op_pass(state)))
+		if ((selcond == 0x10 && typ_a_op_pass()) || (selcond == 0x04 && typ_b_op_pass()))
 			mp_seq_uev |= UEV_TOS1_OP;
-		if ((selcond == 0x20 && typ_a_op_pass(state)) || (selcond == 0x08 && typ_b_op_pass(state)))
+		if ((selcond == 0x20 && typ_a_op_pass()) || (selcond == 0x08 && typ_b_op_pass()))
 			mp_seq_uev |= UEV_TOS_OP;
-		if ((!((state->typ_rand != 0xe) || !(TYP_B_LIT() != UIR_TYP_CLIT))))
+		if ((!((r1k->typ_rand != 0xe) || !(TYP_B_LIT() != UIR_TYP_CLIT))))
 			mp_seq_uev |= UEV_CHK_SYS;
 
-		if ((!((state->typ_rand != 0xe) || !(TYP_B_LIT() != UIR_TYP_CLIT)))) {
+		if ((!((r1k->typ_rand != 0xe) || !(TYP_B_LIT() != UIR_TYP_CLIT)))) {
 			mp_clock_stop_3 = false;
 		}
 
-		if ((0x3 < state->typ_rand && state->typ_rand < 0x8) && typ_clev(state)) {
+		if ((0x3 < r1k->typ_rand && r1k->typ_rand < 0x8) && typ_clev()) {
 			mp_clock_stop_3 = false;
 		}
 
-		if (typ_priv_path_eq(state) && typ_bin_op_pass(state) && selcond == 0x80) {
+		if (typ_priv_path_eq() && typ_bin_op_pass() && selcond == 0x80) {
 			mp_clock_stop_3 = false;
 		}
 	}
 
-	if (selcond == 0x40 && typ_bin_op_pass(state)) {
+	if (selcond == 0x40 && typ_bin_op_pass()) {
 		mp_clock_stop_4 = false;
 	}
 
-	if ((selcond & 0x30) && typ_a_op_pass(state)) {
+	if ((selcond & 0x30) && typ_a_op_pass()) {
 		mp_clock_stop_4 = false;
 	}
 
-	if ((selcond & 0x0c) && typ_b_op_pass(state)) {
+	if ((selcond & 0x0c) && typ_b_op_pass()) {
 		mp_clock_stop_4 = false;
 	}
 
 	unsigned marctl = UIR_TYP_MCTL;
 	if ((mp_adr_oe & 0x6) && marctl < 0x8) {	// XXX: && ?
-		mp_spc_bus = (state->typ_b & 0x7) ^ 0x7;
+		mp_spc_bus = (r1k->typ_b & 0x7) ^ 0x7;
 		// XXX: when 4, possible race against address bus truncation in TYP or VAL
 	}
 }
 
 static void
-typ_q4(struct r1000_arch_state *state)
+typ_q4(void)
 {
 	uint64_t c = 0;
 	unsigned priv_check = UIR_TYP_UPVC;
@@ -3420,7 +3427,7 @@ typ_q4(struct r1000_arch_state *state)
 		bool c_source = UIR_TYP_CSRC;
 		bool fiu0, fiu1;
 		fiu0 = c_source;
-		fiu1 = c_source == (state->typ_rand != 0x3);
+		fiu1 = c_source == (r1k->typ_rand != 0x3);
 
 		bool sel = UIR_TYP_SEL;
 
@@ -3428,53 +3435,53 @@ typ_q4(struct r1000_arch_state *state)
 			c |= ~mp_fiu_bus & 0xffffffff00000000ULL;
 		} else {
 			if (sel) {
-				c |= state->typ_wdr & 0xffffffff00000000ULL;
+				c |= r1k->typ_wdr & 0xffffffff00000000ULL;
 			} else {
-				c |= state->typ_alu & 0xffffffff00000000ULL;
+				c |= r1k->typ_alu & 0xffffffff00000000ULL;
 			}
 		}
 		if (!fiu1) {
 			c |= ~mp_fiu_bus & 0xffffffffULL;
 		} else {
 			if (sel) {
-				c |= state->typ_wdr & 0xffffffffULL;
+				c |= r1k->typ_wdr & 0xffffffffULL;
 			} else {
-				c |= state->typ_alu & 0xffffffffULL;
+				c |= r1k->typ_alu & 0xffffffffULL;
 			}
 		}
 
-		unsigned cadr = tv_cadr(state, UIR_TYP_C, UIR_TYP_FRM, state->typ_count);
+		unsigned cadr = tv_cadr(UIR_TYP_C, UIR_TYP_FRM, r1k->typ_count);
 		if (cadr < 0x400)
-			state->typ_rfram[cadr] = ~c;
+			r1k->typ_rfram[cadr] = ~c;
 
 		if (mp_clock_stop) {
 			if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
-				state->typ_wdr = ~mp_typ_bus;
+				r1k->typ_wdr = ~mp_typ_bus;
 			}
 			if (UIR_TYP_C == 0x28) {
-				state->typ_count = c;
-				state->typ_count &= 0x3ff;
-			} else if (state->typ_rand == 0x2) {
-				state->typ_count += 1;
-				state->typ_count &= 0x3ff;
-			} else if (state->typ_rand == 0x1) {
-				state->typ_count += 0x3ff;
-				state->typ_count &= 0x3ff;
+				r1k->typ_count = c;
+				r1k->typ_count &= 0x3ff;
+			} else if (r1k->typ_rand == 0x2) {
+				r1k->typ_count += 1;
+				r1k->typ_count &= 0x3ff;
+			} else if (r1k->typ_rand == 0x1) {
+				r1k->typ_count += 0x3ff;
+				r1k->typ_count &= 0x3ff;
 			}
 
-			state->typ_last_cond = state->typ_cond;
-			if (state->typ_rand == 0xc) {
-				state->typ_ofreg = state->typ_b >> 32;
+			r1k->typ_last_cond = r1k->typ_cond;
+			if (r1k->typ_rand == 0xc) {
+				r1k->typ_ofreg = r1k->typ_b >> 32;
 			}
 
 			if (priv_check != 7) {
-				bool set_pass_priv = state->typ_rand != 0xd;
-				state->typ_ppriv = set_pass_priv;
+				bool set_pass_priv = r1k->typ_rand != 0xd;
+				r1k->typ_ppriv = set_pass_priv;
 			}
 		}
 	}
 	if (!mp_sf_stop) {
-		state->typ_uir = state->typ_wcsram[mp_nua_bus] ^ 0x7fffc0000000ULL;
+		r1k->typ_uir = r1k->typ_wcsram[mp_nua_bus] ^ 0x7fffc0000000ULL;
 		mp_nxt_mar_cntl = UIR_TYP_MCTL;
 		mp_nxt_csa_cntl = UIR_TYP_CCTL;
 		mp_nxt_csa_offset = mp_csa_this_offs;
@@ -3485,11 +3492,11 @@ typ_q4(struct r1000_arch_state *state)
 // -------------------- VAL --------------------
 
 static bool
-val_ovrsgn(struct r1000_arch_state *state)
+val_ovrsgn(void)
 {
-	bool a0 = state->val_amsb;
-	bool b0 = state->val_bmsb;
-	bool se = state->val_isbin;
+	bool a0 = r1k->val_amsb;
+	bool b0 = r1k->val_bmsb;
+	bool se = r1k->val_isbin;
 	return (!(
 		(se && (a0 ^ b0)) ||
 		(!se && !a0)
@@ -3497,118 +3504,117 @@ val_ovrsgn(struct r1000_arch_state *state)
 }
 
 static bool
-val_cond(struct r1000_arch_state *state)
+val_cond(void)
 {
 	unsigned csel = mp_cond_sel;
 	if ((csel & 0x78) == 0x58)
 		csel ^= 0x58;
 	switch(csel) {
 	case 0x00:	// L VAL_ALU_ZERO
-		state->val_thiscond = (state->val_nalu != 0);
+		r1k->val_thiscond = (r1k->val_nalu != 0);
 		break;
 	case 0x01:	// L VAL_ALU_NONZERO
-		state->val_thiscond = (state->val_nalu == 0);
+		r1k->val_thiscond = (r1k->val_nalu == 0);
 		break;
 	case 0x02:	// L VAL_ALU_A_LT_OR_LE_B
-		state->val_thiscond = !(
-			(state->val_bmsb && (state->val_amsb ^ state->val_bmsb)) ||
-			(!state->val_coh && (val_ovrsgn(state) ^ state->val_sub_else_add))
+		r1k->val_thiscond = !(
+			(r1k->val_bmsb && (r1k->val_amsb ^ r1k->val_bmsb)) ||
+			(!r1k->val_coh && (val_ovrsgn() ^ r1k->val_sub_else_add))
 		);
 		break;
 	case 0x03:	// SPARE
-		state->val_thiscond = true;
+		r1k->val_thiscond = true;
 		break;
 	case 0x04:	// E VAL_LOOP_COUNTER_ZERO
-		state->val_thiscond = state->val_count != 0x3ff;
+		r1k->val_thiscond = r1k->val_count != 0x3ff;
 		break;
 	case 0x05:	// SPARE
-		state->val_thiscond = true;
+		r1k->val_thiscond = true;
 		break;
 	case 0x06:	// L VAL_ALU_NONZERO
-		state->val_thiscond = (state->val_nalu == 0);
+		r1k->val_thiscond = (r1k->val_nalu == 0);
 		break;
 	case 0x07:	// L VAL_ALU_32_CO
-		state->val_thiscond = state->val_carry_middle;
+		r1k->val_thiscond = r1k->val_carry_middle;
 		break;
 	case 0x08:	// L VAL_ALU_CARRY
-		state->val_thiscond = !state->val_coh;
+		r1k->val_thiscond = !r1k->val_coh;
 		break;
 	case 0x09:	// L VAL_ALU_OVERFLOW
-		state->val_thiscond = state->val_ovren || !(val_ovrsgn(state) ^ state->val_sub_else_add ^ (!state->val_coh) ^ state->val_cmsb);
+		r1k->val_thiscond = r1k->val_ovren || !(val_ovrsgn() ^ r1k->val_sub_else_add ^ (!r1k->val_coh) ^ r1k->val_cmsb);
 		break;
 	case 0x0a:	// L VAL_ALU_LT_ZERO
-		state->val_thiscond = state->val_cmsb;
+		r1k->val_thiscond = r1k->val_cmsb;
 		break;
 	case 0x0b:	// L VAL_ALU_LE_ZERO
-		state->val_thiscond = !state->val_cmsb || (state->val_nalu == 0);
+		r1k->val_thiscond = !r1k->val_cmsb || (r1k->val_nalu == 0);
 		break;
 	case 0x0c:	// ML VAL_SIGN_BITS_EQUAL
-		state->val_thiscond = (state->val_amsb ^ state->val_bmsb);
+		r1k->val_thiscond = (r1k->val_amsb ^ r1k->val_bmsb);
 		break;
 	case 0x0d:	// SPARE
-		state->val_thiscond = true;
+		r1k->val_thiscond = true;
 		break;
 	case 0x0e:	// SPARE
-		state->val_thiscond = true;
+		r1k->val_thiscond = true;
 		break;
 	case 0x0f:	// E VAL_PREVIOUS
-		state->val_thiscond = state->val_last_cond;
+		r1k->val_thiscond = r1k->val_last_cond;
 		break;
 	case 0x10:	// L VAL_ALU_32_ZERO
-		state->val_thiscond = (state->val_nalu >> 32);
+		r1k->val_thiscond = (r1k->val_nalu >> 32);
 		break;
 	case 0x11:	// L VAL_ALU_40_ZERO
-		state->val_thiscond = (state->val_nalu >> 16);
+		r1k->val_thiscond = (r1k->val_nalu >> 16);
 		break;
 	case 0x12:	// L VAL_ALU_MIDDLE_ZERO
-		state->val_thiscond = (state->val_nalu & 0xffff0000ULL);
+		r1k->val_thiscond = (r1k->val_nalu & 0xffff0000ULL);
 		break;
 	case 0x13:	// E VAL_Q_BIT
-		state->val_thiscond = mp_q_bit;
+		r1k->val_thiscond = mp_q_bit;
 		break;
 	case 0x14:	// SPARE
-		state->val_thiscond = true;
+		r1k->val_thiscond = true;
 		break;
 	case 0x15:	// E VAL_M_BIT
-		state->val_thiscond = state->val_mbit;
+		r1k->val_thiscond = r1k->val_mbit;
 		break;
 	case 0x16:	// E VAL_TRUE
-		state->val_thiscond = false;
+		r1k->val_thiscond = false;
 		break;
 	case 0x17:	// E VAL_FALSE
-		state->val_thiscond = true;
+		r1k->val_thiscond = true;
 		break;
 	default:
 		break;
 	}
-	return (!state->val_thiscond);
+	return (!r1k->val_thiscond);
 }
 
 static bool
-val_fiu_cond(struct r1000_arch_state *state)
+val_fiu_cond(void)
 {
 	unsigned csel = mp_cond_sel;
 	bool fcond;
 	switch (csel) {
 	case 0x00:
-		fcond = state->val_nalu == 0;
+		fcond = r1k->val_nalu == 0;
 		break;
 	case 0x01:
-		fcond = state->val_nalu != 0;
+		fcond = r1k->val_nalu != 0;
 		break;
 	case 0x02:
-		if (state->val_amsb ^ state->val_bmsb) {
-			fcond = state->val_bmsb;
+		if (r1k->val_amsb ^ r1k->val_bmsb) {
+			fcond = r1k->val_bmsb;
 		} else {
-			fcond = !state->val_coh;
+			fcond = !r1k->val_coh;
 		}
 		break;
 	case 0x0f:
 	case 0x16:		// Undocumented
-		fcond = state->val_last_cond;
+		fcond = r1k->val_last_cond;
 		break;
 	default:
-		fcond = true;
 		assert(false);
 		break;
 	}
@@ -3616,10 +3622,10 @@ val_fiu_cond(struct r1000_arch_state *state)
 }
 
 static uint64_t
-val_find_b(struct r1000_arch_state *state, unsigned uir)
+val_find_b(unsigned uir)
 {
-	uint64_t retval = tv_find_ab(state, uir, UIR_VAL_FRM, false, false, state->val_rfram);
-	if (state->val_rand == 0x6) {		// "IMMEDIATE_OP"
+	uint64_t retval = tv_find_ab(uir, UIR_VAL_FRM, false, false, r1k->val_rfram);
+	if (r1k->val_rand == 0x6) {		// "IMMEDIATE_OP"
 		retval &= ~0xffULL;
 		retval |= ~mp_val_bus & 0xffULL;
 	}
@@ -3627,67 +3633,67 @@ val_find_b(struct r1000_arch_state *state, unsigned uir)
 }
 
 static void
-val_h1(struct r1000_arch_state *state)
+val_h1(void)
 {
-	state->val_rand = UIR_VAL_RAND;
+	r1k->val_rand = UIR_VAL_RAND;
 	if (mp_fiu_oe == 0x2) {
-		state->val_a = tv_find_ab(state, UIR_VAL_A, UIR_VAL_FRM, true, false, state->val_rfram);
-		state->val_amsb = state->val_a >> 63;
-		mp_fiu_bus = ~state->val_a;
+		r1k->val_a = tv_find_ab(UIR_VAL_A, UIR_VAL_FRM, true, false, r1k->val_rfram);
+		r1k->val_amsb = r1k->val_a >> 63;
+		mp_fiu_bus = ~r1k->val_a;
 	}
 	if (mp_tv_oe & VAL_V_OE) {
-		state->val_b = val_find_b(state, UIR_VAL_B);
-		state->val_bmsb = state->val_b >> 63;
-		mp_val_bus = ~state->val_b;
+		r1k->val_b = val_find_b(UIR_VAL_B);
+		r1k->val_bmsb = r1k->val_b >> 63;
+		mp_val_bus = ~r1k->val_b;
 	}
 }
 
 static void
-val_q2(struct r1000_arch_state *state)
+val_q2(void)
 {
 
-	bool divide = state->val_rand != 0xb;
+	bool divide = r1k->val_rand != 0xb;
 	if (mp_fiu_oe != 0x02) {
-		state->val_a = tv_find_ab(state, UIR_VAL_A, UIR_VAL_FRM, true, false, state->val_rfram);
-		state->val_amsb = state->val_a >> 63;
+		r1k->val_a = tv_find_ab(UIR_VAL_A, UIR_VAL_FRM, true, false, r1k->val_rfram);
+		r1k->val_amsb = r1k->val_a >> 63;
 	}
 	if (!(mp_tv_oe & VAL_V_OE)) {
-		state->val_b = val_find_b(state, UIR_VAL_B);
-		state->val_bmsb = state->val_b >> 63;
+		r1k->val_b = val_find_b(UIR_VAL_B);
+		r1k->val_bmsb = r1k->val_b >> 63;
 	}
 
-	if (state->val_rand == 0xc) {
-		state->val_malat = ~state->val_a;
-		state->val_mblat = ~state->val_b;
+	if (r1k->val_rand == 0xc) {
+		r1k->val_malat = ~r1k->val_a;
+		r1k->val_mblat = ~r1k->val_b;
 	}
 
 	unsigned proma = UIR_VAL_AFNC;
-	if (state->val_rand < 8) {
+	if (r1k->val_rand < 8) {
 		proma |= 7 << 5;
 	} else {
-		proma |= (15 - state->val_rand) << 5;
+		proma |= (15 - r1k->val_rand) << 5;
 	}
-	if (!((state->val_last_cond && divide) || (mp_q_bit && !divide))) {
+	if (!((r1k->val_last_cond && divide) || (mp_q_bit && !divide))) {
 		proma |= 0x100;
 	}
 
 	unsigned tmp = val_pa011[proma];
-	state->val_isbin = (tmp >> 1) & 1;
+	r1k->val_isbin = (tmp >> 1) & 1;
 
-	F181_ALU(tmp, state->val_a, state->val_b,(tmp >> 2) & 1, state->val_nalu, state->val_carry_middle);
+	F181_ALU(tmp, r1k->val_a, r1k->val_b,(tmp >> 2) & 1, r1k->val_nalu, r1k->val_carry_middle);
 
 	tmp = tv_pa010[proma];
-	state->val_ovren = (tmp >> 1) & 1;
-	state->val_sub_else_add = (tmp >> 2) & 1;
+	r1k->val_ovren = (tmp >> 1) & 1;
+	r1k->val_sub_else_add = (tmp >> 2) & 1;
 
 	uint64_t o;
-	F181_ALU(tmp, state->val_a >> 32, state->val_b >> 32, state->val_carry_middle, o, state->val_coh);
-	state->val_nalu |= o << 32;
+	F181_ALU(tmp, r1k->val_a >> 32, r1k->val_b >> 32, r1k->val_carry_middle, o, r1k->val_coh);
+	r1k->val_nalu |= o << 32;
 
-	state->val_alu = ~state->val_nalu;
-	state->val_cmsb = state->val_alu >> 63;
+	r1k->val_alu = ~r1k->val_nalu;
+	r1k->val_cmsb = r1k->val_alu >> 63;
 	if (mp_adr_oe & 0x2) {
-		uint64_t alu = state->val_alu;
+		uint64_t alu = r1k->val_alu;
 		// XXX: there is a race here, if TYP gets the space from typ_b only in Q2
 		if (mp_spc_bus != 4) {
 			alu |=0xf8000000ULL;
@@ -3697,37 +3703,39 @@ val_q2(struct r1000_arch_state *state)
 }
 
 static void
-val_q4(struct r1000_arch_state *state)
+val_q4(void)
 {
 
 	if (mp_ram_stop && !mp_freeze) {
 		uint64_t fiu = 0, mux = 0;
 		bool c_source = UIR_VAL_CSRC;
-		bool split_c_src = state->val_rand == 0x4;
+		bool split_c_src = r1k->val_rand == 0x4;
 		if (split_c_src || !c_source) {
 			fiu = ~mp_fiu_bus;
 		}
-		if (!c_source && (state->val_rand == 3 || state->val_rand == 6)) {
+		if (!c_source && (r1k->val_rand == 3 || r1k->val_rand == 6)) {
 			fiu &= ~1ULL;
-			fiu |= val_fiu_cond(state);
+			fiu |= val_fiu_cond();
 		}
 		if (c_source || split_c_src) {
 			unsigned sel = UIR_VAL_SEL;
 			switch (sel) {
 			case 0x0:
-				mux = state->val_alu << 1;
+				mux = r1k->val_alu << 1;
 				mux |= 1;
 				break;
 			case 0x1:
-				mux = state->val_alu >> 16;
+				mux = r1k->val_alu >> 16;
 				mux |= 0xffffULL << 48;
 				break;
 			case 0x2:
-				mux = state->val_alu;
+				mux = r1k->val_alu;
 				break;
 			case 0x3:
-				mux = state->val_wdr;
+				mux = r1k->val_wdr;
 				break;
+			default:
+				assert(0);
 			}
 		}
 		uint64_t val_c;
@@ -3745,61 +3753,61 @@ val_q4(struct r1000_arch_state *state)
 
 		uint32_t a;
 		switch (UIR_VAL_MSRC >> 2) {
-		case 0: a = (state->val_malat >> 48) & 0xffff; break;
-		case 1: a = (state->val_malat >> 32) & 0xffff; break;
-		case 2: a = (state->val_malat >> 16) & 0xffff; break;
-		case 3: a = (state->val_malat >>  0) & 0xffff; break;
+		case 0: a = (r1k->val_malat >> 48) & 0xffff; break;
+		case 1: a = (r1k->val_malat >> 32) & 0xffff; break;
+		case 2: a = (r1k->val_malat >> 16) & 0xffff; break;
+		case 3: a = (r1k->val_malat >>  0) & 0xffff; break;
 		default: assert(false);
 		}
 		uint32_t b;
 		switch (UIR_VAL_MSRC & 3) {
-		case 0: b = (state->val_mblat >> 48) & 0xffff; break;
-		case 1: b = (state->val_mblat >> 32) & 0xffff; break;
-		case 2: b = (state->val_mblat >> 16) & 0xffff; break;
-		case 3: b = (state->val_mblat >>  0) & 0xffff; break;
+		case 0: b = (r1k->val_mblat >> 48) & 0xffff; break;
+		case 1: b = (r1k->val_mblat >> 32) & 0xffff; break;
+		case 2: b = (r1k->val_mblat >> 16) & 0xffff; break;
+		case 3: b = (r1k->val_mblat >>  0) & 0xffff; break;
 		default: assert(false);
 		}
-		state->val_mprod = a * b;
+		r1k->val_mprod = a * b;
 
-		unsigned cadr = tv_cadr(state, UIR_VAL_C, UIR_VAL_FRM, state->val_count);
+		unsigned cadr = tv_cadr(UIR_VAL_C, UIR_VAL_FRM, r1k->val_count);
 		if (cadr < 0x400)
-			state->val_rfram[cadr] = ~val_c;
+			r1k->val_rfram[cadr] = ~val_c;
 
 		if (mp_clock_stop) {
-			bool divide = state->val_rand != 0xb;
+			bool divide = r1k->val_rand != 0xb;
 			if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
-				state->val_wdr = ~mp_val_bus;
+				r1k->val_wdr = ~mp_val_bus;
 			}
 			if (UIR_VAL_C == 0x28) {
-				state->val_count = val_c;
-				state->val_count &= 0x3ff;
-			} else if (state->val_rand == 0x2 || !divide) {
-				state->val_count += 1;
-				state->val_count &= 0x3ff;
-			} else if (state->val_rand == 0x1) {
-				state->val_count += 0x3ff;
-				state->val_count &= 0x3ff;
+				r1k->val_count = val_c;
+				r1k->val_count &= 0x3ff;
+			} else if (r1k->val_rand == 0x2 || !divide) {
+				r1k->val_count += 1;
+				r1k->val_count &= 0x3ff;
+			} else if (r1k->val_rand == 0x1) {
+				r1k->val_count += 0x3ff;
+				r1k->val_count &= 0x3ff;
 			}
 
-			mp_nxt_q_bit = !(((!divide) && (mp_q_bit ^ state->val_mbit ^ (!state->val_coh))) || (divide && state->val_coh));
-			state->val_mbit = state->val_cmsb;
+			mp_nxt_q_bit = !(((!divide) && (mp_q_bit ^ r1k->val_mbit ^ (!r1k->val_coh))) || (divide && r1k->val_coh));
+			r1k->val_mbit = r1k->val_cmsb;
 
-			if (state->val_rand == 0x5) {
-				uint64_t count2 = 0x40 - flsll(~state->val_alu);
-				state->val_zerocnt = ~count2;
+			if (r1k->val_rand == 0x5) {
+				uint64_t count2 = 0x40 - flsll(~r1k->val_alu);
+				r1k->val_zerocnt = ~count2;
 			}
-			state->val_last_cond = state->val_thiscond;
+			r1k->val_last_cond = r1k->val_thiscond;
 		}
 	}
 	if (!mp_sf_stop) {
-		state->val_uir = state->val_wcsram[mp_nua_bus] ^ 0xffff800000ULL;
+		r1k->val_uir = r1k->val_wcsram[mp_nua_bus] ^ 0xffff800000ULL;
 	}
 }
 
 // ------------------ TYP&VAL ------------------
 
 static uint64_t
-tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a, bool t, const uint64_t *rfram)
+tv_find_ab(unsigned uir, unsigned frame, bool a, bool t, const uint64_t *rfram)
 {
 	// NB: uir is inverted
 	// Sorted after frequency of use.
@@ -3813,7 +3821,7 @@ tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a,
 	}
 
 	if (uir >= 0x2d) {								// 0x10…0x12	TOP,TOP+1,SPARE
-		return (~(rfram[(uir + state->csa_topreg + 1) & 0xf]));
+		return (~(rfram[(uir + r1k->csa_topreg + 1) & 0xf]));
 	}
 
 	if (!a && uir == 0x29) {							// 0x16		CSA/VAL_BUS
@@ -3822,7 +3830,7 @@ tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a,
 		} else if ((t) && !(mp_tv_oe & TYP_T_OE)) {
 			return (~mp_typ_bus);
 		} else {
-			unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
+			unsigned adr = (r1k->csa_botreg + (uir&1)) & 0xf;
 			adr += mp_csa_offset;
 			adr &= 0xf;
 			return(~(rfram[adr]));
@@ -3830,13 +3838,13 @@ tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a,
 	}
 
 	if (0x20 <= uir && uir <= 0x27) {						// 0x18…0x1f	TOP-8…TOP-1
-		return (~(rfram[(uir + state->csa_topreg + 1) & 0xf]));
+		return (~(rfram[(uir + r1k->csa_topreg + 1) & 0xf]));
 	}
 
 	if (t && uir == 0x2c) {								// 0x13		[LOOP]
-		return(~(rfram[state->typ_count]));
+		return(~(rfram[r1k->typ_count]));
 	} else if (uir == 0x2c) {
-		return(~(rfram[state->val_count]));
+		return(~(rfram[r1k->val_count]));
 	}
 
 	if (t && a && uir >= 0x29) {							// 0x14…0x16	ZERO,SPARE,SPARE
@@ -3848,33 +3856,34 @@ tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a,
 	}
 
 	if ((!t) && a && uir == 0x2a) {							// 0x15		ZERO_COUNTER
-		return(state->val_zerocnt);
+		return(r1k->val_zerocnt);
 	}
 
 	if ((!t) && a && uir == 0x29) {							// 0x16		PRODUCT
 		unsigned mdst;
-		bool prod_16 = state->val_rand != 0xd;
-		bool prod_32 = state->val_rand != 0xe;
+		bool prod_16 = r1k->val_rand != 0xd;
+		bool prod_32 = r1k->val_rand != 0xe;
 		mdst = prod_32 << 1;
 		mdst |= prod_16;
 		switch(mdst) {
-		case 0: state->val_a = 0; break;
-		case 1: state->val_a = state->val_mprod << 32; break;
-		case 2: state->val_a = state->val_mprod << 16; break;
-		case 3: state->val_a = state->val_mprod <<  0; break;
+		case 0: r1k->val_a = 0; break;
+		case 1: r1k->val_a = r1k->val_mprod << 32; break;
+		case 2: r1k->val_a = r1k->val_mprod << 16; break;
+		case 3: r1k->val_a = r1k->val_mprod <<  0; break;
+		default: assert(0);
 		}
-		return (~state->val_a);
+		return (~r1k->val_a);
 	}
 
 	if (a && uir == 0x28) {								// 0x17		LOOP
 		if (t)
-			return ((~0ULL << 10) | state->typ_count);
+			return ((~0ULL << 10) | r1k->typ_count);
 		else
-			return ((~0ULL << 10) | state->val_count);
+			return ((~0ULL << 10) | r1k->val_count);
 	}
 
 	if (!a && uir >= 0x2a) {							// 0x14…0x15	BOT-1,BOT
-		unsigned adr = (state->csa_botreg + (uir&1)) & 0xf;
+		unsigned adr = (r1k->csa_botreg + (uir&1)) & 0xf;
 		return(~(rfram[adr]));
 	}
 
@@ -3886,7 +3895,7 @@ tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a,
 }
 
 static void
-csa_q4(struct r1000_arch_state *state)
+csa_q4(void)
 {
 	bool sclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
 
@@ -3894,21 +3903,21 @@ csa_q4(struct r1000_arch_state *state)
 		unsigned csmux0;
 
 		if (mp_load_top)
-			csmux0 = state->csa_botreg;
+			csmux0 = r1k->csa_botreg;
 		else
-			csmux0 = state->csa_topreg;
+			csmux0 = r1k->csa_topreg;
 
 		unsigned csalu0 = mp_csa_this_offs + csmux0 + 1;
 
 		if (!mp_load_bot)
-			state->csa_botreg = csalu0;
+			r1k->csa_botreg = csalu0;
 		if (!(mp_load_top && mp_pop_down))
-			state->csa_topreg = csalu0;
+			r1k->csa_topreg = csalu0;
 	}
 }
 
 static unsigned
-tv_cadr(const struct r1000_arch_state *state, unsigned uirc, unsigned frame, unsigned count)
+tv_cadr(unsigned uirc, unsigned frame, unsigned count)
 {
 	// Ordered by frequency of use.
 	// Pay attention to the order of range comparisons when reordering
@@ -3923,19 +3932,19 @@ tv_cadr(const struct r1000_arch_state *state, unsigned uirc, unsigned frame, uns
 		return((uirc & 0x1f) | (frame << 5));
 	}
 	if (uirc == 0x2e || uirc == 0x2f) {				// 0x2e…0x2f	TOP+1,TOP
-		return((state->csa_topreg + (uirc & 0x1) + 0xf) & 0xf);
+		return((r1k->csa_topreg + (uirc & 0x1) + 0xf) & 0xf);
 	}
 	if (uirc <= 0x27) {						// 0x20…0x27	TOP-1…TOP-8
-		return((state->csa_topreg + (uirc & 0x7) + 1) & 0xf);
+		return((r1k->csa_topreg + (uirc & 0x7) + 1) & 0xf);
 	}
 	if (uirc == 0x28) {						// 0x28		LOOP COUNTER (RF write disabled)
 		return(0x400);
 	}
 	if (uirc == 0x29 && mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled)
-		return ((state->csa_botreg + mp_csa_offset + 1) & 0xf);
+		return ((r1k->csa_botreg + mp_csa_offset + 1) & 0xf);
 	}
 	if (uirc <= 0x2b) {						// 0x2a…0x2b	BOT,BOT-1
-		return ((state->csa_botreg + (uirc & 1)) & 0xf);
+		return ((r1k->csa_botreg + (uirc & 1)) & 0xf);
 	}
 	if (uirc == 0x2c) {						// 0x2c		LOOP_REG
 		return(count);
@@ -3949,105 +3958,105 @@ tv_cadr(const struct r1000_arch_state *state, unsigned uirc, unsigned frame, uns
 // -------------------- IOC --------------------
 
 static void
-ioc_do_xact(struct r1000_arch_state *state)
+ioc_do_xact(void)
 {
-	if (!state->ioc_xact)
-		state->ioc_xact = ioc_sc_bus_get_xact();
+	if (!r1k->ioc_xact)
+		r1k->ioc_xact = ioc_sc_bus_get_xact();
 
-	if (!state->ioc_xact)
+	if (!r1k->ioc_xact)
 		return;
 
-	if (state->ioc_xact->sc_state == 200 && state->ioc_xact->address == 0xfffff100) {
+	if (r1k->ioc_xact->sc_state == 200 && r1k->ioc_xact->address == 0xfffff100) {
 		/* READ GET REQUEST */
-		state->ioc_xact->data = state->ioc_reqreg;
-		ioc_sc_bus_done(&state->ioc_xact);
+		r1k->ioc_xact->data = r1k->ioc_reqreg;
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
-	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff200) {
+	if (r1k->ioc_xact->sc_state == 100 && r1k->ioc_xact->address == 0xfffff200) {
 		/* WRITE FRONT PANEL */
-		ioc_sc_bus_done(&state->ioc_xact);
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
 
-	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff300) {
+	if (r1k->ioc_xact->sc_state == 100 && r1k->ioc_xact->address == 0xfffff300) {
 		/* WRITE SENSE TEST */
-		state->ioc_request_int_en = (state->ioc_xact->data >> 1) & 1;
-		state->ioc_response_int_en = (state->ioc_xact->data >> 0) & 1;
-		ioc_sc_bus_done(&state->ioc_xact);
+		r1k->ioc_request_int_en = (r1k->ioc_xact->data >> 1) & 1;
+		r1k->ioc_response_int_en = (r1k->ioc_xact->data >> 0) & 1;
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
-	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff400) {
+	if (r1k->ioc_xact->sc_state == 100 && r1k->ioc_xact->address == 0xfffff400) {
 		/* WRITE CONTROL */
-		state->ioc_fffff400 = (state->ioc_xact->data >> 16) & 0xf;
-		ioc_sc_bus_done(&state->ioc_xact);
+		r1k->ioc_fffff400 = (r1k->ioc_xact->data >> 16) & 0xf;
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
-	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff500) {
+	if (r1k->ioc_xact->sc_state == 100 && r1k->ioc_xact->address == 0xfffff500) {
 		/* WRITE FIFO INIT */
-		state->ioc_reqwrp = state->ioc_reqrdp = 0;
-		state->ioc_rspwrp = state->ioc_rsprdp = 0;
-		ioc_sc_bus_done(&state->ioc_xact);
+		r1k->ioc_reqwrp = r1k->ioc_reqrdp = 0;
+		r1k->ioc_rspwrp = r1k->ioc_rsprdp = 0;
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
 
-	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff600) {
+	if (r1k->ioc_xact->sc_state == 100 && r1k->ioc_xact->address == 0xfffff600) {
 		/* WRITE FIFO CPU RSP */
-		state->ioc_rspfifo[state->ioc_rspwrp++] = state->ioc_xact->data;
-		state->ioc_rspwrp &= 0x3ff;
+		r1k->ioc_rspfifo[r1k->ioc_rspwrp++] = r1k->ioc_xact->data;
+		r1k->ioc_rspwrp &= 0x3ff;
 
-		ioc_sc_bus_done(&state->ioc_xact);
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
 
-	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff700) {
+	if (r1k->ioc_xact->sc_state == 100 && r1k->ioc_xact->address == 0xfffff700) {
 		/* WRITE CPU REQUEST */
-		state->ioc_reqreg = state->ioc_reqfifo[state->ioc_reqrdp++];
-		state->ioc_reqrdp &= 0x3ff;
-		ioc_sc_bus_done(&state->ioc_xact);
+		r1k->ioc_reqreg = r1k->ioc_reqfifo[r1k->ioc_reqrdp++];
+		r1k->ioc_reqrdp &= 0x3ff;
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
 
-	if (state->ioc_xact->sc_state == 200 && state->ioc_xact->address == 0xfffff800) {
+	if (r1k->ioc_xact->sc_state == 200 && r1k->ioc_xact->address == 0xfffff800) {
 		/* READ STATUS */
-		state->ioc_xact->data = 0x9000ff80;
-		if (state->ioc_cpu_running) {
-			state->ioc_xact->data |= 0x40000000;
+		r1k->ioc_xact->data = 0x9000ff80;
+		if (r1k->ioc_cpu_running) {
+			r1k->ioc_xact->data |= 0x40000000;
 		}
-		// if (PIN_PROTE)			state->ioc_xact->data |= 0x02000000;
-		if (state->ioc_fffff400 & 8)	state->ioc_xact->data |= 0x00080000; // IOP.INTR_EN
-		if (state->ioc_fffff400 & 4)	state->ioc_xact->data |= 0x00040000; // GOOD_PARITY
-		if (state->ioc_fffff400 & 2)	state->ioc_xact->data |= 0x00020000; // PERR_ENABLE
-		if (state->ioc_fffff400 & 1)	state->ioc_xact->data |= 0x00010000; // IOP.NEXT_CLK
-		state->ioc_xact->data |= 0x7 << 4;
-		if (!mp_key_switch)		state->ioc_xact->data |= 0x00000008;
-		state->ioc_xact->data |= state->ioc_iack << 0;
+		// if (PIN_PROTE)			r1k->ioc_xact->data |= 0x02000000;
+		if (r1k->ioc_fffff400 & 8)	r1k->ioc_xact->data |= 0x00080000; // IOP.INTR_EN
+		if (r1k->ioc_fffff400 & 4)	r1k->ioc_xact->data |= 0x00040000; // GOOD_PARITY
+		if (r1k->ioc_fffff400 & 2)	r1k->ioc_xact->data |= 0x00020000; // PERR_ENABLE
+		if (r1k->ioc_fffff400 & 1)	r1k->ioc_xact->data |= 0x00010000; // IOP.NEXT_CLK
+		r1k->ioc_xact->data |= 0x7 << 4;
+		if (!mp_key_switch)		r1k->ioc_xact->data |= 0x00000008;
+		r1k->ioc_xact->data |= r1k->ioc_iack << 0;
 
-		ioc_sc_bus_done(&state->ioc_xact);
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
 
-	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffff900) {
+	if (r1k->ioc_xact->sc_state == 100 && r1k->ioc_xact->address == 0xfffff900) {
 		/* WRITE CLEAR BERR */
-		ioc_sc_bus_done(&state->ioc_xact);
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
-	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffffe00) {
+	if (r1k->ioc_xact->sc_state == 100 && r1k->ioc_xact->address == 0xfffffe00) {
 		/* WRITE CPU CONTROL */
-		ioc_sc_bus_done(&state->ioc_xact);
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
-	if (state->ioc_xact->sc_state == 100 && state->ioc_xact->address == 0xfffffd00) {
-		ioc_sc_bus_done(&state->ioc_xact);
+	if (r1k->ioc_xact->sc_state == 100 && r1k->ioc_xact->address == 0xfffffd00) {
+		ioc_sc_bus_done(&r1k->ioc_xact);
 		return;
 	}
 }
 
 static bool
-ioc_cond(const struct r1000_arch_state *state)
+ioc_cond(void)
 {
 	switch (mp_cond_sel) {
 	case 0x78:
-		return (true); // state->ioc_multibit_error;
+		return (true); // r1k->ioc_multibit_error;
 		break;
 	case 0x79:
 		{
@@ -4056,31 +4065,31 @@ ioc_cond(const struct r1000_arch_state *state)
 		}
 		break;
 	case 0x7a:
-		return (true); // state->ioc_checkbit_error;
+		return (true); // r1k->ioc_checkbit_error;
 		break;
 	case 0x7b:
-		return (state->ioc_reqwrp != state->ioc_reqrdp);
+		return (r1k->ioc_reqwrp != r1k->ioc_reqrdp);
 		break;
 	case 0x7c:
-		return (state->ioc_acnt == 0xfff);
+		return (r1k->ioc_acnt == 0xfff);
 		break;
 	case 0x7d:
 		return (true);
 		break;
 	case 0x7e:
-		return (state->ioc_rspwrp != state->ioc_rsprdp);
+		return (r1k->ioc_rspwrp != r1k->ioc_rsprdp);
 		break;
 	case 0x7f:
 		return (true);
 		break;
+	default: assert(0);
 	}
-	return (true);
 }
 
 static void
-ioc_h1(const struct r1000_arch_state *state)
+ioc_h1(void)
 {
-	if (state->ioc_rspwrp != state->ioc_rsprdp) {
+	if (r1k->ioc_rspwrp != r1k->ioc_rsprdp) {
 		mp_macro_event |= 0x8;
 	} else {
 		mp_macro_event &= ~0x8;
@@ -4089,46 +4098,46 @@ ioc_h1(const struct r1000_arch_state *state)
 	mp_load_wdr = UIR_IOC_ULWDR;
 
 	if (mp_tv_oe & IOC_TV_OE) {
-		mp_val_bus = state->ioc_dummy_val;
+		mp_val_bus = r1k->ioc_dummy_val;
 
 		switch (UIR_IOC_RAND) {
 		case 0x05:
-			mp_typ_bus = (uint64_t)(state->ioc_slice) << 48;
-			mp_typ_bus |= (uint64_t)(state->ioc_delay) << 32;
-			mp_typ_bus |= ((uint64_t)state->ioc_rtc) << 16;
-			mp_typ_bus |= state->ioc_rspfifo[state->ioc_rsprdp];
+			mp_typ_bus = (uint64_t)(r1k->ioc_slice) << 48;
+			mp_typ_bus |= (uint64_t)(r1k->ioc_delay) << 32;
+			mp_typ_bus |= ((uint64_t)r1k->ioc_rtc) << 16;
+			mp_typ_bus |= r1k->ioc_rspfifo[r1k->ioc_rsprdp];
 			break;
 		case 0x08:
 		case 0x09:
 		case 0x19:
-			mp_typ_bus = (uint64_t)(state->ioc_slice) << 48;
-			mp_typ_bus |= (uint64_t)(state->ioc_delay) << 32;
-			mp_typ_bus |= ((uint64_t)state->ioc_rtc) << 16;
+			mp_typ_bus = (uint64_t)(r1k->ioc_slice) << 48;
+			mp_typ_bus |= (uint64_t)(r1k->ioc_delay) << 32;
+			mp_typ_bus |= ((uint64_t)r1k->ioc_rtc) << 16;
 			break;
 		case 0x16:
 		case 0x1c:
 		case 0x1d:
-			mp_typ_bus = ((uint64_t)state->ioc_rdata) << 32;
-			mp_typ_bus |= ((uint64_t)state->ioc_rtc) << 16;
+			mp_typ_bus = ((uint64_t)r1k->ioc_rdata) << 32;
+			mp_typ_bus |= ((uint64_t)r1k->ioc_rtc) << 16;
 			break;
 		default:
-			mp_typ_bus = state->ioc_dummy_typ;
+			mp_typ_bus = r1k->ioc_dummy_typ;
 			break;
 		}
 	}
 }
 
 static void
-ioc_q2(const struct r1000_arch_state *state)
+ioc_q2(void)
 {
 	unsigned rand = UIR_IOC_RAND;
-	if (state->ioc_slice_ev && !state->ioc_ten) {
+	if (r1k->ioc_slice_ev && !r1k->ioc_ten) {
 		mp_macro_event |= 0x2;
 	}
 	if (rand == 0x0a) {
 		mp_macro_event &= ~0x2;
 	}
-	if (state->ioc_delay_ev && !state->ioc_ten) {
+	if (r1k->ioc_delay_ev && !r1k->ioc_ten) {
 		mp_macro_event |= 0x1;
 	}
 	if (rand == 0x0b) {
@@ -4141,88 +4150,88 @@ ioc_q2(const struct r1000_arch_state *state)
 }
 
 static void
-ioc_q4(struct r1000_arch_state *state)
+ioc_q4(void)
 {
 	unsigned rand = UIR_IOC_RAND;
 
-	if (mp_ioc_trace && ((mp_sync_freeze & 0x3) == 0) && !state->ioc_is_tracing) {
-		state->ioc_is_tracing = true;
+	if (mp_ioc_trace && ((mp_sync_freeze & 0x3) == 0) && !r1k->ioc_is_tracing) {
+		r1k->ioc_is_tracing = true;
 	}
-	if (mp_ioc_trace && (mp_sync_freeze & 0x3) && state->ioc_is_tracing) {
-		state->ioc_is_tracing = true;
+	if (mp_ioc_trace && (mp_sync_freeze & 0x3) && r1k->ioc_is_tracing) {
+		r1k->ioc_is_tracing = true;
 		mp_ioc_trace = 0;
 	}
 
-	if ((state->ioc_request_int_en && state->ioc_reqrdp != state->ioc_reqwrp) && state->ioc_iack != 6) {
-		state->ioc_iack = 6;
+	if ((r1k->ioc_request_int_en && r1k->ioc_reqrdp != r1k->ioc_reqwrp) && r1k->ioc_iack != 6) {
+		r1k->ioc_iack = 6;
 		ioc_sc_bus_start_iack(6);
 	}
-	if ((!state->ioc_request_int_en || state->ioc_reqrdp == state->ioc_reqwrp) && state->ioc_iack != 7) {
-		state->ioc_iack = 7;
+	if ((!r1k->ioc_request_int_en || r1k->ioc_reqrdp == r1k->ioc_reqwrp) && r1k->ioc_iack != 7) {
+		r1k->ioc_iack = 7;
 		ioc_sc_bus_start_iack(7);
 	}
 
-	ioc_do_xact(state);
+	ioc_do_xact();
 
 	if (mp_clock_stop) {
-		unsigned adr = (state->ioc_areg | state->ioc_acnt) << 2;
+		unsigned adr = (r1k->ioc_areg | r1k->ioc_acnt) << 2;
 		assert(adr < (512<<10));
 
 		switch(rand) {
 		case 0x01:
-			state->ioc_acnt = (mp_typ_bus >> 2) & 0x00fff;
-			state->ioc_areg = (mp_typ_bus >> 2) & 0x1f000;
+			r1k->ioc_acnt = (mp_typ_bus >> 2) & 0x00fff;
+			r1k->ioc_areg = (mp_typ_bus >> 2) & 0x1f000;
 			break;
 		case 0x04:
-			state->ioc_reqfifo[state->ioc_reqwrp++] = mp_typ_bus & 0xffff;
-			state->ioc_reqwrp &= 0x3ff;
+			r1k->ioc_reqfifo[r1k->ioc_reqwrp++] = mp_typ_bus & 0xffff;
+			r1k->ioc_reqwrp &= 0x3ff;
 			break;
 		case 0x05:
-			state->ioc_rsprdp++;
-			state->ioc_rsprdp &= 0x3ff;
+			r1k->ioc_rsprdp++;
+			r1k->ioc_rsprdp &= 0x3ff;
 			break;
 		case 0x06:
-			state->ioc_slice = mp_typ_bus >> 48;
+			r1k->ioc_slice = mp_typ_bus >> 48;
 			break;
 		case 0x07:
-			state->ioc_delay = mp_typ_bus >> 32;
+			r1k->ioc_delay = mp_typ_bus >> 32;
 			break;
 		case 0x08:
-			state->ioc_rtc = 0;
+			r1k->ioc_rtc = 0;
 			break;
 		case 0x0c:
-			state->ioc_sen = false;
+			r1k->ioc_sen = false;
 			break;
 		case 0x0d:
-			state->ioc_sen = true;
+			r1k->ioc_sen = true;
 			break;
 		case 0x0e:
-			state->ioc_den = false;
+			r1k->ioc_den = false;
 			break;
 		case 0x0f:
-			state->ioc_den = true;
+			r1k->ioc_den = true;
 			break;
 		case 0x1c:
-			state->ioc_rdata = vbe32dec(state->ioc_ram + adr);
-			state->ioc_acnt += 1;
-			state->ioc_acnt &= 0xfff;
+			r1k->ioc_rdata = vbe32dec(r1k->ioc_ram + adr);
+			r1k->ioc_acnt += 1;
+			r1k->ioc_acnt &= 0xfff;
 			break;
 		case 0x1d:
-			state->ioc_rdata = vbe32dec(state->ioc_ram + adr);
+			r1k->ioc_rdata = vbe32dec(r1k->ioc_ram + adr);
 			break;
 		case 0x1e:
-			vbe32enc(state->ioc_ram + adr, mp_typ_bus >> 32);
-			state->ioc_acnt += 1;
-			state->ioc_acnt &= 0xfff;
+			vbe32enc(r1k->ioc_ram + adr, mp_typ_bus >> 32);
+			r1k->ioc_acnt += 1;
+			r1k->ioc_acnt &= 0xfff;
 			break;
 		case 0x1f:
-			vbe32enc(state->ioc_ram + adr, mp_typ_bus >> 32);
+			vbe32enc(r1k->ioc_ram + adr, mp_typ_bus >> 32);
 			break;
 		case 0x23:
-			state->ioc_cpu_running = true;
+			r1k->ioc_cpu_running = true;
 			break;
 		case 0x24:
-			state->ioc_cpu_running = false;
+			r1k->ioc_cpu_running = false;
 			break;
 		default:
 			break;
@@ -4230,54 +4239,54 @@ ioc_q4(struct r1000_arch_state *state)
 	}
 
 	if (!mp_sf_stop && rand != 0x08) {
-		state->ioc_rtc++;
-		state->ioc_rtc &= 0xffff;
+		r1k->ioc_rtc++;
+		r1k->ioc_rtc &= 0xffff;
 	}
 
-	state->ioc_prescaler++;
-	state->ioc_ten = state->ioc_prescaler != 0xf;
-	state->ioc_prescaler &= 0xf;
+	r1k->ioc_prescaler++;
+	r1k->ioc_ten = r1k->ioc_prescaler != 0xf;
+	r1k->ioc_prescaler &= 0xf;
 
-	if (!state->ioc_ten) {
-		state->ioc_slice_ev = state->ioc_slice == 0xffff;
-		state->ioc_delay_ev= state->ioc_delay == 0xffff;
-		if (rand != 0x06 && !state->ioc_sen)
-			state->ioc_slice++;
-		if (rand != 0x07 && !state->ioc_den)
-			state->ioc_delay++;
+	if (!r1k->ioc_ten) {
+		r1k->ioc_slice_ev = r1k->ioc_slice == 0xffff;
+		r1k->ioc_delay_ev= r1k->ioc_delay == 0xffff;
+		if (rand != 0x06 && !r1k->ioc_sen)
+			r1k->ioc_slice++;
+		if (rand != 0x07 && !r1k->ioc_den)
+			r1k->ioc_delay++;
 	}
-	bool rddum = (UIR_IOC_TVBS < 0xc) || !state->ioc_dumen;
+	bool rddum = (UIR_IOC_TVBS < 0xc) || !r1k->ioc_dumen;
 	if (rddum && !mp_restore_rdr) {
-		state->ioc_dummy_typ = mp_typ_bus;
-		state->ioc_dummy_val = mp_val_bus;
+		r1k->ioc_dummy_typ = mp_typ_bus;
+		r1k->ioc_dummy_val = mp_val_bus;
 	}
 
 	if (!mp_sf_stop) {
-		state->ioc_uir = state->ioc_wcsram[mp_nua_bus];
-		assert (state->ioc_uir <= 0xffff);
+		r1k->ioc_uir = r1k->ioc_wcsram[mp_nua_bus];
+		assert (r1k->ioc_uir <= 0xffff);
 		mp_nxt_adr_oe = 1U << UIR_IOC_AEN;
 		mp_nxt_fiu_oe = 1U << UIR_IOC_FEN;
-		state->ioc_dumen = !mp_dummy_next;
-		state->ioc_csa_hit = !mp_csa_hit;
+		r1k->ioc_dumen = !mp_dummy_next;
+		r1k->ioc_csa_hit = !mp_csa_hit;
 
 		uint16_t tdat = mp_nua_bus;
 		if (!mp_clock_stop)
 			tdat |= 0x8000;
-		if (state->ioc_csa_hit)
+		if (r1k->ioc_csa_hit)
 			tdat |= 0x4000;
-		uint16_t tptr = state->ioc_tram[2048];
-		state->ioc_tram[tptr] = tdat;
+		uint16_t tptr = r1k->ioc_tram[2048];
+		r1k->ioc_tram[tptr] = tdat;
 		if (mp_ioc_trace) {
 			tptr += 1;
 			tptr &= 0x7ff;
-			state->ioc_tram[2048] = tptr;
+			r1k->ioc_tram[2048] = tptr;
 		}
 
 		mp_nxt_tv_oe = 1U << UIR_IOC_TVBS;
 		if (mp_nxt_tv_oe & MEM_TV_OE) {
-			if (state->ioc_dumen) {
+			if (r1k->ioc_dumen) {
 				mp_nxt_tv_oe = 1U << 4;	   // IOC_TV
-			} else if (state->ioc_csa_hit) {
+			} else if (r1k->ioc_csa_hit) {
 				mp_nxt_tv_oe = 1U << 0;	   // VAL_V|TYP_T
 			}
 		}

@@ -43,6 +43,7 @@
 -esym(534, memset)
 -esym(534, memcpy)
 -esym(534, usleep)
+-esym(534, sleep)
 -esym(534, rpn_error)
 
 // 641 Converting enum 'sfr_e' to 'int'
@@ -131,3 +132,13 @@
 -esym(123,MC_*)	// Macro '___' defined with arguments at ___ -- this is just a warning
 
 -esym(765, mp_*)
+-esym(762, mp_ioc_trace)
+-esym(762, mp_nua_bus)
+-esym(762, mp_seq_halted)
+-esym(762, mp_fiu_freeze)
+-esym(762, mp_refresh_count)
+-esym(762, mp_seq_prepped)
+-esym(762, mp_fiu_unfreeze)
+-esym(762, mp_cur_uadr)
+
+-e514		// Unusual use of a Boolean expression

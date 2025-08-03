@@ -369,6 +369,7 @@ thr_modem_sim(void *priv)
 			SIMTX("\n");
 			state = 0;
 			break;
+		default: assert(0);
 		}
 		AZ(pthread_mutex_unlock(&duart_mtx));
 	}

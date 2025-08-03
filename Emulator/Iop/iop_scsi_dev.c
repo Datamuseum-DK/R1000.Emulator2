@@ -435,7 +435,7 @@ cli_scsi_disk_patch(struct cli *cli)
 
 	err = NULL;
 	offset = strtoul(cli->av[0], &err, 0);
-	if ((err != NULL && *err != '\0') || offset < 0) {
+	if (err != NULL && *err != '\0') {
 		Cli_Error(cli, "Cannot grog <offset>");
 		return;
 	}
@@ -447,7 +447,7 @@ cli_scsi_disk_patch(struct cli *cli)
 		}
 		err = NULL;
 		val = strtoul(cli->av[i], &err, 0);
-		if ((err != NULL && *err != '\0') || val < 0 || val > 255) {
+		if ((err != NULL && *err != '\0') || val > 255) {
 			Cli_Error(cli, "Cannot grog <byte> (%s)", cli->av[i]);
 			return;
 		}

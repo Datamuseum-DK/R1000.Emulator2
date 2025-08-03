@@ -43,7 +43,6 @@
 #include <sys/time.h>
 
 #include "Infra/r1000.h"
-#include "Infra/vqueue.h"
 
 #include "Chassis/r1000_arch.h"
 
@@ -244,12 +243,12 @@ sc_now(void)
 void *
 sc_main_thread(void *priv)
 {
-	struct r1000_arch_state *state = r1000_arch_new();
+	r1000_arch_new();
 
 	(void)priv;
 	(void)sc_main_get_quota();
 	while(1) {
-		r1000_arch_micro_cycle(state);
+		r1000_arch_micro_cycle();
 		ucycle += 1;
 	}
 	return(0);
@@ -269,24 +268,17 @@ static int fido_dont_bite = 0;
 static void *
 fido(void *priv)
 {
-	uint64_t last_exec = 0, last_instr = 0, last_act = 0;
-	uint64_t this_exec, this_instr, this_act;
-	struct timespec t0, t1;
-	double d, dl, e, el, dt;
+	struct timespec t1;
+	double d, dl, e, el;
 
 	(void)priv;
 	sleep(fido_patience);
 	dl = el = 0;
 	AZ(clock_gettime(CLOCK_MONOTONIC, &t1));
 	while (1) {
-		t0 = t1;
 		sleep(fido_patience);
 		AZ(clock_gettime(CLOCK_MONOTONIC, &t1));
 		e = sc_when();
-		dt = 1e-9 * (t1.tv_nsec - t0.tv_nsec);
-		dt += (t1.tv_sec - t0.tv_sec);
-
-		this_exec = this_instr = this_act = 0;
 
 		if (el > 0) {
 			d = 1e-9 * (t1.tv_nsec - sc_t0.tv_nsec);
@@ -297,30 +289,10 @@ fido(void *priv)
 				printf("  d/ %.3f", (d - dl) / (e - el));
 			else
 				printf("  d/' %.3f", 0.0 );
-			printf(" Mda %.1f",
-			    (1e-6 * (this_act - last_act)) / dt);
-			printf(" kdm %.1f",
-			    (1e-3 * (this_instr - last_instr)) / dt);
 			printf("\n");
+			dl = d;
 		}
 		el = e;
-		dl = d;
-
-		if (fido_dont_bite ||
-		    (this_exec > last_exec && this_instr > last_instr)) {
-			last_act = this_act;
-			last_exec = this_exec;
-			last_instr = this_instr;
-		} else if (last_instr == 0) {
-			finish(9, "SC Watchdog have seen no mcs51 activity");
-		} else if (last_exec == 0) {
-			finish(9, "SC Watchdog have seen no exp activity");
-		} else if (this_instr == last_instr) {
-			finish(8, "SC Watchdog sees DIPROC mcs51 stalled");
-		} else {
-			assert (this_exec == last_exec);
-			finish(8, "SC Watchdog sees DIPROC exp stalled");
-		}
 	}
 }
 

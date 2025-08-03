@@ -343,7 +343,6 @@ main_ioc(void *priv)
 	int i;
 	unsigned u;
 	nanosec ns;
-	nanosec mytime = simclock;
 	struct timespec ts;
 
 	(void)priv;
@@ -375,7 +374,6 @@ main_ioc(void *priv)
 		}
 		i = m68k_execute(1);
 		simclock += 100ULL * i;
-		mytime = simclock;
 
 		if (i == 1) {
 			ioc_t_stopped += 100ULL;
@@ -413,7 +411,6 @@ main_ioc(void *priv)
 		if (ioc_cpu_quota)
 			ioc_cpu_quota--;
 	}
-	return(NULL);
 }
 
 void

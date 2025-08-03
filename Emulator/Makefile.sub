@@ -27,6 +27,7 @@ CFLAGS += -std=c17 ${OPTIMIZE} -pthread
 CFLAGS += ${CFLAGSMINUSD}
 CFLAGS += ${CFLAGSMINUSI}
 CFLAGS += ${PARANOIA}
+#CFLAGS += --analyze
 
 ${R1000BIN}:	${OBJS}
 	@echo Linking ${R1000BIN}

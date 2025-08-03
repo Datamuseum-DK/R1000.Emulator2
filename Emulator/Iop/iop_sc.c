@@ -8,8 +8,6 @@
 #include "Iop/iop.h"
 #include "Iop/iop_sc_68k20.hh"
 
-#include "Chassis/r1000_arch.h"
-
 typedef void ioc_sc_bus_callback_f(uint32_t data);
 
 struct bus_xact {
