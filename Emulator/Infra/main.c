@@ -53,28 +53,7 @@ volatile int systemc_clock;
 
 const char *tracepath;
 
-static FILE *utrace_file;
-
 static struct timespec t0;
-
-void
-microtrace(const uint8_t *p, size_t l)
-{
-	if (utrace_file == NULL)
-		return;
-	if (l == 18) {
-		assert((p[0] & 0xf0) == 0x70);
-	} else if (l == 10) {
-		assert((p[0] & 0xf0) == 0x60);
-	} else if (l == 4) {
-		assert((p[0] & 0x80) || (p[0] & 0xf0) == 0x50);
-	} else if (l == 2) {
-		assert(p[0] < 0x50);
-	} else {
-		assert(l != 2);
-	}
-	(void)fwrite(p, l, 1, utrace_file);
-}
 
 void
 hexdump(struct vsb *vsb, const void *ptr, size_t len, unsigned offset)
@@ -195,16 +174,6 @@ main(int argc, char **argv)
 		fprintf(stderr, "Cannot open tracefile '%s': %s\n",
 		    buf, strerror(errno));
 		exit(2);
-	}
-
-	if (0) {
-		bprintf(buf, "%s.utrace", tracepath);
-		utrace_file = fopen(buf, "w");
-		if (utrace_file == NULL) {
-			fprintf(stderr, "Cannot open utracefile '%s': %s\n",
-			    buf, strerror(errno));
-			exit(2);
-		}
 	}
 
 	CTX_init(tracepath);

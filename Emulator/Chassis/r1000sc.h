@@ -9,8 +9,6 @@ void load_programmable(const char *who,
 
 void pit_clock(void);
 
-#include "Infra/microtrace.h"
-
 extern uint16_t mp_refresh_count;
 extern uint16_t mp_cur_uadr;
 extern unsigned mp_fiu_freeze;

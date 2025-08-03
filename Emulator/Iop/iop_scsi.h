@@ -26,7 +26,6 @@ struct scsi_dev {
 
 struct scsi {
 	const char		*name;
-	enum microtrace		utrace;
 	struct irq_vector	*irq_vector;
 	pthread_mutex_t		mtx;
 	pthread_cond_t		cond;

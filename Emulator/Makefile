@@ -18,8 +18,7 @@ all:	r1000sim
 .PHONY: r1000sim
 
 R1000DEP= \
-	Infra/r1000.h \
-	Infra/microtrace.h \
+	Infra/r1000.h
 
 r1000sim:
 	@echo "WORKDIR ${WORKDIR}"

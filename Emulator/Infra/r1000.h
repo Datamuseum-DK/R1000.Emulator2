@@ -149,8 +149,6 @@ TRACERS
 
 cli_func_f cli_trace;
 
-#include "Infra/microtrace.h"
-
 /* CALLOUTS ***********************************************************/
 
 void callout_signal_cond(pthread_cond_t *cond,
