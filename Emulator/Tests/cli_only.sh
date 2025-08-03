@@ -6,7 +6,7 @@ set -e
 
 # cli "trace +ioc_instructions"
 
-sc_boards ioc
+sc_boards ioc fiu mem0 seq typ val
 
 cli iop memtrace add resha_misc
 cli iop memtrace add scsi_d
@@ -16,7 +16,7 @@ cli trace +disk_data
 cli trace +ioc_dma
 
 cli console serial /dev/nmdm0B
-cli sc quota add 100
+cli r1000 quota add 100
 
 cli_prompt
 

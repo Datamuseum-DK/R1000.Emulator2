@@ -59,13 +59,11 @@ cli 'modem telnet localhost:1416'
 standard_patches
 
 sc_boards() {
-	cli '# => sc_all_boards'
-	cli r1000 launch $*
-	for brd in ioc fiu mem0 mem1 mem2 mem3 seq typ val
-	do
-	    echo "$*" | grep -q -i ${brd} || cli diproc dummy -TIMEOUT ${brd}
-	done
+	cli r1000 launch
 	cli diproc dummy mem0
+	cli diproc dummy -TIMEOUT mem1
+	cli diproc dummy -TIMEOUT mem2
+	cli diproc dummy -TIMEOUT mem3
 	cli diproc dummy typ
 	cli diproc dummy val
 	cli diproc dummy ioc
@@ -95,21 +93,6 @@ cli_prompt() {
 	cli 'console match expect "Enter option [enter CLI] : "'
 	cli 'console << "1"'
 	cli 'console match expect "CLI>"'
-}
-
-expmon_cmd() {
-	cli '# => expmon_cmd'
-	cli 'console <<' "\"$*\""
-	cli 'console match expect "EM>"'
-}
-
-expmon_prompt() {
-	cli '# => expmon_prompt'
-	cli_prompt
-	cli 'console << "x expmon"'
-	cli 'console match expect "EM>"'
-	expmon_cmd '[set FIRST_PASS true]'
-	expmon_cmd '[set num_fails 0]'
 }
 
 fru_prompt() {

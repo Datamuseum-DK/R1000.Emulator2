@@ -54,12 +54,6 @@ struct component {
 	uint32_t		*flags;
 };
 
-int sc_boards;
-
-static VTAILQ_HEAD(,component) component_list =
-    VTAILQ_HEAD_INITIALIZER(component_list);
-
-static int ncomponents = 0;
 static pthread_t sc_runner;
 static pthread_mutex_t sc_mtx;
 static pthread_cond_t sc_cond;
@@ -67,27 +61,6 @@ static double sc_quota = 0;
 static int sc_quota_exit = 0;
 int sc_started;
 struct timespec sc_t0;
-
-#define DMACRO(typ, nam, val) volatile typ mp_##nam = val;
-MIDPLANE(DMACRO)
-#undef DMACRO
-
-#define DMACRO(typ, nam, val) volatile typ mp_##nam = val;
-MIDSTATE(DMACRO)
-#undef DMACRO
-
-#define DMACRO(typ, nam, val) volatile typ mp_nxt_##nam = val;
-MIDSTATE(DMACRO)
-#undef DMACRO
-
-void
-update_state(void)
-{
-
-#define DMACRO(typ, nam, val) mp_##nam = mp_nxt_##nam;
-MIDSTATE(DMACRO)
-#undef DMACRO
-}
 
 void
 load_programmable(const char *who, void *dst, size_t size, const char *arg)
@@ -150,39 +123,11 @@ sc_main_get_quota(void)
 static void v_matchproto_(cli_func_f)
 cli_sc_launch(struct cli *cli)
 {
-	int i;
 
-	if (cli->help || cli->ac < 2) {
-		Cli_Usage(cli, "[<board>|all] …",
+	if (cli->help) {
+		Cli_Usage(cli, "",
 		    "Launch SystemC models of boards.");
 		return;
-	}
-
-	for (i = 1; i < cli->ac; i++) {
-		if (!strcmp(cli->av[i], "all")) {
-			sc_boards |= R1K_BOARD_ALL;
-		} else if (!strcmp(cli->av[i], "ioc"))
-			sc_boards |= R1K_BOARD_IOC;
-		else if (!strcmp(cli->av[i], "val"))
-			sc_boards |= R1K_BOARD_VAL;
-		else if (!strcmp(cli->av[i], "typ"))
-			sc_boards |= R1K_BOARD_TYP;
-		else if (!strcmp(cli->av[i], "seq"))
-			sc_boards |= R1K_BOARD_SEQ;
-		else if (!strcmp(cli->av[i], "fiu"))
-			sc_boards |= R1K_BOARD_FIU;
-		else if (!strcmp(cli->av[i], "mem0"))
-			sc_boards |= R1K_BOARD_MEM32_0;
-		else if (!strcmp(cli->av[i], "mem2"))
-			sc_boards |= R1K_BOARD_MEM32_2;
-		else if (!strcmp(cli->av[i], "mem32")) {
-			if (sc_boards & R1K_BOARD_MEM32_0)
-				sc_boards |= R1K_BOARD_MEM32_2;
-			else
-				sc_boards |= R1K_BOARD_MEM32_0;
-		} else {
-			Cli_Error(cli, "Bad board name `%s`\n", cli->av[i]);
-		}
 	}
 
 	systemc_clock = 1;
@@ -202,8 +147,6 @@ cli_sc_launch(struct cli *cli)
 	systemc_t_zero = simclock;
 	sc_started = 3;
 	AZ(pthread_mutex_unlock(&sc_mtx));
-
-	Cli_Printf(cli, "SystemC started, %d components\n", ncomponents);
 }
 
 static void v_matchproto_(cli_func_f)
@@ -299,54 +242,6 @@ cli_sc_rate(struct cli *cli)
 	Cli_Printf(cli, "SC real time: %.3f\tsim time: %.3f\tratio: %.3f\n", d, e, d / e);
 }
 
-static void v_matchproto_(cli_func_f)
-cli_sc_trace(struct cli *cli)
-{
-	struct component *comp;
-	regex_t rex;
-	char errbuf[BUFSIZ];
-	const char *regexp;
-	unsigned onoff = 0;
-	int nmatch = 0, err;
-
-	if (cli->help || cli->ac != 3) {
-		Cli_Usage(cli, "<regexp> <level>",
-		    "Set tracing for components matching regexp to level.");
-		return;
-	}
-	regexp = cli->av[1];
-
-	if (!strcasecmp(cli->av[2], "on"))
-		onoff = 1;
-	else if (!strcasecmp(cli->av[2], "off"))
-		onoff = 0;
-	else
-		onoff = strtoul(cli->av[2], NULL, 0);
-
-	err = regcomp(&rex, regexp, 0);
-	if (err) {
-		(void)regerror(err, &rex, errbuf, sizeof errbuf);
-		Cli_Error(cli, "Regexp error: %s\n", errbuf);
-		return;
-	}
-
-	VTAILQ_FOREACH(comp, &component_list, list) {
-		if (!regexec(&rex, comp->name, 0, 0, 0)) {
-			nmatch++;
-			if (*comp->flags != onoff) {
-				Cli_Printf(
-				    cli,
-				    "    0x%x %s\n", *comp->flags, comp->name
-				);
-			}
-			*comp->flags = onoff;
-		}
-	}
-	regfree(&rex);
-	if (!nmatch)
-		Cli_Error(cli, "regexp matched no components.\n");
-}
-
 int sc_forced_reset;
 
 static void v_matchproto_(cli_func_f)
@@ -364,7 +259,6 @@ static const struct cli_cmds cli_r1000_cmds[] = {
 	{ "launch",		cli_sc_launch },
 	{ "quota",		cli_sc_quota },
 	{ "rate",		cli_sc_rate },
-	{ "trace",		cli_sc_trace },
 	{ "wait",		cli_sc_wait },
 	{ "watchdog",		cli_sc_watchdog },
 	{ "force_reset",	cli_sc_force_reset },

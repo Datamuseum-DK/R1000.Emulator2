@@ -106,8 +106,6 @@ MIDSTATE(DMACRO)
 #define UADR_MASK 0x3fff
 #define UADR_WIDTH 14
 
-void update_state(void);
-
 #define BUS64_LSB(lsb) (63 - (lsb))
 
 #endif /* R1000SC_H */

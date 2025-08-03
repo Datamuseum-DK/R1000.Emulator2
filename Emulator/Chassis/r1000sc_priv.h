@@ -17,7 +17,6 @@ double sc_main_get_quota(void);
 
 double sc_when(void);
 
-extern int sc_boards;
 extern const char *tracepath;
 
 extern int sc_forced_reset;

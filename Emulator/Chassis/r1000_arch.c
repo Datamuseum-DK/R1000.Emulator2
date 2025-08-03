@@ -18,6 +18,27 @@
 #include "Iop/iop_sc_68k20.hh"
 #include "Infra/vend.h"
 
+#define DMACRO(typ, nam, val) volatile typ mp_##nam = val;
+MIDPLANE(DMACRO)
+#undef DMACRO
+
+#define DMACRO(typ, nam, val) volatile typ mp_##nam = val;
+MIDSTATE(DMACRO)
+#undef DMACRO
+
+#define DMACRO(typ, nam, val) volatile typ mp_nxt_##nam = val;
+MIDSTATE(DMACRO)
+#undef DMACRO
+
+static void
+update_state(void)
+{
+
+#define DMACRO(typ, nam, val) mp_##nam = mp_nxt_##nam;
+MIDSTATE(DMACRO)
+#undef DMACRO
+}
+
 static void csa_q4(struct r1000_arch_state *state);
 
 static bool mem_is_hit(struct r1000_arch_state *state, unsigned adr, unsigned set);
