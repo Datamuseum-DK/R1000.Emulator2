@@ -29,19 +29,11 @@ make -j 7 && make -j 7
 
 sc_boards ioc fiu mem0 seq typ val
 
-#cli trace +diproc
-
-# cli 'r1000 trace DI*PROC 0x14'
-#cli 'trace +console'
-#cli 'trace +diagbus'
-#cli 'iop syscall'
-
 cli 'r1000 quota add 10000'
 cli 'r1000 quota exit'
 
 cli "console > ${rundir}/_.console"
 cli "modem > ${rundir}/_.modem"
-cli trace +ioc_modem
 
 cli 'r1000 wait 1e-6'
 cli iop reset

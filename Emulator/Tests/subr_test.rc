@@ -267,11 +267,9 @@ sc_boards() {
 }
 
 cli_prompt() {
-	# cli 'r1000 trace DI*PROC 0x14'
-	cli 'trace +console'
-	cli 'trace +diagbus'
-	cli "iop syscall"  
-	# cli "r1000 trace DUIRG 1"
+	cli 'trace -console'
+	cli 'trace -diagbus'
+	#cli "iop syscall"  
 
 	cli 'r1000 wait .00001'
 	cli '# => cli_prompt'
@@ -316,37 +314,4 @@ run() {
 	echo "exit" | ./r1000sim \
 		-T ${R1K_PFX}/_ \
 		"include ${R1K_CLIFILE}" 2>&1 | tee ${R1K_PFX}/_.log
-}
-
-single() {
-	single_brd=$1
-	shift
-
-        if [ "x${single_brd}" = "xmem0" ] ; then
-		single_suff="m32"
-		cli 'r1000 trace DFSM 1'
-	else
-		single_suff="${single_brd}"
-		cli 'r1000 trace DUIRG 1'
-	fi
-
-
-	if [ "x$1" == "x" ] ; then
-		set TEST_WCS_ADDRESS
-	fi
-
-	#cli 'r1000 trace DI*PROC 0x14'
-
-	cli 'r1000 quota add 60'
-	cli 'r1000 quota exit'
-
-        for EXP in $*
-	do
-		cli "dfs read ${EXP}.${single_suff} ${R1K_PFX}.exp"
-		cli "diproc experiment ${single_brd} ${R1K_PFX}.exp"
-		cli "diproc wait ${single_brd}"
-		cli "diproc status ${single_brd}"
-	done
-
-	run
 }
