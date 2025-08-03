@@ -38,6 +38,29 @@ standard_patches() {
 
 	# Single MEM32 board
 	cli dfs patch HARDWARE.M200_CONFIG 0x05 0x0
+
+	# Speed up DELAY_LOOP(D1)
+	# 	00005d16 20 3c 00 00 05 00          MOVE.L  #0x00000500,D0
+	# 	00005d16 20 3c 00 00 00 20          MOVE.L  #0x00000020,D0
+	cli dfs patch KERNEL_0.M200 0x00005d18 0x00 0x00 0x00 0x20
+
+	# Speed up INIT_KERNEL_10_VME
+	#	000066d0 20 3c 00 23 7c 4d     MOVE.L  #0x00237c4d,D0
+	#	000066d0 20 3c 00 00 00 20     MOVE.L  #0x00000020,D0
+	cli dfs patch KERNEL_0.M200 0x000066d2 0x00 0x00 0x00 0x20
+
+	# Speed up INIT_KERNEL_07
+	#	00009af6 20 3c 00 07 ff ff          MOVE.L  #0x0007ffff,D0
+	#	00009af6 20 3c 00 00 00 20          MOVE.L  #0x00000020,D0
+	cli dfs patch KERNEL_0.M200 0x00009af8 0x00 0x00 0x00 0x20
+	#	00009b56 30 3c 7f ff                MOVE.W  #0x7fff,D0
+	#	00009b56 30 3c 00 20                MOVE.W  #0x0020,D0
+	cli dfs patch KERNEL_0.M200 0x00009b58 0x00 0x20
+
+	# Speed up SCSI operations
+	#	00009818 20 3c 00 03 ff ff          MOVE.L  #0x0003ffff,D0
+	#	00009818 20 3c 00 00 04 00          MOVE.L  #0x00000400,D0
+	cli dfs patch KERNEL_0.M200 0x0000981a 0x00 0x00 0x04 0x00
 }
 
 cli() {
