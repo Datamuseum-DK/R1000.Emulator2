@@ -16,10 +16,34 @@
 #include "Iop/iop_sc_68k20.hh"
 #include "Infra/vend.h"
 
+static void csa_q4(struct r1000_arch_state *state);
+
 static bool mem_is_hit(struct r1000_arch_state *state, unsigned adr, unsigned set);
 static void mem_load_mar(struct r1000_arch_state *state);
 static void mem_h1(struct r1000_arch_state *state);
 static void mem_q4(struct r1000_arch_state *state);
+
+static bool fiu_conditions(struct r1000_arch_state *state);
+static void fiu_do_tivi(struct r1000_arch_state *state);
+static void fiu_rotator(struct r1000_arch_state *state, bool sclk);
+static uint64_t fiu_frame(struct r1000_arch_state *state);
+static void fiu_q1(struct r1000_arch_state *state);
+static void fiu_q2(struct r1000_arch_state *state);
+static void fiu_q4(struct r1000_arch_state *state);
+
+static void seq_int_reads(struct r1000_arch_state *state);
+static bool seq_conda(struct r1000_arch_state *state, unsigned condsel);
+static bool seq_cond9(struct r1000_arch_state *state, unsigned condsel);
+static bool seq_cond8(struct r1000_arch_state *state, unsigned condsel);
+static void seq_nxt_lex_valid(struct r1000_arch_state *state);
+static bool seq_condition(struct r1000_arch_state *state);
+static unsigned seq_branch_offset(struct r1000_arch_state *state);
+static void seq_q3clockstop(struct r1000_arch_state *state);
+static void seq_p1(struct r1000_arch_state *state);
+static void seq_h1(struct r1000_arch_state *state);
+static void seq_q1(struct r1000_arch_state *state);
+static void seq_q3(struct r1000_arch_state *state);
+static void seq_q4(struct r1000_arch_state *state);
 
 static unsigned tv_cadr(struct r1000_arch_state *state, unsigned uirc, unsigned frame, unsigned count);
 static uint64_t tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a, bool t, uint64_t *rfram);
@@ -617,12 +641,12 @@ void
 r1000_arch :: doit(void)
 {
 	mem_q4(state);
-	fiu_q4();
+	fiu_q4(state);
 	typ_q4(state);
 	val_q4(state);
-	csa_q4();
+	csa_q4(state);
 	ioc_q4(state);
-	seq_q4();
+	seq_q4(state);
 
 	if (++state->pit == 256) {
 		pit_clock();
@@ -634,17 +658,17 @@ r1000_arch :: doit(void)
 	typ_h1(state);
 	val_h1(state);
 	ioc_h1(state);
-	seq_h1();
+	seq_h1(state);
 
-	fiu_q1();
-	seq_q1();
+	fiu_q1(state);
+	seq_q1(state);
 
-	fiu_q2();
+	fiu_q2(state);
 	typ_q2(state);
 	val_q2(state);
 	ioc_q2(state);
 
-	seq_q3();
+	seq_q3(state);
 }
 
 // -------------------- MEM --------------------
@@ -919,9 +943,8 @@ mem_q4(struct r1000_arch_state *state)
 
 // -------------------- FIU --------------------
 
-bool
-r1000_arch ::
-fiu_conditions()
+static bool
+fiu_conditions(struct r1000_arch_state *state)
 {
 
 	switch(mp_cond_sel) {
@@ -946,9 +969,8 @@ fiu_conditions()
 	return (false);
 }
 
-uint64_t
-r1000_arch ::
-frame(void)
+static uint64_t
+fiu_frame(struct r1000_arch_state *state)
 {
 	uint64_t u = 0;
 
@@ -978,9 +1000,8 @@ frame(void)
 	return (u);
 }
 
-void
-r1000_arch ::
-do_tivi(void)
+static void
+fiu_do_tivi(struct r1000_arch_state *state)
 {
 
 	unsigned tivi = UIR_FIU_TIVI;
@@ -997,7 +1018,7 @@ do_tivi(void)
 		vi = ~mp_fiu_bus;
 		break;
 	case 0x03: case 0x07: case 0x0b:
-		vi = frame() ^ ~0ULL;
+		vi = fiu_frame(state) ^ ~0ULL;
 		break;
 	default:
 		vi = (uint64_t)state->fiu_srn << 32;
@@ -1038,9 +1059,8 @@ do_tivi(void)
 	state->fiu_vi_bus = vi;
 }
 
-void
-r1000_arch ::
-rotator(bool sclk)
+static void
+fiu_rotator(struct r1000_arch_state *state, bool sclk)
 {
 	uint64_t rot = 0;
 	uint64_t vmsk = 0, tmsk = 0;
@@ -1232,9 +1252,8 @@ rotator(bool sclk)
 	}
 }
 
-void
-r1000_arch ::
-fiu_q1(void)
+static void
+fiu_q1(struct r1000_arch_state *state)
 {
 	bool sclk = false;
 	bool carry, name_match;
@@ -1252,9 +1271,9 @@ fiu_q1(void)
 	bool rmarp = (mp_mar_cntl & 0xe) == 0x4;
 	state->fiu_mem_start = UIR_FIU_MSTRT ^ 0x1e;
 
-	do_tivi();
+	fiu_do_tivi(state);
 	if (mp_fiu_oe == 0x1) {
-		rotator(sclk);
+		fiu_rotator(state, sclk);
 	}
 	unsigned dif;
 
@@ -1338,7 +1357,7 @@ fiu_q1(void)
 	}
 
 	if (mp_tv_oe & (FIU_T_OE|FIU_V_OE)) {
-		do_tivi();
+		fiu_do_tivi(state);
 		if (mp_tv_oe & FIU_T_OE) {
 			mp_typ_bus = ~state->fiu_ti_bus;
 		}
@@ -1348,9 +1367,8 @@ fiu_q1(void)
 	}
 }
 
-void
-r1000_arch ::
-fiu_q2(void)
+static void
+fiu_q2(struct r1000_arch_state *state)
 {
 	unsigned pa028a = mp_mar_cntl << 5;
 	pa028a |= state->fiu_incmplt_mcyc << 4;
@@ -1362,7 +1380,7 @@ fiu_q2(void)
 	state->fiu_prmt ^= 0x02;
 	state->fiu_prmt &= 0x7b;
 
-	do_tivi();
+	fiu_do_tivi(state);
 	unsigned pa025a = 0;
 	pa025a |= state->fiu_mem_start;
 	pa025a |= state->fiu_state0 << 8;
@@ -1530,9 +1548,8 @@ fiu_q2(void)
 	}
 }
 
-void
-r1000_arch ::
-fiu_q4(void)
+static void
+fiu_q4(struct r1000_arch_state *state)
 {
 	bool sclk = !mp_state_clk_en;
 	bool tcsa_clk = (mp_clock_stop && mp_ram_stop && !mp_freeze);
@@ -1561,7 +1578,7 @@ fiu_q4(void)
 	}
 	if (sclk) {
 		if (UIR_FIU_LDMDR || !UIR_FIU_TCLK || !UIR_FIU_VCLK) {
-			rotator(sclk);
+			fiu_rotator(state, sclk);
 		}
 
 		if (!UIR_FIU_OCLK) {			// Q4~^
@@ -1758,9 +1775,8 @@ fiu_q4(void)
 
 // -------------------- SEQ --------------------
 
-void
-r1000_arch ::
-int_reads()
+static void
+seq_int_reads(struct r1000_arch_state *state)
 {
 	unsigned internal_reads = UIR_SEQ_IRD;
 	switch (state->seq_urand & 3) {
@@ -1815,9 +1831,8 @@ int_reads()
 	}
 }
 
-bool
-r1000_arch ::
-seq_conda(unsigned condsel)
+static bool
+seq_conda(struct r1000_arch_state *state, unsigned condsel)
 {
 
 	switch (condsel) {
@@ -1842,9 +1857,8 @@ seq_conda(unsigned condsel)
 	}
 }
 
-bool
-r1000_arch ::
-seq_cond9(unsigned condsel)
+static bool
+seq_cond9(struct r1000_arch_state *state, unsigned condsel)
 {
 
 	switch (condsel) {
@@ -1885,9 +1899,8 @@ seq_cond9(unsigned condsel)
 	}
 }
 
-bool
-r1000_arch ::
-seq_cond8(unsigned condsel)
+static bool
+seq_cond8(struct r1000_arch_state *state, unsigned condsel)
 {
 
 	switch (condsel) {
@@ -1920,9 +1933,8 @@ seq_cond8(unsigned condsel)
 	}
 }
 
-void
-r1000_arch ::
-nxt_lex_valid(void)
+static void
+seq_nxt_lex_valid(struct r1000_arch_state *state)
 {
 	unsigned lex_random = (state->seq_rndx >> 5) & 0x7;
 	uint16_t dra = state->seq_resolve_address & 3;
@@ -1968,9 +1980,8 @@ nxt_lex_valid(void)
 	state->seq_lex_valid = nv;
 }
 
-bool
-r1000_arch ::
-condition(void)
+static bool
+seq_condition(struct r1000_arch_state *state)
 {
 	unsigned condsel = UIR_SEQ_CSEL;
 
@@ -1983,25 +1994,24 @@ condition(void)
 	case 0x5: return(typ_cond(state));
 	case 0x6: return(typ_cond(state));
 	case 0x7: return(typ_cond(state));
-	case 0x8: return(seq_cond8(condsel));
-	case 0x9: return(seq_cond9(condsel));
-	case 0xa: return(seq_conda(condsel));
+	case 0x8: return(seq_cond8(state, condsel));
+	case 0x9: return(seq_cond9(state, condsel));
+	case 0xa: return(seq_conda(state, condsel));
 	case 0xb:
 		{
 		bool tc = typ_cond(state);
 		bool vc = val_cond(state);
 		return(!(tc && vc));
 		}
-	case 0xc: return(fiu_conditions());
-	case 0xd: return(fiu_conditions());
+	case 0xc: return(fiu_conditions(state));
+	case 0xd: return(fiu_conditions(state));
 	case 0xf: return(ioc_cond(state));
 	default: return(1);
 	}
 }
 
-unsigned
-r1000_arch ::
-branch_offset(void)
+static unsigned
+seq_branch_offset(struct r1000_arch_state *state)
 {
 	unsigned retval = state->seq_macro_pc_offset;
 	assert(!(retval & ~0x7fff));
@@ -2026,9 +2036,8 @@ branch_offset(void)
 	return (retval & 0x7fff);
 }
 
-void
-r1000_arch ::
-q3clockstop(void)
+static void
+seq_q3clockstop(struct r1000_arch_state *state)
 {
 	bool event = true;
 	mp_state_clk_stop = true;
@@ -2105,9 +2114,8 @@ q3clockstop(void)
 	mp_mem_abort_el = event;
 }
 
-void
-r1000_arch ::
-seq_p1(void)
+static void
+seq_p1(struct r1000_arch_state *state)
 {
 	if (state->seq_maybe_dispatch && !(state->seq_display >> 15)) {
 		state->seq_resolve_address = (state->seq_display >> 9) & 0xf;
@@ -2206,9 +2214,8 @@ seq_p1(void)
 	}
 }
 
-void
-r1000_arch ::
-seq_h1(void)
+static void
+seq_h1(struct r1000_arch_state *state)
 {
 
 	state->seq_urand = UIR_SEQ_URAND;
@@ -2237,9 +2244,9 @@ seq_h1(void)
 	if (mp_fiu_oe == 0x8)
 		mp_fiu_bus = state->seq_topu;
 	if (mp_tv_oe & SEQ_TV_OE) {
-		seq_p1();
-		state->seq_branch_offset = branch_offset();
-		int_reads();	// Necessary
+		seq_p1(state);
+		state->seq_branch_offset = seq_branch_offset(state);
+		seq_int_reads(state);	// Necessary
 		mp_typ_bus = ~state->seq_typ_bus;
 		mp_val_bus = ~state->seq_val_bus;
 	}
@@ -2255,9 +2262,8 @@ seq_h1(void)
  * 11 HINT FALSE
  */
 
-void
-r1000_arch ::
-seq_q1(void)
+static void
+seq_q1(struct r1000_arch_state *state)
 {
 
 	state->seq_stop = !(!state->seq_bad_hint && (state->seq_uev == 16) && !state->seq_late_macro_event);
@@ -2265,15 +2271,14 @@ seq_q1(void)
 	mp_uevent_enable = !(evnan0d || state->seq_stop);
 
 	if (!(mp_tv_oe & SEQ_TV_OE)) {
-		seq_p1();
-		state->seq_branch_offset = branch_offset();
-		int_reads();
+		seq_p1(state);
+		state->seq_branch_offset = seq_branch_offset(state);
+		seq_int_reads(state);
 	}
 }
 
-void
-r1000_arch ::
-seq_q3(void)
+static void
+seq_q3(struct r1000_arch_state *state)
 {
 	// These are necessary for conditions
 	state->seq_lxval = !((state->seq_lex_valid >> (15 - state->seq_resolve_address)) & 1);
@@ -2282,7 +2287,7 @@ seq_q3(void)
 	state->seq_tos_vld_cond = !(state->seq_foo7 || RNDX(RND_TOS_VLB));
 	state->seq_m_tos_invld = !(state->seq_uses_tos && state->seq_tos_vld_cond);
 
-	bool precond = condition();
+	bool precond = seq_condition(state);
 	state->seq_br_tim = UIR_SEQ_BRTIM;
 
 	// SEQ micro arch doc, pg 29 says this can only be early cond, so there is no recursion on seq_m_ibuff_mt
@@ -2308,7 +2313,7 @@ seq_q3(void)
 		state->seq_push_br = false;
 		state->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !seq_uadr_mux));
 		state->seq_wanna_dispatch = !(((rom >> 5) & 1) && !seq_uadr_mux);
-		state->seq_branch_offset = branch_offset();
+		state->seq_branch_offset = seq_branch_offset(state);
 		state->seq_preturn = !(((rom >> 3) & 1) ||  seq_uadr_mux);
 		nua = state->seq_other;
 		mp_clock_stop_6 = true;
@@ -2346,7 +2351,7 @@ seq_q3(void)
 		state->seq_push_br = BRTYPE(PUSH);
 		state->seq_push = !(BRTYPE(PUSH|CASE_CALL) || (BRTYPE(A_CALL) && uadr_mux));
 		state->seq_wanna_dispatch = !(BRTYPE(A_DISPATCH) && !uadr_mux);
-		state->seq_branch_offset = branch_offset();
+		state->seq_branch_offset = seq_branch_offset(state);
 		state->seq_preturn = BRTYPE(A_RETURN) && !uadr_mux;
 		unsigned one, two;
 		if (BRTYPE(A_BRANCH|PUSH|A_CALL|CONTINUE)) {
@@ -2384,13 +2389,13 @@ seq_q3(void)
 
 	state->seq_ram[(state->seq_adr + 1) & 0xf] = state->seq_topu;
 
-	int_reads();
+	seq_int_reads(state);
 
 	state->seq_q3cond = precond;
 
 	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
 
-	q3clockstop();
+	seq_q3clockstop(state);
 
 
 	bool bar8;
@@ -2511,9 +2516,8 @@ seq_q3(void)
 	mp_mem_abort_l = bad_hint_disp && !(RNDX(RND_L_ABRT) && !state->seq_stop);
 }
 
-void
-r1000_arch ::
-seq_q4(void)
+static void
+seq_q4(struct r1000_arch_state *state)
 {
 	bool aclk = !state->seq_sf_stop;
 	bool state_clock = state->seq_s_state_stop && !state->seq_stop;
@@ -2524,7 +2528,7 @@ seq_q4(void)
 	bool dispatch = state->seq_wanna_dispatch || state->seq_early_macro_pending || (state->seq_late_macro_pending != 8);
 	bool update_display = false;
 	if (state_clock) {
-		nxt_lex_valid();
+		seq_nxt_lex_valid(state);
 		if (!RNDX(RND_RES_OFFS)) {
 			state->seq_tosram[state->seq_resolve_address] = (state->seq_typ_bus >> 7) & 0xfffff;
 		}
@@ -3735,9 +3739,8 @@ tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a,
 	assert(0);
 }
 
-void
-r1000_arch ::
-csa_q4(void)
+static void
+csa_q4(struct r1000_arch_state *state)
 {
 	bool sclken = (mp_clock_stop && mp_ram_stop && !mp_freeze);
 
