@@ -58,9 +58,6 @@ struct vsb {
 #endif
 #define v_printflike_	__printflike
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 /*
  * API functions
  */
@@ -95,8 +92,5 @@ void		 VSB_quote_pfx(struct vsb *, const char*, const void *,
 void		 VSB_quote(struct vsb *, const void *, int len, int how);
 void		 VSB_indent(struct vsb *, int);
 int		 VSB_tofile(const struct vsb *, int fd);
-#ifdef __cplusplus
-};
-#endif
 
 #endif

@@ -30,10 +30,6 @@
 #ifndef INFRA_CONTEXT_H
 #define INFRA_CONTEXT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct ctx {
 	uint32_t	magic;
 #define CTX_MAGIC	0x6e706c8e
@@ -45,9 +41,5 @@ void *CTX_GetRaw(const char *ident, uint32_t length);
 
 struct ctx *CTX_Iter(void **priv);
 struct ctx *CTX_Find(const char *name);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* INFRA_CONTEXT_H */

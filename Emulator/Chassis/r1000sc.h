@@ -2,11 +2,6 @@
 #ifndef R1000SC_H
 #define R1000SC_H
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern int sc_started;
 
 void load_programmable(const char *who,
@@ -114,9 +109,5 @@ MIDSTATE(DMACRO)
 void update_state(void);
 
 #define BUS64_LSB(lsb) (63 - (lsb))
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* R1000SC_H */

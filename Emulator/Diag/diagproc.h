@@ -1,8 +1,4 @@
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct diagproc;
 
 typedef int diagprocturbo_t(const struct diagproc *);
@@ -78,8 +74,3 @@ diagprocturbo_t diagproc_turbo_val;
 int diag_load_novram(const struct diagproc *dp, const char *novram_name, unsigned src, unsigned dst, unsigned len);
 
 uint64_t diagbus_out_count(void);
-
-
-#ifdef __cplusplus
-}
-#endif
