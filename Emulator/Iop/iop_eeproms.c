@@ -46,7 +46,7 @@ ioc_load_eeproms(void)
 {
 	uint8_t tmp[0x8000];
 
-	AZ(Firmware_Copy("IOC_EEPROM", sizeof tmp, tmp));
+	AZ(Firmware_Copy(tmp, sizeof tmp, "IOC_EEPROM"));
 	memcpy(ioc_eeprom_space + 0x0000, tmp + 0x0000, 0x2000);
 	memcpy(ioc_eeprom_space + 0x2000, tmp + 0x4000, 0x2000);
 	memcpy(ioc_eeprom_space + 0x4000, tmp + 0x2000, 0x2000);
@@ -54,7 +54,7 @@ ioc_load_eeproms(void)
 
 	Ioc_HotFix_Ioc();
 
-	AZ(Firmware_Copy("RESHA_EEPROM", sizeof resha_eeprom, resha_eeprom));
+	AZ(Firmware_Copy(resha_eeprom, sizeof resha_eeprom, "RESHA_EEPROM"));
 
 	Ioc_HotFix_Resha();
 }

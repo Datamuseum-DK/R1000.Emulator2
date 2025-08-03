@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 
+#include "Infra/r1000.h"
 #include "Chassis/r1000sc.h"
 #include "Infra/context.h"
 
@@ -710,46 +711,46 @@ r1000_arch_new(void)
 
 	// -------------------- FIU --------------------
 
-	load_programmable("r1000_arch", fiu_pa025, sizeof fiu_pa025, "PA025-03");
-	load_programmable("r1000_arch", fiu_pa026, sizeof fiu_pa026, "PA026-02");
-	load_programmable("r1000_arch", fiu_pa027, sizeof fiu_pa027, "PA027-01");
-	load_programmable("r1000_arch", fiu_pa028, sizeof fiu_pa028, "PA028-02");
-	load_programmable("r1000_arch", fiu_pa060, sizeof fiu_pa060, "PA060");
+	Firmware_Copy(fiu_pa025, sizeof fiu_pa025, "PA025-03");
+	Firmware_Copy(fiu_pa026, sizeof fiu_pa026, "PA026-02");
+	Firmware_Copy(fiu_pa027, sizeof fiu_pa027, "PA027-01");
+	Firmware_Copy(fiu_pa028, sizeof fiu_pa028, "PA028-02");
+	Firmware_Copy(fiu_pa060, sizeof fiu_pa060, "PA060-01");
 	state->fiu_wcsram = (uint64_t*)CTX_GetRaw("FIU_WCS", sizeof(uint64_t) << 14);
 	state->fiu_typwcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 
 	// -------------------- SEQ --------------------
 
-	load_programmable("r1000_arch", seq_pa040, sizeof seq_pa040, "PA040-02");
-	load_programmable("r1000_arch", seq_pa041, sizeof seq_pa041, "PA041-01");
-	load_programmable("r1000_arch", seq_pa042, sizeof seq_pa041, "PA042-02");
-	load_programmable("r1000_arch", seq_pa043, sizeof seq_pa043, "PA043-02");
-	load_programmable("r1000_arch", seq_pa044, sizeof seq_pa044, "PA044-01");
-	load_programmable("r1000_arch", seq_pa045, sizeof seq_pa045, "PA045-03");
-	load_programmable("r1000_arch", seq_pa046, sizeof seq_pa046, "PA046-02");
-	load_programmable("r1000_arch", seq_pa047, sizeof seq_pa047, "PA047-02");
-	load_programmable("r1000_arch", seq_pa048, sizeof seq_pa048, "PA048-02");
+	Firmware_Copy(seq_pa040, sizeof seq_pa040, "PA040-02");
+	Firmware_Copy(seq_pa041, sizeof seq_pa041, "PA041-01");
+	Firmware_Copy(seq_pa042, sizeof seq_pa041, "PA042-02");
+	Firmware_Copy(seq_pa043, sizeof seq_pa043, "PA043-02");
+	Firmware_Copy(seq_pa044, sizeof seq_pa044, "PA044-01");
+	Firmware_Copy(seq_pa045, sizeof seq_pa045, "PA045-03");
+	Firmware_Copy(seq_pa046, sizeof seq_pa046, "PA046-02");
+	Firmware_Copy(seq_pa047, sizeof seq_pa047, "PA047-02");
+	Firmware_Copy(seq_pa048, sizeof seq_pa048, "PA048-02");
 	state->seq_wcsram = (uint64_t*)CTX_GetRaw("SEQ_WCS", sizeof(uint64_t) << UADR_WIDTH);
 	state->seq_top = (uint32_t*)CTX_GetRaw("SEQ_TOP", sizeof(uint32_t) << 10);
 	state->seq_bot = (uint32_t*)CTX_GetRaw("SEQ_BOT", sizeof(uint32_t) << 10);
 
 	// -------------------- TYP --------------------
 
-	load_programmable("r1000_arch", tv_pa010, sizeof tv_pa010, "PA010");
-	load_programmable("r1000_arch", typ_pa068, sizeof typ_pa068, "PA068");
-	load_programmable("r1000_arch", typ_pa059, sizeof typ_pa059, "PA059-01");
+	Firmware_Copy(tv_pa010, sizeof tv_pa010, "PA010-02");
+	Firmware_Copy(typ_pa068, sizeof typ_pa068, "PA068-01");
+	Firmware_Copy(typ_pa059, sizeof typ_pa059, "PA059-01");
 	state->typ_wcsram = (uint64_t*)CTX_GetRaw("TYP_WCS", sizeof(uint64_t) << 14);
 	state->typ_rfram = (uint64_t*)CTX_GetRaw("TYP_RF", sizeof(uint64_t) << 10);
 
 	// -------------------- VAL --------------------
 
-	load_programmable("r1000_arch", val_pa011, sizeof val_pa011, "PA011");
+	Firmware_Copy(val_pa011, sizeof val_pa011, "PA011-02");
 	state->val_wcsram = (uint64_t*)CTX_GetRaw("VAL_WCS", sizeof(uint64_t) << 14);
 	state->val_rfram = (uint64_t*)CTX_GetRaw("VAL_RF", sizeof(uint64_t) << 10);
 
 	// -------------------- IOC --------------------
 
-	load_programmable("r1000_arch", ioc_pb011, sizeof ioc_pb011, "PB011");
+	Firmware_Copy(ioc_pb011, sizeof ioc_pb011, "PB011-01");
 	state->ioc_wcsram = (uint64_t*)CTX_GetRaw("IOC_WCS", sizeof(uint64_t) << 14);
 	state->ioc_tram = (uint16_t*)CTX_GetRaw("IOC_TRAM", sizeof(uint16_t) * 2049);
 

@@ -62,37 +62,6 @@ static int sc_quota_exit = 0;
 int sc_started;
 struct timespec sc_t0;
 
-void
-load_programmable(const char *who, void *dst, size_t size, const char *arg)
-{
-	char buf[BUFSIZ];
-	int ret;
-
-	bprintf(buf, "%s", arg);
-	ret = Firmware_Copy(buf, size, dst);
-	if (ret < 0) {
-		bprintf(buf, "%s-01", arg);
-		ret = Firmware_Copy(buf, size, dst);
-	}
-	if (ret < 0) {
-		bprintf(buf, "%s-02", arg);
-		ret = Firmware_Copy(buf, size, dst);
-	}
-	if (ret < 0) {
-		bprintf(buf, "%s-03", arg);
-		ret = Firmware_Copy(buf, size, dst);
-	}
-	if (ret < 0) {
-		bprintf(buf, "PROM-%s", arg);
-		ret = Firmware_Copy(buf, size, dst);
-	}
-	if (ret < 0) {
-		fprintf(stderr, "Firmware '%s' missing for '%s'\n", arg, who);
-		fprintf(stderr, "(run 'make setup_systemc' ?)\n");
-		exit(2);
-	}
-}
-
 double
 sc_main_get_quota(void)
 {

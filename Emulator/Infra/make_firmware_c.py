@@ -40,29 +40,14 @@ import http.client
 def firmwarelist():
     ''' See: https://datamuseum.dk/wiki/Bits:Keyword/RATIONAL_1000/SW '''
     yield from range(30000502, 30000504)	# IOC+RESHA EEPROM
-    yield from range(30002508, 30002515)	# PA013…019
-    yield from range(30002517, 30002518)	# DIPROC "9028"
-    yield from range(30002520, 30002529)	# PA101…109
-    yield from range(30002529, 30002539)	# PA110…119
-    yield from range(30002539, 30002540)	# PA120
-    yield from range(30002542, 30002551)	# PB010…018
-    yield from range(30002551, 30002562)	# PA045…055
-    yield from range(30002562, 30002563)	# PA065
+    yield from range(30002543, 30002544)	# PB011
+    yield from range(30002551, 30002555)	# PA045…048
     yield from range(30002563, 30002566)	# PA025…027
-    yield from range(30002567, 30002568)	# PA029
-    yield from range(30002568, 30002575)	# PA030…PA036
-    yield from range(30002577, 30002578)	# PA012
     yield from range(30002578, 30002581)	# PA059, PA060, PA068
-    yield from range(30002595, 30002608)	# MEM32 GALs
-    yield from range(30002631, 30002636)	# PA020…024
     yield from range(30002636, 30002641)	# PA040…044
     yield from range(30002886, 30002887)	# PA010-02
     yield from range(30002888, 30002889)	# PA011-02
-    yield from range(30002889, 30002893)	# MEM32 GALs
     yield from range(30002893, 30002894)	# PA028-02
-    yield from range(30002894, 30002896)	# MEM32 GALs
-    yield from range(30002896, 30002903)	# MEM32 DFSM
-    yield from range(30003041, 30003042)	# DIPROC "-01"
     yield from range(30003101, 30003107)	# NOVRAMS
 
 def getone(http_conn, nbr):
@@ -124,7 +109,7 @@ def main():
         file.write('}\n')
         file.write('\n')
         file.write('int\n')
-        file.write('Firmware_Copy(const char *name, size_t size, void *dst)\n')
+        file.write('Firmware_Copy(void *dst, size_t size, const char *name)\n')
         file.write('{\n')
         file.write('\tsize_t sz;\n')
         file.write('\tuint8_t *ptr;\n')
@@ -133,7 +118,7 @@ def main():
         file.write('\tif (ptr == NULL)\n')
         file.write('\t\treturn(-1);\n')
         file.write('\tassert(size == sz);\n')
-        file.write('\tmemcpy(dst, ptr, sz);\n');
+        file.write('\tmemcpy(dst, ptr, sz);\n')
         file.write('\treturn(0);\n')
         file.write('}\n')
 

@@ -4,9 +4,6 @@
 
 extern int sc_started;
 
-void load_programmable(const char *who,
-    void *dst, size_t size, const char *spec);
-
 void pit_clock(void);
 
 extern uint16_t mp_refresh_count;

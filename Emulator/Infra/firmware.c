@@ -4889,9 +4889,8 @@ Firmware_Get(const char *name, size_t *size)
 	return(NULL);
 }
 
-/*lint -save -e670 */
 int
-Firmware_Copy(const char *name, size_t size, void *dst)
+Firmware_Copy(void *dst, size_t size, const char *name)
 {
 	size_t sz;
 	uint8_t *ptr;
@@ -4903,4 +4902,3 @@ Firmware_Copy(const char *name, size_t size, void *dst)
 	memcpy(dst, ptr, sz);
 	return(0);
 }
-/*lint -restore */

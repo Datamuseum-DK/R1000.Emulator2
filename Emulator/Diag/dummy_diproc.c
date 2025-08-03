@@ -244,7 +244,7 @@ diag_load_novram(const struct diagproc *dp, const char *novram_name, unsigned sr
 	uint8_t novram[0x100];
 	unsigned u;
 
-	load_programmable("turbo", novram, sizeof novram, novram_name);
+	Firmware_Copy(novram, sizeof novram, novram_name);
 	for (u = 0; u < len; u++) {
 		dp->ram[dst] = novram[src++] << 4;
 		dp->ram[dst++] |= novram[src++];
