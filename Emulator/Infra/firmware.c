@@ -4889,16 +4889,14 @@ Firmware_Get(const char *name, size_t *size)
 	return(NULL);
 }
 
-int
+void
 Firmware_Copy(void *dst, size_t size, const char *name)
 {
 	size_t sz;
 	uint8_t *ptr;
 
 	ptr = Firmware_Get(name, &sz);
-	if (ptr == NULL)
-		return(-1);
+	assert(ptr != NULL);
 	assert(size == sz);
 	memcpy(dst, ptr, sz);
-	return(0);
 }

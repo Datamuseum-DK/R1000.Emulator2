@@ -1,3 +1,33 @@
+/*-
+ * Copyright (c) 2021 Poul-Henning Kamp
+ * All rights reserved.
+ *
+ * Author: Poul-Henning Kamp <phk@phk.freebsd.dk>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ */
 
 #include <pthread.h>
 #include <stdint.h>
@@ -5,7 +35,6 @@
 #include <string.h>
 
 #include "Infra/r1000.h"
-#include "Diag/diag.h"
 #include "Diag/diagproc.h"
 #include "Diag/exp_hash.h"
 #include "Infra/context.h"
@@ -18,7 +47,7 @@ static uint64_t *seq_wcs;
 static uint32_t *decode_top;
 static uint32_t *decode_bot;
 
-static int
+static void
 load_dispatch_rams_200_seq(const struct diagproc *dp)
 {
 	unsigned n, offset;
@@ -77,11 +106,9 @@ load_dispatch_rams_200_seq(const struct diagproc *dp)
 	}
 
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_DISPATCH_RAMS_200.SEQ");
-
-	return ((int)DIPROC_RESPONSE_DONE);
 }
 
-static int
+static void
 load_control_store_200_seq(const struct diagproc *dp)
 {
 	struct ctx *ctx;
@@ -141,7 +168,6 @@ load_control_store_200_seq(const struct diagproc *dp)
 		seq_wcs[seq_ptr++] = wcs;
 	}
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_CONTROL_STORE_200.SEQ");
-	return ((int)DIPROC_RESPONSE_DONE);
 }
 
 static void
@@ -153,72 +179,75 @@ prep_run_seq(const struct diagproc *dp)
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_RUN.SEQ");
 }
 
-int v_matchproto_(diagprocturbo_t)
+void v_matchproto_(diagprocturbo_t)
 diagproc_turbo_seq(const struct diagproc *dp)
 {
 	if (dp->dl_hash == CLEAR_PARITY_SEQ_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_PARITY.SEQ");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == READ_NOVRAM_DATA_SEQ_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_DATA.SEQ");
 		*dp->ip = 0x3;
-		return(diag_load_novram(dp, "R1000_SEQ_NOVRAM", 1, 0x1a, 8));
+		diag_load_novram(dp, "R1000_SEQ_NOVRAM", 1, 0x1a, 8);
+		return;
 	}
 	if (dp->dl_hash == READ_NOVRAM_INFO_SEQ_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_INFO.SEQ");
 		*dp->ip = 0x3;
-		return(diag_load_novram(dp, "R1000_SEQ_NOVRAM", 0, 0x20, 21));
+		diag_load_novram(dp, "R1000_SEQ_NOVRAM", 0, 0x20, 21);
+		return;
 	}
 
 	if (dp->dl_hash == LOAD_DISPATCH_RAMS_200_SEQ_HASH ||
 	    dp->dl_hash == 0x00001081) {
-		return (load_dispatch_rams_200_seq(dp));
+		load_dispatch_rams_200_seq(dp);;
+		return;
 	}
 	if (dp->dl_hash == LOAD_COUNTER_SEQ_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_COUNTER.SEQ");
 		seq_ptr = vbe16dec(dp->ram + 0x18);
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_SEQ_HASH ||
 	    dp->dl_hash == 0x00001045) {
-		return (load_control_store_200_seq(dp));
+		load_control_store_200_seq(dp);
+		return;
 	}
 	if (dp->dl_hash == PREP_RUN_SEQ_HASH) {
 		prep_run_seq(dp);
-	        return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == RESET_SEQ_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "THAW 0");
 		mp_seq_prepped = 0;
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == RUN_CHECK_SEQ_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "THAW 1");
 		mp_seq_prepped = 1;
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 
 	if (dp->dl_hash == PREP_LOAD_DISPATCH_RAMS_SEQ_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_LOAD_DISPATCH_RAMS.SEQ");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == CLR_BREAK_MASK_SEQ_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo CLR_BREAK_MASK.SEQ");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == GET_MISC_ERRORS_SEQ_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo GET_MISC_ERRORS.SEQ");
 		dp->ram[0x18] = 0x1f;
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == HALT_SEQ_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo HALT.SEQ");
 		*dp->ip = 0x6;
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo *.SEQ");
-	return ((int)DIPROC_RESPONSE_DONE);
-	return (0);
+	return;
 }

@@ -49,8 +49,8 @@
 #include "Infra/vend.h"
 
 #define UEV_MEMEX	(1<<(15-0))
-#define UEV_ECC		(1<<(15-1))
-#define UEV_BKPT	(1<<(15-2))
+//#define UEV_ECC		(1<<(15-1))
+//#define UEV_BKPT	(1<<(15-2))
 #define UEV_CK_EXIT	(1<<(15-3))
 #define UEV_FLD_ERR	(1<<(15-4))
 #define UEV_CLASS	(1<<(15-5))
@@ -61,17 +61,17 @@
 #define UEV_PAGE_X	(1<<(15-10))
 #define UEV_CHK_SYS	(1<<(15-11))
 #define UEV_NEW_PAK	(1<<(15-12))
-#define UEV_NEW_STS	(1<<(15-13))
-#define UEV_XFER_CP	(1<<(15-14))
+//#define UEV_NEW_STS	(1<<(15-13))
+//#define UEV_XFER_CP	(1<<(15-14))
 
 #define MIDPLANE(macro) \
-	macro(uint64_t, adr_bus, -1) \
-	macro(uint64_t, fiu_bus, -1) \
+	macro(uint64_t, adr_bus, ~0ULL) \
+	macro(uint64_t, fiu_bus, ~0ULL) \
 	macro(unsigned, ioc_trace, 0) \
 	macro(unsigned, nua_bus, 0x3fff) \
-	macro(uint64_t, spc_bus, -1) \
-	macro(uint64_t, typ_bus, -1) \
-	macro(uint64_t, val_bus, -1) \
+	macro(uint64_t, spc_bus, ~0ULL) \
+	macro(uint64_t, typ_bus, ~0ULL) \
+	macro(uint64_t, val_bus, ~0ULL) \
 	macro(unsigned, seq_prepped, 0) \
 	macro(unsigned, seq_halted, 0) \
 	macro(unsigned, seq_uev, 0) \
@@ -138,7 +138,7 @@ MIDSTATE(DMACRO)
 MIDSTATE(DMACRO)
 #undef DMACRO
 
-#define UADR_MASK 0x3fff
+//#define UADR_MASK 0x3fff
 #define UADR_WIDTH 14
 
 #define BUS64_LSB(lsb) (63 - (lsb))
@@ -167,15 +167,15 @@ MIDSTATE(DMACRO)
 
 static void csa_q4(struct r1000_arch_state *state);
 
-static bool mem_is_hit(struct r1000_arch_state *state, unsigned adr, unsigned set);
+static bool mem_is_hit(const struct r1000_arch_state *state, unsigned adr, unsigned set);
 static void mem_load_mar(struct r1000_arch_state *state);
 static void mem_h1(struct r1000_arch_state *state);
 static void mem_q4(struct r1000_arch_state *state);
 
-static bool fiu_conditions(struct r1000_arch_state *state);
+static bool fiu_conditions(const struct r1000_arch_state *state);
 static void fiu_do_tivi(struct r1000_arch_state *state);
 static void fiu_rotator(struct r1000_arch_state *state, bool sclk);
-static uint64_t fiu_frame(struct r1000_arch_state *state);
+static uint64_t fiu_frame(const struct r1000_arch_state *state);
 static void fiu_q1(struct r1000_arch_state *state);
 static void fiu_q2(struct r1000_arch_state *state);
 static void fiu_q4(struct r1000_arch_state *state);
@@ -194,8 +194,8 @@ static void seq_q1(struct r1000_arch_state *state);
 static void seq_q3(struct r1000_arch_state *state);
 static void seq_q4(struct r1000_arch_state *state);
 
-static unsigned tv_cadr(struct r1000_arch_state *state, unsigned uirc, unsigned frame, unsigned count);
-static uint64_t tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a, bool t, uint64_t *rfram);
+static unsigned tv_cadr(const struct r1000_arch_state *state, unsigned uirc, unsigned frame, unsigned count);
+static uint64_t tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a, bool t, const uint64_t *rfram);
 
 static bool typ_bin_op_pass(struct r1000_arch_state *state);
 static bool typ_priv_path_eq(struct r1000_arch_state *state);
@@ -215,11 +215,11 @@ static void val_h1(struct r1000_arch_state *state);
 static void val_q2(struct r1000_arch_state *state);
 static void val_q4(struct r1000_arch_state *state);
 
-static void ioc_h1(struct r1000_arch_state *state);
-static void ioc_q2(struct r1000_arch_state *state);
+static void ioc_h1(const struct r1000_arch_state *state);
+static void ioc_q2(const struct r1000_arch_state *state);
 static void ioc_q4(struct r1000_arch_state *state);
 static void ioc_do_xact(struct r1000_arch_state *state);
-static bool ioc_cond(struct r1000_arch_state *state);
+static bool ioc_cond(const struct r1000_arch_state *state);
 
 
 static uint8_t fiu_pa025[512];
@@ -251,6 +251,7 @@ do {							\
 	case 0x20: c = aa | bb; break;			\
 	case 0x10: c = aa | (bb^0xffffffff); break;	\
 	case 0x00: c = 0xffffffff; break;		\
+	default: assert(0);				\
 	}						\
 	c ^= 0xffffffff;				\
 							\
@@ -290,13 +291,13 @@ do {							\
 #define CMD_PMR	(1<<0xe)	// PHYSICAL_MEM_READ
 #define CMD_LMW	(1<<0xd)	// LOGICAL_MEM_WRITE
 #define CMD_LMR	(1<<0xc)	// LOGICAL_MEM_READ
-#define CMD_C01	(1<<0xb)	// COPY 0 TO 1
-#define CMD_MTT	(1<<0xa)	// MEMORY_TO_TAGSTORE
-#define CMD_C10	(1<<0x9)	// COPY 1 TO 0
-#define CMD_SFF	(1<<0x8)	// SET HIT FLIP FLOPS
+//#define CMD_C01	(1<<0xb)	// COPY 0 TO 1
+//#define CMD_MTT	(1<<0xa)	// MEMORY_TO_TAGSTORE
+//#define CMD_C10	(1<<0x9)	// COPY 1 TO 0
+//#define CMD_SFF	(1<<0x8)	// SET HIT FLIP FLOPS
 #define CMD_PTW	(1<<0x7)	// PHYSICAL TAG WRITE
 #define CMD_PTR	(1<<0x6)	// PHYSICAL TAG READ
-#define CMD_INI	(1<<0x5)	// INITIALIZE MRU
+//#define CMD_INI	(1<<0x5)	// INITIALIZE MRU
 #define CMD_LTR	(1<<0x4)	// LOGICAL TAG READ
 #define CMD_NMQ	(1<<0x3)	// NAME QUERY
 #define CMD_LRQ	(1<<0x2)	// LRU QUERY
@@ -343,9 +344,9 @@ do {							\
 #define RND_PRED_LD		(1<< 9)
 #define RND_L_ABRT		(1<< 8)
 
-#define RND_LEX_COMM0		(1<< 7)
-#define RND_LEX_COMM1		(1<< 6)
-#define RND_LEX_COMM2		(1<< 5)
+//#define RND_LEX_COMM0		(1<< 7)
+//#define RND_LEX_COMM1		(1<< 6)
+//#define RND_LEX_COMM2		(1<< 5)
 #define RND_CIB_PC_L		(1<< 4)
 #define RND_INSTR_MX		(1<< 3)
 #define RND_IBUFF_LD		(1<< 2)
@@ -587,7 +588,6 @@ struct r1000_arch_state {
 	bool seq_maybe_dispatch;
 	unsigned seq_intreads;
 	bool seq_tmp_carry_out;
-	bool uses_tos;
 	unsigned seq_mem_start;
 
 	#define BRANCH_FALSE	(1<<0x0)
@@ -625,7 +625,7 @@ struct r1000_arch_state {
 	// -------------------- TYP --------------------
 
 	uint64_t *typ_rfram;
-	uint64_t typ_a, typ_b, c, typ_nalu, typ_alu;
+	uint64_t typ_a, typ_b, typ_nalu, typ_alu;
 	uint64_t typ_wdr;
 	unsigned typ_count;
 	bool typ_cond;
@@ -732,7 +732,7 @@ r1000_arch_new(void)
 
 	// -------------------- MEM --------------------
 
-	state->mem_bcmd = 1 << state->mem_cmd;
+	state->mem_bcmd = 1U << state->mem_cmd;
 	state->mem_bitt = (uint64_t*)CTX_GetRaw("MEM.bitt", sizeof(*state->mem_bitt) << 22);
 			// 12 bit line, 3 bit set, 6 bit word, 1 bit T/V
 	state->mem_ram = (uint64_t*)CTX_GetRaw("MEM.ram", sizeof(*state->mem_ram) << 15);
@@ -828,7 +828,7 @@ r1000_arch_micro_cycle(struct r1000_arch_state *state)
 // -------------------- MEM --------------------
 
 static bool
-mem_is_hit(struct r1000_arch_state *state, unsigned adr, unsigned set)
+mem_is_hit(const struct r1000_arch_state *state, unsigned adr, unsigned set)
 {
 	uint64_t data = state->mem_ram[adr];
 	if (CMDS(CMD_LMR|CMD_LMW|CMD_LTR) && ((state->mem_mar ^ data) & ~0x1fffULL)) {
@@ -899,7 +899,7 @@ mem_h1(struct r1000_arch_state *state)
 	} else {
 		state->mem_cmd = state->mem_q4cmd ^ 0xf;
 	}
-	state->mem_bcmd = 1 << state->mem_cmd;
+	state->mem_bcmd = 1U << state->mem_cmd;
 	state->mem_p_mcyc2_next =
 		!(
 			((state->mem_q4cmd != 0xf) && (!p_early_abort) && p_mcyc2_next_hd) ||
@@ -950,7 +950,7 @@ mem_h1(struct r1000_arch_state *state)
 
 		if (CMDS(CMD_LMR|CMD_PMR) && !labort) {
 			uint32_t radr =	(state->mem_hit_set << 18) | (state->mem_cl << 6) | state->mem_wd;
-			assert(radr < (1 << 21));
+			assert(radr < (1U << 21));
 			state->mem_tqreg = state->mem_bitt[radr+radr];
 			state->mem_vqreg = state->mem_bitt[radr+radr+1];
 		}
@@ -958,7 +958,7 @@ mem_h1(struct r1000_arch_state *state)
 		bool ihit = mp_mem_hit == 0xf;
 		if (CMDS(CMD_LMW|CMD_PMW) && !ihit && !state->mem_labort) {
 			uint32_t radr = (state->mem_hit_set << 18) | (state->mem_cl << 6) | state->mem_wd;
-			assert(radr < (1 << 21));
+			assert(radr < (1U << 21));
 			state->mem_bitt[radr+radr] = state->mem_tdreg;
 			state->mem_bitt[radr+radr+1] = state->mem_vdreg;
 		}
@@ -1074,7 +1074,7 @@ mem_q4(struct r1000_arch_state *state)
 			} while (0);
 		} else if (CMDS(CMD_PMR|CMD_PMW|CMD_PTW|CMD_PTR)) {
 			if (state->mem_mar_set < 8) {
-				state->mem_hits = 1 << state->mem_mar_set;
+				state->mem_hits = 1U << state->mem_mar_set;
 				state->mem_hit_set = state->mem_mar_set;
 			}
 		} else {
@@ -1098,7 +1098,7 @@ mem_q4(struct r1000_arch_state *state)
 // -------------------- FIU --------------------
 
 static bool
-fiu_conditions(struct r1000_arch_state *state)
+fiu_conditions(const struct r1000_arch_state *state)
 {
 
 	switch(mp_cond_sel) {
@@ -1119,12 +1119,13 @@ fiu_conditions(struct r1000_arch_state *state)
 	case 0x6d: return(!state->fiu_mar_modified);
 	case 0x6e: return(!state->fiu_incmplt_mcyc);
 	case 0x6f: return((state->fiu_moff & 0x3f) != 0);
-	};
+	default: assert(0);
+	}
 	return (false);
 }
 
 static uint64_t
-fiu_frame(struct r1000_arch_state *state)
+fiu_frame(const struct r1000_arch_state *state)
 {
 	uint64_t u = 0;
 
@@ -1495,7 +1496,7 @@ fiu_q1(struct r1000_arch_state *state)
 	pa027a |= mp_mem_hit << 5;
 	pa027a |= state->fiu_init_mru_d << 4;
 	pa027a |= (state->fiu_omq & 0xc);
-	pa027a |= 1 << 1;
+	pa027a |= 1U << 1;
 	pa027a |= pgmod << 0;
 	state->fiu_pa027d = fiu_pa027[pa027a];
 	state->fiu_setq = (state->fiu_pa027d >> 3) & 3;
@@ -1759,9 +1760,9 @@ fiu_q4(struct r1000_arch_state *state)
 		case 0:
 			state->fiu_lfreg = (((state->fiu_vi_bus >> BUS64_LSB(31)) & 0x3f) + 1) & 0x3f;
 			if ((state->fiu_ti_bus >> BUS64_LSB(36)) & 1)
-				state->fiu_lfreg |= (1 << 6);
+				state->fiu_lfreg |= (1U << 6);
 			else if (!((state->fiu_vi_bus >> BUS64_LSB(25)) & 1))
-				state->fiu_lfreg |= (1 << 6);
+				state->fiu_lfreg |= (1U << 6);
 			state->fiu_lfreg ^= 0x7f;
 			break;
 		case 1:
@@ -1770,11 +1771,12 @@ fiu_q4(struct r1000_arch_state *state)
 		case 2:
 			state->fiu_lfreg = (state->fiu_ti_bus >> BUS64_LSB(48)) & 0x3f;
 			if ((state->fiu_ti_bus >> BUS64_LSB(36)) & 1)
-				state->fiu_lfreg |= (1 << 6);
+				state->fiu_lfreg |= (1U << 6);
 			state->fiu_lfreg = state->fiu_lfreg ^ 0x7f;
 			break;
 		case 3:	// No load
 			break;
+		default: assert(0);
 		}
 
 		state->fiu_marh &= ~(0x3fULL << 15);
@@ -1784,11 +1786,9 @@ fiu_q4(struct r1000_arch_state *state)
 		if (state->fiu_lfreg != 0x7f)
 			state->fiu_lfreg |= 1<<7;
 
-{
 		unsigned csacntl0 = (state->fiu_typwcsram[mp_nua_bus] >> 1) & 7;
 		unsigned csacntl1 = (state->fiu_typuir >> 1) & 6;
 		state->fiu_pdt = (csacntl0 == 7) && (csacntl1 == 0);
-}
 		state->fiu_nve = mp_csa_nve;
 		if (!(csa >> 2)) {
 			state->fiu_pdreg = state->fiu_ctopo;
@@ -2381,7 +2381,7 @@ seq_h1(struct r1000_arch_state *state)
 	state->seq_rndx |= seq_pa047[state->seq_urand | 0x100];
 
 	state->seq_br_typ = UIR_SEQ_BRTYP;
-	state->seq_br_typb = 1 << state->seq_br_typ;
+	state->seq_br_typb = 1U << state->seq_br_typ;
 
 	state->seq_maybe_dispatch = BRTYPE(A_DISPATCH);
 
@@ -3413,8 +3413,6 @@ static void
 typ_q4(struct r1000_arch_state *state)
 {
 	uint64_t c = 0;
-	bool chi = false;
-	bool clo = false;
 	unsigned priv_check = UIR_TYP_UPVC;
 
 	if (mp_ram_stop && !mp_freeze) {
@@ -3428,30 +3426,22 @@ typ_q4(struct r1000_arch_state *state)
 
 		if (!fiu0) {
 			c |= ~mp_fiu_bus & 0xffffffff00000000ULL;
-			chi = true;
 		} else {
 			if (sel) {
 				c |= state->typ_wdr & 0xffffffff00000000ULL;
 			} else {
 				c |= state->typ_alu & 0xffffffff00000000ULL;
 			}
-			chi = true;
 		}
 		if (!fiu1) {
 			c |= ~mp_fiu_bus & 0xffffffffULL;
-			clo = true;
 		} else {
 			if (sel) {
 				c |= state->typ_wdr & 0xffffffffULL;
 			} else {
 				c |= state->typ_alu & 0xffffffffULL;
 			}
-			clo = true;
 		}
-		if (chi && !clo)
-			c |= 0xffffffff;
-		if (!chi && clo)
-			c |= 0xffffffffULL << 32;
 
 		unsigned cadr = tv_cadr(state, UIR_TYP_C, UIR_TYP_FRM, state->typ_count);
 		if (cadr < 0x400)
@@ -3809,7 +3799,7 @@ val_q4(struct r1000_arch_state *state)
 // ------------------ TYP&VAL ------------------
 
 static uint64_t
-tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a, bool t, uint64_t *rfram)
+tv_find_ab(struct r1000_arch_state *state, unsigned uir, unsigned frame, bool a, bool t, const uint64_t *rfram)
 {
 	// NB: uir is inverted
 	// Sorted after frequency of use.
@@ -3918,7 +3908,7 @@ csa_q4(struct r1000_arch_state *state)
 }
 
 static unsigned
-tv_cadr(struct r1000_arch_state *state, unsigned uirc, unsigned frame, unsigned count)
+tv_cadr(const struct r1000_arch_state *state, unsigned uirc, unsigned frame, unsigned count)
 {
 	// Ordered by frequency of use.
 	// Pay attention to the order of range comparisons when reordering
@@ -3954,7 +3944,6 @@ tv_cadr(struct r1000_arch_state *state, unsigned uirc, unsigned frame, unsigned 
 		return (0x400);
 	}
 	assert(0);
-	return (0x400);
 }
 
 // -------------------- IOC --------------------
@@ -4054,7 +4043,7 @@ ioc_do_xact(struct r1000_arch_state *state)
 }
 
 static bool
-ioc_cond(struct r1000_arch_state *state)
+ioc_cond(const struct r1000_arch_state *state)
 {
 	switch (mp_cond_sel) {
 	case 0x78:
@@ -4089,7 +4078,7 @@ ioc_cond(struct r1000_arch_state *state)
 }
 
 static void
-ioc_h1(struct r1000_arch_state *state)
+ioc_h1(const struct r1000_arch_state *state)
 {
 	if (state->ioc_rspwrp != state->ioc_rsprdp) {
 		mp_macro_event |= 0x8;
@@ -4130,7 +4119,7 @@ ioc_h1(struct r1000_arch_state *state)
 }
 
 static void
-ioc_q2(struct r1000_arch_state *state)
+ioc_q2(const struct r1000_arch_state *state)
 {
 	unsigned rand = UIR_IOC_RAND;
 	if (state->ioc_slice_ev && !state->ioc_ten) {
@@ -4266,8 +4255,8 @@ ioc_q4(struct r1000_arch_state *state)
 	if (!mp_sf_stop) {
 		state->ioc_uir = state->ioc_wcsram[mp_nua_bus];
 		assert (state->ioc_uir <= 0xffff);
-		mp_nxt_adr_oe = 1 << UIR_IOC_AEN;
-		mp_nxt_fiu_oe = 1 << UIR_IOC_FEN;
+		mp_nxt_adr_oe = 1U << UIR_IOC_AEN;
+		mp_nxt_fiu_oe = 1U << UIR_IOC_FEN;
 		state->ioc_dumen = !mp_dummy_next;
 		state->ioc_csa_hit = !mp_csa_hit;
 
@@ -4284,12 +4273,12 @@ ioc_q4(struct r1000_arch_state *state)
 			state->ioc_tram[2048] = tptr;
 		}
 
-		mp_nxt_tv_oe = 1 << UIR_IOC_TVBS;
+		mp_nxt_tv_oe = 1U << UIR_IOC_TVBS;
 		if (mp_nxt_tv_oe & MEM_TV_OE) {
 			if (state->ioc_dumen) {
-				mp_nxt_tv_oe = 1 << 4;	   // IOC_TV
+				mp_nxt_tv_oe = 1U << 4;	   // IOC_TV
 			} else if (state->ioc_csa_hit) {
-				mp_nxt_tv_oe = 1 << 0;	   // VAL_V|TYP_T
+				mp_nxt_tv_oe = 1U << 0;	   // VAL_V|TYP_T
 			}
 		}
 	}

@@ -94,6 +94,7 @@ i8052_thread(void *priv)
 	vsb = VSB_new_auto();
 	AN(vsb);
 
+	memset(dp, 0, sizeof dp);
 	dp->ip = &dp->ram[0];
 	dp->name = i52->name;
 	dp->ram = i52->ram;
@@ -238,7 +239,7 @@ cli_diproc_dummy(struct cli *cli)
 	}
 }
 
-int
+void
 diag_load_novram(const struct diagproc *dp, const char *novram_name, unsigned src, unsigned dst, unsigned len)
 {
 	uint8_t novram[0x100];
@@ -249,6 +250,5 @@ diag_load_novram(const struct diagproc *dp, const char *novram_name, unsigned sr
 		dp->ram[dst] = novram[src++] << 4;
 		dp->ram[dst++] |= novram[src++];
 	}
-	return ((int)DIPROC_RESPONSE_DONE);
 }
 

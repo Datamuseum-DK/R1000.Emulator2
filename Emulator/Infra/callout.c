@@ -157,10 +157,12 @@ callout_callback(callout_callback_f *func,
 {
 	struct callout *co;
 	struct priv_sig_callback *psc;
+	char *p;
 
-	co = calloc(sizeof *co + sizeof *psc, 1);
-	AN(co);
-	psc = (void*)(co + 1);
+	p = calloc(sizeof *co + sizeof *psc, 1);
+	AN(p);
+	co = (void*)p;
+	psc = (void*)(p + sizeof *co);
 	psc->func = func;
 	psc->priv = priv;
 	co->when = simclock + when;

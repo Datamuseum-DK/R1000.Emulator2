@@ -47,12 +47,6 @@
 
 #include "Chassis/r1000_arch.h"
 
-struct component {
-	VTAILQ_ENTRY(component)	list;
-	char			*name;
-	uint32_t		*flags;
-};
-
 static pthread_t sc_runner;
 static pthread_mutex_t sc_mtx;
 static pthread_cond_t sc_cond;

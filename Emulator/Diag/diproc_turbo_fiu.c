@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "Infra/r1000.h"
-#include "Diag/diag.h"
 #include "Diag/diagproc.h"
 #include "Diag/exp_hash.h"
 #include "Infra/context.h"
@@ -15,7 +14,7 @@
 static uint64_t *fiu_wcs;
 static unsigned fiu_ptr;
 
-static int
+static void
 load_control_store_200_fiu(const struct diagproc *dp)
 {
 	struct ctx *ctx;
@@ -82,10 +81,9 @@ load_control_store_200_fiu(const struct diagproc *dp)
 		fiu_wcs[fiu_ptr++] = wcs;
 	}
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_CONTROL_STORE_200.FIU");
-	return ((int)DIPROC_RESPONSE_DONE);
 }
 
-static int
+static void
 load_counter(const struct diagproc *dp)
 {
 	fiu_ptr = vbe16dec(dp->ram + 0x28);
@@ -93,73 +91,76 @@ load_counter(const struct diagproc *dp)
 	mp_refresh_count = vbe16dec(dp->ram + 0x26);
 
 	Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_COUNTER.FIU");
-	return ((int)DIPROC_RESPONSE_DONE);
 }
 
-int v_matchproto_(diagprocturbo_t)
+void v_matchproto_(diagprocturbo_t)
 diagproc_turbo_fiu(const struct diagproc *dp)
 {
 	if (dp->dl_hash == LOAD_COUNTER_FIU_HASH) {
-		return (load_counter(dp));
+		load_counter(dp);
+		return;
 	}
 	if (dp->dl_hash == INIT_MRU_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo INIT_MRU.FIU");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == CLEAR_PARITY_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_PARITY.FIU");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == LOAD_HRAM_32_0_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_HRAM_32_0.FIU");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == LOAD_HRAM_1_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_HRAM_1.FIU");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 	if (dp->dl_hash == READ_NOVRAM_DATA_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_DATA.FIU");
 		*dp->ip = 0x3;
-		return(diag_load_novram(dp, "R1000_FIU_NOVRAM", 1, 0x22, 8));
+		diag_load_novram(dp, "R1000_FIU_NOVRAM", 1, 0x22, 8);
+		return;
 	}
 	if (dp->dl_hash == READ_NOVRAM_INFO_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo READ_NOVRAM_INFO.FIU");
 		*dp->ip = 0x3;
-		return(diag_load_novram(dp, "R1000_FIU_NOVRAM", 0, 0x27, 21));
+		diag_load_novram(dp, "R1000_FIU_NOVRAM", 0, 0x27, 21);
+		return;
 	}
 	if (dp->dl_hash == LOAD_CONTROL_STORE_200_FIU_HASH ||
 	    dp->dl_hash == 0x00001045) {
-		return (load_control_store_200_fiu(dp));
+		load_control_store_200_fiu(dp);
+		return;
 	}
 	if (dp->dl_hash == LOAD_REFRESH_REGS_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_REFRESH_REGS.FIU");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 
 	if (dp->dl_hash == CLEAR_EXCEPTIONS_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo CLEAR_EXCEPTIONS.FIU");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 
 	if (dp->dl_hash == LOAD_UIR_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo LOAD_UIR.FIU");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 
 	if (dp->dl_hash == PREP_RUN_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo PREP_RUN.FIU");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 
 	if (dp->dl_hash == RESET_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo RESET.FIU");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 
 	if (dp->dl_hash == MF_FIU_HASH) {
 		Trace(trace_diproc, "%s %s", dp->name, "Turbo MF.FIU");
-		return ((int)DIPROC_RESPONSE_DONE);
+		return;
 	}
 
 	if (dp->dl_hash == RUN_NORMAL_FIU_HASH) {
@@ -172,7 +173,4 @@ diagproc_turbo_fiu(const struct diagproc *dp)
 		mp_fiu_freeze = 1;
 		mp_fiu_unfreeze = 0;
 	}
-
-
-	return (0);
 }

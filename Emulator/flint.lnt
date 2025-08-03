@@ -103,6 +103,7 @@
 // 123: Macro 'BOARD' defined with arguments at line 23 -- this is just a warning
 -esym(123, BOARD)
 -esym(123, RESPONSE)
+-esym(123, DMACRO)
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -128,3 +129,5 @@
 -e679		// Suspicious Truncation in arithmetic expression combining with pointer
 -e835		// A zero has been given as right argument to operator '<<'
 -esym(123,MC_*)	// Macro '___' defined with arguments at ___ -- this is just a warning
+
+-esym(765, mp_*)
