@@ -574,8 +574,11 @@ struct r1000_arch_state {
 	unsigned csa_botreg;
 };
 
-r1000_arch :: r1000_arch(void)
+static struct r1000_arch_state *
+r1000_arch_new(void)
 {
+	struct r1000_arch_state *state;
+
 	state = (struct r1000_arch_state *)CTX_GetRaw("R1000", sizeof *state);
 
 	// -------------------- MEM --------------------
@@ -633,12 +636,14 @@ r1000_arch :: r1000_arch(void)
 
 	state->ioc_ram = (uint8_t *)CTX_GetRaw("IOP.ram_space", 512<<10);
 	state->ioc_is_tracing = false;
+
+	return (state);
 }
 
 // ----------- One Micro Cycle -----------------
 
-void
-r1000_arch :: doit(void)
+static void
+r1000_arch_micro_cycle(struct r1000_arch_state *state)
 {
 	mem_q4(state);
 	fiu_q4(state);
@@ -669,6 +674,19 @@ r1000_arch :: doit(void)
 	ioc_q2(state);
 
 	seq_q3(state);
+}
+
+// ----------- C++ API -----------------
+
+r1000_arch :: r1000_arch(void)
+{
+	state = r1000_arch_new();
+}
+
+void
+r1000_arch :: doit(void)
+{
+	r1000_arch_micro_cycle(state);
 }
 
 // -------------------- MEM --------------------
