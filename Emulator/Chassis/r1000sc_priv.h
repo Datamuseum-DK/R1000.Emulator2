@@ -1,10 +1,6 @@
 #ifndef R1000SC_PRIV_H
 #define R1000SC_PRIV_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define R1K_BOARD_MEM32_0	(1<<0)
 #define R1K_BOARD_MEM32_2	(1<<1)
 #define R1K_BOARD_FIU		(1<<2)
@@ -27,12 +23,6 @@ extern const char *tracepath;
 extern int sc_forced_reset;
 extern struct timespec sc_t0;
 
-#ifndef __cplusplus
 cli_func_f cli_sc_watchdog;
-#endif
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* R1000SC_PRIV_H */

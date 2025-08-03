@@ -113,18 +113,10 @@ MIDSTATE(DMACRO)
 
 void update_state(void);
 
+#define BUS64_LSB(lsb) (63 - (lsb))
+
 #ifdef __cplusplus
 }
 #endif
-
-/**********************************************************************
- * C++ Only below this point
- */
-
-#ifdef __cplusplus
-
-#define BUS64_LSB(lsb) (63 - (lsb))
-
-#endif /* __cplusplus */
 
 #endif /* R1000SC_H */

@@ -1,9 +1,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "Infra/r1000.h"
 #include "Chassis/r1000sc.h"
 #include "Chassis/r1000sc_priv.h"
-#include "Chassis/r1000_arch.hh"
+#include "Chassis/r1000_arch.h"
 
 static uint64_t ucycle;
 
@@ -13,15 +14,15 @@ sc_now(void)
 	return (ucycle * 200);
 }
 
-extern "C"
 void *
 sc_main_thread(void *priv)
 {
-	r1000_arch r1k;
+	struct r1000_arch_state *state = r1000_arch_new();
 
+	(void)priv;
 	(void)sc_main_get_quota();
 	while(1) {
-		r1k.doit();
+		r1000_arch_micro_cycle(state);
 		ucycle += 1;
 	}
 	return(0);
