@@ -133,7 +133,9 @@ speedup_patches() {
 	cli firmware patch RESHA_EEPROM 0x738a 0x00 0x00 0x00 0x0a
 
 	# Poll experiment completion four times as often
-	cli 'dfs patch FS_0.M200 0x93c6 0x00 0x14'
+	#	000193c4 48 78 00 4e                PEA.L       0x4e
+	#	000193c4 48 78 00 14                PEA.L       0x14
+	cli dfs patch FS_0.M200 0x93c6 0x00 0x14
 
 	# Speed up DELAY_LOOP(D1)
 	# 	00005d16 20 3c 00 00 05 00          MOVE.L  #0x00000500,D0
