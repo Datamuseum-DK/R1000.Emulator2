@@ -66,15 +66,25 @@ mandatory_patches() {
 	# Skip IOC test "Clock margining"
 	cli firmware patch IOC_EEPROM 0x1880 0x4e 0xf9 0x80 0x00 0x19 0x7c
 
-	# Set the cluster id to 408459 (= PAM's machine)
-	cli firmware patch IOC_EEPROM 0x7e84 0x00 0x06 0x3b 0x8b
+	# Patch ucode halt at 0x29f2 "ECC_EVENT_NOT_TAKEN" to <return>
+	cli dfs patch DIAG.M200_UCODE 0x5c240 \
+		0xf8 0xf8 0xfc 0xec 0xc8 0xd8 0xc8 0xf8 \
+		0xf9 0xf8 0xfd 0xe8 0xe8 0xd8 0xcc 0xf8 \
+		0xc2 0x52 0x78 0x78 0x40 0x63 0x4c 0x4c \
+		0x10 0x50 0x20 0x10 0x30 0x00 0x30 0x20
 
+	# Patch ucode halt at 0x29f4 "ECC_ERROR" to <return>
+	cli dfs patch DIAG.M200_UCODE 0x5c280 \
+		0xf8 0xf8 0xfc 0xec 0xc8 0xd8 0xc8 0xf8 \
+		0xf9 0xf8 0xfd 0xe8 0xe8 0xd8 0xcc 0xf8 \
+		0xc2 0x52 0x78 0x78 0x40 0x63 0x4c 0x4c \
+		0x10 0x50 0x20 0x10 0x30 0x00 0x30 0x20
 }
 
 speedup_patches() {
 
-	# These optional patches speed things up a bit but eliminates
-	# a ton of output when tracing.
+	# These optional patches speed things up a little bit, but eliminates
+	# tons of output when tracing.
 
 	# Skip IOC test "512k RAM Test (dword based)"
 	cli firmware patch IOC_EEPROM 0x03a4 0x4e 0xf9 0x80 0x00 0x04 0xf8
@@ -159,9 +169,28 @@ speedup_patches() {
 	#	00009818 20 3c 00 03 ff ff          MOVE.L  #0x0003ffff,D0
 	#	00009818 20 3c 00 00 04 00          MOVE.L  #0x00000400,D0
 	cli dfs patch KERNEL_0.M200 0x0000981a 0x00 0x00 0x04 0x00
+
+	# Speed up microcode loading
+	#	0002122c 2e bc 00 00 98 96          MOVE.L      #0x9896,(A7)
+	#	0002122c 2e bc 00 00 44 aa          MOVE.L      #0x44aa,(A7)
+	cli dfs patch LOADER.M200 0x122e 0x00 0x00 0x44 0xaa
+
+	# Reduce post-copyright delay
+	#	0002081e 2e bc 00 02 fa ee          MOVE.L      #0x2faee,(A7)
+	#	0002081e 2e bc 00 00 07 a1          MOVE.L      #0x007a1,(A7)
+	cli dfs patch LOADER.M200 0x0820 0x00 0x00 0x07 0xa1
+
+	# Reduce poll-rate 2s -> .1s
+	# (Do this slow working systems down ?)
+	#	00020c3e 2f 3c 00 00 98 96          MOVE.L      #0x9896,-(A7)
+	#	00020c3e 2f 3c 00 00 0f 42          MOVE.L      #0x0f42,-(A7)
+	cli dfs patch MONITOR.M200 0x0c40 0x00 0x00 0x0f 0x42
 }
 
 config_patches() {
+
+	# Set the cluster id to 408459 (= PAM's machine)
+	cli firmware patch IOC_EEPROM 0x7e84 0x00 0x06 0x3b 0x8b
 
 	# These patches adjust the configuration so we do not have to run
 	# CEDIT all the time.
@@ -180,6 +209,10 @@ config_patches() {
 
 	# Single MEM32 board
 	cli dfs patch HARDWARE.M200_CONFIG 0x05 0x0
+
+	# Enable kernel debugger
+	# cli dfs patch STANDARD.M200_CONFIG 0xbc 0x52
+	# cli dfs patch STANDARD.M200_CONFIG 0xb9 0x30
 }
 
 convenience_patches() {

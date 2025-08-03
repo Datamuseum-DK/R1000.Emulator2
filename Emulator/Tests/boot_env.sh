@@ -27,10 +27,6 @@ mkdir -p ${rundir}
 
 make -j 7 && make -j 7
 
-# Enable kernel debugger
-# cli dfs patch STANDARD.M200_CONFIG 0xbc 0x52
-# cli dfs patch STANDARD.M200_CONFIG 0xb9 0x30
-
 sc_boards ioc fiu mem0 seq typ val
 
 #cli trace +diproc
@@ -46,15 +42,6 @@ cli 'r1000 quota exit'
 cli "console > ${rundir}/_.console"
 cli "modem > ${rundir}/_.modem"
 cli trace +ioc_modem
-
-# LOADER microcode get started 2s -> 0.9s
-cli 'dfs patch LOADER.M200 0x122e 0x00 0x00 0x44 0xaa'
-
-# LOADER copyright post-delay 10s -> 0.1s
-cli 'dfs patch LOADER.M200 0x0820 0x00 0x00 0x07 0xa1'
-
-# MONITOR poll-rate 2s -> 0.1s
-cli 'dfs patch MONITOR.M200 0x0c40 0x00 0x00 0x0f 0x42'
 
 cli 'r1000 wait 1e-6'
 cli iop reset
