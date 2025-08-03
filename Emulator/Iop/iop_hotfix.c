@@ -61,9 +61,10 @@ Ioc_HotFix_Ioc(void)
 	// skip_code(0x80001194, 0x800011a0, "RESHA TAPE SUB-TESTs");
 }
 
-static void
-ioc_hotfix_resha_functional(void)
+void
+Ioc_HotFix_Resha(void)
 {
+
 	ioc_breakpoint_rpn(0x00071286,
 	    "'Hit RESHA self-test fail. ' regs ' ' stack ' ' finish");
 
@@ -87,37 +88,6 @@ ioc_hotfix_resha_functional(void)
 	 * 000741e6 4e d0                      JMP     (A0)
 	 */
 	ioc_breakpoint(0x00054000, Ioc_HotFix_Bootloader, NULL);
-}
-
-void
-Ioc_HotFix_Resha(void)
-{
-
-	ioc_hotfix_resha_functional();
-
-	/*
-	 * 00077176 24 3c 00 0b 42 0f          MOVE.L  #0x000b420f,D2
-	 * 0007717c 08 38 00 01 90 01          BTST.B  #0x1,IO_UART_STATUS
-	 * 00077182 67 1e                      BEQ     0x771a2
-	 */
-	ioc_breakpoint_rpn(0x0007717c, "D2 0xa min !D2");
-
-	/*
-	 * 00074588 20 3c 00 00 05 00          MOVE.L  #0x00000500,D0
-	 * 0007458e 53 80                      SUBQ.L  #0x1,D0
-	 * 00074590 66 fc                      BNE     0x7458e
-	 */
-	ioc_breakpoint_rpn(0x0007458e, "D0 0xa min !D0");
-
-	/*
-	 * 00077386                    SCSI_T_AWAIT_INTERRUPT():
-	 * 00077386 2f 00                      MOVE.L  D0,-(A7)
-	 * 00077388 20 3c 00 00 05 00          MOVE.L  #0x00000500,D0
-	 * 0007738e 53 80                      SUBQ.L  #0x1,D0
-	 * 00077390 66 fc                      BNE     0x7738e
-	 */
-	ioc_breakpoint_rpn(0x0007738e, "D0 0xa min !D0");
-
 }
 
 static int v_matchproto_(ioc_bpt_f)

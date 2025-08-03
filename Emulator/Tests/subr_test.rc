@@ -117,6 +117,21 @@ speedup_patches() {
 	#	80000348 20 3c 00 00 00 0a          MOVE.L  #0x0000000a,D0
 	cli firmware patch IOC_EEPROM 0x034a 0x00 0x00 0x00 0x0a
 
+	# NB: patching RESHA_EEPROM causes "Warning: Detected Checksum Error"
+
+	# Resha UART loop
+	#	00077176 24 3c 00 0b 42 0f          MOVE.L  #0x000b420f,D2
+	#	00077176 24 3c 00 00 00 0a          MOVE.L  #0x0000000a,D2
+	cli firmware patch RESHA_EEPROM 0x717a 0x00 0x00 0x00 0x0a
+
+	# Resha SCSI loops
+	#	00074588 20 3c 00 00 05 00          MOVE.L  #0x00000500,D0
+	#	00074588 20 3c 00 00 00 0a          MOVE.L  #0x0000000a,D0
+	cli firmware patch RESHA_EEPROM 0x458a 0x00 0x00 0x00 0x0a
+	#	00077388 20 3c 00 00 05 00          MOVE.L  #0x00000500,D0
+	#	00077388 20 3c 00 00 00 0a          MOVE.L  #0x0000000a,D0
+	cli firmware patch RESHA_EEPROM 0x738a 0x00 0x00 0x00 0x0a
+
 	# Poll experiment completion four times as often
 	cli 'dfs patch FS_0.M200 0x93c6 0x00 0x14'
 
