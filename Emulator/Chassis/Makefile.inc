@@ -1,28 +1,11 @@
 
-OBJS += ${OBJDIR}/sc.o
-${OBJDIR}/sc.o: \
-    Chassis/sc.c \
+OBJS += ${OBJDIR}/r1000_thread.o
+${OBJDIR}/r1000_thread.o: \
+    Chassis/r1000_thread.c \
     Infra/r1000.h \
     Infra/vqueue.h \
     Chassis/r1000_arch.h
-	${CC} ${CFLAGS} -c Chassis/sc.c -o ${OBJDIR}/sc.o
-
-OBJS += ${OBJDIR}/sc_main_thread.o
-${OBJDIR}/sc_main_thread.o: \
-    Chassis/sc_main_thread.c \
-    Chassis/r1000_arch.h
-	${CC} ${CFLAGS} \
-		-c Chassis/sc_main_thread.c \
-		-o ${OBJDIR}/sc_main_thread.o
-
-OBJS += ${OBJDIR}/sc_watchdog.o
-${OBJDIR}/sc_watchdog.o: \
-    Chassis/sc_watchdog.c \
-    Infra/r1000.h \
-    Infra/context.h \
-    Diag/diagproc.h \
-    Chassis/r1000_arch.h
-	${CC} ${CFLAGS} -c Chassis/sc_watchdog.c -o ${OBJDIR}/sc_watchdog.o
+	${CC} ${CFLAGS} -c Chassis/r1000_thread.c -o ${OBJDIR}/r1000_thread.o
 
 OBJS += ${OBJDIR}/r1000_arch.o
 ${OBJDIR}/r1000_arch.o: \
