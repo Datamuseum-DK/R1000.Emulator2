@@ -401,6 +401,9 @@ scsi_ctl_pre_read(int debug, uint8_t *space, unsigned width, unsigned adr)
 	space[1] &= 0x8f;
 	space[1] |= space[9] & 0x70;
 
+	// EE WP switch
+	space[1] |= 0x08;
+
 	Trace(trace_ioc_io, "SCSI_CTL R [%x] -> %x/%d",
 	    adr, vbe16dec(space+adr), width);
 }
