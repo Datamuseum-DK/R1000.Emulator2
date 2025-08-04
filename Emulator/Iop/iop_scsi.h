@@ -37,6 +37,8 @@ struct scsi_dev {
 	uint8_t			req_sense[26];
 	uint8_t			sense_3[36];
 	uint8_t			sense_4[32];
+	char			msg[256];
+
 	int			fd;
 	uint8_t			*map;
 	size_t			map_size;
@@ -57,6 +59,7 @@ struct scsi {
 	unsigned int		dma_adr;
 	struct scsi_dev		*dev[7];
 	unsigned		reset;
+	int			*tracer;
 };
 
 void trace_scsi_dev(struct scsi_dev *dev, const char *cmt);

@@ -146,7 +146,7 @@ scsi_thread(void *priv)
 	scsi_func_f *sf;
 	unsigned id;
 	const char *p;
-	int i;
+	int status;
 
 	AZ(pthread_mutex_lock(&sp->mtx));
 	while (1) {
@@ -191,30 +191,70 @@ scsi_thread(void *priv)
 
 		sd = sp->dev[id];
 
+		const char *msg = "";
 		if (sd == NULL) {
-			trace_scsi_ctl(sp, "No Device at ID");
-			sp->regs[0x17] = 0x42;
+			msg = "No such unit";
+			status = -2;
 		} else if (sd->funcs[sp->regs[0x03]] == NULL) {
+			msg = "Unimplemented Command";
 			trace_scsi_ctl(sp, "UNIMPL");
-			sp->regs[0x17] = 0x42;
+			status = -3;
 		} else {
+			sd->msg[0] = '\0';
+			msg = sd->msg;
 			sf = sd->funcs[sp->regs[0x03]];
 			AN(sf);
-			i = sf(sd, sp->regs+0x03);
-			if (i < 0) {
-				sp->regs[0x14] = 0;
-				sp->regs[0x13] = 0;
-				sp->regs[0x12] = 0;
-				sp->regs[0x17] = 0x42;
-			} else {
-				sp->regs[0x14] = i & 0xff;
-				sp->regs[0x13] = ((unsigned)i>>8) & 0xff;
-				sp->regs[0x12] = ((unsigned)i>>16) & 0xff;
-				sp->regs[0x17] = 0x16;
-			}
+			status = sf(sd, sp->regs+0x03);
 		}
-		Trace(trace_scsi_cmd,
-		    "SCSI_RSP %s ID=%u %02x", sp->name, id, sp->regs[0x17]);
+
+		const char *scsi_cmd =  scsi_cmd_name[sp->regs[0x03]];
+		if (scsi_cmd == NULL)
+			scsi_cmd = "?";
+
+		AN(sp);
+		AN(sp->tracer);
+		Trace(
+		    *sp->tracer,
+		    "%s %d"
+		    " [%02x %02x %02x %02x %02x %02x|%02x %02x %02x %02x]"
+		    " 0x%06x"
+		    " %s => %d ; %s",
+		    sp->name,
+		    sp->regs[0x15] & 7,
+
+		    sp->regs[0x03],
+		    sp->regs[0x04],
+		    sp->regs[0x05],
+		    sp->regs[0x06],
+		    sp->regs[0x07],
+		    sp->regs[0x08],
+
+		    sp->regs[0x09],
+		    sp->regs[0x0a],
+		    sp->regs[0x0b],
+		    sp->regs[0x0c],
+
+                    vbe32dec(sp->regs + 0x11) & 0xffffff,
+		    //sp->regs[0x12],
+		    //sp->regs[0x13],
+		    //sp->regs[0x14],
+		    scsi_cmd,
+		    status,
+		    msg
+		);
+
+		if (status < 0) {
+			sp->regs[0x14] = 0;
+			sp->regs[0x13] = 0;
+			sp->regs[0x12] = 0;
+			sp->regs[0x17] = 0x42;
+		} else {
+			sp->regs[0x14] = status & 0xff;
+			sp->regs[0x13] = ((unsigned)status>>8) & 0xff;
+			sp->regs[0x12] = ((unsigned)status>>16) & 0xff;
+			sp->regs[0x17] = 0x16;
+		}
+
 		sp->regs[0x1f] |= 0x80;
 		irq_raise(sp->irq_vector);
 	}
@@ -313,6 +353,7 @@ ioc_scsi_d_init(void)
 {
 	scsi_d->name = "SCSI_D";
 	scsi_d->irq_vector = &IRQ_SCSI_D;
+	scsi_d->tracer = &trace_scsi_disk;
 	AZ(pthread_mutex_init(&scsi_d->mtx, NULL));
 	AZ(pthread_cond_init(&scsi_d->cond, NULL));
 	AZ(pthread_create(&scsi_d->thr, NULL, scsi_thread, scsi_d));
@@ -341,6 +382,7 @@ ioc_scsi_t_init(void)
 {
 	scsi_t->name = "SCSI_T";
 	scsi_t->irq_vector = &IRQ_SCSI_T;
+	scsi_t->tracer = &trace_scsi_tape;
 	AZ(pthread_mutex_init(&scsi_t->mtx, NULL));
 	AZ(pthread_cond_init(&scsi_t->cond, NULL));
 	AZ(pthread_create(&scsi_t->thr, NULL, scsi_thread, scsi_t));
