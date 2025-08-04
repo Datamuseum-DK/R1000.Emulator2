@@ -127,12 +127,10 @@ speedup_patches() {
 	#	80000348 20 3c 00 00 00 0a          MOVE.L  #0x0000000a,D0
 	cli firmware patch IOC_EEPROM 0x034a 0x00 0x00 0x00 0x0a
 
-	# NB: patching RESHA_EEPROM causes "Warning: Detected Checksum Error"
-
 	# Resha UART loop
 	#	00077176 24 3c 00 0b 42 0f          MOVE.L  #0x000b420f,D2
 	#	00077176 24 3c 00 00 00 0a          MOVE.L  #0x0000000a,D2
-	cli firmware patch RESHA_EEPROM 0x717a 0x00 0x00 0x00 0x0a
+	#cli firmware patch RESHA_EEPROM 0x717a 0x00 0x00 0x00 0x0a
 
 	# Resha SCSI loops
 	#	00074588 20 3c 00 00 05 00          MOVE.L  #0x00000500,D0
@@ -195,16 +193,19 @@ config_patches() {
 	# These patches adjust the configuration so we do not have to run
 	# CEDIT all the time.
 
-	# Allow operator to enter CLI immediately [N] ? y
-	# cli dfs patch STANDARD.M200_CONFIG 0x3 0x1
+	# Allow operator to enter CLI immediately ?
+	# cli dfs patch STANDARD.M200_CONFIG 0x3 0x0
 
-	# Allow operator to enter CLI prior to starting the cluster [N] ? y
-	# cli dfs patch STANDARD.M200_CONFIG 0x5 0x1
+	# Allow operator to enter CLI prior to starting the cluster ?
+	# cli dfs patch STANDARD.M200_CONFIG 0x5 0x0
 
-	# Wait for remote debugging on kernel crashes [Y] ? n
+	# Auto boot the kernel debugger
+	# cli dfs patch STANDARD.M200_CONFIG 0x2b 0x0
+
+	# Wait for remote debugging on kernel crashes ?
 	cli dfs patch STANDARD.M200_CONFIG 0x2a 0x0
 
-	# Call Rational on kernel crash [Y] ? n
+	# Call Rational on kernel crash ? n
 	cli dfs patch STANDARD.M200_CONFIG 0x2d 0x0
 
 	# Single MEM32 board
@@ -232,6 +233,10 @@ standard_patches() {
 	speedup_patches
 	config_patches
 	convenience_patches
+
+	# Fixup the checksums after patching
+	cli firmware fix_checksum IOC_EEPROM
+	cli firmware fix_checksum RESHA_EEPROM
 }
 
 cli() {
@@ -250,7 +255,15 @@ cli 'modem >' ${R1K_PFX}/_.modem
 cli 'console telnet localhost:1400'
 cli 'modem telnet localhost:1416'
 
+if [ `uname -n` = critter.freebsd.dk ] ; then
+	cli console serial /dev/nmdm0B
+fi
+
 standard_patches
+
+cli iop switch -normal
+cli iop config +iop-autoboot
+cli iop config +r1000-autoboot
 
 sc_boards() {
 	cli r1000 launch
@@ -266,22 +279,17 @@ sc_boards() {
 	cli 'r1000 watchdog -dont_bite 2' 
 }
 
-cli_prompt() {
+start_r1000() {
 	cli 'trace -console'
 	cli 'trace -diagbus'
 	#cli "iop syscall"  
-
 	cli 'r1000 wait .00001'
 	cli '# => cli_prompt'
 	cli iop reset
-	cli 'console match expect "Boot from (Tn or Dn)  [D0] : "'
-	cli 'console << ""'
-	cli 'console match expect "Kernel program (0,1,2) [0] : "'
-	cli 'console << ""'
-	cli 'console match expect "File system    (0,1,2) [0] : "'
-	cli 'console << ""'
-	cli 'console match expect "User program   (0,1,2) [0] : "'
-	cli 'console << ""'
+}
+
+cli_prompt() {
+	cli iop reset
 	cli 'console match expect "Enter option [enter CLI] : "'
 	cli 'console << "1"'
 	cli 'console match expect "CLI>"'

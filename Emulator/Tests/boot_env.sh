@@ -25,8 +25,6 @@ fi
 
 mkdir -p ${rundir}
 
-make -j 7 && make -j 7
-
 sc_boards ioc fiu mem0 seq typ val
 
 cli 'r1000 quota add 10000'
@@ -38,14 +36,6 @@ cli "modem > ${rundir}/_.modem"
 cli 'r1000 wait 1e-6'
 cli iop reset
 
-cli 'console match expect "Boot from (Tn or Dn)  [D0] : "'
-cli 'console << ""'
-cli 'console match expect "Kernel program (0,1,2) [0] : "'
-cli 'console << ""'
-cli 'console match expect "File system    (0,1,2) [0] : "'
-cli 'console << ""'
-cli 'console match expect "User program   (0,1,2) [0] : "'
-cli 'console << ""'
 cli 'console match expect "Enter option [enter CLI] : "'
 cli 'console << "6"'
 

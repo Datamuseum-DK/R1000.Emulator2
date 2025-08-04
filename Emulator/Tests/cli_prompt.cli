@@ -2,7 +2,6 @@ sc watchdog 120
 trace +diagbus_bytes
 console > _.console
 console telnet localhost:1400
-console serial /dev/nmdm0B
 modem > _.modem
 scsi_tape
 scsi_disk 0 /critter/R1K/DiskImages/PE_R1K_Disk0.dd
