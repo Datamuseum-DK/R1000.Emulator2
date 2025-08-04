@@ -29,8 +29,13 @@ cli_scsi_dev_map_file(struct cli *cli, struct scsi_dev *dev, const char *fn)
 	AN(cli);
 	AN(dev);
 	AN(fn);
-	// XXX: cleanup if changing
-	dev->fd = open(fn, O_RDONLY);
+
+	int rw = *fn == '+';
+	if (rw) {
+		fn++;
+	}
+
+	dev->fd = open(fn, rw ? O_RDWR : O_RDONLY);
 	if (dev->fd < 0) {
 		Cli_Error(cli, "Cannot open %s: (%s)\n", fn, strerror(errno));
 		return (-1);
@@ -47,7 +52,7 @@ cli_scsi_dev_map_file(struct cli *cli, struct scsi_dev *dev, const char *fn)
 	    NULL,
 	    dev->map_size,
 	    PROT_READ|PROT_WRITE,
-	    MAP_PRIVATE | MAP_NOSYNC,
+	    rw ? (MAP_SHARED | MAP_NOSYNC) : (MAP_PRIVATE | MAP_NOSYNC),
 	    dev->fd,
 	    0
 	);
@@ -78,8 +83,9 @@ scsi_01_rewind(struct scsi_dev *dev, uint8_t *cdb)
 {
 
 	(void)cdb;
-	trace_scsi_dev(dev, "REWIND");
+	trace_scsi_dev_tape(dev, "REWIND");
 	dev->tape_head = 0;
+	dev->tape_fileno = 0;
 	dev->tape_recno = 0;
 	return (IOC_SCSI_OK);
 }
@@ -133,7 +139,7 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 {
 	unsigned tape_length, xfer_length;
 
-	trace_scsi_dev(dev, "READ_6(TAPE)");
+	trace_scsi_dev_tape(dev, "READ_6(TAPE)");
 
 	if (!(dev->ctl->regs[0x12] + dev->ctl->regs[0x13] + dev->ctl->regs[0x14]))
 		return (IOC_SCSI_OK);
@@ -145,6 +151,10 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 		    dev->scsi_id, dev->tape_head);
 		dev->tape_head += 4;
 		dev->req_sense[2] = 0x80;
+		dev->req_sense[3] = xfer_length >> 8;
+		dev->req_sense[4] = xfer_length & 0xff;
+		dev->tape_recno = 0;
+		dev->tape_fileno++;
 		return (-1);
 	}
 	if (tape_length == 0xffffffff) {
@@ -167,11 +177,13 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 	    dev->scsi_id, tape_length, dev->tape_head);
 
 	dev->tape_head += tape_length;
+	if (tape_length & 1)
+		dev->tape_head += 1;
 	assert(tape_length == vle32dec(dev->map + dev->tape_head));
 	dev->tape_head += 4;
 
-	Trace(trace_scsi_data, "SCSI_T READ6 recno=%x head=%zx tape=%x xfer=%x",
-	    dev->tape_recno, dev->tape_head, tape_length, xfer_length);
+	Trace(trace_scsi_data, "SCSI_T READ6 0x%x:0x%x head=%zx tape=%x xfer=%x",
+	    dev->tape_fileno, dev->tape_recno, dev->tape_head, tape_length, xfer_length);
 
 	dev->tape_recno++;
 	if (tape_length < xfer_length)
@@ -203,6 +215,41 @@ scsi_0a_write_6(struct scsi_dev *dev, uint8_t *cdb)
 }
 
 static int v_matchproto_(scsi_func_f)
+scsi_0a_write_6_tape(struct scsi_dev *dev, uint8_t *cdb)
+{
+	unsigned xfer_length;
+
+	trace_scsi_dev_tape(dev, "WRITE_6(TAPE)");
+
+	if (!(dev->ctl->regs[0x12] + dev->ctl->regs[0x13] + dev->ctl->regs[0x14]))
+		return (IOC_SCSI_OK);
+
+	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
+	vle32enc(dev->map + dev->tape_head, xfer_length);
+	dev->tape_head += 4;
+	scsi_to_target(dev, dev->map + dev->tape_head, xfer_length);
+
+	TraceDump(trace_tape_data,
+	    dev->map + dev->tape_head, xfer_length,
+	    "WRITE TAPE ID=%d BLKSZ=%08x (@0x%08zx)\n",
+	    dev->scsi_id, xfer_length, dev->tape_head);
+
+	dev->tape_head += xfer_length;
+	if (xfer_length & 1)
+		dev->tape_head += 1;
+	vle32enc(dev->map + dev->tape_head, xfer_length);
+	dev->tape_head += 4;
+
+	/* Write a end of tape mark, but dont advance */
+	vle32enc(dev->map + dev->tape_head, 0xffffffff);
+
+	dev->tape_recno++;
+
+	Trace(trace_scsi_data, "SCSI_T WRITE6 %x", xfer_length);
+	return (IOC_SCSI_OK);
+}
+
+static int v_matchproto_(scsi_func_f)
 scsi_0b_seek(struct scsi_dev *dev, uint8_t *cdb)
 {
 
@@ -222,15 +269,149 @@ scsi_0d_vendor(struct scsi_dev *dev, uint8_t *cdb)
 }
 
 static int v_matchproto_(scsi_func_f)
+scsi_10_write_filemarks_tape(struct scsi_dev *dev, uint8_t *cdb)
+{
+	unsigned xfer_length;
+
+	trace_scsi_dev_tape(dev, "WRITE_FILEMARK(TAPE)");
+
+	if (!(dev->ctl->regs[0x12] + dev->ctl->regs[0x13] + dev->ctl->regs[0x14]))
+		return (IOC_SCSI_OK);
+
+	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
+	vle32enc(dev->map + dev->tape_head, 0);
+	dev->tape_head += 4;
+
+	dev->tape_recno = 0;
+	dev->tape_fileno++;
+
+	/* Write a end of tape mark, but dont advance */
+	vle32enc(dev->map + dev->tape_head, 0xffffffff);
+
+	return (IOC_SCSI_OK);
+}
+
+static void
+tape_space_block_backward(struct scsi_dev *dev)
+{
+	uint32_t tape_length, u;
+
+	tape_length = vle32dec(dev->map + dev->tape_head - 4);
+	assert(tape_length > 0);
+	dev->tape_head -= 4;
+	dev->tape_head -= tape_length;
+	if (tape_length & 1)
+		dev->tape_head -= 1;
+	u = vle32dec(dev->map + dev->tape_head - 4);
+	assert(tape_length == u);
+	dev->tape_head -= 4;
+	dev->tape_recno--;
+}
+
+static void
+tape_space_block_forward(struct scsi_dev *dev)
+{
+	uint32_t tape_length, chk;
+
+	tape_length = vle32dec(dev->map + dev->tape_head);
+	assert(tape_length > 0 && tape_length < 0xff000000);
+	dev->tape_head += 4;
+	dev->tape_head += tape_length;
+	if (tape_length & 1)
+		dev->tape_head += 1;
+	chk = vle32dec(dev->map + dev->tape_head);
+	assert(tape_length == chk);
+	dev->tape_head += 4;
+	dev->tape_recno++;
+}
+
+static int v_matchproto_(scsi_func_f)
 scsi_11_space(struct scsi_dev *dev, uint8_t *cdb)
 {
+	int32_t xfer_length;
+	uint32_t tape_length;
 
-	trace_scsi_dev(dev, "SPACE");
-	assert(cdb[0x01] == 0x1);
-	assert(cdb[0x02] == 0xff);
-	assert(cdb[0x03] == 0xff);
-	assert(cdb[0x04] == 0xff);
-	dev->tape_head -= 4;
+	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
+	if (xfer_length & 0x800000)
+		xfer_length -= 0x1000000;
+
+	trace_scsi_dev_tape(dev, "SPACE(TAPE)");
+
+	if (cdb[0x01] == 0 && xfer_length < 0) {
+		while (xfer_length < 0) {
+			tape_length = vle32dec(dev->map + dev->tape_head - 4);
+			assert(tape_length > 0 && tape_length < 0xff000000);
+			tape_space_block_backward(dev);
+			xfer_length++;
+		}
+	} else if (cdb[0x01] == 0 && xfer_length > 0) {
+		while (xfer_length > 0) {
+			tape_length = vle32dec(dev->map + dev->tape_head);
+			assert(tape_length > 0 && tape_length < 0xff000000);
+			tape_space_block_forward(dev);
+			xfer_length--;
+		}
+	} else if (cdb[0x01] == 1 && xfer_length < 0) {
+		printf("BSF %d\n", xfer_length);
+		if (0 && xfer_length == -49) {
+			//xfer_length = -38;	/* 0:0 */
+			// xfer_length = -37;	/* 1:0 (tape_length <= xfer_length) */
+			// xfer_length = -36;	/* 2:0 */
+
+			xfer_length = -35;	/* 3:0 */
+			// xfer_length = -34;	/* 4:0 (tape_length <= xfer_length) */
+			// xfer_length = -33;	/* 5:0 */
+
+			//xfer_length = -32;	/* 6:0 */
+
+			// xfer_length = -29;	/* 9:0 */
+
+			// xfer_length = -26;	/* 12:0 */
+		}
+		while (xfer_length < 0 && dev->tape_head > 0) {
+			tape_length = vle32dec(dev->map + dev->tape_head - 4);
+			assert(tape_length < 0xff000000);
+			if (tape_length > 0) {
+				tape_space_block_backward(dev);
+				continue;
+			}
+			dev->tape_head -= 4;
+			dev->tape_fileno--;
+			xfer_length++;
+		}
+		if (dev->tape_head > 0) {
+			//dev->tape_head += 4;
+			//dev->tape_fileno++;
+		} else {
+			if (dev->tape_fileno)
+				printf("TAPE: Wrong fileno after space BOT %d\n", dev->tape_fileno);
+			dev->tape_head = 0;
+			dev->tape_fileno = 0;
+		}
+		dev->tape_recno = 0;
+	} else if (cdb[0x01] == 1 && xfer_length > 0) {
+		while (xfer_length > 0) {
+			tape_length = vle32dec(dev->map + dev->tape_head);
+			assert(tape_length < 0xff000000);
+			if (tape_length > 0) {
+				tape_space_block_forward(dev);
+				continue;
+			}
+			dev->tape_head += 4;
+			dev->tape_fileno++;
+			dev->tape_recno = 0;
+			xfer_length--;
+		}
+	} else {
+		printf("BAD TAPE SPACE 0x%x %d\n", cdb[0x01], xfer_length);
+		assert(0);
+	}
+	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
+	if (xfer_length & 0x800000)
+		xfer_length -= 0x1000000;
+
+printf("POST SPACE 0x%x/%d 0x%x:0x%x @0x%zx\n", cdb[0x01], xfer_length, dev->tape_fileno, dev->tape_recno, dev->tape_head);
+
 	dev->req_sense[2] = 0;
 	return (IOC_SCSI_OK);
 }
@@ -269,6 +450,15 @@ scsi_1a_sense(struct scsi_dev *dev, uint8_t *cdb)
 		Trace(trace_scsi_data, "MODE_SENSE page 0x%d unknown", cdb[0x02]);
 		return (IOC_SCSI_ERROR);
 	}
+	return (IOC_SCSI_OK);
+}
+
+static int v_matchproto_(scsi_func_f)
+scsi_1b_unload_tape(struct scsi_dev *dev, uint8_t *cdb)
+{
+
+	(void)cdb;
+	trace_scsi_dev_tape(dev, "UNLOAD(TAPE)");
 	return (IOC_SCSI_OK);
 }
 
@@ -475,6 +665,9 @@ static scsi_func_f * const scsi_tape_funcs [256] = {
 	[SCSI_REWIND] = scsi_01_rewind,
 	[SCSI_REQUEST_SENSE] = scsi_03_request_sense,
 	[SCSI_READ_6] = scsi_08_read_6_tape,
+	[SCSI_WRITE_6] = scsi_0a_write_6_tape,
+	[SCSI_WRITE_FILEMARKS] = scsi_10_write_filemarks_tape,
+	[SCSI_UNLOAD] = scsi_1b_unload_tape,
 	[SCSI_SPACE] = scsi_11_space,
 };
 

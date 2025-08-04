@@ -93,6 +93,15 @@ trace_scsi_dev(struct scsi_dev *dev, const char *cmt)
 }
 
 void
+trace_scsi_dev_tape(struct scsi_dev *dev, const char *cmt)
+{
+	char buf[100];
+
+	sprintf(buf, "%s 0x%x:0x%x @0x%zx", cmt, dev->tape_fileno, dev->tape_recno, dev->tape_head);
+	trace_scsi_ctl(dev->ctl, buf);
+}
+
+void
 scsi_to_target(struct scsi_dev *sd, void *ptr, unsigned len)
 {
 	unsigned xlen;

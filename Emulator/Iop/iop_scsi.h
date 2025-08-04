@@ -20,6 +20,7 @@ struct scsi_dev {
 	uint8_t			*map;
 	size_t			map_size;
 
+	unsigned		tape_fileno;
 	unsigned		tape_recno;
 	size_t			tape_head;
 };
@@ -38,6 +39,7 @@ struct scsi {
 };
 
 void trace_scsi_dev(struct scsi_dev *dev, const char *cmt);
+void trace_scsi_dev_tape(struct scsi_dev *dev, const char *cmt);
 void scsi_to_target(struct scsi_dev *, void *ptr, unsigned len);
 void scsi_fm_target(struct scsi_dev *, void *ptr, unsigned len);
 extern struct scsi scsi_t[1];
