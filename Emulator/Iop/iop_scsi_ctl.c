@@ -11,14 +11,15 @@
 #include "Iop/iop_scsi.h"
 #include "Infra/vend.h"
 
-struct scsi scsi_t[1];
-struct scsi scsi_d[1];
+static struct scsi scsi_t[1];
+static struct scsi scsi_d[1];
 
 /**********************************************************************/
 
 static const char * const scsi_cmd_name[256] = {
-#define SCSI_CMD(name, number) [number] = #name,
-SCSI_CMD_TABLE
+	#define M_NAME(name, number) [number] = #name,
+	SCSI_CMD_TABLE(M_NAME)
+	#undef M_NAME
 };
 
 static const char * const scsi_reg[] = {
@@ -415,4 +416,41 @@ scsi_ctl_pre_read(int debug, uint8_t *space, unsigned width, unsigned adr)
 
 	Trace(trace_ioc_io, "SCSI_CTL R [%x] -> %x/%d",
 	    adr, vbe16dec(space+adr), width);
+}
+
+void *
+scsi_disk_pointer_to_sector(unsigned unit, unsigned lba)
+{
+
+	assert(unit < 4);
+
+	const struct scsi_dev *sd = scsi_d[0].dev[unit];
+	if (sd == NULL)
+		return(NULL);
+	AN(sd->map);
+	assert(((lba + 1ULL) << 10) <= sd->map_size);
+	return (sd->map + (lba << 10));
+}
+
+struct scsi_dev*
+get_scsi_dev(int tape, unsigned unit, int create)
+{
+	struct scsi *s;
+
+	if (tape)
+		s = scsi_t;
+	else
+		s = scsi_d;
+	AN(s);
+
+	struct scsi_dev *sd = s->dev[unit];
+	if (!create || sd != NULL)
+		return (sd);
+
+	sd = calloc(1, sizeof *sd);
+	AN(sd);
+	sd->scsi_id = unit;
+	sd->ctl = s;
+	s->dev[unit] = sd;
+	return (sd);
 }

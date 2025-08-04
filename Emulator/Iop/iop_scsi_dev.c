@@ -493,21 +493,6 @@ scsi_37_read_defect_data_10(struct scsi_dev *dev, uint8_t *cdb)
 
 /**********************************************************************/
 
-static scsi_func_f * const scsi_disk_funcs[256] = {
-	[SCSI_TEST_UNIT_READY] = scsi_00_test_unit_ready,
-	[SCSI_FORMAT_UNIT] = scsi_04_format_unit,
-	[SCSI_READ_6] = scsi_08_read_6_disk,
-	[SCSI_WRITE_6] = scsi_0a_write_6,
-	[SCSI_SEEK] = scsi_0b_seek,
-	[0x0d] = scsi_0d_vendor,
-	[SCSI_MODE_SENSE_6] = scsi_1a_sense,
-	[SCSI_READ_10] = scsi_28_read_10,
-	[SCSI_MODE_SELECT_6] = scsi_15_mode_select_6,
-	[SCSI_READ_DEFECT_DATA_10] = scsi_37_read_defect_data_10,
-};
-
-/**********************************************************************/
-
 static struct scsi_dev *
 cli_scsi_get_disk(struct cli *cli, int create)
 {
@@ -521,23 +506,27 @@ cli_scsi_get_disk(struct cli *cli, int create)
 		Cli_Error(cli, "Only disks 0-3 supported\n");
 		return(NULL);
 	}
-	sd = scsi_d->dev[unit];
+	sd = get_scsi_dev(0, unit, create);
 
-	if (sd == NULL && !create) {
-		Cli_Error(cli, "Disks not mounted\n");
-		return(NULL);
+	if (!create) {
+		if (sd == NULL)
+			Cli_Error(cli, "Disks not mounted\n");
+		return(sd);
 	}
 
-	if (sd == NULL) {
-		sd = calloc(1, sizeof *sd);
-		AN(sd);
-		sd->req_sense[0] = 0x80;
-		sd->req_sense[7] = 0x12;
-		sd->scsi_id = unit;
-		sd->ctl = scsi_d;
-		sd->funcs = scsi_disk_funcs;
-		scsi_d->dev[unit] = sd;
-	}
+	sd->req_sense[0] = 0x80;
+	sd->req_sense[7] = 0x12;
+
+	sd->funcs[SCSI_TEST_UNIT_READY] = scsi_00_test_unit_ready;
+	sd->funcs[SCSI_FORMAT_UNIT] = scsi_04_format_unit;
+	sd->funcs[SCSI_READ_6] = scsi_08_read_6_disk;
+	sd->funcs[SCSI_WRITE_6] = scsi_0a_write_6;
+	sd->funcs[SCSI_SEEK] = scsi_0b_seek;
+	sd->funcs[0x0d] = scsi_0d_vendor;
+	sd->funcs[SCSI_MODE_SENSE_6] = scsi_1a_sense;
+	sd->funcs[SCSI_READ_10] = scsi_28_read_10;
+	sd->funcs[SCSI_MODE_SELECT_6] = scsi_15_mode_select_6;
+	sd->funcs[SCSI_READ_DEFECT_DATA_10] = scsi_37_read_defect_data_10;
 
 	return (sd);
 }
@@ -660,19 +649,6 @@ cli_scsi_disk(struct cli *cli)
 
 /**********************************************************************/
 
-static scsi_func_f * const scsi_tape_funcs [256] = {
-	[SCSI_TEST_UNIT_READY] = scsi_00_test_unit_ready,
-	[SCSI_REWIND] = scsi_01_rewind,
-	[SCSI_REQUEST_SENSE] = scsi_03_request_sense,
-	[SCSI_READ_6] = scsi_08_read_6_tape,
-	[SCSI_WRITE_6] = scsi_0a_write_6_tape,
-	[SCSI_WRITE_FILEMARKS] = scsi_10_write_filemarks_tape,
-	[SCSI_UNLOAD] = scsi_1b_unload_tape,
-	[SCSI_SPACE] = scsi_11_space,
-};
-
-/**********************************************************************/
-
 static void v_matchproto_(cli_func_f)
 cli_scsi_tape_mount(struct cli *cli)
 {
@@ -687,18 +663,21 @@ cli_scsi_tape_mount(struct cli *cli)
 	cli->ac--;
 	cli->av++;
 
-	sd = scsi_t->dev[0];
-	if (sd == NULL) {
-		sd = calloc(1, sizeof *sd);
-		AN(sd);
-		sd->req_sense[0] = 0xf0;
-		sd->req_sense[7] = 0x12;
-		sd->ctl = scsi_t;
-		sd->funcs = scsi_tape_funcs;
-		sd->is_tape = 1;
-		sd->scsi_id = 0;
-		scsi_t->dev[0] = sd;
-	}
+	sd = get_scsi_dev(1, 0, 1);
+
+	sd->req_sense[0] = 0xf0;
+	sd->req_sense[7] = 0x12;
+
+	sd->funcs[SCSI_TEST_UNIT_READY] = scsi_00_test_unit_ready;
+	sd->funcs[SCSI_REWIND] = scsi_01_rewind;
+	sd->funcs[SCSI_REQUEST_SENSE] = scsi_03_request_sense;
+	sd->funcs[SCSI_READ_6] = scsi_08_read_6_tape;
+	sd->funcs[SCSI_WRITE_6] = scsi_0a_write_6_tape;
+	sd->funcs[SCSI_WRITE_FILEMARKS] = scsi_10_write_filemarks_tape;
+	sd->funcs[SCSI_UNLOAD] = scsi_1b_unload_tape;
+	sd->funcs[SCSI_SPACE] = scsi_11_space;
+
+	sd->is_tape = 1;
 
 	if (cli_scsi_dev_map_file(cli, sd, cli->av[0]) < 0)
 		return;

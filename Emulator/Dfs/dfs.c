@@ -106,16 +106,11 @@ dfs_render_dirent(struct cli *cli, struct dfs_dirent *de)
 static uint8_t *
 dfs_read_sect(unsigned secno)
 {
-	uint8_t *retval;
-	const struct scsi_dev *sd;
+	void *p;
 
-	sd = scsi_d[0].dev[0];
-	assert(sd);
-	assert(sd->map);
-	assert(((secno + 1ULL) << 10) <= sd->map_size);
-
-	retval = sd->map + (secno << 10);
-	return (retval);
+	p = scsi_disk_pointer_to_sector(0, secno);
+	AN(p);
+	return (p);
 }
 
 static struct dfs_superblock *
