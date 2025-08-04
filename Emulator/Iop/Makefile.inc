@@ -132,6 +132,14 @@ ${OBJDIR}/iop_scsi_disk.o: \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Iop/iop_scsi_disk.c -o ${OBJDIR}/iop_scsi_disk.o
 
+OBJS += ${OBJDIR}/iop_scsi_tape.o
+${OBJDIR}/iop_scsi_tape.o: \
+    Iop/iop_scsi_tape.c \
+    Iop/iop_scsi.h \
+    Iop/iop.h \
+    ${R1000DEP}
+	${CC} ${CFLAGS} -c Iop/iop_scsi_tape.c -o ${OBJDIR}/iop_scsi_tape.o
+
 OBJS += ${OBJDIR}/iop_syscall.o
 ${OBJDIR}/iop_syscall.o: \
     Iop/iop_syscall.c \

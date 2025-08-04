@@ -76,3 +76,9 @@ enum SCSI_COMMANDS {
 	SCSI_CMD_TABLE(M_ENUM)
 	#undef M_ENUM
 };
+
+scsi_func_f scsi_00_test_unit_ready;
+scsi_func_f scsi_03_request_sense;
+
+int cli_scsi_dev_map_file(struct cli *cli, struct scsi_dev *dev, const char *fn);
+
