@@ -30,6 +30,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "Infra/r1000.h"
@@ -76,10 +77,57 @@ cli_firmware_patch(struct cli *cli)
 	}
 }
 
+static void v_matchproto_(cli_func_f)
+cli_firmware_fix_checksum(struct cli *cli)
+{
+	size_t sz, slab;
+	uint8_t *ptr;
+
+	if (cli->help || cli->ac != 2) {
+		Cli_Usage(cli, "", "Fixes Checksum");
+		return;
+	}
+	if (strcmp(cli->av[1], "IOC_EEPROM") && strcmp(cli->av[1], "RESHA_EEPROM")) {
+		Cli_Usage(cli, "", "Only use fix_checkum on IOC & RESHA EEPROMS.");
+		return;
+	}
+
+	ptr = Firmware_Get(cli->av[1], &sz);
+	if (ptr == NULL) {
+		Cli_Error(cli, "Firmware image '%s' not found\n", cli->av[1]);
+		return;
+	}
+
+	for (slab = 0; slab < sz; slab += 0x2000) {
+		unsigned u = 0, v;
+		for(v = 0; v < 0x2000; v++)
+			u += ptr[slab+v];
+		Cli_Printf(cli,
+		    "fw=%s slab=0x%04zx sum=0x%08x [",
+		    cli->av[1], slab, u);
+		Cli_Printf(cli,
+		    "%02x %02x %02x %02x %02x %02x] ",
+		    ptr[slab + 0x1ffa],
+		    ptr[slab + 0x1ffb],
+		    ptr[slab + 0x1ffc],
+		    ptr[slab + 0x1ffd],
+		    ptr[slab + 0x1ffe],
+		    ptr[slab + 0x1fff]
+		);
+		u -= 0xaa;
+		u -= ptr[slab + 0x1fff];
+		u &= 0xff;
+		ptr[slab + 0x1fff] = 256 - u;
+
+		Cli_Printf(cli, " => %02x\n", ptr[slab + 0x1fff]);
+	}
+}
+
 /**********************************************************************/
 
 static const struct cli_cmds cli_firmware_cmds[] = {
 	{ "patch",		cli_firmware_patch },
+	{ "fix_checksum",	cli_firmware_fix_checksum },
 	{ NULL,			NULL },
 };
 
