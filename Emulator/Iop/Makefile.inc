@@ -124,13 +124,13 @@ ${OBJDIR}/iop_scsi_ctl.o: \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Iop/iop_scsi_ctl.c -o ${OBJDIR}/iop_scsi_ctl.o
 
-OBJS += ${OBJDIR}/iop_scsi_dev.o
-${OBJDIR}/iop_scsi_dev.o: \
-    Iop/iop_scsi_dev.c \
+OBJS += ${OBJDIR}/iop_scsi_disk.o
+${OBJDIR}/iop_scsi_disk.o: \
+    Iop/iop_scsi_disk.c \
     Iop/iop_scsi.h \
     Iop/iop.h \
     ${R1000DEP}
-	${CC} ${CFLAGS} -c Iop/iop_scsi_dev.c -o ${OBJDIR}/iop_scsi_dev.o
+	${CC} ${CFLAGS} -c Iop/iop_scsi_disk.c -o ${OBJDIR}/iop_scsi_disk.o
 
 OBJS += ${OBJDIR}/iop_syscall.o
 ${OBJDIR}/iop_syscall.o: \
