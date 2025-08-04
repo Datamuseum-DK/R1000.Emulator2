@@ -1,13 +1,8 @@
-#include <errno.h>
-#include <fcntl.h>
-#include <pthread.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
 
 #include "Infra/r1000.h"
 #include "Iop/iop.h"
@@ -49,12 +44,12 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 		dev->req_sense[4] = xfer_length & 0xff;
 		dev->tape_recno = 0;
 		dev->tape_fileno++;
-		return (-1);
+		return (IOC_SCSI_ERROR);
 	}
 	if (tape_length == 0xffffffff) {
 		strcat(dev->msg, " EOT");
 		dev->req_sense[2] = 0x40;
-		return (-1);
+		return (IOC_SCSI_ERROR);
 	}
 	dev->req_sense[2] = 0;
 	assert(tape_length < 65535);
@@ -183,46 +178,31 @@ scsi_11_space(struct scsi_dev *dev, uint8_t *cdb)
 {
 	int32_t xfer_length;
 	uint32_t tape_length;
+	int retval = IOC_SCSI_OK;
 
 	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
 	if (xfer_length & 0x800000)
 		xfer_length -= 0x1000000;
 
-	bprintf(dev->msg, MSG_FMT "m=%d x=%d", MSG_ARG, cdb[0x01], xfer_length);
+        unsigned m = cdb[0x01] & 3;
 
-	trace_scsi_dev_tape(dev, "SPACE(TAPE)");
+	bprintf(dev->msg, MSG_FMT "m=%d x=%d", MSG_ARG, m, xfer_length);
 
-	if (cdb[0x01] == 0 && xfer_length < 0) {
+	if (m == 0 && xfer_length < 0) {
 		while (xfer_length < 0) {
 			tape_length = vle32dec(dev->map + dev->tape_head - 4);
 			assert(tape_length > 0 && tape_length < 0xff000000);
 			tape_space_block_backward(dev);
 			xfer_length++;
 		}
-	} else if (cdb[0x01] == 0 && xfer_length > 0) {
+	} else if (m == 0 && xfer_length > 0) {
 		while (xfer_length > 0) {
 			tape_length = vle32dec(dev->map + dev->tape_head);
 			assert(tape_length > 0 && tape_length < 0xff000000);
 			tape_space_block_forward(dev);
 			xfer_length--;
 		}
-	} else if (cdb[0x01] == 1 && xfer_length < 0) {
-		printf("BSF %d\n", xfer_length);
-		if (0 && xfer_length == -49) {
-			//xfer_length = -38;	/* 0:0 */
-			// xfer_length = -37;	/* 1:0 (tape_length <= xfer_length) */
-			// xfer_length = -36;	/* 2:0 */
-
-			xfer_length = -35;	/* 3:0 */
-			// xfer_length = -34;	/* 4:0 (tape_length <= xfer_length) */
-			// xfer_length = -33;	/* 5:0 */
-
-			//xfer_length = -32;	/* 6:0 */
-
-			// xfer_length = -29;	/* 9:0 */
-
-			// xfer_length = -26;	/* 12:0 */
-		}
+	} else if (m == 1 && xfer_length < 0) {
 		while (xfer_length < 0 && dev->tape_head > 0) {
 			tape_length = vle32dec(dev->map + dev->tape_head - 4);
 			assert(tape_length < 0xff000000);
@@ -234,17 +214,14 @@ scsi_11_space(struct scsi_dev *dev, uint8_t *cdb)
 			dev->tape_fileno--;
 			xfer_length++;
 		}
-		if (dev->tape_head > 0) {
-			//dev->tape_head += 4;
-			//dev->tape_fileno++;
-		} else {
-			if (dev->tape_fileno)
-				printf("TAPE: Wrong fileno after space BOT %d\n", dev->tape_fileno);
-			dev->tape_head = 0;
+		if (xfer_length) {
+			dev->req_sense[2] |= 0x40;		// EOM
+			dev->req_sense[19] |= 0x01;		// LBOT
 			dev->tape_fileno = 0;
+			dev->tape_head = 0;
 		}
 		dev->tape_recno = 0;
-	} else if (cdb[0x01] == 1 && xfer_length > 0) {
+	} else if (m == 1 && xfer_length > 0) {
 		while (xfer_length > 0) {
 			tape_length = vle32dec(dev->map + dev->tape_head);
 			assert(tape_length < 0xff000000);
@@ -257,18 +234,18 @@ scsi_11_space(struct scsi_dev *dev, uint8_t *cdb)
 			dev->tape_recno = 0;
 			xfer_length--;
 		}
-	} else {
+	} else if (m > 1) {
 		printf("BAD TAPE SPACE 0x%x %d\n", cdb[0x01], xfer_length);
-		assert(0);
 	}
-	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
-	if (xfer_length & 0x800000)
-		xfer_length -= 0x1000000;
 
-printf("POST SPACE 0x%x/%d 0x%x:0x%x @0x%zx\n", cdb[0x01], xfer_length, dev->tape_fileno, dev->tape_recno, dev->tape_head);
+	if (xfer_length) {
+		sprintf(strchr(dev->msg, '\0'), " residual=%d", xfer_length);
+		retval = IOC_SCSI_ERROR;
+	}
 
-	dev->req_sense[2] = 0;
-	return (IOC_SCSI_OK);
+	vbe32enc(&dev->req_sense[3], xfer_length);
+
+	return (retval);
 }
 
 static int v_matchproto_(scsi_func_f)

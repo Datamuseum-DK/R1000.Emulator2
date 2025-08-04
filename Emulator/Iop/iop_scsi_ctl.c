@@ -202,6 +202,12 @@ scsi_thread(void *priv)
 		} else {
 			sd->msg[0] = '\0';
 			msg = sd->msg;
+			if (sp->regs[0x3] != SCSI_REQUEST_SENSE &&
+			    sp->regs[0x3] != SCSI_INQUIRY) {
+				memset(sd->req_sense, 0, sizeof sd->req_sense);
+				sd->req_sense[0] = 0xf0;
+				sd->req_sense[7] = 0x12;
+			}
 			sf = sd->funcs[sp->regs[0x03]];
 			AN(sf);
 			status = sf(sd, sp->regs+0x03);
