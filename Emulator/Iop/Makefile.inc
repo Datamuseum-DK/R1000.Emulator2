@@ -119,6 +119,7 @@ OBJS += ${OBJDIR}/iop_scsi_ctl.o
 ${OBJDIR}/iop_scsi_ctl.o: \
     Iop/iop_scsi_ctl.c \
     Iop/iop_scsi.h \
+    Iop/iop_scsi_cmds.h \
     Iop/iop.h \
     Iop/memspace.h \
     ${R1000DEP}
@@ -128,6 +129,7 @@ OBJS += ${OBJDIR}/iop_scsi_dev.o
 ${OBJDIR}/iop_scsi_dev.o: \
     Iop/iop_scsi_dev.c \
     Iop/iop_scsi.h \
+    Iop/iop_scsi_cmds.h \
     Iop/iop.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Iop/iop_scsi_dev.c -o ${OBJDIR}/iop_scsi_dev.o
