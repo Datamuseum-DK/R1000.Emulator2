@@ -119,9 +119,6 @@ scsi_10_write_filemarks_tape(struct scsi_dev *dev, uint8_t *cdb)
 {
 	unsigned xfer_length;
 
-	if (!(dev->ctl->regs[0x12] + dev->ctl->regs[0x13] + dev->ctl->regs[0x14]))
-		return (IOC_SCSI_OK);
-
 	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
 
 	bprintf(dev->msg, MSG_FMT "x=0x%x", MSG_ARG, xfer_length);
