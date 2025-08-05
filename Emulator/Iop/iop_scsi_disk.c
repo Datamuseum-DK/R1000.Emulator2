@@ -70,19 +70,9 @@ cli_scsi_dev_map_file(struct cli *cli, struct scsi_dev *dev, const char *fn)
 /**********************************************************************/
 
 int v_matchproto_(scsi_func_f)
-scsi_00_test_unit_ready(struct scsi_dev *dev, uint8_t *cdb)
-{
-
-	(void)cdb;
-	trace_scsi_dev(dev, "TEST_UNIT_READY");
-	return (IOC_SCSI_OK);
-}
-
-int v_matchproto_(scsi_func_f)
 scsi_03_request_sense(struct scsi_dev *dev, uint8_t *cdb)
 {
 
-	trace_scsi_dev(dev, "REQUEST_SENSE");
 	assert(cdb[4] >= sizeof dev->req_sense);
 	TraceDump(*dev->ctl->tracer,
 	    dev->req_sense, sizeof dev->req_sense,
@@ -93,24 +83,14 @@ scsi_03_request_sense(struct scsi_dev *dev, uint8_t *cdb)
 }
 
 static int v_matchproto_(scsi_func_f)
-scsi_04_format_unit(struct scsi_dev *dev, uint8_t *cdb)
-{
-
-	(void)cdb;
-	trace_scsi_dev(dev, "FORMAT_UNIT");
-	return (IOC_SCSI_OK);
-}
-
-static int v_matchproto_(scsi_func_f)
 scsi_08_read_6_disk(struct scsi_dev *dev, uint8_t *cdb)
 {
 	size_t lba;
 	size_t nsect;
 
-	trace_scsi_dev(dev, "READ_6(DISK)");
-
 	lba = vbe32dec(cdb) & 0x1fffff;
 	nsect = cdb[0x04];
+	sprintf(dev->msg, "lba=0x%zx n=0x%zx", lba, nsect);
 
 	TraceDump(trace_disk_data,
 	    dev->map + (lba << 10), nsect << 10,
@@ -118,7 +98,6 @@ scsi_08_read_6_disk(struct scsi_dev *dev, uint8_t *cdb)
 	    dev->scsi_id, lba, lba << 10);
 
 	scsi_fm_target(dev, dev->map + (lba<<10), nsect<<10);
-	Trace(trace_scsi_data, "SCSI_D READ6 %zx (%08zx)", lba, lba << 10);
 	return (IOC_SCSI_OK);
 }
 
@@ -128,10 +107,9 @@ scsi_0a_write_6(struct scsi_dev *dev, uint8_t *cdb)
 	size_t lba;
 	size_t nsect;
 
-	trace_scsi_dev(dev, "WRITE_6");
-
 	lba = vbe32dec(cdb) & 0x1fffff;
 	nsect = cdb[0x04];
+	sprintf(dev->msg, "lba=0x%zx n=0x%zx", lba, nsect);
 
 	scsi_to_target(dev, dev->map + (lba<<10), nsect<<10);
 
@@ -140,27 +118,6 @@ scsi_0a_write_6(struct scsi_dev *dev, uint8_t *cdb)
 	    "WRITE DISK ID=%d LBA=%08zx (@0x%08zx)\n",
 	    dev->scsi_id, lba, lba << 10);
 
-	Trace(trace_scsi_data, "SCSI_D WRITE6 %zx", lba);
-	return (IOC_SCSI_OK);
-}
-
-
-static int v_matchproto_(scsi_func_f)
-scsi_0b_seek(struct scsi_dev *dev, uint8_t *cdb)
-{
-
-	(void)cdb;
-	trace_scsi_dev(dev, "SEEK");
-
-	return (IOC_SCSI_OK);
-}
-
-static int v_matchproto_(scsi_func_f)
-scsi_0d_vendor(struct scsi_dev *dev, uint8_t *cdb)
-{
-
-	(void)cdb;
-	trace_scsi_dev(dev, "VENDOR");
 	return (IOC_SCSI_OK);
 }
 
@@ -170,7 +127,6 @@ scsi_15_mode_select_6(struct scsi_dev *dev, uint8_t *cdb)
 
 	uint8_t buf[BUFSIZ];
 
-	trace_scsi_dev(dev, "MODE_SELECT_6");
 	assert(cdb[0x01] == 0x11);
 	assert(cdb[0x02] == 0x00);
 	assert(cdb[0x03] == 0x00);
@@ -184,8 +140,6 @@ scsi_15_mode_select_6(struct scsi_dev *dev, uint8_t *cdb)
 static int v_matchproto_(scsi_func_f)
 scsi_1a_sense(struct scsi_dev *dev, uint8_t *cdb)
 {
-
-	trace_scsi_dev(dev, "MODE SENSE");
 
 	switch(cdb[0x02]) {
 	case 0x03:
@@ -205,28 +159,15 @@ static int v_matchproto_(scsi_func_f)
 scsi_28_read_10(struct scsi_dev *dev, uint8_t *cdb)
 {
 	size_t lba;
-	unsigned nsect;
-
-	trace_scsi_dev(dev, "READ_10");
+	size_t nsect;
 
 	lba = vbe32dec(cdb + 0x02);
 
 	nsect = cdb[0x07] << 8;
 	nsect |= cdb[0x08];
+	sprintf(dev->msg, "lba=0x%zx n=0x%zx", lba, nsect);
 
 	scsi_fm_target(dev, dev->map + (lba<<10), nsect<<10);
-	Trace(trace_scsi_data, "SCSI_D READ10 %zx", lba);
-	return (IOC_SCSI_OK);
-}
-
-static int v_matchproto_(scsi_func_f)
-scsi_37_read_defect_data_10(struct scsi_dev *dev, uint8_t *cdb)
-{
-
-	(void)cdb;
-	trace_scsi_dev(dev, "READ_DEFECT_DATA_10");
-
-	// scsi_fm_target(dev, dev->map + (lba<<10), nsect<<10);
 	return (IOC_SCSI_OK);
 }
 
@@ -256,16 +197,16 @@ cli_scsi_get_disk(struct cli *cli, int create)
 	sd->req_sense[0] = 0x80;
 	sd->req_sense[7] = 0x12;
 
-	sd->funcs[SCSI_TEST_UNIT_READY] = scsi_00_test_unit_ready;
-	sd->funcs[SCSI_FORMAT_UNIT] = scsi_04_format_unit;
+	sd->funcs[SCSI_TEST_UNIT_READY] = scsi_xx_no_op;
+	sd->funcs[SCSI_FORMAT_UNIT] = scsi_xx_no_op;
 	sd->funcs[SCSI_READ_6] = scsi_08_read_6_disk;
 	sd->funcs[SCSI_WRITE_6] = scsi_0a_write_6;
-	sd->funcs[SCSI_SEEK] = scsi_0b_seek;
-	sd->funcs[0x0d] = scsi_0d_vendor;
+	sd->funcs[SCSI_SEEK] = scsi_xx_no_op;
+	sd->funcs[SCSI_VENDOR_0D] = scsi_xx_no_op;
 	sd->funcs[SCSI_MODE_SENSE_6] = scsi_1a_sense;
 	sd->funcs[SCSI_READ_10] = scsi_28_read_10;
 	sd->funcs[SCSI_MODE_SELECT_6] = scsi_15_mode_select_6;
-	sd->funcs[SCSI_READ_DEFECT_DATA_10] = scsi_37_read_defect_data_10;
+	sd->funcs[SCSI_READ_DEFECT_DATA_10] = scsi_xx_no_op;
 
 	return (sd);
 }

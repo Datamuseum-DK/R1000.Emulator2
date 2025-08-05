@@ -22,6 +22,19 @@ static const char * const scsi_cmd_name[256] = {
 	#undef M_NAME
 };
 
+/**********************************************************************/
+
+int v_matchproto_(scsi_func_f)
+scsi_xx_no_op(struct scsi_dev *dev, uint8_t *cdb)
+{
+
+        (void)dev;
+        (void)cdb;
+        return (IOC_SCSI_OK);
+}
+
+/**********************************************************************/
+
 static const char * const scsi_reg[] = {
 	"00_OWN_ID_CDB_SIZE",
 	"01_CONTROL",
@@ -85,21 +98,6 @@ trace_scsi_ctl(struct scsi *sp, const char *cmt)
 	    sp->regs[0x14],
 	    cmt
 	);
-}
-
-void
-trace_scsi_dev(struct scsi_dev *dev, const char *cmt)
-{
-	trace_scsi_ctl(dev->ctl, cmt);
-}
-
-void
-trace_scsi_dev_tape(struct scsi_dev *dev, const char *cmt)
-{
-	char buf[100];
-
-	sprintf(buf, "%s 0x%x:0x%x @0x%zx", cmt, dev->tape_fileno, dev->tape_recno, dev->tape_head);
-	trace_scsi_ctl(dev->ctl, buf);
 }
 
 void

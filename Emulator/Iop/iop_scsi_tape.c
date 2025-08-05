@@ -18,7 +18,6 @@ scsi_01_rewind(struct scsi_dev *dev, uint8_t *cdb)
 
 	(void)cdb;
 	bprintf(dev->msg, MSG_FMT, MSG_ARG);
-	trace_scsi_dev_tape(dev, "REWIND");
 	dev->tape_head = 0;
 	dev->tape_fileno = 0;
 	dev->tape_recno = 0;
@@ -39,9 +38,8 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 	if (tape_length == 0) {
 		strcat(dev->msg, " TAPE-MARK");
 		dev->tape_head += 4;
-		dev->req_sense[2] = 0x80;
-		dev->req_sense[3] = xfer_length >> 8;
-		dev->req_sense[4] = xfer_length & 0xff;
+		dev->req_sense[2] |= 0x80;
+		vbe32enc(&dev->req_sense[3], xfer_length);
 		dev->tape_recno = 0;
 		dev->tape_fileno++;
 		return (IOC_SCSI_ERROR);
@@ -49,9 +47,9 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 	if (tape_length == 0xffffffff) {
 		strcat(dev->msg, " EOT");
 		dev->req_sense[2] = 0x40;
+		vbe32enc(&dev->req_sense[3], xfer_length);
 		return (IOC_SCSI_ERROR);
 	}
-	dev->req_sense[2] = 0;
 	assert(tape_length < 65535);
 	assert(tape_length <= xfer_length);
 	dev->tape_head += 4;
@@ -70,8 +68,12 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 	dev->tape_head += 4;
 
 	dev->tape_recno++;
-	if (tape_length < xfer_length)
-		return (xfer_length - tape_length);
+
+	if (tape_length != xfer_length) {
+		dev->req_sense[2] = 0x20;		// ILI
+		vbe32enc(&dev->req_sense[3], xfer_length - tape_length);
+		return (IOC_SCSI_ERROR);
+	}
 
 	return (IOC_SCSI_OK);
 }
@@ -116,8 +118,6 @@ static int v_matchproto_(scsi_func_f)
 scsi_10_write_filemarks_tape(struct scsi_dev *dev, uint8_t *cdb)
 {
 	unsigned xfer_length;
-
-	trace_scsi_dev_tape(dev, "WRITE_FILEMARK(TAPE)");
 
 	if (!(dev->ctl->regs[0x12] + dev->ctl->regs[0x13] + dev->ctl->regs[0x14]))
 		return (IOC_SCSI_OK);
@@ -248,16 +248,6 @@ scsi_11_space(struct scsi_dev *dev, uint8_t *cdb)
 	return (retval);
 }
 
-static int v_matchproto_(scsi_func_f)
-scsi_1b_unload_tape(struct scsi_dev *dev, uint8_t *cdb)
-{
-
-	(void)cdb;
-	trace_scsi_dev_tape(dev, "UNLOAD(TAPE)");
-	return (IOC_SCSI_OK);
-}
-
-
 static void v_matchproto_(cli_func_f)
 cli_scsi_tape_mount(struct cli *cli)
 {
@@ -277,13 +267,13 @@ cli_scsi_tape_mount(struct cli *cli)
 	sd->req_sense[0] = 0xf0;
 	sd->req_sense[7] = 0x12;
 
-	sd->funcs[SCSI_TEST_UNIT_READY] = scsi_00_test_unit_ready;
+	sd->funcs[SCSI_TEST_UNIT_READY] = scsi_xx_no_op;
 	sd->funcs[SCSI_REWIND] = scsi_01_rewind;
 	sd->funcs[SCSI_REQUEST_SENSE] = scsi_03_request_sense;
 	sd->funcs[SCSI_READ_6] = scsi_08_read_6_tape;
 	sd->funcs[SCSI_WRITE_6] = scsi_0a_write_6_tape;
 	sd->funcs[SCSI_WRITE_FILEMARKS] = scsi_10_write_filemarks_tape;
-	sd->funcs[SCSI_UNLOAD] = scsi_1b_unload_tape;
+	sd->funcs[SCSI_UNLOAD] = scsi_xx_no_op;
 	sd->funcs[SCSI_SPACE] = scsi_11_space;
 
 	sd->is_tape = 1;

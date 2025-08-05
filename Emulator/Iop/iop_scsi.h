@@ -14,6 +14,7 @@
 	MACRO(READ_6,			0x08)	\
 	MACRO(WRITE_6,			0x0A)	\
 	MACRO(SEEK,			0x0B)	\
+	MACRO(VENDOR_0D,		0x0D)	\
 	MACRO(WRITE_FILEMARKS,		0x10)	\
 	MACRO(SPACE,			0x11)	\
 	MACRO(INQUIRY,			0x12)	\
@@ -63,10 +64,9 @@ struct scsi {
 	int			*tracer;
 };
 
-void trace_scsi_dev(struct scsi_dev *dev, const char *cmt);
-void trace_scsi_dev_tape(struct scsi_dev *dev, const char *cmt);
 void scsi_to_target(struct scsi_dev *, void *ptr, unsigned len);
 void scsi_fm_target(struct scsi_dev *, void *ptr, unsigned len);
+
 
 void *scsi_disk_pointer_to_sector(unsigned unit, unsigned lba);
 
@@ -78,7 +78,7 @@ enum SCSI_COMMANDS {
 	#undef M_ENUM
 };
 
-scsi_func_f scsi_00_test_unit_ready;
+scsi_func_f scsi_xx_no_op;
 scsi_func_f scsi_03_request_sense;
 
 int cli_scsi_dev_map_file(struct cli *cli, struct scsi_dev *dev, const char *fn);
