@@ -83,3 +83,5 @@ scsi_func_f scsi_03_request_sense;
 
 int cli_scsi_dev_map_file(struct cli *cli, struct scsi_dev *dev, const char *fn);
 
+void scsi_tape_configure(void);
+

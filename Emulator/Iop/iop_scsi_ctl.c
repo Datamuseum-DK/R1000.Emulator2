@@ -390,6 +390,7 @@ ioc_scsi_t_init(void)
 	AZ(pthread_mutex_init(&scsi_t->mtx, NULL));
 	AZ(pthread_cond_init(&scsi_t->cond, NULL));
 	AZ(pthread_create(&scsi_t->thr, NULL, scsi_thread, scsi_t));
+	scsi_tape_configure();
 }
 
 /**********************************************************************/
@@ -498,5 +499,6 @@ get_scsi_dev(int tape, unsigned unit, int create)
 	sd->scsi_id = unit;
 	sd->ctl = s;
 	s->dev[unit] = sd;
+	sd->fd = -1;
 	return (sd);
 }

@@ -13,6 +13,23 @@
 #define MSG_ARG dev->tape_fileno, dev->tape_recno, dev->tape_head
 
 static int v_matchproto_(scsi_func_f)
+scsi_00_test_unit_ready(struct scsi_dev *dev, uint8_t *cdb)
+{
+	
+	(void)cdb;
+	bprintf(dev->msg, MSG_FMT, MSG_ARG);
+	if (dev->fd < 0) {
+		dev->req_sense[2] |= 0x02; // Not Ready
+		dev->req_sense[12] = 0x04; // ASQ = LU Not Ready
+		dev->req_sense[13] = 0x00; // ASQQ = Volume not mounted
+		dev->req_sense[19] |= 0x02; // Tape Not Present
+		return (IOC_SCSI_OK);
+	} else {
+		return (IOC_SCSI_OK);
+	}
+}
+
+static int v_matchproto_(scsi_func_f)
 scsi_01_rewind(struct scsi_dev *dev, uint8_t *cdb)
 {
 
@@ -245,6 +262,25 @@ scsi_11_space(struct scsi_dev *dev, uint8_t *cdb)
 	return (retval);
 }
 
+void
+scsi_tape_configure(void)
+{
+	struct scsi_dev *sd;
+
+	sd = get_scsi_dev(1, 0, 1);
+
+	sd->funcs[SCSI_TEST_UNIT_READY] = scsi_00_test_unit_ready;
+	sd->funcs[SCSI_REWIND] = scsi_01_rewind;
+	sd->funcs[SCSI_REQUEST_SENSE] = scsi_03_request_sense;
+	sd->funcs[SCSI_READ_6] = scsi_08_read_6_tape;
+	sd->funcs[SCSI_WRITE_6] = scsi_0a_write_6_tape;
+	sd->funcs[SCSI_WRITE_FILEMARKS] = scsi_10_write_filemarks_tape;
+	sd->funcs[SCSI_UNLOAD] = scsi_xx_no_op;
+	sd->funcs[SCSI_SPACE] = scsi_11_space;
+
+	sd->is_tape = 1;
+}
+
 static void v_matchproto_(cli_func_f)
 cli_scsi_tape_mount(struct cli *cli)
 {
@@ -259,21 +295,8 @@ cli_scsi_tape_mount(struct cli *cli)
 	cli->ac--;
 	cli->av++;
 
-	sd = get_scsi_dev(1, 0, 1);
-
-	sd->req_sense[0] = 0xf0;
-	sd->req_sense[7] = 0x12;
-
-	sd->funcs[SCSI_TEST_UNIT_READY] = scsi_xx_no_op;
-	sd->funcs[SCSI_REWIND] = scsi_01_rewind;
-	sd->funcs[SCSI_REQUEST_SENSE] = scsi_03_request_sense;
-	sd->funcs[SCSI_READ_6] = scsi_08_read_6_tape;
-	sd->funcs[SCSI_WRITE_6] = scsi_0a_write_6_tape;
-	sd->funcs[SCSI_WRITE_FILEMARKS] = scsi_10_write_filemarks_tape;
-	sd->funcs[SCSI_UNLOAD] = scsi_xx_no_op;
-	sd->funcs[SCSI_SPACE] = scsi_11_space;
-
-	sd->is_tape = 1;
+	sd = get_scsi_dev(1, 0, 0);
+	AN(sd);
 
 	if (cli_scsi_dev_map_file(cli, sd, cli->av[0]) < 0)
 		return;
