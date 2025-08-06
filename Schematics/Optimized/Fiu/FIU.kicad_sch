@@ -1,666 +1,1778 @@
-(kicad_sch (version 20230121) (generator eeschema)
-
-  (uuid 20011966-34db-22cb-3cf6-70f130e3b336)
-
-  (paper "User" 584.2 378.46)
-
-  (title_block
-    (title "FIU Main")
-  )
-
-  (lib_symbols
-    (symbol "r1000:PD" (power) (pin_numbers hide) (pin_names hide) (in_bom no) (on_board yes)
-      (property "Reference" "#PWR" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Value" "PD" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_keywords" "power-flag" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "PD_0_1"
-        (polyline
-          (pts
-            (xy 0 -2.54)
-            (xy 1.27 -2.54)
-            (xy 0 -3.81)
-            (xy -1.27 -2.54)
-            (xy 0 -2.54)
-          )
-          (stroke (width 0.1524) (type default))
-          (fill (type none))
-        )
-      )
-      (symbol "PD_1_1"
-        (pin power_in line (at 0 0 270) (length 2.54)
-          (name "PD" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:PU" (power) (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "#PWR" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Value" "PU" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_keywords" "power-flag" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "PU_0_1"
-        (polyline
-          (pts
-            (xy 0 2.54)
-            (xy -1.27 2.54)
-            (xy 0 3.81)
-            (xy 1.27 2.54)
-            (xy 0 2.54)
-          )
-          (stroke (width 0.1524) (type default))
-          (fill (type none))
-        )
-      )
-      (symbol "PU_1_1"
-        (pin power_in line (at 0 0 90) (length 2.54)
-          (name "PU" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:Pull_Down" (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "U" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Pull_Down" (at 0 3.81 0)
-        (effects (font (size 2.54 2.54)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "Pull_Down_1_1"
-        (pin power_out line (at 0 0 90) (length 2.54)
-          (name "Out" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:Pull_Up" (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "U" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Pull_Up" (at 0 -3.81 0)
-        (effects (font (size 2.54 2.54)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "Pull_Up_1_1"
-        (pin power_out line (at 0 0 270) (length 2.54)
-          (name "Out" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-  )
-
-
-  (wire (pts (xy 566.42 259.08) (xy 566.42 261.62))
-    (stroke (width 0) (type default))
-    (uuid 2ca10db3-28a6-4e39-af74-78ee1089dd8d)
-  )
-  (wire (pts (xy 566.42 243.84) (xy 566.42 246.38))
-    (stroke (width 0) (type default))
-    (uuid 49fb38cd-a105-4f50-9b60-8624ee130d7b)
-  )
-
-  (text "DIAGNOSTIC PROCESSOR" (at 307.34 162.56 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 05fbd135-8e6c-4885-9d5f-f48727a9c6c0)
-  )
-  (text "Board: FIU Branch: Optimized" (at 7.62 370.84 0)
-    (effects (font (size 7.62 7.62) (thickness 1.27) bold) (justify left bottom))
-    (uuid 0990d355-7f06-4fbf-a647-40dac4ba7818)
-  )
-  (text "FIU ROTATE AMOUNT" (at 53.34 261.62 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 0b171b80-2c6a-4ddd-bbbc-97e7b39d8b87)
-  )
-  (text "FIU BOARD <6>" (at 53.34 40.64 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 10ec250f-2b5f-4e3a-9f34-45edb4269d6e)
-  )
-  (text "MERGE_VMUX - FIU AND VAL PART" (at 53.34 185.42 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 157d7f16-568a-4e52-81e1-39ad11461072)
-  )
-  (text "ROTATOR <6>" (at 53.34 124.46 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 17638fb0-9498-4b02-b97d-21f0a86d237a)
-  )
-  (text "DIAGNOSTIC PROCESSOR" (at 307.34 170.18 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 20f2925e-611e-435a-b052-7b79f9d3afea)
-  )
-  (text "WRITABLE CONTROL STORE - BITS 32 to 37 AND PARITY" (at 53.34 299.72 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 27f25890-502e-4adc-90fa-06b780249ef5)
-  )
-  (text "FIU BOARD <6>" (at 53.34 25.4 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 2f14ad2c-dd00-4a50-af09-75ee5b63cf73)
-  )
-  (text "FIU BOARD <6>" (at 53.34 48.26 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 3189e873-670f-4105-9bb6-05166997d020)
-  )
-  (text "MERGE_VMUX - SIGN BIT PART" (at 53.34 193.04 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 334d307f-bd9c-418c-9b4f-0c4151dfe972)
-  )
-  (text "MERGER / TYPE HALF LSB'S" (at 53.34 223.52 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 3692bdcf-13a4-4f05-b0c2-ca1dd7b1c943)
-  )
-  (text "MERGER / VALUE HALF LSB'S" (at 53.34 238.76 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 3cec87bc-5bec-4d36-8b52-e6fc0e590ed2)
-  )
-  (text "REFRESH COUNTERS" (at 307.34 124.46 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 3d00193e-d23e-4194-a526-1d42b2a77b16)
-  )
-  (text "FIU BUS PARITY GENERATOR" (at 53.34 93.98 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 3d6b434f-8a35-495a-8a30-457403d477f3)
-  )
-  (text "TYPE AND VAL BUS DRIVERS" (at 53.34 63.5 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 3ef386e6-b5ae-4346-a0df-d419af3de6be)
-  )
-  (text "WRITABLE CONTROL STORE - BITS 0 TO 15" (at 53.34 284.48 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4129abff-e123-4b74-ab46-1e13dd05a2ce)
-  )
-  (text "CSA NAME COMPARE" (at 307.34 40.64 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 41afc7cc-f104-4368-a1dd-440300b1c017)
-  )
-  (text "ROTATOR TIER 2" (at 53.34 154.94 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4282bc86-d55d-49e2-ab58-2ca1ed1594b9)
-  )
-  (text "FIU FIELD PARAMETERS" (at 53.34 246.38 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 462c0bd8-4563-45da-9630-911c4727064f)
-  )
-  (text "ROTATOR TIER 3" (at 53.34 162.56 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 47d2bb09-e33a-4a72-be2b-986e7faef5bb)
-  )
-  (text "CSA OFFSET COMPARE" (at 307.34 48.26 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 48410304-7a19-44b9-a212-b116acba5f0e)
-  )
-  (text "MEMORY WRITE MONITOR" (at 53.34 330.2 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 48ea96cd-01e5-46bb-b306-1189b61f89ef)
-  )
-  (text "POWER AND GROUND FINGERS - & BYPASS CAPACITORS <6>"
-    (at 307.34 177.8 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 52b55084-18ca-4088-ada1-425a2e28ca27)
-  )
-  (text "HASH FUNCTION / FRAME DRIVER" (at 307.34 86.36 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 5dfaef5c-6968-4963-9222-efd8a9005442)
-  )
-  (text "READ MAR DRIVER" (at 307.34 93.98 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 64c13a0e-42d1-4e4f-9acc-36794c652890)
-  )
-  (text "SIGN BIT EXTRACTOR" (at 53.34 170.18 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 6c2977b5-77cf-40e9-a4e2-38ea788b83ac)
-  )
-  (text "ADDRESS BUS DRIVERS" (at 307.34 101.6 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 6d6cf93a-1c2f-4123-ab67-68bbbf5430c8)
-  )
-  (text "CSA OFFSET SELECT" (at 307.34 33.02 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 70f7eace-d49e-4e11-9ad7-40458fae9b3c)
-  )
-  (text "MICRO_INSTRUCTION REGISTER" (at 53.34 307.34 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 714c7dde-9cf5-43ea-a059-fe33c6eeffea)
-  )
-  (text "FIU BOARD - FIU DATA PATH <6>" (at 53.34 17.78 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 714e2ffd-890c-4637-9f2b-aa1c8dae42ae)
-  )
-  (text "MERGE MASK BYTE CONTROL" (at 53.34 200.66 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 749bcdec-d017-48a6-a367-d7a1c9b9d15c)
-  )
-  (text "MAR INCREMENT AND CONDITONS" (at 307.34 78.74 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 74abede2-26ac-45c8-9a50-0bcbd4a93f4b)
-  )
-  (text "WCS ADDRESS - MUX, DRIVERS, AND PARITY" (at 53.34 276.86 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 7c43cc2f-6918-4e10-8d51-dd64b54c560f)
-  )
-  (text "DIAGNOSTIC PROCESSOR" (at 307.34 154.94 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 8894c60b-2902-4b8a-97d8-be6c3721c00e)
-  )
-  (text "MERGE MASK PROMS" (at 53.34 208.28 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 8d9e7557-cc48-49ad-9689-3c0692e0d7da)
-  )
-  (text "TYPE/FIU BUS PARITY" (at 53.34 71.12 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 92a5e248-3a66-4c73-80c2-54e4d5e42ac2)
-  )
-  (text "FIU BUS XCVR" (at 53.34 86.36 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 938fd7ca-e862-472c-8b3c-046107a223f6)
-  )
-  (text "CLOCK GENERATION" (at 307.34 147.32 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid a83cbe57-1481-4b64-bac7-b927135fd33e)
-  )
-  (text "CSA_MONITOR <6>" (at 53.34 353.06 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid a922cb5c-83c3-4d5b-8383-0dd8d0e60a8b)
-  )
-  (text "TYPE ASSEMBLY REGISTER" (at 53.34 109.22 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid b3e0a279-4a83-496f-8b73-37e6551b5f69)
-  )
-  (text "ROTATOR TIER1/VALUE HALF" (at 53.34 147.32 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid b4ab40ad-c3ed-4f24-a6f6-438b49992ba0)
-  )
-  (text "CLOCK GENERATION" (at 307.34 139.7 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid b649dc12-8402-444c-83e2-c8150eef78c1)
-  )
-  (text "WCS PARITY CHECKER" (at 53.34 314.96 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid bcec77d9-f65d-44ab-9e24-fe09210934c2)
-  )
-  (text "ROTATOR NIBBLE MASK" (at 53.34 132.08 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid bf7e212e-55a4-4846-936e-0d6a46d1bb08)
-  )
-  (text "MERGER / VALUE HALF MSB'S" (at 53.34 231.14 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c52dceab-db46-4094-88e5-497abf1567b1)
-  )
-  (text "TYPE AND VAL BUS RCVRS" (at 53.34 55.88 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c7dc86c2-39df-4eaf-ac38-d7b8b92912c7)
-  )
-  (text "MEMORY STATE MONITOR" (at 53.34 345.44 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c81f417a-88ca-4229-8a1c-59c86709ebca)
-  )
-  (text "FIU_TV BUS DRIVERS" (at 53.34 101.6 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c8efe62a-9157-4257-b7bd-981ec8d56568)
-  )
-  (text "MERGER / TYPE HALF MSB'S" (at 53.34 215.9 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ca4a127e-39ff-429a-98fd-511bbe6db860)
-  )
-  (text "CONTROL TOP REGISTER" (at 307.34 17.78 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid cce16fd1-8df3-4a81-b114-96abb9ed13be)
-  )
-  (text "ROTATOR TIER1/TYPE HALF" (at 53.34 139.7 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid cd36c8ae-2767-4ae1-8c77-af78621334d9)
-  )
-  (text "MAR NAME AND OFFSET" (at 307.34 71.12 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid d0fbe2d2-2824-4ae4-8ebf-f07343ebb720)
-  )
-  (text "VAL/FIU BUS PARITY" (at 53.34 78.74 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid d2fd5312-7c75-483b-909c-8799c8c48b94)
-  )
-  (text "WRITABLE CONTROL STORE - BITS 16 TO 31" (at 53.34 292.1 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid da84bd15-cd1d-4a6b-823b-afed0e9bac53)
-  )
-  (text "FIU BOARD <6>" (at 53.34 33.02 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid db20bebf-6f10-40be-9dcb-4b976419f83a)
-  )
-  (text "MERGE DATA REGISTER" (at 53.34 177.8 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid df674671-9185-4fb0-9aed-21a80818844e)
-  )
-  (text "ADDRESS BUS PARITY DRIVERS" (at 307.34 116.84 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e36d0d95-9491-46d1-b506-e906375b99a3)
-  )
-  (text "CONTROL TOP REGISTER PARITY" (at 307.34 25.4 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e8b89933-43bc-4c91-9b57-34c02fffe3d5)
-  )
-  (text "VAL ASSEMBLY REGISTER" (at 53.34 116.84 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e9b24234-1c0d-4313-a321-7168f30c262a)
-  )
-  (text "MEMORY WRITE MONITOR" (at 53.34 337.82 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid eabd0626-5604-46ff-abb5-87949deb2d18)
-  )
-  (text "SCAVENGER" (at 307.34 132.08 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid f27080b4-c0b0-4c89-9677-dfb1320dfd8d)
-  )
-  (text "ADDRESS BUS PARITY - GENERATOR AND CHECKER" (at 307.34 109.22 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid f3ea2ae6-69a7-4dd8-8e52-3bcd9b3c35e4)
-  )
-  (text "FIU CONDITION SELECTORS" (at 307.34 55.88 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid f4f24a37-f463-4a12-b11e-11748d37106f)
-  )
-  (text "BUS CONTROL" (at 53.34 322.58 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid f768cf66-087b-47f4-b7d8-1193d539966e)
-  )
-  (text "FIU FIELD PARAMETERS" (at 53.34 254 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid fa6c641d-4a7d-4356-952c-ec2475b0331c)
-  )
-  (text "MEMORY ADDRESS REGISTER <6>" (at 307.34 63.5 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid fd6379e0-97d5-4529-814b-fac1e476d13b)
-  )
-  (text "FIU STARTBIT AND CMDBIT" (at 53.34 269.24 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ffa5feb9-de8d-45ba-a0c5-a1332cb5c27c)
-  )
-
-  (symbol (lib_id "r1000:PD") (at 566.42 261.62 0) (unit 1)
-    (in_bom no) (on_board yes) (dnp no)
-    (uuid 8db41ca4-179a-49d7-9cea-f39e88410034)
-    (property "Reference" "#PWR0102" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "~" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Footprint" "" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid da86a88e-dca1-4865-81d2-720cd5fbaafb))
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336"
-          (reference "#PWR0102") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:PU") (at 566.42 243.84 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 8f17a7af-e646-41b9-9f8c-f41364533041)
-    (property "Reference" "#PWR0101" (at 566.42 243.84 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "~" (at 566.42 243.84 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Footprint" "" (at 566.42 243.84 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 243.84 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid ae566f84-f209-4a77-a562-2b99f48f7ea1))
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336"
-          (reference "#PWR0101") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:Pull_Down") (at 566.42 259.08 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid a2ced704-0e59-4bb2-b7eb-b84cbd227b53)
-    (property "Reference" "U102" (at 566.42 259.08 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "~" (at 566.42 255.27 0)
-      (effects (font (size 2.54 2.54)))
-    )
-    (property "Footprint" "" (at 566.42 259.08 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 259.08 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid c3b058b2-7c6c-4544-b2cf-ed75fc68e7d4))
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336"
-          (reference "U102") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:Pull_Up") (at 566.42 246.38 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid db15ac45-a8a0-4da2-9e57-ad2d225f707a)
-    (property "Reference" "U101" (at 566.42 246.38 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "~" (at 566.42 250.19 0)
-      (effects (font (size 2.54 2.54)))
-    )
-    (property "Footprint" "" (at 566.42 246.38 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 246.38 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 33b1d533-8f5d-4d7d-ac13-0972d4b80212))
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336"
-          (reference "U101") (unit 1)
-        )
-      )
-    )
-  )
-
-  (sheet (at 266.7 134.62) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-03fd-1254-4cd9-11c1b9c0a5d9)
-    (property "Sheetname" "Page 62" (at 289.56 139.7 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_62.kicad_sch" (at 289.56 137.16 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336" (page "62"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 149.86) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-1485-3f31-5abe-70048b53912f)
-    (property "Sheetname" "Page 64" (at 289.56 154.94 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_64.kicad_sch" (at 289.56 152.4 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336" (page "64"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 96.52) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-22e1-0891-6a5a-45777b19714b)
-    (property "Sheetname" "Page 57" (at 289.56 101.6 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_57.kicad_sch" (at 289.56 99.06 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336" (page "57"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 134.62) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-2778-75d3-0f96-5c55616182cc)
-    (property "Sheetname" "Page 17" (at 35.56 139.7 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_17.kicad_sch" (at 35.56 137.16 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336" (page "17"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 119.38) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-2bde-5da4-6397-0f97328ac853)
-    (property "Sheetname" "Page 60" (at 289.56 124.46 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_60.kicad_sch" (at 289.56 121.92 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336" (page "60"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 325.12) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-3a20-1115-5689-5ff2ad94d194)
-    (property "Sheetname" "Page 42" (at 35.56 330.2 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_42.kicad_sch" (at 35.56 327.66 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336" (page "42"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 50.8) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-4623-09e3-5067-163716d71c1d)
-    (property "Sheetname" "Page 06" (at 35.56 55.88 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_06.kicad_sch" (at 35.56 53.34 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336" (page "06"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 279.4) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-5626-5622-6ac4-55d76a8aa92b)
-    (property "Sheetname" "Page 36" (at 35.56 284.48 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_36.kicad_sch" (at 35.56 281.94 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336" (page "36"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 58.42) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-6bba-160c-07d7-0c7848600710)
-    (property "Sheetname" "Page 07" (at 35.56 63.5 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_07.kicad_sch" (at 35.56 60.96 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "FIU"
-        (path "/20011966-34db-22cb-3cf6-70f130e3b336" (page "07"))
-      )
-    )
-  )
-
-  (sheet_instances
-    (path "/" (page "00"))
-  )
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "20011966-34db-22cb-3cf6-70f130e3b336")
+	(paper "User" 584.2 378.46)
+	(title_block
+		(title "FIU Main")
+	)
+	(lib_symbols
+		(symbol "r1000:PD"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "PD"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "power-flag"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "PD_0_1"
+				(polyline
+					(pts
+						(xy 0 -2.54) (xy 1.27 -2.54) (xy 0 -3.81) (xy -1.27 -2.54) (xy 0 -2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "PD_1_1"
+				(pin power_in line
+					(at 0 0 270)
+					(length 2.54)
+					(name "PD"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:PU"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "PU"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "power-flag"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "PU_0_1"
+				(polyline
+					(pts
+						(xy 0 2.54) (xy -1.27 2.54) (xy 0 3.81) (xy 1.27 2.54) (xy 0 2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "PU_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 2.54)
+					(name "PU"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:Pull_Down"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Pull_Down"
+				(at 0 3.81 0)
+				(effects
+					(font
+						(size 2.54 2.54)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Pull_Down_1_1"
+				(pin power_out line
+					(at 0 0 90)
+					(length 2.54)
+					(name "Out"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:Pull_Up"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Pull_Up"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 2.54 2.54)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Pull_Up_1_1"
+				(pin power_out line
+					(at 0 0 270)
+					(length 2.54)
+					(name "Out"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(text "DIAGNOSTIC PROCESSOR"
+		(exclude_from_sim no)
+		(at 307.34 162.56 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "05fbd135-8e6c-4885-9d5f-f48727a9c6c0")
+	)
+	(text "Board: FIU Branch: Optimized"
+		(exclude_from_sim no)
+		(at 7.62 370.84 0)
+		(effects
+			(font
+				(size 7.62 7.62)
+				(thickness 1.27)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "0990d355-7f06-4fbf-a647-40dac4ba7818")
+	)
+	(text "FIU ROTATE AMOUNT"
+		(exclude_from_sim no)
+		(at 53.34 261.62 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "0b171b80-2c6a-4ddd-bbbc-97e7b39d8b87")
+	)
+	(text "FIU BOARD <6>"
+		(exclude_from_sim no)
+		(at 53.34 40.64 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "10ec250f-2b5f-4e3a-9f34-45edb4269d6e")
+	)
+	(text "MERGE_VMUX - FIU AND VAL PART"
+		(exclude_from_sim no)
+		(at 53.34 185.42 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "157d7f16-568a-4e52-81e1-39ad11461072")
+	)
+	(text "ROTATOR <6>"
+		(exclude_from_sim no)
+		(at 53.34 124.46 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "17638fb0-9498-4b02-b97d-21f0a86d237a")
+	)
+	(text "DIAGNOSTIC PROCESSOR"
+		(exclude_from_sim no)
+		(at 307.34 170.18 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "20f2925e-611e-435a-b052-7b79f9d3afea")
+	)
+	(text "WRITABLE CONTROL STORE - BITS 32 to 37 AND PARITY"
+		(exclude_from_sim no)
+		(at 53.34 299.72 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "27f25890-502e-4adc-90fa-06b780249ef5")
+	)
+	(text "FIU BOARD <6>"
+		(exclude_from_sim no)
+		(at 53.34 25.4 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "2f14ad2c-dd00-4a50-af09-75ee5b63cf73")
+	)
+	(text "FIU BOARD <6>"
+		(exclude_from_sim no)
+		(at 53.34 48.26 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "3189e873-670f-4105-9bb6-05166997d020")
+	)
+	(text "MERGE_VMUX - SIGN BIT PART"
+		(exclude_from_sim no)
+		(at 53.34 193.04 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "334d307f-bd9c-418c-9b4f-0c4151dfe972")
+	)
+	(text "MERGER / TYPE HALF LSB'S"
+		(exclude_from_sim no)
+		(at 53.34 223.52 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "3692bdcf-13a4-4f05-b0c2-ca1dd7b1c943")
+	)
+	(text "MERGER / VALUE HALF LSB'S"
+		(exclude_from_sim no)
+		(at 53.34 238.76 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "3cec87bc-5bec-4d36-8b52-e6fc0e590ed2")
+	)
+	(text "REFRESH COUNTERS"
+		(exclude_from_sim no)
+		(at 307.34 124.46 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "3d00193e-d23e-4194-a526-1d42b2a77b16")
+	)
+	(text "FIU BUS PARITY GENERATOR"
+		(exclude_from_sim no)
+		(at 53.34 93.98 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "3d6b434f-8a35-495a-8a30-457403d477f3")
+	)
+	(text "TYPE AND VAL BUS DRIVERS"
+		(exclude_from_sim no)
+		(at 53.34 63.5 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "3ef386e6-b5ae-4346-a0df-d419af3de6be")
+	)
+	(text "WRITABLE CONTROL STORE - BITS 0 TO 15"
+		(exclude_from_sim no)
+		(at 53.34 284.48 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "4129abff-e123-4b74-ab46-1e13dd05a2ce")
+	)
+	(text "CSA NAME COMPARE"
+		(exclude_from_sim no)
+		(at 307.34 40.64 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "41afc7cc-f104-4368-a1dd-440300b1c017")
+	)
+	(text "ROTATOR TIER 2"
+		(exclude_from_sim no)
+		(at 53.34 154.94 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "4282bc86-d55d-49e2-ab58-2ca1ed1594b9")
+	)
+	(text "FIU FIELD PARAMETERS"
+		(exclude_from_sim no)
+		(at 53.34 246.38 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "462c0bd8-4563-45da-9630-911c4727064f")
+	)
+	(text "ROTATOR TIER 3"
+		(exclude_from_sim no)
+		(at 53.34 162.56 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "47d2bb09-e33a-4a72-be2b-986e7faef5bb")
+	)
+	(text "CSA OFFSET COMPARE"
+		(exclude_from_sim no)
+		(at 307.34 48.26 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "48410304-7a19-44b9-a212-b116acba5f0e")
+	)
+	(text "MEMORY WRITE MONITOR"
+		(exclude_from_sim no)
+		(at 53.34 330.2 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "48ea96cd-01e5-46bb-b306-1189b61f89ef")
+	)
+	(text "POWER AND GROUND FINGERS - & BYPASS CAPACITORS <6>"
+		(exclude_from_sim no)
+		(at 307.34 177.8 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "52b55084-18ca-4088-ada1-425a2e28ca27")
+	)
+	(text "HASH FUNCTION / FRAME DRIVER"
+		(exclude_from_sim no)
+		(at 307.34 86.36 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "5dfaef5c-6968-4963-9222-efd8a9005442")
+	)
+	(text "READ MAR DRIVER"
+		(exclude_from_sim no)
+		(at 307.34 93.98 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "64c13a0e-42d1-4e4f-9acc-36794c652890")
+	)
+	(text "SIGN BIT EXTRACTOR"
+		(exclude_from_sim no)
+		(at 53.34 170.18 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "6c2977b5-77cf-40e9-a4e2-38ea788b83ac")
+	)
+	(text "ADDRESS BUS DRIVERS"
+		(exclude_from_sim no)
+		(at 307.34 101.6 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "6d6cf93a-1c2f-4123-ab67-68bbbf5430c8")
+	)
+	(text "CSA OFFSET SELECT"
+		(exclude_from_sim no)
+		(at 307.34 33.02 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "70f7eace-d49e-4e11-9ad7-40458fae9b3c")
+	)
+	(text "MICRO_INSTRUCTION REGISTER"
+		(exclude_from_sim no)
+		(at 53.34 307.34 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "714c7dde-9cf5-43ea-a059-fe33c6eeffea")
+	)
+	(text "FIU BOARD - FIU DATA PATH <6>"
+		(exclude_from_sim no)
+		(at 53.34 17.78 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "714e2ffd-890c-4637-9f2b-aa1c8dae42ae")
+	)
+	(text "MERGE MASK BYTE CONTROL"
+		(exclude_from_sim no)
+		(at 53.34 200.66 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "749bcdec-d017-48a6-a367-d7a1c9b9d15c")
+	)
+	(text "MAR INCREMENT AND CONDITONS"
+		(exclude_from_sim no)
+		(at 307.34 78.74 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "74abede2-26ac-45c8-9a50-0bcbd4a93f4b")
+	)
+	(text "WCS ADDRESS - MUX, DRIVERS, AND PARITY"
+		(exclude_from_sim no)
+		(at 53.34 276.86 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "7c43cc2f-6918-4e10-8d51-dd64b54c560f")
+	)
+	(text "DIAGNOSTIC PROCESSOR"
+		(exclude_from_sim no)
+		(at 307.34 154.94 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "8894c60b-2902-4b8a-97d8-be6c3721c00e")
+	)
+	(text "MERGE MASK PROMS"
+		(exclude_from_sim no)
+		(at 53.34 208.28 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "8d9e7557-cc48-49ad-9689-3c0692e0d7da")
+	)
+	(text "TYPE/FIU BUS PARITY"
+		(exclude_from_sim no)
+		(at 53.34 71.12 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "92a5e248-3a66-4c73-80c2-54e4d5e42ac2")
+	)
+	(text "FIU BUS XCVR"
+		(exclude_from_sim no)
+		(at 53.34 86.36 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "938fd7ca-e862-472c-8b3c-046107a223f6")
+	)
+	(text "CLOCK GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 147.32 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "a83cbe57-1481-4b64-bac7-b927135fd33e")
+	)
+	(text "CSA_MONITOR <6>"
+		(exclude_from_sim no)
+		(at 53.34 353.06 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "a922cb5c-83c3-4d5b-8383-0dd8d0e60a8b")
+	)
+	(text "TYPE ASSEMBLY REGISTER"
+		(exclude_from_sim no)
+		(at 53.34 109.22 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "b3e0a279-4a83-496f-8b73-37e6551b5f69")
+	)
+	(text "ROTATOR TIER1/VALUE HALF"
+		(exclude_from_sim no)
+		(at 53.34 147.32 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "b4ab40ad-c3ed-4f24-a6f6-438b49992ba0")
+	)
+	(text "CLOCK GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 139.7 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "b649dc12-8402-444c-83e2-c8150eef78c1")
+	)
+	(text "WCS PARITY CHECKER"
+		(exclude_from_sim no)
+		(at 53.34 314.96 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "bcec77d9-f65d-44ab-9e24-fe09210934c2")
+	)
+	(text "ROTATOR NIBBLE MASK"
+		(exclude_from_sim no)
+		(at 53.34 132.08 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "bf7e212e-55a4-4846-936e-0d6a46d1bb08")
+	)
+	(text "MERGER / VALUE HALF MSB'S"
+		(exclude_from_sim no)
+		(at 53.34 231.14 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c52dceab-db46-4094-88e5-497abf1567b1")
+	)
+	(text "TYPE AND VAL BUS RCVRS"
+		(exclude_from_sim no)
+		(at 53.34 55.88 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c7dc86c2-39df-4eaf-ac38-d7b8b92912c7")
+	)
+	(text "MEMORY STATE MONITOR"
+		(exclude_from_sim no)
+		(at 53.34 345.44 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c81f417a-88ca-4229-8a1c-59c86709ebca")
+	)
+	(text "FIU_TV BUS DRIVERS"
+		(exclude_from_sim no)
+		(at 53.34 101.6 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c8efe62a-9157-4257-b7bd-981ec8d56568")
+	)
+	(text "MERGER / TYPE HALF MSB'S"
+		(exclude_from_sim no)
+		(at 53.34 215.9 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ca4a127e-39ff-429a-98fd-511bbe6db860")
+	)
+	(text "CONTROL TOP REGISTER"
+		(exclude_from_sim no)
+		(at 307.34 17.78 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "cce16fd1-8df3-4a81-b114-96abb9ed13be")
+	)
+	(text "ROTATOR TIER1/TYPE HALF"
+		(exclude_from_sim no)
+		(at 53.34 139.7 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "cd36c8ae-2767-4ae1-8c77-af78621334d9")
+	)
+	(text "MAR NAME AND OFFSET"
+		(exclude_from_sim no)
+		(at 307.34 71.12 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "d0fbe2d2-2824-4ae4-8ebf-f07343ebb720")
+	)
+	(text "VAL/FIU BUS PARITY"
+		(exclude_from_sim no)
+		(at 53.34 78.74 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "d2fd5312-7c75-483b-909c-8799c8c48b94")
+	)
+	(text "WRITABLE CONTROL STORE - BITS 16 TO 31"
+		(exclude_from_sim no)
+		(at 53.34 292.1 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "da84bd15-cd1d-4a6b-823b-afed0e9bac53")
+	)
+	(text "FIU BOARD <6>"
+		(exclude_from_sim no)
+		(at 53.34 33.02 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "db20bebf-6f10-40be-9dcb-4b976419f83a")
+	)
+	(text "MERGE DATA REGISTER"
+		(exclude_from_sim no)
+		(at 53.34 177.8 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "df674671-9185-4fb0-9aed-21a80818844e")
+	)
+	(text "ADDRESS BUS PARITY DRIVERS"
+		(exclude_from_sim no)
+		(at 307.34 116.84 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e36d0d95-9491-46d1-b506-e906375b99a3")
+	)
+	(text "CONTROL TOP REGISTER PARITY"
+		(exclude_from_sim no)
+		(at 307.34 25.4 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e8b89933-43bc-4c91-9b57-34c02fffe3d5")
+	)
+	(text "VAL ASSEMBLY REGISTER"
+		(exclude_from_sim no)
+		(at 53.34 116.84 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e9b24234-1c0d-4313-a321-7168f30c262a")
+	)
+	(text "MEMORY WRITE MONITOR"
+		(exclude_from_sim no)
+		(at 53.34 337.82 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "eabd0626-5604-46ff-abb5-87949deb2d18")
+	)
+	(text "SCAVENGER"
+		(exclude_from_sim no)
+		(at 307.34 132.08 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "f27080b4-c0b0-4c89-9677-dfb1320dfd8d")
+	)
+	(text "ADDRESS BUS PARITY - GENERATOR AND CHECKER"
+		(exclude_from_sim no)
+		(at 307.34 109.22 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "f3ea2ae6-69a7-4dd8-8e52-3bcd9b3c35e4")
+	)
+	(text "FIU CONDITION SELECTORS"
+		(exclude_from_sim no)
+		(at 307.34 55.88 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "f4f24a37-f463-4a12-b11e-11748d37106f")
+	)
+	(text "BUS CONTROL"
+		(exclude_from_sim no)
+		(at 53.34 322.58 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "f768cf66-087b-47f4-b7d8-1193d539966e")
+	)
+	(text "FIU FIELD PARAMETERS"
+		(exclude_from_sim no)
+		(at 53.34 254 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "fa6c641d-4a7d-4356-952c-ec2475b0331c")
+	)
+	(text "MEMORY ADDRESS REGISTER <6>"
+		(exclude_from_sim no)
+		(at 307.34 63.5 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "fd6379e0-97d5-4529-814b-fac1e476d13b")
+	)
+	(text "FIU STARTBIT AND CMDBIT"
+		(exclude_from_sim no)
+		(at 53.34 269.24 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ffa5feb9-de8d-45ba-a0c5-a1332cb5c27c")
+	)
+	(wire
+		(pts
+			(xy 566.42 259.08) (xy 566.42 261.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "12b26e00-5f0e-46eb-b689-69df5789fc04")
+	)
+	(wire
+		(pts
+			(xy 566.42 243.84) (xy 566.42 246.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a9d5c42c-e977-4a52-b84f-c3d884e3fe53")
+	)
+	(symbol
+		(lib_id "r1000:PU")
+		(at 566.42 243.84 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "73c0f211-fe8c-4446-82ac-fc371aa8c71c")
+		(property "Reference" "#PWR01"
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PU"
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "ae844360-5b1b-4350-a2d2-599bef858446")
+		)
+		(instances
+			(project ""
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(reference "#PWR01")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:Pull_Down")
+		(at 566.42 259.08 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a2ced704-0e59-4bb2-b7eb-b84cbd227b53")
+		(property "Reference" "U102"
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 566.42 255.27 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "c3b058b2-7c6c-4544-b2cf-ed75fc68e7d4")
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(reference "U102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:Pull_Up")
+		(at 566.42 246.38 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "db15ac45-a8a0-4da2-9e57-ad2d225f707a")
+		(property "Reference" "U101"
+			(at 566.42 246.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 566.42 250.19 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 246.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 246.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 246.38 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "33b1d533-8f5d-4d7d-ac13-0972d4b80212")
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(reference "U101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:PD")
+		(at 566.42 261.62 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "f1b40499-194c-4f43-9a39-e7527467644e")
+		(property "Reference" "#PWR02"
+			(at 566.42 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PD"
+			(at 566.42 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "06621437-7eb7-41fa-ad94-f5339bab0052")
+		)
+		(instances
+			(project ""
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(reference "#PWR02")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 134.62)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-03fd-1254-4cd9-11c1b9c0a5d9")
+		(property "Sheetname" "Page 62"
+			(at 289.56 139.7 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_62.kicad_sch"
+			(at 289.56 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(page "62")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 149.86)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-1485-3f31-5abe-70048b53912f")
+		(property "Sheetname" "Page 64"
+			(at 289.56 154.94 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_64.kicad_sch"
+			(at 289.56 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(page "64")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 96.52)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-22e1-0891-6a5a-45777b19714b")
+		(property "Sheetname" "Page 57"
+			(at 289.56 101.6 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_57.kicad_sch"
+			(at 289.56 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(page "57")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 134.62)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-2778-75d3-0f96-5c55616182cc")
+		(property "Sheetname" "Page 17"
+			(at 35.56 139.7 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_17.kicad_sch"
+			(at 35.56 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(page "17")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 119.38)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-2bde-5da4-6397-0f97328ac853")
+		(property "Sheetname" "Page 60"
+			(at 289.56 124.46 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_60.kicad_sch"
+			(at 289.56 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(page "60")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 325.12)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-3a20-1115-5689-5ff2ad94d194")
+		(property "Sheetname" "Page 42"
+			(at 35.56 330.2 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_42.kicad_sch"
+			(at 35.56 327.66 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(page "42")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 50.8)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-4623-09e3-5067-163716d71c1d")
+		(property "Sheetname" "Page 06"
+			(at 35.56 55.88 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_06.kicad_sch"
+			(at 35.56 53.34 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(page "06")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 279.4)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-5626-5622-6ac4-55d76a8aa92b")
+		(property "Sheetname" "Page 36"
+			(at 35.56 284.48 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_36.kicad_sch"
+			(at 35.56 281.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(page "36")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 58.42)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-6bba-160c-07d7-0c7848600710")
+		(property "Sheetname" "Page 07"
+			(at 35.56 63.5 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_07.kicad_sch"
+			(at 35.56 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "FIU"
+				(path "/20011966-34db-22cb-3cf6-70f130e3b336"
+					(page "07")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "00")
+		)
+	)
+	(embedded_fonts no)
 )

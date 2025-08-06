@@ -1,642 +1,1673 @@
-(kicad_sch (version 20230121) (generator eeschema)
-
-  (uuid 20011966-487c-2cfb-5da0-3540af989df7)
-
-  (paper "User" 584.2 378.46)
-
-  (title_block
-    (title "MEM32 Main")
-  )
-
-  (lib_symbols
-    (symbol "r1000:PD" (power) (pin_numbers hide) (pin_names hide) (in_bom no) (on_board yes)
-      (property "Reference" "#PWR" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Value" "PD" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_keywords" "power-flag" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "PD_0_1"
-        (polyline
-          (pts
-            (xy 0 -2.54)
-            (xy 1.27 -2.54)
-            (xy 0 -3.81)
-            (xy -1.27 -2.54)
-            (xy 0 -2.54)
-          )
-          (stroke (width 0.1524) (type default))
-          (fill (type none))
-        )
-      )
-      (symbol "PD_1_1"
-        (pin power_in line (at 0 0 270) (length 2.54)
-          (name "PD" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:PU" (power) (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "#PWR" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Value" "PU" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_keywords" "power-flag" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "PU_0_1"
-        (polyline
-          (pts
-            (xy 0 2.54)
-            (xy -1.27 2.54)
-            (xy 0 3.81)
-            (xy 1.27 2.54)
-            (xy 0 2.54)
-          )
-          (stroke (width 0.1524) (type default))
-          (fill (type none))
-        )
-      )
-      (symbol "PU_1_1"
-        (pin power_in line (at 0 0 90) (length 2.54)
-          (name "PU" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:Pull_Down" (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "U" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Pull_Down" (at 0 3.81 0)
-        (effects (font (size 2.54 2.54)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "Pull_Down_1_1"
-        (pin power_out line (at 0 0 90) (length 2.54)
-          (name "Out" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:Pull_Up" (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "U" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Pull_Up" (at 0 -3.81 0)
-        (effects (font (size 2.54 2.54)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "Pull_Up_1_1"
-        (pin power_out line (at 0 0 270) (length 2.54)
-          (name "Out" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-  )
-
-
-  (wire (pts (xy 566.42 256.54) (xy 566.42 261.62))
-    (stroke (width 0) (type default))
-    (uuid 1c5054e4-3437-4915-a00f-e0b0ce281f8b)
-  )
-  (wire (pts (xy 566.42 238.76) (xy 566.42 243.84))
-    (stroke (width 0) (type default))
-    (uuid 2998f141-cd47-4014-9e8a-fdada3627b0c)
-  )
-
-  (text "TAGB RAMS - 0:40, 56:63, P0:P5, P7" (at 53.34 101.6 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 022b6a10-a94c-4d99-8319-b14e48b2468f)
-  )
-  (text "HIT LOGIC" (at 53.34 223.52 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 03a10fce-1e4a-44da-b3f1-16b4edfdd644)
-  )
-  (text "BXCVR - VAL & VAL_PAR DIAG REG" (at 53.34 71.12 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 05f5292f-1707-48e6-92e6-f667cce46f12)
-  )
-  (text "PLANEB DYNAMIC RAMS - TYPE BITS 32-63 - CHECK BITS 3-4"
-    (at 53.34 330.2 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 0f01d6f3-c161-42c4-9dd2-9721cbb04581)
-  )
-  (text "BUS CONTROL" (at 53.34 215.9 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 0f04c4ec-1909-426d-9fa4-aba72414da52)
-  )
-  (text "BXCVR - VAL AND VAL_PARITY" (at 53.34 55.88 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 14a64770-c0aa-4384-8b88-76cf6a4e9219)
-  )
-  (text "TAGACOMP - PARITY" (at 53.34 132.08 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 16c21558-3df8-4641-a40a-ea572c030278)
-  )
-  (text "TAG B RAMS - TRANSCEIVERS" (at 53.34 116.84 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 2f27be71-b995-4636-b52d-35ccfec64a36)
-  )
-  (text "BXCVR - TYPE AND CHECKBITS" (at 53.34 48.26 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 33897606-48cf-4a67-a1d5-60512e046d75)
-  )
-  (text "LRU LOGIC - PLANE B_LATE" (at 53.34 177.8 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 41fe3f91-05f3-499b-a793-800372b3e19b)
-  )
-  (text "ADDRESS - LAR AND SET REGISTERS" (at 53.34 200.66 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 46a69962-d2b6-4b90-8f22-e56e153cd961)
-  )
-  (text "PLANE A - DRAM ADDRESS BUFFERS" (at 53.34 307.34 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4c99503d-7aae-435f-a686-64d08849cfee)
-  )
-  (text "TRACE RAMS - DIAGNOSTIC COUNTER" (at 53.34 269.24 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 65756209-1940-429e-a0bb-03cee7b41fad)
-  )
-  (text "AXCVR - TYPE AND CHECKBITS" (at 53.34 33.02 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 6654eb08-8a29-445e-bc20-e74f7d6fd3c7)
-  )
-  (text "LRU LOGIC - PLANE A_LATE" (at 53.34 162.56 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 670eb6df-6b44-4641-be4a-fa03fcd00f5a)
-  )
-  (text "PLANEA DYNAMIC RAMS - VAL BITS 32 - 63 - CHECK BITS 7 - 8"
-    (at 53.34 299.72 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 67cc90be-f212-4ca5-b9c5-97ad8d396984)
-  )
-  (text "PLANEA DYNAMIC RAMS - VAL BITS 0 - 31 - CHECK BITS 5 - 6"
-    (at 53.34 292.1 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 68292907-b0b4-4c85-9bc1-cf2a57d9f8d7)
-  )
-  (text "PLANEB DYNAMIC RAMS - TYPE BITS 0-31 - CHECK BITS 0-2"
-    (at 53.34 322.58 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 764e0311-ddc3-4e57-8ec5-e0ec8f38db55)
-  )
-  (text "TAGBCOMP - PARITY" (at 53.34 147.32 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 7810e3cc-d862-4677-9537-f7cb7a0e16ce)
-  )
-  (text "PLANEB DYNAMIC RAMS - VAL BITS 0-31 - CHECK BITS 5-6"
-    (at 53.34 337.82 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 7a3ec638-e51a-488f-86d7-6fa42faf465f)
-  )
-  (text "PLANEA DYNAMIC RAMS - TYPE BITS 0-31 - CHECK BITS 0-2"
-    (at 53.34 276.86 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 7f9cfadd-d9e4-498e-b723-72dc25db1e4c)
-  )
-  (text "TAGB RAMS - LRU BYTE 49:55, P6" (at 53.34 109.22 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 876b30ea-c09e-4010-a814-fcc1436b1b70)
-  )
-  (text "ADDRESS - PARITY AND HASH" (at 53.34 193.04 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 89c50efe-4c04-4c7a-9f98-9963063adb36)
-  )
-  (text "TABG COMPARATORS - MATCH" (at 53.34 139.7 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 8f6836eb-0a48-4678-8fe9-9ff5b7aa5cb9)
-  )
-  (text "PLANEB DYNAMIC RAMS - VAL BITS 32-63 - CHECK BITS 7-8"
-    (at 53.34 345.44 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 9208cb66-f872-4671-820a-1a54b21ae348)
-  )
-  (text "BACKPLANE CONNECTIONS - FRONTPLANE CONNECTIONS - BYPASS CAPACITORS"
-    (at 53.34 25.4 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 9515889c-10d7-4afe-9702-4ba8311701e0)
-  )
-  (text "TAG STORE ADDRESS BUFFERS" (at 53.34 208.28 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 9c3598e9-31ec-463a-a861-69f62d780fc8)
-  )
-  (text "DIAGNOSTIC AND CONTROL - DIAG FINITE STATE MACHINE"
-    (at 53.34 261.62 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 9dac8d5b-b5bd-4c56-adcc-6271400f8c36)
-  )
-  (text "TAGA COMPARATORS - MATCH" (at 53.34 124.46 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid a202be56-1be7-42f4-bdd2-a03c82d4b898)
-  )
-  (text "DIAGNOSTIC AND CONTROL - DIAGNOSTIC PROCESSOR" (at 53.34 254 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid a218458f-d186-4b8f-83ed-52f45e477496)
-  )
-  (text "PLANEB - RAS, CAS, WE GENERATION" (at 307.34 17.78 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid a969002f-7f79-40f6-bb1f-ac7e6ed78954)
-  )
-  (text "LRU LOGIC - PLANE B_EARLY" (at 53.34 170.18 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c0352421-bc79-4fcd-b3fb-182d3aaa7f59)
-  )
-  (text "TAG A RAMS - TRANCEIVERS" (at 53.34 93.98 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c18e4b54-a22c-448b-b173-71711bdb4996)
-  )
-  (text "AXCVR - VALUE" (at 53.34 40.64 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c2ee2148-09ea-44c8-bcff-81bef431bfd1)
-  )
-  (text "DIAGNOSTIC AND CONTROL - CLOCK GENERATION" (at 53.34 246.38 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c31d51f5-e8be-4e0b-a9f7-a34435dcc5e7)
-  )
-  (text "BXCVR - TYPE & CHKBIT DIAG REG" (at 53.34 63.5 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c45f85b9-8e12-4c14-9671-c8302a8ced00)
-  )
-  (text "TAGA RAMS - 0:40, 56:63, P0:P5, P7" (at 53.34 78.74 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c64a7900-9e68-43ff-8efc-7eb269c22818)
-  )
-  (text "TAGARAMS - LRU BYTE 49:55, P6" (at 53.34 86.36 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid cd330120-d368-4e74-bd19-dc6f23ea79e1)
-  )
-  (text "CONTROL - COMMAND + WDR CLOCKS" (at 53.34 231.14 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ceeba909-35cf-4e87-b50e-6a5529897b94)
-  )
-  (text "LRU LOGIC - PLANE A_EARLY" (at 53.34 154.94 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid d820e9fc-85b8-4a24-a9a4-6a7ca6e0ddab)
-  )
-  (text "PLANE B - DRAM ADDRESS BUFFERS" (at 53.34 353.06 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ddb727d4-cda7-4c3b-b5ae-9630d89b0706)
-  )
-  (text "PLANEA - RAS, CAS, WE GENERATION" (at 53.34 314.96 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e13e5429-b527-4113-9f9a-dfd76cebab14)
-  )
-  (text "CONTROL - TAGSTORE CONTROL - RDR CLOCK GENERATION" (at 53.34 238.76 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e1db3949-fbfe-45c6-9049-e968242588e5)
-  )
-  (text "TOP LEVEL BLOCK DIAGRAM <6>" (at 53.34 17.78 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e2f5e4d4-6293-4249-885c-26202e095ee0)
-  )
-  (text "Board: MEM32 Branch: Optimized" (at 7.62 370.84 0)
-    (effects (font (size 7.62 7.62) (thickness 1.27) bold) (justify left bottom))
-    (uuid e75a3193-3d64-4106-81d1-e22d73552e86)
-  )
-  (text "ADDRESS - MAR REGISTER" (at 53.34 185.42 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid eec5e4fa-52dd-4f4b-acb0-1f46cea0018e)
-  )
-  (text "PLANE A DYNAMIC RAMS - TYPE BITS 32-63 - CHECK BITS 3-4"
-    (at 53.34 284.48 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid f2c2294c-ff8e-41c1-a33b-15b84ad66a3f)
-  )
-
-  (symbol (lib_id "r1000:Pull_Down") (at 566.42 256.54 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 515e8e97-8fab-43dc-82de-97649785de6e)
-    (property "Reference" "U102" (at 566.42 256.54 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "~" (at 566.42 252.73 0)
-      (effects (font (size 2.54 2.54)))
-    )
-    (property "Footprint" "" (at 566.42 256.54 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 256.54 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid c0047a1f-ae01-401c-a4aa-c569acbec33d))
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7"
-          (reference "U102") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:Pull_Up") (at 566.42 243.84 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 5ac97325-e0ee-4133-99da-af8924b89a5e)
-    (property "Reference" "U101" (at 566.42 243.84 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "~" (at 566.42 247.65 0)
-      (effects (font (size 2.54 2.54)))
-    )
-    (property "Footprint" "" (at 566.42 243.84 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 243.84 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 1b1d8991-eda3-4687-8c99-6a5ddd4a8d30))
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7"
-          (reference "U101") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:PD") (at 566.42 261.62 0) (unit 1)
-    (in_bom no) (on_board yes) (dnp no)
-    (uuid cba187b0-726f-40bc-a30b-3ee0ac4ae96e)
-    (property "Reference" "#PWR0102" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "~" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Footprint" "" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 14641798-fe3b-4a31-afce-1a411ea7dc07))
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7"
-          (reference "#PWR0102") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:PU") (at 566.42 238.76 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid f0ccfb13-6f25-40c3-85a1-cf69813bac20)
-    (property "Reference" "#PWR0101" (at 566.42 238.76 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "~" (at 566.42 238.76 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Footprint" "" (at 566.42 238.76 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 238.76 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 50aade15-38b6-452c-b2dc-5f18a9821fff))
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7"
-          (reference "#PWR0101") (unit 1)
-        )
-      )
-    )
-  )
-
-  (sheet (at 12.7 195.58) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-0366-3cf2-04e4-19456e48afb8)
-    (property "Sheetname" "Page 25" (at 35.56 200.66 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_25.kicad_sch" (at 35.56 198.12 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "25"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 66.04) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-1163-13fa-6bfe-71b3d0f91a49)
-    (property "Sheetname" "Page 08" (at 35.56 71.12 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_08.kicad_sch" (at 35.56 68.58 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "08"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 73.66) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-1d35-0d1d-01aa-577b35b2d0d1)
-    (property "Sheetname" "Page 09" (at 35.56 78.74 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_09.kicad_sch" (at 35.56 76.2 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "09"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 20.32) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-25b4-4225-7fcb-01a5b9dfc023)
-    (property "Sheetname" "Page 02" (at 35.56 25.4 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_02.kicad_sch" (at 35.56 22.86 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "02"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 180.34) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-3948-2c35-5ce4-24adaca00218)
-    (property "Sheetname" "Page 23" (at 35.56 185.42 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_23.kicad_sch" (at 35.56 182.88 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "23"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 27.94) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-458b-12c1-7e98-5ab71a721067)
-    (property "Sheetname" "Page 03" (at 35.56 33.02 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_03.kicad_sch" (at 35.56 30.48 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "03"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 233.68) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-45d8-6f3b-0fe4-522fb26ea132)
-    (property "Sheetname" "Page 30" (at 35.56 238.76 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_30.kicad_sch" (at 35.56 236.22 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "30"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 256.54) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-4dde-11e8-70a4-56c54d33c4b8)
-    (property "Sheetname" "Page 33" (at 35.56 261.62 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_33.kicad_sch" (at 35.56 259.08 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "33"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 241.3) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-56ab-769b-6ada-3f85c78f4c03)
-    (property "Sheetname" "Page 31" (at 35.56 246.38 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_31.kicad_sch" (at 35.56 243.84 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "31"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 43.18) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-5937-6f7f-2ee7-37f08851176d)
-    (property "Sheetname" "Page 05" (at 35.56 48.26 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_05.kicad_sch" (at 35.56 45.72 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "05"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 248.92) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-6c3f-17e1-2185-2214326f9c11)
-    (property "Sheetname" "Page 32" (at 35.56 254 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_32.kicad_sch" (at 35.56 251.46 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "32"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 96.52) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-7399-7712-1f61-03bdc0b61a9e)
-    (property "Sheetname" "Page 12" (at 35.56 101.6 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_12.kicad_sch" (at 35.56 99.06 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "MEM32"
-        (path "/20011966-487c-2cfb-5da0-3540af989df7" (page "12"))
-      )
-    )
-  )
-
-  (sheet_instances
-    (path "/" (page "00"))
-  )
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "20011966-487c-2cfb-5da0-3540af989df7")
+	(paper "User" 584.2 378.46)
+	(title_block
+		(title "MEM32 Main")
+	)
+	(lib_symbols
+		(symbol "r1000:PD"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "PD"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "power-flag"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "PD_0_1"
+				(polyline
+					(pts
+						(xy 0 -2.54) (xy 1.27 -2.54) (xy 0 -3.81) (xy -1.27 -2.54) (xy 0 -2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "PD_1_1"
+				(pin power_in line
+					(at 0 0 270)
+					(length 2.54)
+					(name "PD"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:PU"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "PU"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "power-flag"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "PU_0_1"
+				(polyline
+					(pts
+						(xy 0 2.54) (xy -1.27 2.54) (xy 0 3.81) (xy 1.27 2.54) (xy 0 2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "PU_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 2.54)
+					(name "PU"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:Pull_Down"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Pull_Down"
+				(at 0 3.81 0)
+				(effects
+					(font
+						(size 2.54 2.54)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Pull_Down_1_1"
+				(pin power_out line
+					(at 0 0 90)
+					(length 2.54)
+					(name "Out"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:Pull_Up"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Pull_Up"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 2.54 2.54)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Pull_Up_1_1"
+				(pin power_out line
+					(at 0 0 270)
+					(length 2.54)
+					(name "Out"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(text "TAGB RAMS - 0:40, 56:63, P0:P5, P7"
+		(exclude_from_sim no)
+		(at 53.34 101.6 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "022b6a10-a94c-4d99-8319-b14e48b2468f")
+	)
+	(text "HIT LOGIC"
+		(exclude_from_sim no)
+		(at 53.34 223.52 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "03a10fce-1e4a-44da-b3f1-16b4edfdd644")
+	)
+	(text "BXCVR - VAL & VAL_PAR DIAG REG"
+		(exclude_from_sim no)
+		(at 53.34 71.12 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "05f5292f-1707-48e6-92e6-f667cce46f12")
+	)
+	(text "PLANEB DYNAMIC RAMS - TYPE BITS 32-63 - CHECK BITS 3-4"
+		(exclude_from_sim no)
+		(at 53.34 330.2 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "0f01d6f3-c161-42c4-9dd2-9721cbb04581")
+	)
+	(text "BUS CONTROL"
+		(exclude_from_sim no)
+		(at 53.34 215.9 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "0f04c4ec-1909-426d-9fa4-aba72414da52")
+	)
+	(text "BXCVR - VAL AND VAL_PARITY"
+		(exclude_from_sim no)
+		(at 53.34 55.88 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "14a64770-c0aa-4384-8b88-76cf6a4e9219")
+	)
+	(text "TAGACOMP - PARITY"
+		(exclude_from_sim no)
+		(at 53.34 132.08 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "16c21558-3df8-4641-a40a-ea572c030278")
+	)
+	(text "TAG B RAMS - TRANSCEIVERS"
+		(exclude_from_sim no)
+		(at 53.34 116.84 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "2f27be71-b995-4636-b52d-35ccfec64a36")
+	)
+	(text "BXCVR - TYPE AND CHECKBITS"
+		(exclude_from_sim no)
+		(at 53.34 48.26 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "33897606-48cf-4a67-a1d5-60512e046d75")
+	)
+	(text "LRU LOGIC - PLANE B_LATE"
+		(exclude_from_sim no)
+		(at 53.34 177.8 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "41fe3f91-05f3-499b-a793-800372b3e19b")
+	)
+	(text "ADDRESS - LAR AND SET REGISTERS"
+		(exclude_from_sim no)
+		(at 53.34 200.66 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "46a69962-d2b6-4b90-8f22-e56e153cd961")
+	)
+	(text "PLANE A - DRAM ADDRESS BUFFERS"
+		(exclude_from_sim no)
+		(at 53.34 307.34 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "4c99503d-7aae-435f-a686-64d08849cfee")
+	)
+	(text "TRACE RAMS - DIAGNOSTIC COUNTER"
+		(exclude_from_sim no)
+		(at 53.34 269.24 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "65756209-1940-429e-a0bb-03cee7b41fad")
+	)
+	(text "AXCVR - TYPE AND CHECKBITS"
+		(exclude_from_sim no)
+		(at 53.34 33.02 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "6654eb08-8a29-445e-bc20-e74f7d6fd3c7")
+	)
+	(text "LRU LOGIC - PLANE A_LATE"
+		(exclude_from_sim no)
+		(at 53.34 162.56 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "670eb6df-6b44-4641-be4a-fa03fcd00f5a")
+	)
+	(text "PLANEA DYNAMIC RAMS - VAL BITS 32 - 63 - CHECK BITS 7 - 8"
+		(exclude_from_sim no)
+		(at 53.34 299.72 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "67cc90be-f212-4ca5-b9c5-97ad8d396984")
+	)
+	(text "PLANEA DYNAMIC RAMS - VAL BITS 0 - 31 - CHECK BITS 5 - 6"
+		(exclude_from_sim no)
+		(at 53.34 292.1 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "68292907-b0b4-4c85-9bc1-cf2a57d9f8d7")
+	)
+	(text "PLANEB DYNAMIC RAMS - TYPE BITS 0-31 - CHECK BITS 0-2"
+		(exclude_from_sim no)
+		(at 53.34 322.58 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "764e0311-ddc3-4e57-8ec5-e0ec8f38db55")
+	)
+	(text "TAGBCOMP - PARITY"
+		(exclude_from_sim no)
+		(at 53.34 147.32 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "7810e3cc-d862-4677-9537-f7cb7a0e16ce")
+	)
+	(text "PLANEB DYNAMIC RAMS - VAL BITS 0-31 - CHECK BITS 5-6"
+		(exclude_from_sim no)
+		(at 53.34 337.82 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "7a3ec638-e51a-488f-86d7-6fa42faf465f")
+	)
+	(text "PLANEA DYNAMIC RAMS - TYPE BITS 0-31 - CHECK BITS 0-2"
+		(exclude_from_sim no)
+		(at 53.34 276.86 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "7f9cfadd-d9e4-498e-b723-72dc25db1e4c")
+	)
+	(text "TAGB RAMS - LRU BYTE 49:55, P6"
+		(exclude_from_sim no)
+		(at 53.34 109.22 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "876b30ea-c09e-4010-a814-fcc1436b1b70")
+	)
+	(text "ADDRESS - PARITY AND HASH"
+		(exclude_from_sim no)
+		(at 53.34 193.04 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "89c50efe-4c04-4c7a-9f98-9963063adb36")
+	)
+	(text "TABG COMPARATORS - MATCH"
+		(exclude_from_sim no)
+		(at 53.34 139.7 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "8f6836eb-0a48-4678-8fe9-9ff5b7aa5cb9")
+	)
+	(text "PLANEB DYNAMIC RAMS - VAL BITS 32-63 - CHECK BITS 7-8"
+		(exclude_from_sim no)
+		(at 53.34 345.44 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "9208cb66-f872-4671-820a-1a54b21ae348")
+	)
+	(text "BACKPLANE CONNECTIONS - FRONTPLANE CONNECTIONS - BYPASS CAPACITORS"
+		(exclude_from_sim no)
+		(at 53.34 25.4 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "9515889c-10d7-4afe-9702-4ba8311701e0")
+	)
+	(text "TAG STORE ADDRESS BUFFERS"
+		(exclude_from_sim no)
+		(at 53.34 208.28 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "9c3598e9-31ec-463a-a861-69f62d780fc8")
+	)
+	(text "DIAGNOSTIC AND CONTROL - DIAG FINITE STATE MACHINE"
+		(exclude_from_sim no)
+		(at 53.34 261.62 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "9dac8d5b-b5bd-4c56-adcc-6271400f8c36")
+	)
+	(text "TAGA COMPARATORS - MATCH"
+		(exclude_from_sim no)
+		(at 53.34 124.46 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "a202be56-1be7-42f4-bdd2-a03c82d4b898")
+	)
+	(text "DIAGNOSTIC AND CONTROL - DIAGNOSTIC PROCESSOR"
+		(exclude_from_sim no)
+		(at 53.34 254 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "a218458f-d186-4b8f-83ed-52f45e477496")
+	)
+	(text "PLANEB - RAS, CAS, WE GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 17.78 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "a969002f-7f79-40f6-bb1f-ac7e6ed78954")
+	)
+	(text "LRU LOGIC - PLANE B_EARLY"
+		(exclude_from_sim no)
+		(at 53.34 170.18 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c0352421-bc79-4fcd-b3fb-182d3aaa7f59")
+	)
+	(text "TAG A RAMS - TRANCEIVERS"
+		(exclude_from_sim no)
+		(at 53.34 93.98 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c18e4b54-a22c-448b-b173-71711bdb4996")
+	)
+	(text "AXCVR - VALUE"
+		(exclude_from_sim no)
+		(at 53.34 40.64 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c2ee2148-09ea-44c8-bcff-81bef431bfd1")
+	)
+	(text "DIAGNOSTIC AND CONTROL - CLOCK GENERATION"
+		(exclude_from_sim no)
+		(at 53.34 246.38 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c31d51f5-e8be-4e0b-a9f7-a34435dcc5e7")
+	)
+	(text "BXCVR - TYPE & CHKBIT DIAG REG"
+		(exclude_from_sim no)
+		(at 53.34 63.5 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c45f85b9-8e12-4c14-9671-c8302a8ced00")
+	)
+	(text "TAGA RAMS - 0:40, 56:63, P0:P5, P7"
+		(exclude_from_sim no)
+		(at 53.34 78.74 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c64a7900-9e68-43ff-8efc-7eb269c22818")
+	)
+	(text "TAGARAMS - LRU BYTE 49:55, P6"
+		(exclude_from_sim no)
+		(at 53.34 86.36 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "cd330120-d368-4e74-bd19-dc6f23ea79e1")
+	)
+	(text "CONTROL - COMMAND + WDR CLOCKS"
+		(exclude_from_sim no)
+		(at 53.34 231.14 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ceeba909-35cf-4e87-b50e-6a5529897b94")
+	)
+	(text "LRU LOGIC - PLANE A_EARLY"
+		(exclude_from_sim no)
+		(at 53.34 154.94 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "d820e9fc-85b8-4a24-a9a4-6a7ca6e0ddab")
+	)
+	(text "PLANE B - DRAM ADDRESS BUFFERS"
+		(exclude_from_sim no)
+		(at 53.34 353.06 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ddb727d4-cda7-4c3b-b5ae-9630d89b0706")
+	)
+	(text "PLANEA - RAS, CAS, WE GENERATION"
+		(exclude_from_sim no)
+		(at 53.34 314.96 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e13e5429-b527-4113-9f9a-dfd76cebab14")
+	)
+	(text "CONTROL - TAGSTORE CONTROL - RDR CLOCK GENERATION"
+		(exclude_from_sim no)
+		(at 53.34 238.76 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e1db3949-fbfe-45c6-9049-e968242588e5")
+	)
+	(text "TOP LEVEL BLOCK DIAGRAM <6>"
+		(exclude_from_sim no)
+		(at 53.34 17.78 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e2f5e4d4-6293-4249-885c-26202e095ee0")
+	)
+	(text "Board: MEM32 Branch: Optimized"
+		(exclude_from_sim no)
+		(at 7.62 370.84 0)
+		(effects
+			(font
+				(size 7.62 7.62)
+				(thickness 1.27)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "e75a3193-3d64-4106-81d1-e22d73552e86")
+	)
+	(text "ADDRESS - MAR REGISTER"
+		(exclude_from_sim no)
+		(at 53.34 185.42 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "eec5e4fa-52dd-4f4b-acb0-1f46cea0018e")
+	)
+	(text "PLANE A DYNAMIC RAMS - TYPE BITS 32-63 - CHECK BITS 3-4"
+		(exclude_from_sim no)
+		(at 53.34 284.48 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "f2c2294c-ff8e-41c1-a33b-15b84ad66a3f")
+	)
+	(wire
+		(pts
+			(xy 566.42 241.3) (xy 566.42 243.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7876740b-5e4f-4399-9dd4-3d8df5db7286")
+	)
+	(wire
+		(pts
+			(xy 566.42 256.54) (xy 566.42 259.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "95e295d6-00a4-4e16-81d7-3101882b7fb5")
+	)
+	(symbol
+		(lib_id "r1000:Pull_Down")
+		(at 566.42 256.54 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "515e8e97-8fab-43dc-82de-97649785de6e")
+		(property "Reference" "U102"
+			(at 566.42 256.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 566.42 252.73 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 256.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 256.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 256.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "c0047a1f-ae01-401c-a4aa-c569acbec33d")
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(reference "U102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:Pull_Up")
+		(at 566.42 243.84 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5ac97325-e0ee-4133-99da-af8924b89a5e")
+		(property "Reference" "U101"
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 566.42 247.65 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "1b1d8991-eda3-4687-8c99-6a5ddd4a8d30")
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(reference "U101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:PU")
+		(at 566.42 241.3 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "65bcd329-016a-4fc5-a074-a706d399635e")
+		(property "Reference" "#PWR01"
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PU"
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "5a60d6af-dc8c-4ca6-874c-e6a87a4dac74")
+		)
+		(instances
+			(project ""
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(reference "#PWR01")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:PD")
+		(at 566.42 259.08 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d78d6b5b-6750-43b3-bcc9-299831558572")
+		(property "Reference" "#PWR02"
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PD"
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "4e32fca3-c219-428f-a302-c90a93a5a242")
+		)
+		(instances
+			(project ""
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(reference "#PWR02")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 195.58)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-0366-3cf2-04e4-19456e48afb8")
+		(property "Sheetname" "Page 25"
+			(at 35.56 200.66 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_25.kicad_sch"
+			(at 35.56 198.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "25")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 66.04)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-1163-13fa-6bfe-71b3d0f91a49")
+		(property "Sheetname" "Page 08"
+			(at 35.56 71.12 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_08.kicad_sch"
+			(at 35.56 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "08")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 73.66)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-1d35-0d1d-01aa-577b35b2d0d1")
+		(property "Sheetname" "Page 09"
+			(at 35.56 78.74 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_09.kicad_sch"
+			(at 35.56 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "09")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 20.32)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-25b4-4225-7fcb-01a5b9dfc023")
+		(property "Sheetname" "Page 02"
+			(at 35.56 25.4 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_02.kicad_sch"
+			(at 35.56 22.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "02")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 180.34)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-3948-2c35-5ce4-24adaca00218")
+		(property "Sheetname" "Page 23"
+			(at 35.56 185.42 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_23.kicad_sch"
+			(at 35.56 182.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "23")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 27.94)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-458b-12c1-7e98-5ab71a721067")
+		(property "Sheetname" "Page 03"
+			(at 35.56 33.02 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_03.kicad_sch"
+			(at 35.56 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "03")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 233.68)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-45d8-6f3b-0fe4-522fb26ea132")
+		(property "Sheetname" "Page 30"
+			(at 35.56 238.76 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_30.kicad_sch"
+			(at 35.56 236.22 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "30")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 256.54)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-4dde-11e8-70a4-56c54d33c4b8")
+		(property "Sheetname" "Page 33"
+			(at 35.56 261.62 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_33.kicad_sch"
+			(at 35.56 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "33")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 241.3)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-56ab-769b-6ada-3f85c78f4c03")
+		(property "Sheetname" "Page 31"
+			(at 35.56 246.38 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_31.kicad_sch"
+			(at 35.56 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "31")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 43.18)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-5937-6f7f-2ee7-37f08851176d")
+		(property "Sheetname" "Page 05"
+			(at 35.56 48.26 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_05.kicad_sch"
+			(at 35.56 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "05")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 248.92)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-6c3f-17e1-2185-2214326f9c11")
+		(property "Sheetname" "Page 32"
+			(at 35.56 254 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_32.kicad_sch"
+			(at 35.56 251.46 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "32")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 96.52)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-7399-7712-1f61-03bdc0b61a9e")
+		(property "Sheetname" "Page 12"
+			(at 35.56 101.6 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_12.kicad_sch"
+			(at 35.56 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "MEM32"
+				(path "/20011966-487c-2cfb-5da0-3540af989df7"
+					(page "12")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "00")
+		)
+	)
+	(embedded_fonts no)
 )

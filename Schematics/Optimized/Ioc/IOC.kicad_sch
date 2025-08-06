@@ -1,684 +1,1822 @@
-(kicad_sch (version 20230121) (generator eeschema)
-
-  (uuid 20011966-7388-780e-03cc-2841463a393b)
-
-  (paper "User" 584.2 378.46)
-
-  (title_block
-    (title "IOC Main")
-  )
-
-  (lib_symbols
-    (symbol "r1000:PD" (power) (pin_numbers hide) (pin_names hide) (in_bom no) (on_board yes)
-      (property "Reference" "#PWR" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Value" "PD" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_keywords" "power-flag" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "PD_0_1"
-        (polyline
-          (pts
-            (xy 0 -2.54)
-            (xy 1.27 -2.54)
-            (xy 0 -3.81)
-            (xy -1.27 -2.54)
-            (xy 0 -2.54)
-          )
-          (stroke (width 0.1524) (type default))
-          (fill (type none))
-        )
-      )
-      (symbol "PD_1_1"
-        (pin power_in line (at 0 0 270) (length 2.54)
-          (name "PD" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:PU" (power) (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "#PWR" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Value" "PU" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_keywords" "power-flag" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "PU_0_1"
-        (polyline
-          (pts
-            (xy 0 2.54)
-            (xy -1.27 2.54)
-            (xy 0 3.81)
-            (xy 1.27 2.54)
-            (xy 0 2.54)
-          )
-          (stroke (width 0.1524) (type default))
-          (fill (type none))
-        )
-      )
-      (symbol "PU_1_1"
-        (pin power_in line (at 0 0 90) (length 2.54)
-          (name "PU" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:Pull_Down" (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "U" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Pull_Down" (at 0 3.81 0)
-        (effects (font (size 2.54 2.54)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "Pull_Down_1_1"
-        (pin power_out line (at 0 0 90) (length 2.54)
-          (name "Out" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:Pull_Up" (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "U" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Pull_Up" (at 0 -3.81 0)
-        (effects (font (size 2.54 2.54)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "Pull_Up_1_1"
-        (pin power_out line (at 0 0 270) (length 2.54)
-          (name "Out" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-  )
-
-
-
-  (wire (pts (xy 566.42 236.22) (xy 566.42 241.3))
-    (stroke (width 0) (type solid))
-    (uuid 3768c427-8347-4dec-88dd-546c25b3e4e9)
-  )
-  (wire (pts (xy 566.42 256.54) (xy 566.42 261.62))
-    (stroke (width 0) (type solid))
-    (uuid ce9155c9-312a-48b0-a242-1a2ff82a070c)
-  )
-
-  (text "DIAGNOSTIC PROCESSOR - DFSM" (at 307.34 154.94 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 0437060b-0e17-4c18-99b3-56c1446a15ed)
-  )
-  (text "RAMS - PARITY" (at 53.34 284.48 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 056d9a04-15f0-4c71-8a41-ccd9f2e72da4)
-  )
-  (text "ERROR CHECKING & CORRECTION - DIAGNOSTIC CHECKBITS"
-    (at 307.34 40.64 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 078ef17e-a223-4bf4-bf03-18e0e69aa5f8)
-  )
-  (text "DEVICES / BOOT PROMS" (at 53.34 101.6 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 09a620cc-745d-4e18-a7f3-7c92acceb7f1)
-  )
-  (text "CONTROL STORE - RAMS / UIR" (at 307.34 63.5 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 0b22dee3-4b3f-42f4-b6b4-c222fb272165)
-  )
-  (text "IOC BOARD - TOP LEVEL BLOCK DIAGRAM <6>" (at 53.34 17.78 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 0b5fb22a-408b-47e6-bdd9-f5b18a236e47)
-  )
-  (text "DEVICES - FRONT PANEL" (at 53.34 139.7 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 0f89b57b-e78e-45f9-b7fb-7fabb457591e)
-  )
-  (text "IO BUS - MAP ADDRESSING" (at 53.34 185.42 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 0fc707c7-e1c9-45f1-b59d-1069d7f39a9f)
-  )
-  (text "BUS TRANCEIVERS - VALUE BUS" (at 53.34 322.58 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 1160d774-674f-4734-8302-18d7083d5279)
-  )
-  (text "DUMMY RDR - TYPE" (at 53.34 330.2 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 1895be43-1816-49a3-a5ef-98ea87055c7e)
-  )
-  (text "IOP - 68020" (at 53.34 25.4 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 18ef5bbd-722c-46da-9580-20948b018ca2)
-  )
-  (text "ERROR CHECKING & CORRECTION - CHECK BITS 4, 5, 6" (at 307.34 17.78 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 19ba1d50-f555-43cd-8788-32135b58fdb1)
-  )
-  (text "IO BUS - ARBITRATOR" (at 53.34 147.32 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 22ce764b-edb1-4596-a4f3-05a04dece8ad)
-  )
-  (text "IOP - ADDRESS DECODING" (at 53.34 48.26 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 247725e6-8a98-4935-8c5b-e850dcc0099f)
-  )
-  (text "IO BUS - MAP" (at 53.34 193.04 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 2869b4f3-84fe-4e7d-9131-9bc0be596fcf)
-  )
-  (text "CLOCKS - IOP CLOCK GENERATION" (at 307.34 177.8 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 31eea678-7723-492c-b6ec-92ed72ae2349)
-  )
-  (text "IO BUS - MSB DATA PATHS" (at 53.34 162.56 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 3f4dd7d6-ade4-4ac5-9403-161e67d353c5)
-  )
-  (text "UNIBUS 0 - SLAVE FSM" (at 53.34 200.66 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4385a4c6-86b1-4f63-90b1-cb1bd8c964a9)
-  )
-  (text "IO BUS - LSB DATA PATHS" (at 53.34 170.18 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4c089a31-8bb3-4c4e-9ac5-3f8d7c0da6e1)
-  )
-  (text "DEVICES - INTERFACE LOGIC" (at 53.34 71.12 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4d047ecb-61bb-464b-9e3c-ba1e85bb03a5)
-  )
-  (text "FIFOS - RESPONSE FIFO" (at 307.34 116.84 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4da0b748-c9df-4066-aa4b-d8c9601865c2)
-  )
-  (text "CONDITIONS AND EVENTS" (at 307.34 132.08 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4f9fd2f1-7328-466a-9540-87591a1293ba)
-  )
-  (text "R1000 INTERFACE <6>" (at 53.34 292.1 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 517513aa-54de-4468-a2d2-3f5e37ff40b5)
-  )
-  (text "DEVICES - CONTROL / STATUS REGISTER" (at 53.34 116.84 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 517c192c-091a-4400-ac40-8f0e738a7518)
-  )
-  (text "RAM INTERFACE - ADDRESS PATH" (at 307.34 101.6 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 60bc4014-e2c2-4226-974c-07ac758c9e7d)
-  )
-  (text "ERROR CHECKING & CORRECTION - CHECK BITS 2 & 3" (at 53.34 353.06 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 614513be-26dc-4814-8e93-b11619bfd34a)
-  )
-  (text "ERROR CHECKING & CORRECTION - VAL & TYP PARITY CHECKING"
-    (at 307.34 48.26 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 6211031b-33a8-4254-acc3-a1ecc7f7f670)
-  )
-  (text "IOP - 68020 BUS BUFFERS" (at 53.34 33.02 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 656ec8d2-1d43-469d-882c-e8dc43f5e20f)
-  )
-  (text "RAMS - BANK 0 - BYTE 2 / BYTE 3" (at 53.34 261.62 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 6774a7a7-e118-42ce-9128-47cca0261788)
-  )
-  (text "TRACE RAMS" (at 307.34 86.36 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 69a2222e-8551-4eb9-a8e0-bb602e66dff9)
-  )
-  (text "R1000 INTERFACE <6>" (at 53.34 307.34 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 6e262027-cb7a-4149-b4b1-8bdfc05b10a6)
-  )
-  (text "TIMERS" (at 307.34 93.98 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 708abefb-6cb4-43ad-8b1c-93730ef7c222)
-  )
-  (text "RAM INTERFACE - DATA PATHS" (at 307.34 109.22 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 70d4ef57-c2ea-4d2c-8e4b-ff62cfe81df4)
-  )
-  (text "ERROR CHECKING & CORRECTION - CHECK BITS 7 & 8" (at 307.34 25.4 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 73df444d-570a-4045-8514-0fe0629b6ca7)
-  )
-  (text "MEMORY - BYTE 2 & 3 ADDRESS DRIVERS" (at 53.34 246.38 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 7a1e9f4a-25af-4d45-8aaa-33def51e690d)
-  )
-  (text "IO BUS - MASTER FSM" (at 53.34 154.94 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 7cb17ccd-f75a-4488-bcd1-bf800caea427)
-  )
-  (text "IOP - ATU" (at 53.34 40.64 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 7eca6b90-b5ab-4a3f-9a85-dd479d4d1a86)
-  )
-  (text "Board: IOC Branch: Optimized" (at 7.62 370.84 0)
-    (effects (font (size 7.62 7.62) (thickness 1.27) bold) (justify left bottom))
-    (uuid 80ab84fd-2ca7-423b-ac2f-ab53e555e55c)
-  )
-  (text "R1000 INTERFACE <6>" (at 53.34 299.72 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 826f5d0b-1f8f-4e3f-b82b-170da500b3c4)
-  )
-  (text "IO BUS - ADDRESS PATHS" (at 53.34 177.8 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 83c3cbd7-4121-43a6-a662-29dd8c04806a)
-  )
-  (text "ERROR CHECKING & CORRECTION - ERROR DETECTION" (at 307.34 33.02 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 8c7045c0-ae00-40ba-9dca-e3d3529d7dd3)
-  )
-  (text "DEVICES - PIT / MODEM / DIAG BUS" (at 53.34 93.98 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 8d04cc1a-23c8-435d-837c-12b7d01deb38)
-  )
-  (text "CONDITIONS AND EVENTS - BELOW TCB DETECTION" (at 307.34 139.7 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 8e6cc091-549a-4166-a3cc-4406d1aec30a)
-  )
-  (text "MEMORY - PARITY CHECKING" (at 53.34 231.14 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 94fc4be9-d0d0-4b20-8a89-aa953b09d9da)
-  )
-  (text "FIFOS - REQUEST FIFO" (at 307.34 124.46 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 9c96a188-2bae-4ff2-be76-f0dfd96613e5)
-  )
-  (text "RAMS - BANK 1 - BYTE 2 / BYTE 3" (at 53.34 276.86 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid a67c6429-389b-4f1c-af42-cc213f368f40)
-  )
-  (text "CLOCKS - 4X CLOCK GENERATION" (at 307.34 162.56 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid a8c1561d-70d9-45c9-8b51-f69d361216c7)
-  )
-  (text "IOP - MEMORY BUFFERS" (at 53.34 63.5 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid aa2c9d60-0b16-4198-8986-5fe2a49df4a9)
-  )
-  (text "RAM - BANK 0 - BYTE 0 / BYTE 1" (at 53.34 254 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ab3b86a2-2a74-4444-a550-1de2c9ff3884)
-  )
-  (text "MEMORY - PARITY GENERATION" (at 53.34 223.52 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ac887d7c-7667-4774-b344-f4533a87afe1)
-  )
-  (text "IOP - VECTOR GENERATION" (at 53.34 55.88 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid b2963e40-f7df-49ae-803b-006c60049b87)
-  )
-  (text "MEMORY - BYTE 0 & 1 ADDRESS DRIVERS" (at 53.34 238.76 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid b418c8ce-83aa-4b18-afb0-a4227de5cf63)
-  )
-  (text "CONTROL STORE - ADDRESSING" (at 307.34 55.88 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid bb4d63c1-fddd-42e1-b790-82e0e2b726ac)
-  )
-  (text "CONTROL STORE - BUS DRIVER DECODING" (at 307.34 71.12 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid bd6f6e5c-4325-4a7d-b220-c227861e15bd)
-  )
-  (text "CONTROL STORE - RANDOM DECODING" (at 307.34 78.74 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid be12c4a0-ea85-41c9-a8d8-f958f857d1df)
-  )
-  (text "DEVICES - CONSOLE PCI" (at 53.34 86.36 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c6def1f3-9fa4-48bf-9bf4-9d27222fc511)
-  )
-  (text "RAMS - BANK 1 - BYTE 0 / BYTE 1" (at 53.34 269.24 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid cc668e98-6543-4d83-adad-fecb3e070a9b)
-  )
-  (text "DEVICES - TEMPERATURE SENSE" (at 53.34 124.46 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid d2dfcc84-946e-4b53-a75d-d2ea02705ba9)
-  )
-  (text "MEMORY - ARBITER / STROBES" (at 53.34 215.9 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid d3281981-8753-4bd2-8189-433b84abe693)
-  )
-  (text "ERROR CHECKING & CORRECTION - CHECK BITS 0 & 1" (at 53.34 345.44 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid d660063f-d50b-422b-8a78-1b92476c8bbe)
-  )
-  (text "DEVICES - POWER CONTROL / RESETS" (at 53.34 109.22 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid db8fa88c-92c6-421e-891c-4cefbe463630)
-  )
-  (text "DIAGNOSTIC PROCESSOR - 8052 INTERFACE" (at 307.34 147.32 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid dc981628-e901-4f4a-9d09-3c0dbb60f29a)
-  )
-  (text "CLOCKS - PULLUPS / PULLDOWNS" (at 307.34 200.66 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e1a759b2-8830-487e-af59-9ad262313c72)
-  )
-  (text "CLOCKS - 2X CLOCK GENERATION" (at 307.34 170.18 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e1fec266-451f-4f3f-89c9-19ac9b4ca5d3)
-  )
-  (text "POWER AND GROUND FINGERS - & BYPASS CAPACITORS" (at 307.34 208.28 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ea2ed58e-aa48-452a-a461-62a2c3eafbfe)
-  )
-  (text "BUS TRANCEIVERS - TYPE BUS" (at 53.34 314.96 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid eb037dd1-7b16-4b0b-9387-e458f32db37e)
-  )
-  (text "IO BUS - UNIBUS TERMINATORS" (at 53.34 208.28 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid eb0ca131-f232-4705-a28b-4e939e0df052)
-  )
-  (text "DUMMY RDR - VAL" (at 53.34 337.82 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid eb7149ee-bff0-4048-ba9e-999463033c4a)
-  )
-  (text "CLOCKS - STATE CLOCK ENABLE" (at 307.34 185.42 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid edb2f95e-4d5f-421e-8d39-72128ec50bc4)
-  )
-  (text "DEVICES - CALENDAR" (at 53.34 78.74 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ef064364-e75f-45e3-ae92-a07636bb26a9)
-  )
-  (text "CLOCKS - BUZZ OFF" (at 307.34 193.04 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid faf734be-3e02-439c-b96e-260f76cc63f4)
-  )
-  (text "DEVICES - EXTERNAL BUS INTERFACE" (at 53.34 132.08 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid fdf617d8-876c-4492-8213-3aebfd925036)
-  )
-
-  (symbol (lib_id "r1000:Pull_Down") (at 566.42 256.54 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 143a6599-0097-4b43-995b-f8a9304f4ef3)
-    (property "Reference" "U102" (at 566.42 256.54 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "~" (at 566.42 252.73 0)
-      (effects (font (size 2.54 2.54)))
-    )
-    (property "Footprint" "" (at 566.42 256.54 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 256.54 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 46be66b7-e6e7-4bce-b8aa-408290d4c1af))
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b"
-          (reference "U102") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:PU") (at 566.42 236.22 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid 7c826cc6-6225-4a4c-99b2-02005c057434)
-    (property "Reference" "#PWR0102" (at 566.42 236.22 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "~" (at 566.42 236.22 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Footprint" "" (at 566.42 236.22 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 236.22 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 7f86cc27-a212-471a-a53a-74450200652e))
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b"
-          (reference "#PWR0102") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:Pull_Up") (at 566.42 241.3 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 9fba83fc-f710-44dc-bf79-c1e9314a1b20)
-    (property "Reference" "U101" (at 566.42 241.3 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "~" (at 566.42 245.11 0)
-      (effects (font (size 2.54 2.54)))
-    )
-    (property "Footprint" "" (at 566.42 241.3 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 241.3 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 30965633-1414-4dd1-a389-0b93aa564f15))
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b"
-          (reference "U101") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:PD") (at 566.42 261.62 0) (unit 1)
-    (in_bom no) (on_board yes) (dnp no) (fields_autoplaced)
-    (uuid d697141a-6169-4b80-8aa9-94d827a9892d)
-    (property "Reference" "#PWR0101" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "~" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Footprint" "" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 6db63a69-e521-48e2-9006-8f23cb8b6807))
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b"
-          (reference "#PWR0101") (unit 1)
-        )
-      )
-    )
-  )
-
-  (sheet (at 266.7 27.94) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-00a3-77c7-61b2-0e0f810f9415)
-    (property "Sheetname" "Page 48" (at 289.56 33.02 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_48.kicad_sch" (at 289.56 30.48 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b" (page "48"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 149.86) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-2b50-2113-5d73-079fac86e02c)
-    (property "Sheetname" "Page 64" (at 289.56 154.94 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_64.kicad_sch" (at 289.56 152.4 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b" (page "64"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 88.9) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-2bb7-2851-1b96-6e23d1c9a045)
-    (property "Sheetname" "Page 56" (at 289.56 93.98 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_56.kicad_sch" (at 289.56 91.44 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b" (page "56"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 58.42) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-383c-1858-1ed7-14fc9d9b9e9b)
-    (property "Sheetname" "Page 52" (at 289.56 63.5 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_52.kicad_sch" (at 289.56 60.96 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b" (page "52"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 127) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-4c17-6fb7-7ba5-35d78315b774)
-    (property "Sheetname" "Page 61" (at 289.56 132.08 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_61.kicad_sch" (at 289.56 129.54 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b" (page "61"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 142.24) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-52cf-2c94-597f-77dc84b7a7f1)
-    (property "Sheetname" "Page 63" (at 289.56 147.32 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_63.kicad_sch" (at 289.56 144.78 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b" (page "63"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 309.88) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-57a7-39d8-380f-555259c2a56d)
-    (property "Sheetname" "Page 40" (at 35.56 314.96 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_40.kicad_sch" (at 35.56 312.42 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b" (page "40"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 325.12) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-7aea-6efb-44a8-23bf875dade9)
-    (property "Sheetname" "Page 42" (at 35.56 330.2 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_42.kicad_sch" (at 35.56 327.66 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b" (page "42"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 20.32) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-7bb9-3e88-265b-3ea82fc130bc)
-    (property "Sheetname" "Page 02" (at 35.56 25.4 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_02.kicad_sch" (at 35.56 22.86 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "IOC"
-        (path "/20011966-7388-780e-03cc-2841463a393b" (page "02"))
-      )
-    )
-  )
-
-  (sheet_instances
-    (path "/" (page "00"))
-  )
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "20011966-7388-780e-03cc-2841463a393b")
+	(paper "User" 584.2 378.46)
+	(title_block
+		(title "IOC Main")
+	)
+	(lib_symbols
+		(symbol "r1000:PD"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "PD"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "power-flag"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "PD_0_1"
+				(polyline
+					(pts
+						(xy 0 -2.54) (xy 1.27 -2.54) (xy 0 -3.81) (xy -1.27 -2.54) (xy 0 -2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "PD_1_1"
+				(pin power_in line
+					(at 0 0 270)
+					(length 2.54)
+					(name "PD"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:PU"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "PU"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "power-flag"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "PU_0_1"
+				(polyline
+					(pts
+						(xy 0 2.54) (xy -1.27 2.54) (xy 0 3.81) (xy 1.27 2.54) (xy 0 2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "PU_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 2.54)
+					(name "PU"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:Pull_Down"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Pull_Down"
+				(at 0 3.81 0)
+				(effects
+					(font
+						(size 2.54 2.54)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Pull_Down_1_1"
+				(pin power_out line
+					(at 0 0 90)
+					(length 2.54)
+					(name "Out"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:Pull_Up"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Pull_Up"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 2.54 2.54)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Pull_Up_1_1"
+				(pin power_out line
+					(at 0 0 270)
+					(length 2.54)
+					(name "Out"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(text "DIAGNOSTIC PROCESSOR - DFSM"
+		(exclude_from_sim no)
+		(at 307.34 154.94 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "0437060b-0e17-4c18-99b3-56c1446a15ed")
+	)
+	(text "RAMS - PARITY"
+		(exclude_from_sim no)
+		(at 53.34 284.48 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "056d9a04-15f0-4c71-8a41-ccd9f2e72da4")
+	)
+	(text "ERROR CHECKING & CORRECTION - DIAGNOSTIC CHECKBITS"
+		(exclude_from_sim no)
+		(at 307.34 40.64 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "078ef17e-a223-4bf4-bf03-18e0e69aa5f8")
+	)
+	(text "DEVICES / BOOT PROMS"
+		(exclude_from_sim no)
+		(at 53.34 101.6 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "09a620cc-745d-4e18-a7f3-7c92acceb7f1")
+	)
+	(text "CONTROL STORE - RAMS / UIR"
+		(exclude_from_sim no)
+		(at 307.34 63.5 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "0b22dee3-4b3f-42f4-b6b4-c222fb272165")
+	)
+	(text "IOC BOARD - TOP LEVEL BLOCK DIAGRAM <6>"
+		(exclude_from_sim no)
+		(at 53.34 17.78 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "0b5fb22a-408b-47e6-bdd9-f5b18a236e47")
+	)
+	(text "DEVICES - FRONT PANEL"
+		(exclude_from_sim no)
+		(at 53.34 139.7 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "0f89b57b-e78e-45f9-b7fb-7fabb457591e")
+	)
+	(text "IO BUS - MAP ADDRESSING"
+		(exclude_from_sim no)
+		(at 53.34 185.42 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "0fc707c7-e1c9-45f1-b59d-1069d7f39a9f")
+	)
+	(text "BUS TRANCEIVERS - VALUE BUS"
+		(exclude_from_sim no)
+		(at 53.34 322.58 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "1160d774-674f-4734-8302-18d7083d5279")
+	)
+	(text "DUMMY RDR - TYPE"
+		(exclude_from_sim no)
+		(at 53.34 330.2 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "1895be43-1816-49a3-a5ef-98ea87055c7e")
+	)
+	(text "IOP - 68020"
+		(exclude_from_sim no)
+		(at 53.34 25.4 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "18ef5bbd-722c-46da-9580-20948b018ca2")
+	)
+	(text "ERROR CHECKING & CORRECTION - CHECK BITS 4, 5, 6"
+		(exclude_from_sim no)
+		(at 307.34 17.78 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "19ba1d50-f555-43cd-8788-32135b58fdb1")
+	)
+	(text "IO BUS - ARBITRATOR"
+		(exclude_from_sim no)
+		(at 53.34 147.32 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "22ce764b-edb1-4596-a4f3-05a04dece8ad")
+	)
+	(text "IOP - ADDRESS DECODING"
+		(exclude_from_sim no)
+		(at 53.34 48.26 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "247725e6-8a98-4935-8c5b-e850dcc0099f")
+	)
+	(text "IO BUS - MAP"
+		(exclude_from_sim no)
+		(at 53.34 193.04 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "2869b4f3-84fe-4e7d-9131-9bc0be596fcf")
+	)
+	(text "CLOCKS - IOP CLOCK GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 177.8 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "31eea678-7723-492c-b6ec-92ed72ae2349")
+	)
+	(text "IO BUS - MSB DATA PATHS"
+		(exclude_from_sim no)
+		(at 53.34 162.56 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "3f4dd7d6-ade4-4ac5-9403-161e67d353c5")
+	)
+	(text "UNIBUS 0 - SLAVE FSM"
+		(exclude_from_sim no)
+		(at 53.34 200.66 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "4385a4c6-86b1-4f63-90b1-cb1bd8c964a9")
+	)
+	(text "IO BUS - LSB DATA PATHS"
+		(exclude_from_sim no)
+		(at 53.34 170.18 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "4c089a31-8bb3-4c4e-9ac5-3f8d7c0da6e1")
+	)
+	(text "DEVICES - INTERFACE LOGIC"
+		(exclude_from_sim no)
+		(at 53.34 71.12 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "4d047ecb-61bb-464b-9e3c-ba1e85bb03a5")
+	)
+	(text "FIFOS - RESPONSE FIFO"
+		(exclude_from_sim no)
+		(at 307.34 116.84 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "4da0b748-c9df-4066-aa4b-d8c9601865c2")
+	)
+	(text "CONDITIONS AND EVENTS"
+		(exclude_from_sim no)
+		(at 307.34 132.08 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "4f9fd2f1-7328-466a-9540-87591a1293ba")
+	)
+	(text "R1000 INTERFACE <6>"
+		(exclude_from_sim no)
+		(at 53.34 292.1 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "517513aa-54de-4468-a2d2-3f5e37ff40b5")
+	)
+	(text "DEVICES - CONTROL / STATUS REGISTER"
+		(exclude_from_sim no)
+		(at 53.34 116.84 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "517c192c-091a-4400-ac40-8f0e738a7518")
+	)
+	(text "RAM INTERFACE - ADDRESS PATH"
+		(exclude_from_sim no)
+		(at 307.34 101.6 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "60bc4014-e2c2-4226-974c-07ac758c9e7d")
+	)
+	(text "ERROR CHECKING & CORRECTION - CHECK BITS 2 & 3"
+		(exclude_from_sim no)
+		(at 53.34 353.06 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "614513be-26dc-4814-8e93-b11619bfd34a")
+	)
+	(text "ERROR CHECKING & CORRECTION - VAL & TYP PARITY CHECKING"
+		(exclude_from_sim no)
+		(at 307.34 48.26 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "6211031b-33a8-4254-acc3-a1ecc7f7f670")
+	)
+	(text "IOP - 68020 BUS BUFFERS"
+		(exclude_from_sim no)
+		(at 53.34 33.02 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "656ec8d2-1d43-469d-882c-e8dc43f5e20f")
+	)
+	(text "RAMS - BANK 0 - BYTE 2 / BYTE 3"
+		(exclude_from_sim no)
+		(at 53.34 261.62 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "6774a7a7-e118-42ce-9128-47cca0261788")
+	)
+	(text "TRACE RAMS"
+		(exclude_from_sim no)
+		(at 307.34 86.36 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "69a2222e-8551-4eb9-a8e0-bb602e66dff9")
+	)
+	(text "R1000 INTERFACE <6>"
+		(exclude_from_sim no)
+		(at 53.34 307.34 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "6e262027-cb7a-4149-b4b1-8bdfc05b10a6")
+	)
+	(text "TIMERS"
+		(exclude_from_sim no)
+		(at 307.34 93.98 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "708abefb-6cb4-43ad-8b1c-93730ef7c222")
+	)
+	(text "RAM INTERFACE - DATA PATHS"
+		(exclude_from_sim no)
+		(at 307.34 109.22 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "70d4ef57-c2ea-4d2c-8e4b-ff62cfe81df4")
+	)
+	(text "ERROR CHECKING & CORRECTION - CHECK BITS 7 & 8"
+		(exclude_from_sim no)
+		(at 307.34 25.4 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "73df444d-570a-4045-8514-0fe0629b6ca7")
+	)
+	(text "MEMORY - BYTE 2 & 3 ADDRESS DRIVERS"
+		(exclude_from_sim no)
+		(at 53.34 246.38 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "7a1e9f4a-25af-4d45-8aaa-33def51e690d")
+	)
+	(text "IO BUS - MASTER FSM"
+		(exclude_from_sim no)
+		(at 53.34 154.94 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "7cb17ccd-f75a-4488-bcd1-bf800caea427")
+	)
+	(text "IOP - ATU"
+		(exclude_from_sim no)
+		(at 53.34 40.64 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "7eca6b90-b5ab-4a3f-9a85-dd479d4d1a86")
+	)
+	(text "Board: IOC Branch: Optimized"
+		(exclude_from_sim no)
+		(at 7.62 370.84 0)
+		(effects
+			(font
+				(size 7.62 7.62)
+				(thickness 1.27)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "80ab84fd-2ca7-423b-ac2f-ab53e555e55c")
+	)
+	(text "R1000 INTERFACE <6>"
+		(exclude_from_sim no)
+		(at 53.34 299.72 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "826f5d0b-1f8f-4e3f-b82b-170da500b3c4")
+	)
+	(text "IO BUS - ADDRESS PATHS"
+		(exclude_from_sim no)
+		(at 53.34 177.8 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "83c3cbd7-4121-43a6-a662-29dd8c04806a")
+	)
+	(text "ERROR CHECKING & CORRECTION - ERROR DETECTION"
+		(exclude_from_sim no)
+		(at 307.34 33.02 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "8c7045c0-ae00-40ba-9dca-e3d3529d7dd3")
+	)
+	(text "DEVICES - PIT / MODEM / DIAG BUS"
+		(exclude_from_sim no)
+		(at 53.34 93.98 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "8d04cc1a-23c8-435d-837c-12b7d01deb38")
+	)
+	(text "CONDITIONS AND EVENTS - BELOW TCB DETECTION"
+		(exclude_from_sim no)
+		(at 307.34 139.7 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "8e6cc091-549a-4166-a3cc-4406d1aec30a")
+	)
+	(text "MEMORY - PARITY CHECKING"
+		(exclude_from_sim no)
+		(at 53.34 231.14 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "94fc4be9-d0d0-4b20-8a89-aa953b09d9da")
+	)
+	(text "FIFOS - REQUEST FIFO"
+		(exclude_from_sim no)
+		(at 307.34 124.46 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "9c96a188-2bae-4ff2-be76-f0dfd96613e5")
+	)
+	(text "RAMS - BANK 1 - BYTE 2 / BYTE 3"
+		(exclude_from_sim no)
+		(at 53.34 276.86 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "a67c6429-389b-4f1c-af42-cc213f368f40")
+	)
+	(text "CLOCKS - 4X CLOCK GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 162.56 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "a8c1561d-70d9-45c9-8b51-f69d361216c7")
+	)
+	(text "IOP - MEMORY BUFFERS"
+		(exclude_from_sim no)
+		(at 53.34 63.5 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "aa2c9d60-0b16-4198-8986-5fe2a49df4a9")
+	)
+	(text "RAM - BANK 0 - BYTE 0 / BYTE 1"
+		(exclude_from_sim no)
+		(at 53.34 254 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ab3b86a2-2a74-4444-a550-1de2c9ff3884")
+	)
+	(text "MEMORY - PARITY GENERATION"
+		(exclude_from_sim no)
+		(at 53.34 223.52 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ac887d7c-7667-4774-b344-f4533a87afe1")
+	)
+	(text "IOP - VECTOR GENERATION"
+		(exclude_from_sim no)
+		(at 53.34 55.88 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "b2963e40-f7df-49ae-803b-006c60049b87")
+	)
+	(text "MEMORY - BYTE 0 & 1 ADDRESS DRIVERS"
+		(exclude_from_sim no)
+		(at 53.34 238.76 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "b418c8ce-83aa-4b18-afb0-a4227de5cf63")
+	)
+	(text "CONTROL STORE - ADDRESSING"
+		(exclude_from_sim no)
+		(at 307.34 55.88 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "bb4d63c1-fddd-42e1-b790-82e0e2b726ac")
+	)
+	(text "CONTROL STORE - BUS DRIVER DECODING"
+		(exclude_from_sim no)
+		(at 307.34 71.12 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "bd6f6e5c-4325-4a7d-b220-c227861e15bd")
+	)
+	(text "CONTROL STORE - RANDOM DECODING"
+		(exclude_from_sim no)
+		(at 307.34 78.74 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "be12c4a0-ea85-41c9-a8d8-f958f857d1df")
+	)
+	(text "DEVICES - CONSOLE PCI"
+		(exclude_from_sim no)
+		(at 53.34 86.36 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c6def1f3-9fa4-48bf-9bf4-9d27222fc511")
+	)
+	(text "RAMS - BANK 1 - BYTE 0 / BYTE 1"
+		(exclude_from_sim no)
+		(at 53.34 269.24 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "cc668e98-6543-4d83-adad-fecb3e070a9b")
+	)
+	(text "DEVICES - TEMPERATURE SENSE"
+		(exclude_from_sim no)
+		(at 53.34 124.46 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "d2dfcc84-946e-4b53-a75d-d2ea02705ba9")
+	)
+	(text "MEMORY - ARBITER / STROBES"
+		(exclude_from_sim no)
+		(at 53.34 215.9 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "d3281981-8753-4bd2-8189-433b84abe693")
+	)
+	(text "ERROR CHECKING & CORRECTION - CHECK BITS 0 & 1"
+		(exclude_from_sim no)
+		(at 53.34 345.44 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "d660063f-d50b-422b-8a78-1b92476c8bbe")
+	)
+	(text "DEVICES - POWER CONTROL / RESETS"
+		(exclude_from_sim no)
+		(at 53.34 109.22 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "db8fa88c-92c6-421e-891c-4cefbe463630")
+	)
+	(text "DIAGNOSTIC PROCESSOR - 8052 INTERFACE"
+		(exclude_from_sim no)
+		(at 307.34 147.32 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "dc981628-e901-4f4a-9d09-3c0dbb60f29a")
+	)
+	(text "CLOCKS - PULLUPS / PULLDOWNS"
+		(exclude_from_sim no)
+		(at 307.34 200.66 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e1a759b2-8830-487e-af59-9ad262313c72")
+	)
+	(text "CLOCKS - 2X CLOCK GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 170.18 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e1fec266-451f-4f3f-89c9-19ac9b4ca5d3")
+	)
+	(text "POWER AND GROUND FINGERS - & BYPASS CAPACITORS"
+		(exclude_from_sim no)
+		(at 307.34 208.28 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ea2ed58e-aa48-452a-a461-62a2c3eafbfe")
+	)
+	(text "BUS TRANCEIVERS - TYPE BUS"
+		(exclude_from_sim no)
+		(at 53.34 314.96 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "eb037dd1-7b16-4b0b-9387-e458f32db37e")
+	)
+	(text "IO BUS - UNIBUS TERMINATORS"
+		(exclude_from_sim no)
+		(at 53.34 208.28 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "eb0ca131-f232-4705-a28b-4e939e0df052")
+	)
+	(text "DUMMY RDR - VAL"
+		(exclude_from_sim no)
+		(at 53.34 337.82 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "eb7149ee-bff0-4048-ba9e-999463033c4a")
+	)
+	(text "CLOCKS - STATE CLOCK ENABLE"
+		(exclude_from_sim no)
+		(at 307.34 185.42 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "edb2f95e-4d5f-421e-8d39-72128ec50bc4")
+	)
+	(text "DEVICES - CALENDAR"
+		(exclude_from_sim no)
+		(at 53.34 78.74 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ef064364-e75f-45e3-ae92-a07636bb26a9")
+	)
+	(text "CLOCKS - BUZZ OFF"
+		(exclude_from_sim no)
+		(at 307.34 193.04 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "faf734be-3e02-439c-b96e-260f76cc63f4")
+	)
+	(text "DEVICES - EXTERNAL BUS INTERFACE"
+		(exclude_from_sim no)
+		(at 53.34 132.08 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "fdf617d8-876c-4492-8213-3aebfd925036")
+	)
+	(wire
+		(pts
+			(xy 566.42 238.76) (xy 566.42 241.3)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "85fce3f9-21fe-459a-a419-49ee3ae54b42")
+	)
+	(wire
+		(pts
+			(xy 566.42 256.54) (xy 566.42 259.08)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d9826812-4911-4113-baa5-b4c187462dfe")
+	)
+	(symbol
+		(lib_id "r1000:Pull_Down")
+		(at 566.42 256.54 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "143a6599-0097-4b43-995b-f8a9304f4ef3")
+		(property "Reference" "U102"
+			(at 566.42 256.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 566.42 252.73 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 256.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 256.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 256.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "46be66b7-e6e7-4bce-b8aa-408290d4c1af")
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(reference "U102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:PU")
+		(at 566.42 238.76 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "4bad4458-8e64-4719-aaec-cebcb888f00f")
+		(property "Reference" "#PWR01"
+			(at 566.42 238.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PU"
+			(at 566.42 238.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 238.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 238.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 238.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "2b9f293f-44cf-476e-bc98-c9892689f50f")
+		)
+		(instances
+			(project ""
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(reference "#PWR01")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:PD")
+		(at 566.42 259.08 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "6c3a2766-5ead-40ee-8635-bb4bd8c4a81d")
+		(property "Reference" "#PWR02"
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PD"
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "e6c28c25-85ea-4cfd-b851-4130f6ef0bca")
+		)
+		(instances
+			(project ""
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(reference "#PWR02")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:Pull_Up")
+		(at 566.42 241.3 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "9fba83fc-f710-44dc-bf79-c1e9314a1b20")
+		(property "Reference" "U101"
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 566.42 245.11 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "30965633-1414-4dd1-a389-0b93aa564f15")
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(reference "U101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 27.94)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-00a3-77c7-61b2-0e0f810f9415")
+		(property "Sheetname" "Page 48"
+			(at 289.56 33.02 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_48.kicad_sch"
+			(at 289.56 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(page "48")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 149.86)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-2b50-2113-5d73-079fac86e02c")
+		(property "Sheetname" "Page 64"
+			(at 289.56 154.94 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_64.kicad_sch"
+			(at 289.56 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(page "64")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 88.9)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-2bb7-2851-1b96-6e23d1c9a045")
+		(property "Sheetname" "Page 56"
+			(at 289.56 93.98 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_56.kicad_sch"
+			(at 289.56 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(page "56")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 58.42)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-383c-1858-1ed7-14fc9d9b9e9b")
+		(property "Sheetname" "Page 52"
+			(at 289.56 63.5 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_52.kicad_sch"
+			(at 289.56 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(page "52")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 127)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-4c17-6fb7-7ba5-35d78315b774")
+		(property "Sheetname" "Page 61"
+			(at 289.56 132.08 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_61.kicad_sch"
+			(at 289.56 129.54 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(page "61")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 142.24)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-52cf-2c94-597f-77dc84b7a7f1")
+		(property "Sheetname" "Page 63"
+			(at 289.56 147.32 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_63.kicad_sch"
+			(at 289.56 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(page "63")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 309.88)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-57a7-39d8-380f-555259c2a56d")
+		(property "Sheetname" "Page 40"
+			(at 35.56 314.96 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_40.kicad_sch"
+			(at 35.56 312.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(page "40")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 325.12)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-7aea-6efb-44a8-23bf875dade9")
+		(property "Sheetname" "Page 42"
+			(at 35.56 330.2 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_42.kicad_sch"
+			(at 35.56 327.66 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(page "42")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 20.32)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-7bb9-3e88-265b-3ea82fc130bc")
+		(property "Sheetname" "Page 02"
+			(at 35.56 25.4 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_02.kicad_sch"
+			(at 35.56 22.86 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "IOC"
+				(path "/20011966-7388-780e-03cc-2841463a393b"
+					(page "02")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "00")
+		)
+	)
+	(embedded_fonts no)
 )

@@ -1,712 +1,1882 @@
-(kicad_sch (version 20230121) (generator eeschema)
-
-  (uuid 20011966-0b12-5e7d-4f5d-7b7451992361)
-
-  (paper "User" 584.2 378.46)
-
-  (title_block
-    (title "VAL Main")
-  )
-
-  (lib_symbols
-    (symbol "r1000:PD" (power) (pin_numbers hide) (pin_names hide) (in_bom no) (on_board yes)
-      (property "Reference" "#PWR" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Value" "PD" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_keywords" "power-flag" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "PD_0_1"
-        (polyline
-          (pts
-            (xy 0 -2.54)
-            (xy 1.27 -2.54)
-            (xy 0 -3.81)
-            (xy -1.27 -2.54)
-            (xy 0 -2.54)
-          )
-          (stroke (width 0.1524) (type default))
-          (fill (type none))
-        )
-      )
-      (symbol "PD_1_1"
-        (pin power_in line (at 0 0 270) (length 2.54)
-          (name "PD" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:PU" (power) (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "#PWR" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Value" "PU" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "ki_keywords" "power-flag" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "PU_0_1"
-        (polyline
-          (pts
-            (xy 0 2.54)
-            (xy -1.27 2.54)
-            (xy 0 3.81)
-            (xy 1.27 2.54)
-            (xy 0 2.54)
-          )
-          (stroke (width 0.1524) (type default))
-          (fill (type none))
-        )
-      )
-      (symbol "PU_1_1"
-        (pin power_in line (at 0 0 90) (length 2.54)
-          (name "PU" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:Pull_Down" (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "U" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Pull_Down" (at 0 3.81 0)
-        (effects (font (size 2.54 2.54)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "Pull_Down_1_1"
-        (pin power_out line (at 0 0 90) (length 2.54)
-          (name "Out" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-    (symbol "r1000:Pull_Up" (pin_numbers hide) (pin_names hide) (in_bom yes) (on_board yes)
-      (property "Reference" "U" (at 0 0 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Pull_Up" (at 0 -3.81 0)
-        (effects (font (size 2.54 2.54)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) hide)
-      )
-      (symbol "Pull_Up_1_1"
-        (pin power_out line (at 0 0 270) (length 2.54)
-          (name "Out" (effects (font (size 2.54 2.54))))
-          (number "1" (effects (font (size 2.54 2.54))))
-        )
-      )
-    )
-  )
-
-
-  (wire (pts (xy 566.42 241.3) (xy 566.42 243.84))
-    (stroke (width 0) (type default))
-    (uuid 27a5ff5e-875e-4b37-bc82-dab5cf04c510)
-  )
-  (wire (pts (xy 566.42 259.08) (xy 566.42 261.62))
-    (stroke (width 0) (type default))
-    (uuid 39fa94aa-9acc-4561-aa94-627c08b41c83)
-  )
-
-  (text "CLOCK GENERATION - RAM WRITE ENABLES" (at 53.34 353.06 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 0e7c5bc4-cc7d-4488-aa12-03969159932b)
-  )
-  (text "DIAGNOSTIC PROCESSOR - PULLUPS & PARITY REGISTER" (at 307.34 154.94 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 146376f1-94c2-43c1-90d5-b651a6a62801)
-  )
-  (text "SHIFT MUX - MOST SIGNIFICANT BITS" (at 53.34 139.7 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 16d582d5-6d41-44e2-b619-0eb6d6556888)
-  )
-  (text "VAL BOARD MICROCODE <6>" (at 53.34 17.78 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 1cc83707-2a85-4862-85ad-b27589f0acb0)
-  )
-  (text "CLOCK GENERATION - STATE CLOCKS" (at 53.34 345.44 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 2538d818-d1b2-4727-a1c9-7b4216d24e48)
-  )
-  (text "DIAG & CONTROL SYSTEM <6>" (at 53.34 86.36 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 25a99184-fb4b-449f-ac6b-f3c701aa99fd)
-  )
-  (text "REGISTER FILE CONTROL - A ADDRESS GENERATION" (at 307.34 48.26 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 275bc068-afed-4ec5-8bcf-f006bd942ea7)
-  )
-  (text "WRITABLE CONTROL STORE - WCS BITS 32 TO 38 AND PARITY"
-    (at 307.34 101.6 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 2b793624-3189-4a1c-8d33-4c2b8135dc6a)
-  )
-  (text "ADDRESS BUS PARITY - PARITY" (at 53.34 330.2 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 35eb0096-baaa-4538-958c-7a2c66af0731)
-  )
-  (text "POWER AND GROUND FINGERS - AND BYPASS CAPACITORS" (at 307.34 162.56 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 37a79285-8304-4d31-9889-ee48edea1ce4)
-  )
-  (text "VAL DRIVER AND RECEIVER" (at 53.34 292.1 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 3f27fd68-4dfa-4787-8d62-35088c772d9f)
-  )
-  (text "DIAGNOSTIC PROCESSOR - 8051 AND NOVRAM" (at 307.34 139.7 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 3f84e925-109a-4864-b2a8-c089cee5f548)
-  )
-  (text "FIU DRIVER AND RECEIVER" (at 53.34 307.34 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 445b7efd-816b-47b3-bf78-bad8ab0d1b15)
-  )
-  (text "FIU DRIVER AND RECEIVER - PARITY" (at 53.34 314.96 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 49d15247-0540-4990-b11e-9a7037af3bd6)
-  )
-  (text "ALU ARRAY - LEAST SIGNIFICANT BITS" (at 53.34 269.24 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4a490c6a-8c69-4c5e-8d77-51a1dff1ae36)
-  )
-  (text "REGISTER FILE <6>" (at 53.34 48.26 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 4c6387fd-4047-4b3f-99d8-4c87b777d387)
-  )
-  (text "B LATCH" (at 53.34 200.66 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 51cca8ac-821d-4692-8d90-04bbb827fdd1)
-  )
-  (text "ZERO_DETECTOR" (at 53.34 101.6 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 52261a8c-449c-4867-b1ba-f377c087d425)
-  )
-  (text "VALUE BOARD <6>" (at 53.34 25.4 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 5568dfe7-9aac-412f-a612-8235185c9f59)
-  )
-  (text "WRITABLE CONTROL STORE - WCS BITS 0 TO 15" (at 307.34 86.36 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 577941ef-d368-49a0-9394-b0ea1992bca9)
-  )
-  (text "DIAG & CONTROL SYSTEM <6>" (at 53.34 78.74 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 591e66fc-1ab0-4ea4-b153-b2600b5b59bc)
-  )
-  (text "WRITABLE CONTROL STORE - WCS BITS 16 to 31" (at 307.34 93.98 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 5bab92c8-84db-4127-ba97-e3b957567fe3)
-  )
-  (text "MULTIPLIER OUTPUT - ZERO DRIVERS" (at 53.34 254 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 5dbc9e52-6215-4595-9c80-5bb1f4c97b01)
-  )
-  (text "DIAGNOSTIC PROCESSOR - FINITE STATE MACHINE" (at 307.34 147.32 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 5e268dc7-2503-4bba-9dd9-f72ee93d2864)
-  )
-  (text "WRITABLE CONTROL STORE - MICRO INSTRUCTION REGISTER"
-    (at 307.34 116.84 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 6010bcd6-d5d9-4455-a705-4a806ec2928e)
-  )
-  (text "REGISTER FILE A PARITY" (at 53.34 162.56 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 629e177d-8e70-4fc8-9d8c-752deae703a2)
-  )
-  (text "CONDITION LOGIC" (at 53.34 276.86 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 66bcd467-9ef2-4527-9b96-d3273622a20b)
-  )
-  (text "WRITE DATA REGISTER - REGISTER ARRAY" (at 53.34 124.46 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 743c280a-7603-4507-8702-3519e130cd3f)
-  )
-  (text "REGISTER FILE A - RAM ARRAY" (at 53.34 154.94 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 7698ab36-9e9f-4ab5-97cc-4dd94a35dec6)
-  )
-  (text "ZERO DETECT & LOOP COUNTER - CONTROL" (at 307.34 25.4 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 7d782965-3e7b-4915-b84e-61e8d60f424e)
-  )
-  (text "MULTIPLIER CONTROL" (at 307.34 132.08 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 84f99480-93d2-4beb-b7e0-8d9290872690)
-  )
-  (text "CONDITION LOGIC" (at 53.34 284.48 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 8e4ddfd1-9370-408a-be88-434516a5c45f)
-  )
-  (text "Board: VAL Branch: Optimized" (at 7.62 370.84 0)
-    (effects (font (size 7.62 7.62) (thickness 1.27) bold) (justify left bottom))
-    (uuid 92a4ee47-8ff5-4c59-a921-1b125972b126)
-  )
-  (text "C BUS DRIVER" (at 53.34 185.42 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 9553b1d5-b8fe-4133-8736-6aadd7a202bd)
-  )
-  (text "MULTIPLIER OUTPUT LATCH" (at 53.34 246.38 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 96d1e43e-fc8e-4820-8877-6c124e7c2ab6)
-  )
-  (text "MULTIPLIER <6>" (at 53.34 55.88 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 9bd2a0ee-88d5-4abf-8e0c-73df34446f07)
-  )
-  (text "MULTIPLIER ARRAY" (at 53.34 223.52 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid 9e3688fd-9707-4808-b5f8-d953a98dae8d)
-  )
-  (text "MULTIPLIER A INPUT LATCH" (at 53.34 208.28 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid acded6e3-f399-4aa7-a184-581375e81a6d)
-  )
-  (text "DIAG & CONTROL SYSTEM <6>" (at 53.34 63.5 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ae134292-0946-4df5-96ea-4183ef4df18e)
-  )
-  (text "DIAG & CONTROL SYSTEM <6>" (at 53.34 71.12 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ae7d5afe-9246-44cd-9dec-75869d607367)
-  )
-  (text "CLOCK GENERATION - FREE RUNNING CLOCKS" (at 53.34 337.82 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid b1302a86-7f85-4fad-9e1b-7c0bbc8eadc8)
-  )
-  (text "NIBBLE PROPAGATE ADDER - & CARRY PROPAGATE ADDER" (at 53.34 231.14 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid b4566325-6bbd-4e52-bff0-ae42f4e3ecb7)
-  )
-  (text "SHIFT MUX - LEAST SIGNIFICANT BITS" (at 53.34 147.32 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid b8f588fd-2bce-4f68-bf3e-e01a0d02406c)
-  )
-  (text "REGISTER FILE CONTROL - C ADDRESS GENERATION" (at 307.34 63.5 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid baa8cc79-83da-4f35-bfdb-19b4499d97ea)
-  )
-  (text "WRITE DATA REGISTER - PARITY BITS" (at 53.34 132.08 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid bb086748-2628-4eca-a2f5-084fa0fdc04b)
-  )
-  (text "REGISTER FILE B - RAM ARRAY" (at 53.34 170.18 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid bb5e5caf-209e-4dd8-98c1-bf8b33eafc2b)
-  )
-  (text "WRITEABLE CONTROL STORE - LOOP REGISTER PRE-DECODE"
-    (at 307.34 124.46 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c084173f-d55d-4186-a231-e5d4b3bdc128)
-  )
-  (text "VAL DRIVER AND RECEIVER - PARITY" (at 53.34 299.72 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c3cf3b0c-b9af-496d-8edc-b8248bf147fd)
-  )
-  (text "BUS CONTROL" (at 307.34 17.78 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c6a7e031-b621-4f19-b2e7-dea92c61d133)
-  )
-  (text "ADDRESS BUS DRIVER" (at 53.34 322.58 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c86ce66a-c6b6-4880-8e5d-7cfd30cb729a)
-  )
-  (text "WRITE DATA REGISTER - INPUT BUFFER" (at 53.34 116.84 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid c924bcdc-abfa-4e43-bf43-76f1b221bc34)
-  )
-  (text "REGISTER FILE CONTROL - CSA ADDRESS GENERATION" (at 307.34 71.12 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid d0661f3b-fbd6-4c76-b1ab-007c10151b1f)
-  )
-  (text "C SOURCE CONTROL" (at 307.34 33.02 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid d5b2c72c-d0f6-4628-a0bb-0d4563d68384)
-  )
-  (text "MULTIPLIER OUTPUT INVERTER" (at 53.34 238.76 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid d8a4960c-b07e-41cc-95aa-1cec9268b9e7)
-  )
-  (text "WRITABLE CONTROL STORE - MICRO INSTRUCTION REGISTER"
-    (at 307.34 109.22 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e104b44e-3e9b-4065-a194-b01a9d26545b)
-  )
-  (text "REGISTER FILE CONTROL - B ADDRESS GENERATION" (at 307.34 55.88 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e1fc8f0b-caff-4ccf-bbdb-5d39f4e97ea3)
-  )
-  (text "REGISTER FILE CONTROL" (at 307.34 40.64 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e37ded4b-0393-4d41-95cd-e9ccff587fec)
-  )
-  (text "REGISTER FILE B PARITY" (at 53.34 177.8 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e3e5ffd2-9546-4235-b882-3be742fa3c67)
-  )
-  (text "COUNTER LOGIC" (at 53.34 93.98 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid e505dd06-a64d-4ac7-9633-733cb8c3054b)
-  )
-  (text "ZERO DETECTOR" (at 53.34 109.22 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid ec34805b-e605-455b-951a-3def1dac79e1)
-  )
-  (text "VALUE BOARD <6>" (at 53.34 33.02 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid f27738f9-19ab-4e3c-a836-a93204ce28f2)
-  )
-  (text "ALU ARRAY - MOST SIGNIFICANT BITS" (at 53.34 261.62 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid f39d78cf-3a74-4b4b-9b7d-4259917764cc)
-  )
-  (text "A LATCH" (at 53.34 193.04 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid f6410f5a-fb61-44b5-9a17-f0b5755b2511)
-  )
-  (text "WRITABLE CONTROL STORE - WCS ADDRESS GENERATION" (at 307.34 78.74 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid fad2e415-1681-4a94-ab12-ebc88a23b906)
-  )
-  (text "MULTIPLIER B INPUT LATCH" (at 53.34 215.9 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid fc1920b7-9660-4074-be02-e588f66a0556)
-  )
-  (text "C BUS SOURCE <6>" (at 53.34 40.64 0)
-    (effects (font (size 2.54 2.54)) (justify left bottom))
-    (uuid fd740749-c877-417b-8e98-8a475b02d93a)
-  )
-
-  (symbol (lib_id "r1000:PU") (at 566.42 241.3 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid 874e314e-baf6-49ff-b16e-81b34ce5337f)
-    (property "Reference" "#PWR0102" (at 566.42 241.3 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "~" (at 566.42 241.3 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Footprint" "" (at 566.42 241.3 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 241.3 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 6395f21f-8a6a-4a01-b57a-68f1b7929c10))
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361"
-          (reference "#PWR0102") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:Pull_Down") (at 566.42 259.08 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid cb816244-d6b2-4dc3-a1e6-868895fe04b9)
-    (property "Reference" "U102" (at 566.42 259.08 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "~" (at 566.42 255.27 0)
-      (effects (font (size 2.54 2.54)))
-    )
-    (property "Footprint" "" (at 566.42 259.08 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 259.08 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid e6507d07-10a5-41b2-bc46-6c3409f89b53))
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361"
-          (reference "U102") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:Pull_Up") (at 566.42 243.84 0) (unit 1)
-    (in_bom yes) (on_board yes) (dnp no)
-    (uuid d5c5f0ca-235f-4e9e-b361-65971de0c136)
-    (property "Reference" "U101" (at 566.42 243.84 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "~" (at 566.42 247.65 0)
-      (effects (font (size 2.54 2.54)))
-    )
-    (property "Footprint" "" (at 566.42 243.84 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 243.84 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid b74965c4-5ff4-4e98-99e8-d458459439dd))
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361"
-          (reference "U101") (unit 1)
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "r1000:PD") (at 566.42 261.62 0) (unit 1)
-    (in_bom no) (on_board yes) (dnp no)
-    (uuid e1d2457a-f1b6-4672-9e01-df662ca46fe3)
-    (property "Reference" "#PWR0101" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Value" "~" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Footprint" "" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (property "Datasheet" "" (at 566.42 261.62 0)
-      (effects (font (size 1.27 1.27)) hide)
-    )
-    (pin "1" (uuid 65091822-0fe6-4c43-a8b9-94ebb44f22af))
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361"
-          (reference "#PWR0101") (unit 1)
-        )
-      )
-    )
-  )
-
-  (sheet (at 12.7 256.54) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-10b5-4ab8-2a9c-38c316bdd043)
-    (property "Sheetname" "Page 32" (at 35.56 261.62 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_32.kicad_sch" (at 35.56 259.08 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "32"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 134.62) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-14ec-4f47-0995-330456eb2120)
-    (property "Sheetname" "Page 61" (at 289.56 139.7 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_61.kicad_sch" (at 289.56 137.16 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "61"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 317.5) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-1ab1-2295-08b8-3af1facf87a9)
-    (property "Sheetname" "Page 40" (at 35.56 322.58 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_40.kicad_sch" (at 35.56 320.04 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "40"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 134.62) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-2453-072c-20ee-3263d9c05690)
-    (property "Sheetname" "Page 16" (at 35.56 139.7 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_16.kicad_sch" (at 35.56 137.16 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "16"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 157.48) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-3b0a-23bc-0ff6-2883593a33c5)
-    (property "Sheetname" "Page 19" (at 35.56 162.56 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_19.kicad_sch" (at 35.56 160.02 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "19"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 203.2) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-4654-4d77-36d8-0b07a8870b2d)
-    (property "Sheetname" "Page 25" (at 35.56 208.28 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_25.kicad_sch" (at 35.56 205.74 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "25"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 88.9) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-4a6c-4db0-03d7-1999d12681b1)
-    (property "Sheetname" "Page 10" (at 35.56 93.98 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_10.kicad_sch" (at 35.56 91.44 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "10"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 58.42) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-50f0-40db-7afe-07e89482cc87)
-    (property "Sheetname" "Page 51" (at 289.56 63.5 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_51.kicad_sch" (at 289.56 60.96 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "51"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 142.24) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-5130-3c01-6507-12379f68679d)
-    (property "Sheetname" "Page 62" (at 289.56 147.32 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_62.kicad_sch" (at 289.56 144.78 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "62"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 111.76) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-517a-089e-7e9c-5a2c6b30ddb8)
-    (property "Sheetname" "Page 13" (at 35.56 116.84 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_13.kicad_sch" (at 35.56 114.3 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "13"))
-      )
-    )
-  )
-
-  (sheet (at 12.7 340.36) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-59c2-4843-06ca-12544d6de398)
-    (property "Sheetname" "Page 43" (at 35.56 345.44 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_43.kicad_sch" (at 35.56 342.9 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "43"))
-      )
-    )
-  )
-
-  (sheet (at 266.7 73.66) (size 20.32 5.08)
-    (stroke (width 0) (type solid))
-    (fill (color 0 0 0 0.0000))
-    (uuid 20011966-6eaf-09ea-3fa1-60bf1a5655e1)
-    (property "Sheetname" "Page 53" (at 289.56 78.74 0)
-      (effects (font (size 2.54 2.54)) (justify left bottom))
-    )
-    (property "Sheetfile" "pg_53.kicad_sch" (at 289.56 76.2 0)
-      (effects (font (size 1.27 1.27)) (justify left bottom) hide)
-    )
-    (instances
-      (project "VAL"
-        (path "/20011966-0b12-5e7d-4f5d-7b7451992361" (page "53"))
-      )
-    )
-  )
-
-  (sheet_instances
-    (path "/" (page "00"))
-  )
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "20011966-0b12-5e7d-4f5d-7b7451992361")
+	(paper "User" 584.2 378.46)
+	(title_block
+		(title "VAL Main")
+	)
+	(lib_symbols
+		(symbol "r1000:PD"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom no)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "PD"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "power-flag"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "PD_0_1"
+				(polyline
+					(pts
+						(xy 0 -2.54) (xy 1.27 -2.54) (xy 0 -3.81) (xy -1.27 -2.54) (xy 0 -2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "PD_1_1"
+				(pin power_in line
+					(at 0 0 270)
+					(length 2.54)
+					(name "PD"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:PU"
+			(power)
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "PU"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "power-flag"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "PU_0_1"
+				(polyline
+					(pts
+						(xy 0 2.54) (xy -1.27 2.54) (xy 0 3.81) (xy 1.27 2.54) (xy 0 2.54)
+					)
+					(stroke
+						(width 0.1524)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "PU_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 2.54)
+					(name "PU"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:Pull_Down"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Pull_Down"
+				(at 0 3.81 0)
+				(effects
+					(font
+						(size 2.54 2.54)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Pull_Down_1_1"
+				(pin power_out line
+					(at 0 0 90)
+					(length 2.54)
+					(name "Out"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "r1000:Pull_Up"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Pull_Up"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 2.54 2.54)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Pull_Up_1_1"
+				(pin power_out line
+					(at 0 0 270)
+					(length 2.54)
+					(name "Out"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 2.54 2.54)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(text "CLOCK GENERATION - RAM WRITE ENABLES"
+		(exclude_from_sim no)
+		(at 53.34 353.06 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "0e7c5bc4-cc7d-4488-aa12-03969159932b")
+	)
+	(text "DIAGNOSTIC PROCESSOR - PULLUPS & PARITY REGISTER"
+		(exclude_from_sim no)
+		(at 307.34 154.94 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "146376f1-94c2-43c1-90d5-b651a6a62801")
+	)
+	(text "SHIFT MUX - MOST SIGNIFICANT BITS"
+		(exclude_from_sim no)
+		(at 53.34 139.7 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "16d582d5-6d41-44e2-b619-0eb6d6556888")
+	)
+	(text "VAL BOARD MICROCODE <6>"
+		(exclude_from_sim no)
+		(at 53.34 17.78 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "1cc83707-2a85-4862-85ad-b27589f0acb0")
+	)
+	(text "CLOCK GENERATION - STATE CLOCKS"
+		(exclude_from_sim no)
+		(at 53.34 345.44 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "2538d818-d1b2-4727-a1c9-7b4216d24e48")
+	)
+	(text "DIAG & CONTROL SYSTEM <6>"
+		(exclude_from_sim no)
+		(at 53.34 86.36 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "25a99184-fb4b-449f-ac6b-f3c701aa99fd")
+	)
+	(text "REGISTER FILE CONTROL - A ADDRESS GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 48.26 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "275bc068-afed-4ec5-8bcf-f006bd942ea7")
+	)
+	(text "WRITABLE CONTROL STORE - WCS BITS 32 TO 38 AND PARITY"
+		(exclude_from_sim no)
+		(at 307.34 101.6 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "2b793624-3189-4a1c-8d33-4c2b8135dc6a")
+	)
+	(text "ADDRESS BUS PARITY - PARITY"
+		(exclude_from_sim no)
+		(at 53.34 330.2 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "35eb0096-baaa-4538-958c-7a2c66af0731")
+	)
+	(text "POWER AND GROUND FINGERS - AND BYPASS CAPACITORS"
+		(exclude_from_sim no)
+		(at 307.34 162.56 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "37a79285-8304-4d31-9889-ee48edea1ce4")
+	)
+	(text "VAL DRIVER AND RECEIVER"
+		(exclude_from_sim no)
+		(at 53.34 292.1 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "3f27fd68-4dfa-4787-8d62-35088c772d9f")
+	)
+	(text "DIAGNOSTIC PROCESSOR - 8051 AND NOVRAM"
+		(exclude_from_sim no)
+		(at 307.34 139.7 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "3f84e925-109a-4864-b2a8-c089cee5f548")
+	)
+	(text "FIU DRIVER AND RECEIVER"
+		(exclude_from_sim no)
+		(at 53.34 307.34 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "445b7efd-816b-47b3-bf78-bad8ab0d1b15")
+	)
+	(text "FIU DRIVER AND RECEIVER - PARITY"
+		(exclude_from_sim no)
+		(at 53.34 314.96 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "49d15247-0540-4990-b11e-9a7037af3bd6")
+	)
+	(text "ALU ARRAY - LEAST SIGNIFICANT BITS"
+		(exclude_from_sim no)
+		(at 53.34 269.24 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "4a490c6a-8c69-4c5e-8d77-51a1dff1ae36")
+	)
+	(text "REGISTER FILE <6>"
+		(exclude_from_sim no)
+		(at 53.34 48.26 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "4c6387fd-4047-4b3f-99d8-4c87b777d387")
+	)
+	(text "B LATCH"
+		(exclude_from_sim no)
+		(at 53.34 200.66 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "51cca8ac-821d-4692-8d90-04bbb827fdd1")
+	)
+	(text "ZERO_DETECTOR"
+		(exclude_from_sim no)
+		(at 53.34 101.6 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "52261a8c-449c-4867-b1ba-f377c087d425")
+	)
+	(text "VALUE BOARD <6>"
+		(exclude_from_sim no)
+		(at 53.34 25.4 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "5568dfe7-9aac-412f-a612-8235185c9f59")
+	)
+	(text "WRITABLE CONTROL STORE - WCS BITS 0 TO 15"
+		(exclude_from_sim no)
+		(at 307.34 86.36 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "577941ef-d368-49a0-9394-b0ea1992bca9")
+	)
+	(text "DIAG & CONTROL SYSTEM <6>"
+		(exclude_from_sim no)
+		(at 53.34 78.74 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "591e66fc-1ab0-4ea4-b153-b2600b5b59bc")
+	)
+	(text "WRITABLE CONTROL STORE - WCS BITS 16 to 31"
+		(exclude_from_sim no)
+		(at 307.34 93.98 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "5bab92c8-84db-4127-ba97-e3b957567fe3")
+	)
+	(text "MULTIPLIER OUTPUT - ZERO DRIVERS"
+		(exclude_from_sim no)
+		(at 53.34 254 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "5dbc9e52-6215-4595-9c80-5bb1f4c97b01")
+	)
+	(text "DIAGNOSTIC PROCESSOR - FINITE STATE MACHINE"
+		(exclude_from_sim no)
+		(at 307.34 147.32 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "5e268dc7-2503-4bba-9dd9-f72ee93d2864")
+	)
+	(text "WRITABLE CONTROL STORE - MICRO INSTRUCTION REGISTER"
+		(exclude_from_sim no)
+		(at 307.34 116.84 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "6010bcd6-d5d9-4455-a705-4a806ec2928e")
+	)
+	(text "REGISTER FILE A PARITY"
+		(exclude_from_sim no)
+		(at 53.34 162.56 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "629e177d-8e70-4fc8-9d8c-752deae703a2")
+	)
+	(text "CONDITION LOGIC"
+		(exclude_from_sim no)
+		(at 53.34 276.86 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "66bcd467-9ef2-4527-9b96-d3273622a20b")
+	)
+	(text "WRITE DATA REGISTER - REGISTER ARRAY"
+		(exclude_from_sim no)
+		(at 53.34 124.46 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "743c280a-7603-4507-8702-3519e130cd3f")
+	)
+	(text "REGISTER FILE A - RAM ARRAY"
+		(exclude_from_sim no)
+		(at 53.34 154.94 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "7698ab36-9e9f-4ab5-97cc-4dd94a35dec6")
+	)
+	(text "ZERO DETECT & LOOP COUNTER - CONTROL"
+		(exclude_from_sim no)
+		(at 307.34 25.4 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "7d782965-3e7b-4915-b84e-61e8d60f424e")
+	)
+	(text "MULTIPLIER CONTROL"
+		(exclude_from_sim no)
+		(at 307.34 132.08 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "84f99480-93d2-4beb-b7e0-8d9290872690")
+	)
+	(text "CONDITION LOGIC"
+		(exclude_from_sim no)
+		(at 53.34 284.48 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "8e4ddfd1-9370-408a-be88-434516a5c45f")
+	)
+	(text "Board: VAL Branch: Optimized"
+		(exclude_from_sim no)
+		(at 7.62 370.84 0)
+		(effects
+			(font
+				(size 7.62 7.62)
+				(thickness 1.27)
+				(bold yes)
+			)
+			(justify left bottom)
+		)
+		(uuid "92a4ee47-8ff5-4c59-a921-1b125972b126")
+	)
+	(text "C BUS DRIVER"
+		(exclude_from_sim no)
+		(at 53.34 185.42 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "9553b1d5-b8fe-4133-8736-6aadd7a202bd")
+	)
+	(text "MULTIPLIER OUTPUT LATCH"
+		(exclude_from_sim no)
+		(at 53.34 246.38 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "96d1e43e-fc8e-4820-8877-6c124e7c2ab6")
+	)
+	(text "MULTIPLIER <6>"
+		(exclude_from_sim no)
+		(at 53.34 55.88 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "9bd2a0ee-88d5-4abf-8e0c-73df34446f07")
+	)
+	(text "MULTIPLIER ARRAY"
+		(exclude_from_sim no)
+		(at 53.34 223.52 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "9e3688fd-9707-4808-b5f8-d953a98dae8d")
+	)
+	(text "MULTIPLIER A INPUT LATCH"
+		(exclude_from_sim no)
+		(at 53.34 208.28 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "acded6e3-f399-4aa7-a184-581375e81a6d")
+	)
+	(text "DIAG & CONTROL SYSTEM <6>"
+		(exclude_from_sim no)
+		(at 53.34 63.5 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ae134292-0946-4df5-96ea-4183ef4df18e")
+	)
+	(text "DIAG & CONTROL SYSTEM <6>"
+		(exclude_from_sim no)
+		(at 53.34 71.12 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ae7d5afe-9246-44cd-9dec-75869d607367")
+	)
+	(text "CLOCK GENERATION - FREE RUNNING CLOCKS"
+		(exclude_from_sim no)
+		(at 53.34 337.82 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "b1302a86-7f85-4fad-9e1b-7c0bbc8eadc8")
+	)
+	(text "NIBBLE PROPAGATE ADDER - & CARRY PROPAGATE ADDER"
+		(exclude_from_sim no)
+		(at 53.34 231.14 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "b4566325-6bbd-4e52-bff0-ae42f4e3ecb7")
+	)
+	(text "SHIFT MUX - LEAST SIGNIFICANT BITS"
+		(exclude_from_sim no)
+		(at 53.34 147.32 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "b8f588fd-2bce-4f68-bf3e-e01a0d02406c")
+	)
+	(text "REGISTER FILE CONTROL - C ADDRESS GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 63.5 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "baa8cc79-83da-4f35-bfdb-19b4499d97ea")
+	)
+	(text "WRITE DATA REGISTER - PARITY BITS"
+		(exclude_from_sim no)
+		(at 53.34 132.08 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "bb086748-2628-4eca-a2f5-084fa0fdc04b")
+	)
+	(text "REGISTER FILE B - RAM ARRAY"
+		(exclude_from_sim no)
+		(at 53.34 170.18 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "bb5e5caf-209e-4dd8-98c1-bf8b33eafc2b")
+	)
+	(text "WRITEABLE CONTROL STORE - LOOP REGISTER PRE-DECODE"
+		(exclude_from_sim no)
+		(at 307.34 124.46 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c084173f-d55d-4186-a231-e5d4b3bdc128")
+	)
+	(text "VAL DRIVER AND RECEIVER - PARITY"
+		(exclude_from_sim no)
+		(at 53.34 299.72 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c3cf3b0c-b9af-496d-8edc-b8248bf147fd")
+	)
+	(text "BUS CONTROL"
+		(exclude_from_sim no)
+		(at 307.34 17.78 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c6a7e031-b621-4f19-b2e7-dea92c61d133")
+	)
+	(text "ADDRESS BUS DRIVER"
+		(exclude_from_sim no)
+		(at 53.34 322.58 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c86ce66a-c6b6-4880-8e5d-7cfd30cb729a")
+	)
+	(text "WRITE DATA REGISTER - INPUT BUFFER"
+		(exclude_from_sim no)
+		(at 53.34 116.84 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "c924bcdc-abfa-4e43-bf43-76f1b221bc34")
+	)
+	(text "REGISTER FILE CONTROL - CSA ADDRESS GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 71.12 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "d0661f3b-fbd6-4c76-b1ab-007c10151b1f")
+	)
+	(text "C SOURCE CONTROL"
+		(exclude_from_sim no)
+		(at 307.34 33.02 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "d5b2c72c-d0f6-4628-a0bb-0d4563d68384")
+	)
+	(text "MULTIPLIER OUTPUT INVERTER"
+		(exclude_from_sim no)
+		(at 53.34 238.76 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "d8a4960c-b07e-41cc-95aa-1cec9268b9e7")
+	)
+	(text "WRITABLE CONTROL STORE - MICRO INSTRUCTION REGISTER"
+		(exclude_from_sim no)
+		(at 307.34 109.22 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e104b44e-3e9b-4065-a194-b01a9d26545b")
+	)
+	(text "REGISTER FILE CONTROL - B ADDRESS GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 55.88 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e1fc8f0b-caff-4ccf-bbdb-5d39f4e97ea3")
+	)
+	(text "REGISTER FILE CONTROL"
+		(exclude_from_sim no)
+		(at 307.34 40.64 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e37ded4b-0393-4d41-95cd-e9ccff587fec")
+	)
+	(text "REGISTER FILE B PARITY"
+		(exclude_from_sim no)
+		(at 53.34 177.8 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e3e5ffd2-9546-4235-b882-3be742fa3c67")
+	)
+	(text "COUNTER LOGIC"
+		(exclude_from_sim no)
+		(at 53.34 93.98 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "e505dd06-a64d-4ac7-9633-733cb8c3054b")
+	)
+	(text "ZERO DETECTOR"
+		(exclude_from_sim no)
+		(at 53.34 109.22 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "ec34805b-e605-455b-951a-3def1dac79e1")
+	)
+	(text "VALUE BOARD <6>"
+		(exclude_from_sim no)
+		(at 53.34 33.02 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "f27738f9-19ab-4e3c-a836-a93204ce28f2")
+	)
+	(text "ALU ARRAY - MOST SIGNIFICANT BITS"
+		(exclude_from_sim no)
+		(at 53.34 261.62 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "f39d78cf-3a74-4b4b-9b7d-4259917764cc")
+	)
+	(text "A LATCH"
+		(exclude_from_sim no)
+		(at 53.34 193.04 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "f6410f5a-fb61-44b5-9a17-f0b5755b2511")
+	)
+	(text "WRITABLE CONTROL STORE - WCS ADDRESS GENERATION"
+		(exclude_from_sim no)
+		(at 307.34 78.74 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "fad2e415-1681-4a94-ab12-ebc88a23b906")
+	)
+	(text "MULTIPLIER B INPUT LATCH"
+		(exclude_from_sim no)
+		(at 53.34 215.9 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "fc1920b7-9660-4074-be02-e588f66a0556")
+	)
+	(text "C BUS SOURCE <6>"
+		(exclude_from_sim no)
+		(at 53.34 40.64 0)
+		(effects
+			(font
+				(size 2.54 2.54)
+			)
+			(justify left bottom)
+		)
+		(uuid "fd740749-c877-417b-8e98-8a475b02d93a")
+	)
+	(wire
+		(pts
+			(xy 566.42 241.3) (xy 566.42 243.84)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "44e6b353-2252-4aa0-9e4f-e41d08fabb94")
+	)
+	(wire
+		(pts
+			(xy 566.42 259.08) (xy 566.42 261.62)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f67919c6-9fd9-4cc4-b8f5-535a21d51682")
+	)
+	(symbol
+		(lib_id "r1000:PU")
+		(at 566.42 241.3 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "14322188-7d86-4c2d-9ede-1f5c051744ef")
+		(property "Reference" "#PWR01"
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PU"
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 241.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "a8b43a52-723c-465e-a586-f9a759805072")
+		)
+		(instances
+			(project ""
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(reference "#PWR01")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:PD")
+		(at 566.42 261.62 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom no)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "7377a26b-15b8-47eb-bb64-4297cea8d9bf")
+		(property "Reference" "#PWR02"
+			(at 566.42 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PD"
+			(at 566.42 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 261.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "fb059a64-0493-45b2-a0d4-24bd090b3b9c")
+		)
+		(instances
+			(project ""
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(reference "#PWR02")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:Pull_Down")
+		(at 566.42 259.08 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "cb816244-d6b2-4dc3-a1e6-868895fe04b9")
+		(property "Reference" "U102"
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 566.42 255.27 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e6507d07-10a5-41b2-bc46-6c3409f89b53")
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(reference "U102")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "r1000:Pull_Up")
+		(at 566.42 243.84 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "d5c5f0ca-235f-4e9e-b361-65971de0c136")
+		(property "Reference" "U101"
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "~"
+			(at 566.42 247.65 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 566.42 243.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "b74965c4-5ff4-4e98-99e8-d458459439dd")
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(reference "U101")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 256.54)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-10b5-4ab8-2a9c-38c316bdd043")
+		(property "Sheetname" "Page 32"
+			(at 35.56 261.62 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_32.kicad_sch"
+			(at 35.56 259.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "32")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 134.62)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-14ec-4f47-0995-330456eb2120")
+		(property "Sheetname" "Page 61"
+			(at 289.56 139.7 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_61.kicad_sch"
+			(at 289.56 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "61")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 317.5)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-1ab1-2295-08b8-3af1facf87a9")
+		(property "Sheetname" "Page 40"
+			(at 35.56 322.58 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_40.kicad_sch"
+			(at 35.56 320.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "40")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 134.62)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-2453-072c-20ee-3263d9c05690")
+		(property "Sheetname" "Page 16"
+			(at 35.56 139.7 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_16.kicad_sch"
+			(at 35.56 137.16 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "16")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 157.48)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-3b0a-23bc-0ff6-2883593a33c5")
+		(property "Sheetname" "Page 19"
+			(at 35.56 162.56 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_19.kicad_sch"
+			(at 35.56 160.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "19")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 203.2)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-4654-4d77-36d8-0b07a8870b2d")
+		(property "Sheetname" "Page 25"
+			(at 35.56 208.28 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_25.kicad_sch"
+			(at 35.56 205.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "25")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 88.9)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-4a6c-4db0-03d7-1999d12681b1")
+		(property "Sheetname" "Page 10"
+			(at 35.56 93.98 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_10.kicad_sch"
+			(at 35.56 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "10")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 58.42)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-50f0-40db-7afe-07e89482cc87")
+		(property "Sheetname" "Page 51"
+			(at 289.56 63.5 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_51.kicad_sch"
+			(at 289.56 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "51")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 142.24)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-5130-3c01-6507-12379f68679d")
+		(property "Sheetname" "Page 62"
+			(at 289.56 147.32 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_62.kicad_sch"
+			(at 289.56 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "62")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 111.76)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-517a-089e-7e9c-5a2c6b30ddb8")
+		(property "Sheetname" "Page 13"
+			(at 35.56 116.84 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_13.kicad_sch"
+			(at 35.56 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "13")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 12.7 340.36)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-59c2-4843-06ca-12544d6de398")
+		(property "Sheetname" "Page 43"
+			(at 35.56 345.44 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_43.kicad_sch"
+			(at 35.56 342.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "43")
+				)
+			)
+		)
+	)
+	(sheet
+		(at 266.7 73.66)
+		(size 20.32 5.08)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0.0000)
+		)
+		(uuid "20011966-6eaf-09ea-3fa1-60bf1a5655e1")
+		(property "Sheetname" "Page 53"
+			(at 289.56 78.74 0)
+			(effects
+				(font
+					(size 2.54 2.54)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "pg_53.kicad_sch"
+			(at 289.56 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+				(hide yes)
+			)
+		)
+		(instances
+			(project "VAL"
+				(path "/20011966-0b12-5e7d-4f5d-7b7451992361"
+					(page "53")
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "00")
+		)
+	)
+	(embedded_fonts no)
 )
