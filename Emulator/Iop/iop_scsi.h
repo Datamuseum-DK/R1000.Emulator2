@@ -31,6 +31,8 @@ typedef int scsi_func_f(struct scsi_dev *, uint8_t *cdb);
 #define IOC_SCSI_OK		0
 #define IOC_SCSI_ERROR		-1
 
+struct tape;
+
 struct scsi_dev {
 	scsi_func_f		*funcs[256];
 	struct scsi		*ctl;
@@ -45,6 +47,7 @@ struct scsi_dev {
 	uint8_t			*map;
 	size_t			map_size;
 
+	struct tape		*tape;
 	unsigned		tape_fileno;
 	unsigned		tape_recno;
 	size_t			tape_head;

@@ -8,6 +8,135 @@
 #include "Iop/iop.h"
 #include "Iop/iop_scsi.h"
 #include "Infra/vend.h"
+#include "Infra/vqueue.h"
+
+/**********************************************************************
+ * SIMH-TAPFILE index structures
+ */
+
+VTAILQ_HEAD(tape_recs_head, tape_recs);
+VTAILQ_HEAD(tape_file_head, tape_file);
+
+struct tape_recs {
+	VTAILQ_ENTRY(tape_recs)		next;
+	off_t				offset;
+	uint32_t			reclen;
+	uint32_t			n_rec;
+};
+
+struct tape_file {
+	VTAILQ_ENTRY(tape_file)		next;
+	off_t				offset;
+	uint32_t			n_rec;
+	struct tape_recs_head		list;
+};
+
+struct tape {
+	struct tape_file_head		list;
+	off_t				extent;
+};
+
+static struct tape_recs *
+tape_recs_new(void)
+{
+	struct tape_recs *retval;
+
+	retval = calloc(sizeof *retval, 1);
+	return (retval);
+}
+
+static struct tape_file *
+tape_file_new(void)
+{
+	struct tape_file *retval;
+
+	retval = calloc(sizeof *retval, 1);
+	AN(retval);
+	VTAILQ_INIT(&retval->list);
+	struct tape_recs *tr = tape_recs_new();
+	VTAILQ_INSERT_TAIL(&retval->list, tr, next);
+	return (retval);
+}
+
+static struct tape *
+tape_new(void)
+{
+	struct tape *retval;
+
+	retval = calloc(sizeof *retval, 1);
+	AN(retval);
+	VTAILQ_INIT(&retval->list);
+	struct tape_file *tf = tape_file_new();
+	VTAILQ_INSERT_TAIL(&retval->list, tf, next);
+	return (retval);
+}
+
+static void
+tape_add_tape_mark(struct tape *tp, off_t off)
+{
+	if (off <= tp->extent)
+		return;
+	tp->extent = off;
+	struct tape_file *tf = tape_file_new();
+	tf->offset = off;
+	VTAILQ_INSERT_TAIL(&tp->list, tf, next);
+}
+
+static void
+tape_add_record(struct tape *tp, uint32_t len, off_t off)
+{
+	if (off <= tp->extent)
+		return;
+	tp->extent = off;
+	struct tape_file *tf = VTAILQ_LAST(&tp->list, tape_file_head);
+	tf->n_rec++;
+	struct tape_recs *tr = VTAILQ_LAST(&tf->list, tape_recs_head);
+	if (tr->n_rec > 0 && len != tr->reclen) {
+		tr = tape_recs_new();
+		VTAILQ_INSERT_TAIL(&tf->list, tr, next);
+	}
+	if (tr->n_rec == 0) {
+		tr->reclen = len;
+		tr->offset = off;
+	}
+	tr->n_rec++;
+}
+
+static void v_matchproto_(cli_func_f)
+cli_scsi_tape_layout(struct cli *cli)
+{
+	struct scsi_dev *sd;
+
+	if (cli->help) {
+		Cli_Usage(cli, "",
+		    "Print file/record layout of mounted tape");
+		return;
+	}
+
+	sd = get_scsi_dev(1, 0, 0);
+	AN(sd);
+
+	struct tape *tp = sd->tape;
+	AN(tp);
+
+	Cli_Printf(cli, "TP extent=0x%08zx\n", tp->extent);
+
+	struct tape_file *tf;
+	VTAILQ_FOREACH(tf, &tp->list, next) {
+		Cli_Printf(cli, "TF off=0x%08zx n_rec=0x%08x\n",
+                    tf->offset, tf->n_rec);
+		if (!tf->n_rec)
+			continue;
+		struct tape_recs *tr;
+		VTAILQ_FOREACH(tr, &tf->list, next) {
+			Cli_Printf(cli,
+			    "TR off=0x%08zx reclen=0x%08x n_rec=0x%08x\n",
+			    tr->offset, tr->reclen, tr->n_rec);
+		}
+	}
+}
+
+/**********************************************************************/
 
 #define MSG_FMT "0x%x:0x%x @0x%zx "
 #define MSG_ARG dev->tape_fileno, dev->tape_recno, dev->tape_head
@@ -53,6 +182,7 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 	bprintf(dev->msg, MSG_FMT "x=0x%x t=0x%x",
             MSG_ARG, xfer_length, tape_length);
 	if (tape_length == 0) {
+		tape_add_tape_mark(dev->tape, dev->tape_head);
 		strcat(dev->msg, " TAPE-MARK");
 		dev->tape_head += 4;
 		dev->req_sense[2] |= 0x80;
@@ -68,6 +198,9 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 		return (IOC_SCSI_ERROR);
 	}
 	assert(tape_length < 65535);
+
+	tape_add_record(dev->tape, tape_length, dev->tape_head);
+
 	assert(tape_length <= xfer_length);
 	dev->tape_head += 4;
 
@@ -104,6 +237,7 @@ scsi_0a_write_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 		return (IOC_SCSI_OK);
 
 	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
+	tape_add_record(dev->tape, xfer_length, dev->tape_head);
 	bprintf(dev->msg, MSG_FMT "x=0x%x",
             MSG_ARG, xfer_length);
 
@@ -136,6 +270,7 @@ scsi_10_write_filemarks_tape(struct scsi_dev *dev, uint8_t *cdb)
 {
 	unsigned xfer_length;
 
+	tape_add_tape_mark(dev->tape, dev->tape_head);
 	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
 
 	bprintf(dev->msg, MSG_FMT "x=0x%x", MSG_ARG, xfer_length);
@@ -301,12 +436,14 @@ cli_scsi_tape_mount(struct cli *cli)
 	if (cli_scsi_dev_map_file(cli, sd, cli->av[0]) < 0)
 		return;
 
+	sd->tape = tape_new();
 	cli->ac--;
 	cli->av++;
 }
 
 static const struct cli_cmds cli_scsi_tape_cmds[] = {
 	{ "mount",		cli_scsi_tape_mount },
+	{ "layout",		cli_scsi_tape_layout },
 	{ NULL,			NULL },
 };
 
