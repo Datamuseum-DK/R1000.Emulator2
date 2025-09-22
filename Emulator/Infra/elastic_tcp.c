@@ -69,6 +69,8 @@ report_sockadr(const char *name, int fd)
 	char abuf[1024];
 	char pbuf[1024];
 
+	sl = sizeof ss;
+	memset(&ss, 0, sizeof ss);
 	i = getsockname(fd, (void*)&ss, &sl);
 	assert(i == 0);
 
@@ -144,7 +146,7 @@ static void
 elastic_telnet_passive(struct elastic *ep, struct cli *cli, const char *where)
 {
 	struct addrinfo hints, *res, *res0;
-	int error, s;
+	int error, s, ns = 0;
 	char *a, *p;
 	struct acceptor_arg *aa;
 	pthread_t pt;
@@ -168,7 +170,6 @@ elastic_telnet_passive(struct elastic *ep, struct cli *cli, const char *where)
 		Cli_Error(cli, "Error: %s\n", gai_strerror(error));
 		return;
 	}
-	s = -1;
 	for (res = res0; res != NULL; res = res->ai_next) {
 		s = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 		if (s < 0)
@@ -187,9 +188,10 @@ elastic_telnet_passive(struct elastic *ep, struct cli *cli, const char *where)
 		aa->telnet = 1;
 		report_sockadr(aa->ep->name, aa->fd);
 		AZ(pthread_create(&pt, NULL, elastic_telnet_acceptor, aa));
+		ns++;
 	}
 	free(a);
-	if (s == -1)
+	if (ns == 0)
 		Cli_Error(cli, "Could not bind: %s\n", strerror(errno));
 }
 
