@@ -119,19 +119,19 @@ cli_scsi_tape_layout(struct cli *cli)
 	struct tape *tp = sd->tape;
 	AN(tp);
 
-	Cli_Printf(cli, "TP extent=0x%08zx\n", tp->extent);
+	Cli_Printf(cli, "TP extent=0x%08jx\n", (uintmax_t)tp->extent);
 
 	struct tape_file *tf;
 	VTAILQ_FOREACH(tf, &tp->list, next) {
-		Cli_Printf(cli, "TF off=0x%08zx n_rec=0x%08x\n",
-                    tf->offset, tf->n_rec);
+		Cli_Printf(cli, "TF off=0x%08jx n_rec=0x%08x\n",
+                    (uintmax_t)tf->offset, tf->n_rec);
 		if (!tf->n_rec)
 			continue;
 		struct tape_recs *tr;
 		VTAILQ_FOREACH(tr, &tf->list, next) {
 			Cli_Printf(cli,
-			    "TR off=0x%08zx reclen=0x%08x n_rec=0x%08x\n",
-			    tr->offset, tr->reclen, tr->n_rec);
+			    "TR off=0x%08jx reclen=0x%08x n_rec=0x%08x\n",
+			    (uintmax_t)tr->offset, tr->reclen, tr->n_rec);
 		}
 	}
 }
