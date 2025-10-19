@@ -314,10 +314,46 @@ cli_scsi_disk_patch(struct cli *cli)
 	}
 }
 
+/**********************************************************************/
+
+static void v_matchproto_(cli_func_f)
+cli_scsi_disk_save(struct cli *cli)
+{
+	struct scsi_dev *sd;
+	int fd;
+	ssize_t sz;
+
+	if (cli->help || cli->ac != 3) {
+		Cli_Usage(cli, "<unit> <filename>", "Save disk-image");
+		return;
+	}
+	cli->ac--;
+	cli->av++;
+
+	sd = cli_scsi_get_disk(cli, 0);
+	if (sd == NULL)
+		return;
+
+	fd = open(cli->av[0], O_WRONLY|O_CREAT|O_TRUNC, 0644);
+	if (fd < 0) {
+		Cli_Error(cli, "Could not open '%s' for writing: %s\n",
+		    cli->av[0], strerror(errno));
+		return;
+	}
+	sz = write(fd, sd->map, sd->map_size);
+	if (sz < 0 || (size_t)sz != sd->map_size) {
+		Cli_Error(cli, "Write error on '%s': %s\n",
+		    cli->av[0], strerror(errno));
+	}
+	close(fd);
+	return;
+}
+
 
 static const struct cli_cmds cli_scsi_disk_cmds[] = {
 	{ "mount",		cli_scsi_disk_mount },
 	{ "patch",		cli_scsi_disk_patch },
+	{ "save",		cli_scsi_disk_save },
 	{ NULL,			NULL },
 };
 
