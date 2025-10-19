@@ -183,13 +183,14 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
             MSG_ARG, xfer_length, tape_length);
 	if (tape_length == 0) {
 		tape_add_tape_mark(dev->tape, dev->tape_head);
+		dev->ctl->regs[0x0f] |= 0x02;		// Check Condition
 		strcat(dev->msg, " TAPE-MARK");
 		dev->tape_head += 4;
 		dev->req_sense[2] |= 0x80;
 		vbe32enc(&dev->req_sense[3], xfer_length);
 		dev->tape_recno = 0;
 		dev->tape_fileno++;
-		return (IOC_SCSI_ERROR);
+		return (IOC_SCSI_OK);
 	}
 	if (tape_length == 0xffffffff) {
 		strcat(dev->msg, " EOT");
@@ -220,9 +221,9 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 	dev->tape_recno++;
 
 	if (tape_length != xfer_length) {
+		dev->ctl->regs[0x0f] |= 0x02;		// Check Condition
 		dev->req_sense[2] = 0x20;		// ILI
 		vbe32enc(&dev->req_sense[3], xfer_length - tape_length);
-		return (IOC_SCSI_ERROR);
 	}
 
 	return (IOC_SCSI_OK);
@@ -337,9 +338,13 @@ scsi_11_space(struct scsi_dev *dev, uint8_t *cdb)
 
 	bprintf(dev->msg, MSG_FMT "m=%d x=%d", MSG_ARG, m, xfer_length);
 
+	Trace(*dev->ctl->tracer, "SCSI_T_SPACE m=%u xfer_length=%d tape_head=0x%x P=%08x N=%08x\n", m, xfer_length, (int32_t)dev->tape_head, vle32dec(dev->map + dev->tape_head -4), vle32dec(dev->map + dev->tape_head));
+
 	if (m == 0 && xfer_length < 0) {
 		while (xfer_length < 0) {
 			tape_length = vle32dec(dev->map + dev->tape_head - 4);
+                        if (tape_length == 0)
+				break;
 			assert(tape_length > 0 && tape_length < 0xff000000);
 			tape_space_block_backward(dev);
 			xfer_length++;
