@@ -140,6 +140,8 @@ trace_init(void)
 	} else {
 		VSB_clear(trace_vsb);
 	}
+	uint64_t t = ucycle * 2;
+	VSB_printf(trace_vsb, "%6jd.%07jd ", t / 10000000, t % 10000000);
 }
 
 void
@@ -153,7 +155,7 @@ Trace(int flag, const char *fmt, ...)
 	AZ(pthread_mutex_lock(&trace_mtx));
 	trace_init();
 
-	VSB_printf(trace_vsb, "%12jd ", (intmax_t)simclock);
+	VSB_printf(trace_vsb, "%12.7f ", ucycle * 200e-9);
 	va_start(ap, fmt);
 	VSB_vprintf(trace_vsb, fmt, ap);
 	va_end(ap);
@@ -174,7 +176,6 @@ TraceDump(int flag, const void *ptr, size_t len, const char *fmt, ...)
 	AZ(pthread_mutex_lock(&trace_mtx));
 	trace_init();
 
-	VSB_printf(trace_vsb, "%12jd ", (intmax_t)simclock);
 	va_start(ap, fmt);
 	VSB_vprintf(trace_vsb, fmt, ap);
 	va_end(ap);
@@ -194,7 +195,6 @@ Tracev(int flag, const char *pfx, const char *fmt, va_list ap)
 	AZ(pthread_mutex_lock(&trace_mtx));
 	trace_init();
 
-	VSB_printf(trace_vsb, "%12jd ", (intmax_t)simclock);
 	if (pfx != NULL)
 		VSB_cat(trace_vsb, pfx);
 	VSB_vprintf(trace_vsb, fmt, ap);

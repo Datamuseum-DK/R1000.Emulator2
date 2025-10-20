@@ -48,13 +48,9 @@ extern unsigned mp_nua_bus;
 extern unsigned mp_seq_prepped;
 extern unsigned mp_seq_halted;
 
-double sc_now(void);
-
 void *sc_main_thread(void *priv);
 
 double sc_main_get_quota(void);
-
-double sc_when(void);
 
 extern const char *tracepath;
 

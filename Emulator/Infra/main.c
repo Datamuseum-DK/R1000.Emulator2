@@ -43,7 +43,7 @@
 #include "Infra/r1000.h"
 #include "Iop/iop.h"
 #include "Infra/vsb.h"
-#include "Chassis/r1000_arch.h"	// for sc_when()
+#include "Chassis/r1000_arch.h"
 
 int optreset;		// Some have it, some not.
 
@@ -95,7 +95,7 @@ finish(int status, const char *why)
 	dr += tx.tv_sec - t0.tv_sec;
 	printf("  %12.6f s\tWall Clock Time\n", dr);
 
-	dt = sc_when();
+	dt = ucycle * 200e-9;
 	printf("  %15.9f s\tSystemC simulation\n", dt);
 	if (dt > 0 && dr > dt)
 		printf("  1/%.1f\t\tSystemC Simulation ratio\n", dr / dt);

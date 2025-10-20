@@ -62,6 +62,7 @@ struct cli;
 struct callout;
 
 typedef int64_t			nanosec;
+extern uint64_t			ucycle;
 extern volatile nanosec		simclock;
 extern volatile nanosec		systemc_t_zero;
 extern volatile int		systemc_clock;

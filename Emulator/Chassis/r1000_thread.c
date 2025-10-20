@@ -54,6 +54,14 @@ static int sc_quota_exit = 0;
 int sc_started;
 struct timespec sc_t0;
 
+uint64_t ucycle;
+
+static double
+sc_when(void)
+{
+	return (ucycle * 200e-9);
+}
+
 double
 sc_main_get_quota(void)
 {
@@ -232,14 +240,6 @@ cli_r1000(struct cli *cli)
 	Cli_Dispatch(cli, cli_r1000_cmds);
 }
 
-static uint64_t ucycle;
-
-double
-sc_now(void)
-{
-	return (ucycle * 200);
-}
-
 void *
 sc_main_thread(void *priv)
 {
@@ -252,12 +252,6 @@ sc_main_thread(void *priv)
 		ucycle += 1;
 	}
 	return(0);
-}
-
-double
-sc_when(void)
-{
-	return (ucycle * 200e-9);
 }
 
 static pthread_t fido_thread;
