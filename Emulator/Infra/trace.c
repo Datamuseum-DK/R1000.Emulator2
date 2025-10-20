@@ -141,7 +141,8 @@ trace_init(void)
 		VSB_clear(trace_vsb);
 	}
 	uint64_t t = ucycle * 2;
-	VSB_printf(trace_vsb, "%6jd.%07jd ", t / 10000000, t % 10000000);
+	VSB_printf(trace_vsb, "%6ju.%07ju ",
+	    (uintmax_t)(t / 10000000U), (uintmax_t)(t % 10000000U));
 }
 
 void
