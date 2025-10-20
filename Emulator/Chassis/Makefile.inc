@@ -14,5 +14,5 @@ ${OBJDIR}/r1000_arch.o: \
     Infra/context.h \
     Infra/vend.h \
     Infra/cache_line.h \
-    Iop/iop_sc_68k20.hh
+    Iop/iop.h
 	${CC} ${CFLAGS} -c Chassis/r1000_arch.c -o ${OBJDIR}/r1000_arch.o

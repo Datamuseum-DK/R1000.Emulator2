@@ -251,7 +251,8 @@ class System():
         fo.write('#include "Infra/vend.h"\n')
         fo.write('#include "Infra/vqueue.h"\n')
         fo.write('#include "Infra/context.h"\n')
-        fo.write('#include "Iop/iop_sc_68k20.hh"\n')
+        fo.write('#include "Infra/r1000.h"\n')
+        fo.write('#include "Iop/iop.h"\n')
         fo.write('#include "Iop/memspace.h"\n')
         self.produce_data(fo)
         for i in (1, 2, 4):

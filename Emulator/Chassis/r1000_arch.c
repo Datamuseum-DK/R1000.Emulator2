@@ -42,7 +42,7 @@
 #include "Chassis/r1000_arch.h"
 
 #include "Infra/cache_line.h"
-#include "Iop/iop_sc_68k20.hh"
+#include "Iop/iop.h"
 #include "Infra/vend.h"
 
 #define UEV_MEMEX	(1<<(15-0))

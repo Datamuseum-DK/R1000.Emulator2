@@ -79,7 +79,6 @@ ${OBJDIR}/iop_memory.o: \
     Infra/vend.h \
     Iop/memspace.h \
     Iop/iop.h \
-    Iop/iop_sc_68k20.hh \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Iop/iop_memory.c -o ${OBJDIR}/iop_memory.o
 
@@ -110,7 +109,6 @@ ${OBJDIR}/iop_rtc.o: \
 OBJS += ${OBJDIR}/iop_sc.o
 ${OBJDIR}/iop_sc.o: \
     Iop/iop_sc.c \
-    Iop/iop_sc_68k20.hh \
     Iop/iop.h \
     ${R1000DEP}
 	${CC} ${CFLAGS} -c Iop/iop_sc.c -o ${OBJDIR}/iop_sc.o
@@ -176,6 +174,8 @@ ${OBJDIR}/_memcfg.o: \
     Infra/context.h \
     Infra/vend.h \
     Infra/vqueue.h \
+    Infra/r1000.h \
+    Iop/iop.h \
     Iop/memspace.h
 	${CC} ${CFLAGS} -c Iop/_memcfg.c -o ${OBJDIR}/_memcfg.o
 

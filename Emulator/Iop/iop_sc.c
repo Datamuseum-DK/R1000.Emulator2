@@ -6,7 +6,6 @@
 #include "Infra/vqueue.h"
 
 #include "Iop/iop.h"
-#include "Iop/iop_sc_68k20.hh"
 
 typedef void ioc_sc_bus_callback_f(uint32_t data);
 

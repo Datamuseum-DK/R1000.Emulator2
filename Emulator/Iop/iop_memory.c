@@ -8,7 +8,6 @@
 
 #include "Iop/iop.h"
 #include "Iop/memspace.h"
-#include "Iop/iop_sc_68k20.hh"
 
 struct memevent {
 	VTAILQ_ENTRY(memevent)	list;
