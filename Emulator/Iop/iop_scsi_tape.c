@@ -1,3 +1,33 @@
+/*-
+ * Copyright (c) 2025 Poul-Henning Kamp
+ * All rights reserved.
+ *
+ * Author: Poul-Henning Kamp <phk@phk.freebsd.dk>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,6 +72,7 @@ tape_recs_new(void)
 	struct tape_recs *retval;
 
 	retval = calloc(sizeof *retval, 1);
+	AN(retval);
 	return (retval);
 }
 
@@ -124,7 +155,7 @@ cli_scsi_tape_layout(struct cli *cli)
 	struct tape_file *tf;
 	VTAILQ_FOREACH(tf, &tp->list, next) {
 		Cli_Printf(cli, "TF off=0x%08jx n_rec=0x%08x\n",
-                    (uintmax_t)tf->offset, tf->n_rec);
+		    (uintmax_t)tf->offset, tf->n_rec);
 		if (!tf->n_rec)
 			continue;
 		struct tape_recs *tr;
@@ -144,7 +175,7 @@ cli_scsi_tape_layout(struct cli *cli)
 static int v_matchproto_(scsi_func_f)
 scsi_00_test_unit_ready(struct scsi_dev *dev, uint8_t *cdb)
 {
-	
+
 	(void)cdb;
 	bprintf(dev->msg, MSG_FMT, MSG_ARG);
 	if (dev->fd < 0) {
@@ -180,7 +211,7 @@ scsi_08_read_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
 	tape_length = vle32dec(dev->map + dev->tape_head);
 	bprintf(dev->msg, MSG_FMT "x=0x%x t=0x%x",
-            MSG_ARG, xfer_length, tape_length);
+	    MSG_ARG, xfer_length, tape_length);
 	if (tape_length == 0) {
 		tape_add_tape_mark(dev->tape, dev->tape_head);
 		dev->ctl->regs[0x0f] |= 0x02;		// Check Condition
@@ -240,7 +271,7 @@ scsi_0a_write_6_tape(struct scsi_dev *dev, uint8_t *cdb)
 	xfer_length = vbe32dec(cdb + 1) & 0xffffff;
 	tape_add_record(dev->tape, xfer_length, dev->tape_head);
 	bprintf(dev->msg, MSG_FMT "x=0x%x",
-            MSG_ARG, xfer_length);
+	    MSG_ARG, xfer_length);
 
 	vle32enc(dev->map + dev->tape_head, xfer_length);
 	dev->tape_head += 4;
@@ -334,7 +365,7 @@ scsi_11_space(struct scsi_dev *dev, uint8_t *cdb)
 	if (xfer_length & 0x800000)
 		xfer_length -= 0x1000000;
 
-        unsigned m = cdb[0x01] & 3;
+	unsigned m = cdb[0x01] & 3;
 
 	bprintf(dev->msg, MSG_FMT "m=%d x=%d", MSG_ARG, m, xfer_length);
 
@@ -343,7 +374,7 @@ scsi_11_space(struct scsi_dev *dev, uint8_t *cdb)
 	if (m == 0 && xfer_length < 0) {
 		while (xfer_length < 0) {
 			tape_length = vle32dec(dev->map + dev->tape_head - 4);
-                        if (tape_length == 0)
+			if (tape_length == 0)
 				break;
 			assert(tape_length > 0 && tape_length < 0xff000000);
 			tape_space_block_backward(dev);
