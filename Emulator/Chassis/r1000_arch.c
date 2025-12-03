@@ -314,14 +314,14 @@ do {							\
 
 // -------------------- SEQ --------------------
 
-#define RND_PUSH		(1<<31)
-#define RND_POP			(1<<30)
-#define RND_CLEAR_ST		(1<<29)
+#define RND_PUSH		(1<<31) // SEQ MicroArch pdf 32 Push_stack
+#define RND_POP			(1<<30)	// SEQ MicroArch pdf 32 Pop_stack
+#define RND_CLEAR_ST		(1<<29)	// SEQ MicroArch pdf 32 Clear_stack
 #define RND_RESTRT0		(1<<28)
 #define RND_RESTRT1		(1<<27)
 #define RND_FLD_CHK		(1<<26)
-#define RND_TOP_LD		(1<<25)
-#define RND_HALT		(1<<24)
+#define RND_TOP_LD		(1<<25) // SEQ MicroArch pdf 32 Load_control_top
+#define RND_HALT		(1<<24) // SEQ MicroArch pdf 33 Halt
 
 #define RND_CNTL_MUX		(1<<23)
 #define RND_CHK_EXIT		(1<<22)
@@ -332,22 +332,22 @@ do {							\
 #define RND_M_PC_LDH		(1<<17)
 #define RND_ADR_SEL		(1<<16)
 
-#define RND_TOS_VLB		(1<<15)
+#define RND_TOS_VLB		(1<<15) // SEQ MicroArch pdf 33 Validate_tos_optimizer
 #define RND_RES_OFFS		(1<<14)
 #define RND_RES_NAME		(1<<13)
-#define RND_CUR_LEX		(1<<12)
-#define RND_NAME_LD		(1<<11)
-#define RND_SAVE_LD		(1<<10)
-#define RND_PRED_LD		(1<< 9)
+#define RND_CUR_LEX		(1<<12) // SEQ MicroArch pdf 32 Load_current_lex
+#define RND_NAME_LD		(1<<11) // SEQ MicroArch pdf 32 Load_curr_name
+#define RND_SAVE_LD		(1<<10) // SEQ MicroArch pdf 32 Load_save_offset
+#define RND_PRED_LD		(1<< 9) // SEQ MicroArch pdf 32 Load_control_pred
 #define RND_L_ABRT		(1<< 8)
 
 //#define RND_LEX_COMM0		(1<< 7)
 //#define RND_LEX_COMM1		(1<< 6)
 //#define RND_LEX_COMM2		(1<< 5)
 #define RND_CIB_PC_L		(1<< 4)
-#define RND_INSTR_MX		(1<< 3)
-#define RND_IBUFF_LD		(1<< 2)
-#define RND_BR_MSK_L		(1<< 1)
+#define RND_INSTR_MX		(1<< 3)	// SEQ MicroArch pdf 32 Load_current_instr
+#define RND_IBUFF_LD		(1<< 2)	// SEQ MicroArch pdf 31 Load_ibuff
+#define RND_BR_MSK_L		(1<< 1) // SEQ MicroArch pdf 31 Load_break_mask
 #define RND_INSTR_LD		(1<< 0)
 #define RNDX(x) ((r1k->seq_rndx & (x)) != 0)
 
@@ -2093,7 +2093,6 @@ seq_nxt_lex_valid(void)
 {
 	unsigned lex_random = (r1k->seq_rndx >> 5) & 0x7;
 	uint16_t dra = r1k->seq_resolve_address & 3;
-	uint16_t dlr = lex_random;
 	uint16_t dns;
 	if (lex_random & 0x2) {
 		dns = 0xf;
@@ -2103,33 +2102,33 @@ seq_nxt_lex_valid(void)
 	uint16_t nv = 0;
 	unsigned adr = ((r1k->seq_lex_valid >> 12) & 0xf) << 5;
 	adr |= dra << 3;
-	adr |= ((dlr >> 2) & 1) << 2;
+	adr |= ((lex_random >> 2) & 1) << 2;
 	adr |= ((dns >> 3) & 1) << 1;
-	bool pm3 = !((dns & 0x7) && !(dlr & 1));
+	bool pm3 = !((dns & 0x7) && !(lex_random & 1));
 	adr |= pm3;
 	nv |= (seq_pa041[adr] >> 4) << 12;
 
 	adr = ((r1k->seq_lex_valid >> 8) & 0xf) << 5;
 	adr |= dra << 3;
-	adr |= ((dlr >> 2) & 1) << 2;
+	adr |= ((lex_random >> 2) & 1) << 2;
 	adr |= ((dns >> 2) & 1) << 1;
-	bool pm2 = !((dns & 0x3) && !(dlr & 1));
+	bool pm2 = !((dns & 0x3) && !(lex_random & 1));
 	adr |= pm2;
 	nv |= (seq_pa041[adr] >> 4) << 8;
 
 	adr = ((r1k->seq_lex_valid >> 4) & 0xf) << 5;
 	adr |= dra << 3;
-	adr |= ((dlr >> 2) & 1) << 2;
+	adr |= ((lex_random >> 2) & 1) << 2;
 	adr |= ((dns >> 1) & 1) << 1;
-	bool pm1 = !((dns & 0x1) && !(dlr & 1));
+	bool pm1 = !((dns & 0x1) && !(lex_random & 1));
 	adr |= pm1;
 	nv |= (seq_pa041[adr] >> 4) << 4;
 
 	adr = ((r1k->seq_lex_valid >> 0) & 0xf) << 5;
 	adr |= dra << 3;
-	adr |= ((dlr >> 2) & 1) << 2;
+	adr |= ((lex_random >> 2) & 1) << 2;
 	adr |= ((dns >> 0) & 1) << 1;
-	adr |= (dlr >> 0) & 1;
+	adr |= (lex_random >> 0) & 1;
 	nv |= (seq_pa041[adr] >> 4) << 0;
 
 	r1k->seq_lex_valid = nv;
@@ -2706,7 +2705,7 @@ seq_q4(void)
 	if (aclk) {
 		r1k->seq_late_macro_event = !((!state_clock) || !(r1k->seq_macro_event && !r1k->seq_early_macro_pending));
 		if (!mp_seq_halted) {
-			mp_seq_halted = !((!state_clock) || RNDX(RND_HALT));
+			mp_seq_halted = state_clock && !RNDX(RND_HALT);
 			if (mp_seq_halted)
 				printf("SEQ HALTED\n");
 		}
