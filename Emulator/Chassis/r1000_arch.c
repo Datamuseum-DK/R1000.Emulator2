@@ -225,7 +225,6 @@ static uint8_t fiu_pa027[512];
 static uint8_t fiu_pa028[512];
 static uint8_t fiu_pa060[512];
 static uint8_t seq_pa040[512];
-static uint8_t seq_pa041[512];
 static uint8_t seq_pa042[512];
 static uint8_t seq_pa043[512];
 static uint8_t seq_pa044[512];
@@ -751,8 +750,7 @@ r1000_arch_new(void)
 	// -------------------- SEQ --------------------
 
 	Firmware_Copy(seq_pa040, sizeof seq_pa040, "PA040-02");
-	Firmware_Copy(seq_pa041, sizeof seq_pa041, "PA041-01");
-	Firmware_Copy(seq_pa042, sizeof seq_pa041, "PA042-02");
+	Firmware_Copy(seq_pa042, sizeof seq_pa042, "PA042-02");
 	Firmware_Copy(seq_pa043, sizeof seq_pa043, "PA043-02");
 	Firmware_Copy(seq_pa044, sizeof seq_pa044, "PA044-01");
 	Firmware_Copy(seq_pa045, sizeof seq_pa045, "PA045-03");
@@ -1980,8 +1978,8 @@ seq_int_reads(void)
 		break;
 	default:
 		r1k->seq_val_bus |= (r1k->seq_coff << 4) & 0xffff;
-		r1k->seq_val_bus |= (r1k->seq_curr_lex & 0xf);
-		r1k->seq_val_bus ^= 0xffff;
+		r1k->seq_val_bus |= r1k->seq_curr_lex & 0xf;
+		r1k->seq_val_bus ^= 0xffff;	// XXX: Not 0xfffff or 0xffff0 ?!
 		break;
 	}
 }
@@ -2091,47 +2089,23 @@ seq_cond8(unsigned condsel)
 static void
 seq_nxt_lex_valid(void)
 {
-	unsigned lex_random = (r1k->seq_rndx >> 5) & 0x7;
-	uint16_t dra = r1k->seq_resolve_address & 3;
-	uint16_t dns;
-	if (lex_random & 0x2) {
-		dns = 0xf;
-	} else {
-		dns = 0xf ^ (0x8 >> (r1k->seq_resolve_address >> 2));
+
+	switch((r1k->seq_rndx >> 5) & 0x7) {	// SEQ microarch pdf pg 33
+	case 0:	// Clear Lex Level
+		r1k->seq_lex_valid &= ~(1 << (15 - r1k->seq_resolve_address));
+		break;
+	case 1: // Set Lex Level
+		r1k->seq_lex_valid |= (1 << (15 - r1k->seq_resolve_address));
+		break;
+	case 4: // Clear Greater Than Lex Level
+		r1k->seq_lex_valid &= ~(0xfffe << (15 - r1k->seq_resolve_address));
+		break;
+	case 7: // Clear all Lex Levels
+		r1k->seq_lex_valid = 0;
+		break;
+	default:
+		break;
 	}
-	uint16_t nv = 0;
-	unsigned adr = ((r1k->seq_lex_valid >> 12) & 0xf) << 5;
-	adr |= dra << 3;
-	adr |= ((lex_random >> 2) & 1) << 2;
-	adr |= ((dns >> 3) & 1) << 1;
-	bool pm3 = !((dns & 0x7) && !(lex_random & 1));
-	adr |= pm3;
-	nv |= (seq_pa041[adr] >> 4) << 12;
-
-	adr = ((r1k->seq_lex_valid >> 8) & 0xf) << 5;
-	adr |= dra << 3;
-	adr |= ((lex_random >> 2) & 1) << 2;
-	adr |= ((dns >> 2) & 1) << 1;
-	bool pm2 = !((dns & 0x3) && !(lex_random & 1));
-	adr |= pm2;
-	nv |= (seq_pa041[adr] >> 4) << 8;
-
-	adr = ((r1k->seq_lex_valid >> 4) & 0xf) << 5;
-	adr |= dra << 3;
-	adr |= ((lex_random >> 2) & 1) << 2;
-	adr |= ((dns >> 1) & 1) << 1;
-	bool pm1 = !((dns & 0x1) && !(lex_random & 1));
-	adr |= pm1;
-	nv |= (seq_pa041[adr] >> 4) << 4;
-
-	adr = ((r1k->seq_lex_valid >> 0) & 0xf) << 5;
-	adr |= dra << 3;
-	adr |= ((lex_random >> 2) & 1) << 2;
-	adr |= ((dns >> 0) & 1) << 1;
-	adr |= (lex_random >> 0) & 1;
-	nv |= (seq_pa041[adr] >> 4) << 0;
-
-	r1k->seq_lex_valid = nv;
 }
 
 static bool
@@ -2272,16 +2246,16 @@ static void
 seq_p1(void)
 {
 	if (r1k->seq_maybe_dispatch && !(r1k->seq_display >> 15)) {
-		r1k->seq_resolve_address = (r1k->seq_display >> 9) & 0xf;
+		r1k->seq_resolve_address = r1k->seq_display >> 9;
 	} else {
 		switch (UIR_SEQ_LAUIR) {
 		case 0:
-			r1k->seq_resolve_address = r1k->seq_curr_lex ^ 0xf;
+			r1k->seq_resolve_address = ~r1k->seq_curr_lex;
 			break;
 		case 1:
 			switch (UIR_SEQ_IRD) {
 			case 0x0:
-				r1k->seq_resolve_address = (~mp_val_bus + 1) & 0xf;
+				r1k->seq_resolve_address = ~mp_val_bus + 1;
 				break;
 			case 0x1:
 			case 0x2:
@@ -2289,7 +2263,7 @@ seq_p1(void)
 				assert(0);
 				break;
 			default:
-				r1k->seq_resolve_address = (~r1k->seq_curr_lex + 1) & 0xf;
+				r1k->seq_resolve_address = ~r1k->seq_curr_lex + 1;
 				break;
 			}
 			break;
@@ -2298,6 +2272,7 @@ seq_p1(void)
 		default: assert(0);
 		}
 	}
+	r1k->seq_resolve_address &= 0xf;
 
 	unsigned offs;
 	if (r1k->seq_maybe_dispatch && r1k->seq_uses_tos) {
@@ -2449,8 +2424,7 @@ seq_q3(void)
 	r1k->seq_cload = RNDX(RND_CIB_PC_L) && (!r1k->seq_bad_hint) && (!precond);
 
 	r1k->seq_ibld = r1k->seq_cload || RNDX(RND_IBUFF_LD);
-	bool ibemp = !(!r1k->seq_ibld || ((r1k->seq_macro_pc_offset & 7) != 0));
-	r1k->seq_m_ibuff_mt = !(ibemp && r1k->seq_ibuf_fill);
+	r1k->seq_m_ibuff_mt = !(r1k->seq_ibuf_fill && r1k->seq_ibld && !(r1k->seq_macro_pc_offset & 7));
 
 	r1k->seq_l_macro_hic = true;
 	unsigned nua;
