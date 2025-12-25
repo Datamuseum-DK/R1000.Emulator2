@@ -86,7 +86,7 @@ sc_main(int argc, char *argv[])
 	(void)argv;
 
 	planes = make_planes("PLANES");
-	planes->tf = sc_create_vcd_trace_file(tracepath);
+	// planes->tf = sc_create_vcd_trace_file(tracepath);
 
 	// Order as seen from front L…R
 	if (sc_boards & R1K_BOARD_MEM32_2)
@@ -131,7 +131,7 @@ sc_main(int argc, char *argv[])
 		double dt = sc_main_get_quota();
 		sc_start(dt * 1e6, SC_US);
 		cout << "@" << sc_time_stamp() << " DONE\n";
-		sc_close_vcd_trace_file(planes->tf);
+		// sc_close_vcd_trace_file(planes->tf);
 	}
 
 	return(0);
