@@ -41,7 +41,7 @@ CFLAGS += ${CFLAGSMINUSD}
 CFLAGS += ${CFLAGSMINUSI}
 CFLAGS += ${PARANOIA}
 
-SC_API ?= -std=c++14
+SC_API ?= -std=c++17
 SC_I ?= -I/usr/local/include -I.
 SC_L ?= -L/usr/local/lib -lsystemc
 
