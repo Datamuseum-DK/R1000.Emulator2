@@ -1463,7 +1463,6 @@
 	(global_label "RAM.IOP_GRANT~"
 		(shape input)
 		(at 302.26 154.94 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -1484,7 +1483,6 @@
 	(global_label "USER_REF"
 		(shape input)
 		(at 304.8 162.56 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -1505,7 +1503,6 @@
 	(global_label "RAM.A[14..21]"
 		(shape output)
 		(at 431.8 182.88 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -1526,7 +1523,6 @@
 	(global_label "IOP.A[14..21]"
 		(shape input)
 		(at 304.8 175.26 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -1594,6 +1590,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "L13"
@@ -1715,6 +1712,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "K13"

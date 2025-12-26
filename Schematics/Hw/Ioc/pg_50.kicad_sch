@@ -7155,7 +7155,6 @@
 	(global_label "TYP.RCV~"
 		(shape output)
 		(at 518.16 137.16 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7176,7 +7175,6 @@
 	(global_label "PAR.V[0..7]"
 		(shape input)
 		(at 81.28 190.5 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7197,7 +7195,6 @@
 	(global_label "MEM_TV.DRV~"
 		(shape input)
 		(at 424.18 58.42 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7218,7 +7215,6 @@
 	(global_label "RESTORE_RDR"
 		(shape input)
 		(at 391.16 233.68 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7239,7 +7235,6 @@
 	(global_label "T.PERR~"
 		(shape output)
 		(at 518.16 116.84 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7260,7 +7255,6 @@
 	(global_label "I.BUZZ_OFF~.B2"
 		(shape input)
 		(at 353.06 347.98 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7281,7 +7275,6 @@
 	(global_label "IOC_TV.EN~B2"
 		(shape input)
 		(at 251.46 360.68 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7302,7 +7295,6 @@
 	(global_label "V.PERR~"
 		(shape output)
 		(at 518.16 182.88 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7323,7 +7315,6 @@
 	(global_label "IOC_TV.EN~B1"
 		(shape input)
 		(at 251.46 337.82 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7344,7 +7335,6 @@
 	(global_label "I.TYP.P[0..7]"
 		(shape bidirectional)
 		(at 81.28 177.8 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7365,7 +7355,6 @@
 	(global_label "READ_DUMMY~"
 		(shape input)
 		(at 426.72 71.12 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7386,7 +7375,6 @@
 	(global_label "RCV_TYPE~"
 		(shape input)
 		(at 424.18 30.48 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7407,7 +7395,6 @@
 	(global_label "VAL.RCV~"
 		(shape output)
 		(at 518.16 162.56 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7428,7 +7415,6 @@
 	(global_label "TV.DRV~"
 		(shape output)
 		(at 398.78 358.14 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7449,7 +7435,6 @@
 	(global_label "I.LOAD_WDR~"
 		(shape output)
 		(at 492.76 256.54 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7470,7 +7455,6 @@
 	(global_label "PAR.T[0..7]"
 		(shape input)
 		(at 81.28 15.24 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7491,7 +7475,6 @@
 	(global_label "UIR.LOAD_WDR"
 		(shape input)
 		(at 426.72 86.36 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7512,7 +7495,6 @@
 	(global_label "DIAG.DIS_RCV"
 		(shape input)
 		(at 424.18 43.18 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7533,7 +7515,6 @@
 	(global_label "SEQ.CKSTOP~"
 		(shape input)
 		(at 386.08 266.7 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7554,7 +7535,6 @@
 	(global_label "I.VAL.P[0..7]"
 		(shape bidirectional)
 		(at 73.66 355.6 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -7622,6 +7602,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "A24"
@@ -7754,6 +7735,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "A47"
@@ -7842,6 +7824,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7908,6 +7891,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7974,6 +7958,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -8040,6 +8025,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -8103,6 +8089,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "A48"
@@ -8192,6 +8179,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -8258,6 +8246,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -8324,6 +8313,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -8389,6 +8379,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -8453,6 +8444,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "A23"
@@ -8586,6 +8578,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "B24"
@@ -8719,6 +8712,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "A25"
@@ -8854,6 +8848,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -8918,6 +8913,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D23"
@@ -9004,6 +9000,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "C23"
@@ -9096,6 +9093,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -9160,6 +9158,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D25"
@@ -9249,6 +9248,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -9312,6 +9312,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "C47"
@@ -9401,6 +9402,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -9467,6 +9469,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -9531,6 +9534,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "C24"
@@ -9619,6 +9623,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -9685,6 +9690,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -9749,6 +9755,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D25"
@@ -9838,6 +9845,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -9903,6 +9911,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -9967,6 +9976,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "C24"
@@ -10055,6 +10065,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -10118,6 +10129,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D25"
@@ -10204,6 +10216,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "M41"
@@ -10293,6 +10306,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -10356,6 +10370,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D25"
@@ -10444,6 +10459,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -10508,6 +10524,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "B22"
@@ -10640,6 +10657,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "A48"
@@ -10729,6 +10747,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -10795,6 +10814,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -10861,6 +10881,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -10925,6 +10946,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "F48"
@@ -11010,6 +11032,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "A26"

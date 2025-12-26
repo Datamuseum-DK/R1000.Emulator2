@@ -5543,7 +5543,6 @@
 	(global_label "DISABLE_DELAY"
 		(shape input)
 		(at 48.26 73.66 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5564,7 +5563,6 @@
 	(global_label "CLEAR_RTC.S~"
 		(shape input)
 		(at 48.26 78.74 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5585,7 +5583,6 @@
 	(global_label "SET_DELAY_EVENT"
 		(shape output)
 		(at 226.06 55.88 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5606,7 +5603,6 @@
 	(global_label "SET_SLICE_EVENT"
 		(shape output)
 		(at 226.06 30.48 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5627,7 +5623,6 @@
 	(global_label "READ_RTC~"
 		(shape input)
 		(at 48.26 83.82 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5648,7 +5643,6 @@
 	(global_label "STATE_CLOCK"
 		(shape input)
 		(at 48.26 22.86 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5669,7 +5663,6 @@
 	(global_label "LOAD_RTC~"
 		(shape input)
 		(at 48.26 91.44 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5690,7 +5683,6 @@
 	(global_label "LOAD_SLICE.S~"
 		(shape input)
 		(at 48.26 43.18 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5711,7 +5703,6 @@
 	(global_label "RTC.EN~"
 		(shape input)
 		(at 48.26 96.52 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5732,7 +5723,6 @@
 	(global_label "LOAD_DELAY.S~"
 		(shape input)
 		(at 48.26 48.26 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5753,7 +5743,6 @@
 	(global_label "Q4~.B1"
 		(shape input)
 		(at 48.26 17.78 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5774,7 +5763,6 @@
 	(global_label "DIAG_TRIGGER~"
 		(shape output)
 		(at 454.66 160.02 0)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5795,7 +5783,6 @@
 	(global_label "Q4~.B2"
 		(shape input)
 		(at 48.26 12.7 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5816,7 +5803,6 @@
 	(global_label "ITYP.[0..47]"
 		(shape bidirectional)
 		(at 129.54 116.84 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5837,7 +5823,6 @@
 	(global_label "DISABLE_SLICE"
 		(shape input)
 		(at 48.26 63.5 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5858,7 +5843,6 @@
 	(global_label "ENABLE_DELAY"
 		(shape input)
 		(at 48.26 68.58 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5879,7 +5863,6 @@
 	(global_label "READ_TIMERS~"
 		(shape input)
 		(at 48.26 53.34 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5900,7 +5883,6 @@
 	(global_label "ENABLE_SLICE"
 		(shape input)
 		(at 48.26 58.42 180)
-		(fields_autoplaced yes)
 		(effects
 			(font
 				(size 2.54 2.54)
@@ -5969,6 +5951,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6033,6 +6016,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "E26"
@@ -6118,6 +6102,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D31"
@@ -6216,6 +6201,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6280,6 +6266,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D31"
@@ -6378,6 +6365,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6443,6 +6431,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -6507,6 +6496,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "E26"
@@ -6592,6 +6582,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "B47"
@@ -6725,6 +6716,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D13"
@@ -6858,6 +6850,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "B11"
@@ -6980,6 +6973,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7045,6 +7039,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7109,6 +7104,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D33"
@@ -7243,6 +7239,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7308,6 +7305,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7373,6 +7371,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7438,6 +7437,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7503,6 +7503,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7568,6 +7569,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7632,6 +7634,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D32"
@@ -7766,6 +7769,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7830,6 +7834,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D23"
@@ -7916,6 +7921,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -7980,6 +7986,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "B46"
@@ -8114,6 +8121,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(pin "1"
@@ -8178,6 +8186,7 @@
 				(font
 					(size 1.27 1.27)
 				)
+				(hide yes)
 			)
 		)
 		(property "Location" "D14"
