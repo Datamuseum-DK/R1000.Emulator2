@@ -1,171 +1,76 @@
 
-import struct
 import sys
+import struct
+
 import context
 
-def parbyte(x):
-    x = (x >> 4) ^ x
-    x = (x >> 2) ^ x
-    x = (x >> 1) ^ x
-    return x & 1
+SPACES = ["Resr", "Ctrl", "Type", "Que.", "Data", "Impo", "Code", "Syst"]
+STATES = ["Ld", "Ro", "Rw", "Iv"]
 
-class Line():
-    def __init__(self, side, line, ram1, ram2):
-        self.side = side
-        self.line = line
-        self.ram1 = ram1
-        self.ram2 = ram2
-        # ....|.......|.......
-        # .....######--.......
-        # .....012345.........
-        # .....------7........
-        self.tag = ram1 & ~(0xfe << 7)
-        self.tag |= (ram2 & 0xfe) << 7
-        self.parbit = (ram1 >> 7) & 0xfc
-        self.parbit |= (ram2 & 1) << 1
-        self.parbit |= (ram1 >> 8) & 1
-
-        ba = bin((1<<64)|ram1)[3:] + " " + bin((1<<8)|ram2)[3:]
-        bb = bin((1<<64)|self.tag)[3:] + " " + bin((1<<8)|self.parbit)[3:]
-        ca = len(ba.replace('0', ''))
-        cb = len(bb.replace('0', ''))
-        if ca != cb:
-            print("M", "%016x" % ram1, "%02x" % ram2, "%016x" % self.tag, "%02x" % self.parbit, ca, cb)
-            print("  ", ba)
-            print("  ", bb)
-        for i, j in (
-            (56, 0),
-            (48, 1),
-            (40, 2),
-            (32, 3),
-            (24, 4),
-            (16, 5),
-            (8, 6),
-            (0, 7),
-        ):
-            if j == 16 or parbyte(self.tag >> i) != ((self.parbit >> (7-j)) & 1):
-                print(
-                   self.up.ctx.ident,
-                   "PAR",
-                   j,
-                   "%04x" % self.line,
-                   "%016x" % ram1,
-                   "%02x" % ram2,
-                   "%016x" % self.tag,
-                   "%02x" % self.parbit,
-                   parbyte(self.tag >> i),
-                   (self.parbit >> (7-j)) & 1,
-                )
-                #print("  ", ba)
-                #print("  ", bb)
-
-        self.seg = self.tag >> 40
-        self.vpid = (self.tag >> 32) & 0xff
-        self.pg = (self.tag >> 13) & ((1<<19)-1)
-        self.d = (self.tag >> 12) & 0x1
-        self.lru = (self.tag >> 8) & 0xf
-        self.stat = (self.tag >> 6) & 0x3
-        self.res = (self.tag >> 3) & 0x7
-        self.spc = (self.tag >> 0) & 0x7
+class Tag():
+    def __init__(self, slot, octets):
+        self.slot = slot
+        self.le = struct.unpack("<Q", octets)[0]
+        # ...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|...|
+        # ooooooooooooooooooooooooooooooooppppppppppppppppp   LLLLSS   sss
+        self.obj = self.le >> 32
+        self.pg = (self.le >> 13) & 0x7ffff
+        self.d = (self.le >> 12) & 0x1
+        self.lru = (self.le >> 8) & 0xf
+        self.state = (self.le >> 6) & 0x3
+        self.ucode = (self.le >> 3) & 0x7
+        self.space = self.le & 0x7
+        self.ptr = (self.slot & 0x7) << 22
+        self.ptr |= (self.slot >> 3) << 10
 
     def __repr__(self):
-        b = bin((1<<64)|self.tag)[3:]
-        return ':'.join(
-            [
-                self.side, 
-                "%04x" % self.line,
-                "%06x" % self.seg,
-                "%02x" % self.vpid,
-                "%05x" % self.pg,
-                "%x" % self.d,
-                "%x" % self.lru,
-                "%x" % self.stat,
-                "%x" % self.res,
-                "%x" % self.spc,
-            ]
+        return " ".join(
+            (
+                "T",
+                "slot %05x" % self.slot,
+                "obj %08x" % self.obj,
+                "space %x" % self.space,
+                SPACES[self.space],
+                "page %x" % self.pg,
+                "d %x" % self.d,
+                "lru %x" % self.lru,
+                "state %x" % self.state,
+                STATES[self.state],
+                "ucode %x" % self.ucode,
+                "> %08x" % self.ptr,
+            )
         )
-        return "L:%016x:%06x:%02x:%05x %016x:%02x:(%02x)" % (self.tag, self.seg, self.vpid, self.pg, self.ram1, self.ram2, self.parbit)
+
+    def __lt__(self, other):
+        if self.obj != other.obj:
+            return self.obj < other.obj
+        if self.space != other.space:
+            return self.space < other.space
+        if self.pg != other.pg:
+            return self.pg < other.pg
+        return self.le < other.le
 
 
-class XCache():
+class Mem():
 
-    def __init__(self, side, ctx):
-        self.side = side
-        self.ctx = ctx
-        self.ram = ctx.body[:0x20000]
-        self.rame = ctx.body[0x20000:0x22000]
-        self.raml = ctx.body[0x24000:0x26000]
-        self.lines = []
-        for n, ptr in enumerate(range(0, len(self.ram), 8)):
-            i = struct.unpack("<Q", self.ram[ptr:ptr+8])
-            if n & 3 in (1, 2):
-                self.lines.append(Line(self.side, n, i[0], self.raml[n >> 1]))
-            else:
-                self.lines.append(Line(self.side, n, i[0], self.rame[n >> 1]))
+    def __init__(self, context_file):
+        self.tag_ctx = list(context.contexts(filename=context_file, regex="MEM.ram"))[0]
+        self.ram_ctx = list(context.contexts(filename=context_file, regex="MEM.bitt"))[0]
 
-    def __iter__(self):
-        yield from self.lines
+        print(self.ram_ctx)
+        self.tags = []
+        for p in range(0, len(self.tag_ctx.body), 8):
+            self.tags.append(Tag(p >> 3, self.tag_ctx.body[p:p+8]))
 
-class MemBoard():
-    def __init__(self, acache, bcache):
-        self.acache = acache
-        self.bcache = bcache
-        self.check_lru()
-
-    def __iter__(self):
-        yield from self.acache
-        yield from self.bcache
-
-    def check_lru(self):
-        l = []
-        for i in range(4096):
-            l.append(set())
-        for i in self:
-            l[i.line >> 2].add(i.lru)
-        for n, i in enumerate(l):
-            if len(i) == 8:
-                continue
-            print("LRU trouble", n, i)
-        print("End of LRU check")
-
-    def stats(self):
-        unused = [0] * 4096
-        st = [0] * 4
-        lru = [0] * 8
-        spc = [0] * 8
-        for line in self:
-            if line.stat == 2 and line.d:
-                print("MOD but RO", line)
-            st[line.stat] += 1
-            lru[line.lru] += 1
-            spc[line.spc] += 1
-            if line.stat in (0, 3):
-                unused[line.line>>2] += 1
-        print("STAT\t", st)
-        print("LRU\t", lru)
-        print("SPC\t", spc)
-        full = 0
-        hist = [0] * 9
-        for n, i in enumerate(unused):
-            hist[i] += 1
-        print("HIST\t", hist)
-
-    def dump(self):
-        for line in self:
-            print(line)
+        for tag in sorted(self.tags):
+            print(tag)
+            pg = self.ram_ctx.body[tag.ptr:tag.ptr + (1<<10)]
+            for o in range(0, len(pg), 16):
+                t, v = struct.unpack("<QQ", pg[o:o+16])
+                print("   %02x %08x %016x %016x" % (o >> 4, (o + (tag.pg<<10))<<3, t, v))
 
 def main():
-    acache = None
-    bcache = None
-    filename = sys.argv[1]
-    for ctx in context.contexts(filename=filename, regex="[.][AB]CACHE"):
-        if '.ACACHE' in ctx.ident:
-            acache = XCache("A", ctx)
-        elif '.BCACHE' in ctx.ident:
-            bcache = XCache("B", ctx)
-    mem = MemBoard(acache, bcache)
-    mem.stats()
-    mem.dump()
+    m = Mem(sys.argv[1])
 
 if __name__ == "__main__":
     main()
