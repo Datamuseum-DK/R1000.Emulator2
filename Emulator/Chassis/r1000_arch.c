@@ -1958,30 +1958,31 @@ seq_int_reads(void)
 		break;
 	}
 
-	if (!(r1k->seq_urand & 0x2)) {
-		r1k->seq_val_bus = r1k->seq_pcseg << 32;
-	} else {
+	if (r1k->seq_urand & 0x2) {
 		r1k->seq_val_bus = r1k->seq_retseg << 32;
+	} else {
+		r1k->seq_val_bus = r1k->seq_pcseg << 32;
 	}
-	r1k->seq_val_bus ^= 0xffffffffULL << 32;
-	r1k->seq_val_bus ^= (r1k->seq_code_offset >> 12) << 16;
-	r1k->seq_val_bus ^= 0xffffULL << 16;
+
 	switch (internal_reads) {
 	case 1:
-		r1k->seq_val_bus |= r1k->seq_curins ^ 0xffff;
+		r1k->seq_val_bus |= r1k->seq_curins;
 		break;
 	case 2:
-		r1k->seq_val_bus |= r1k->seq_display;
+		r1k->seq_val_bus |= r1k->seq_display ^ 0xffff;
 		break;
 	case 3:
-		r1k->seq_val_bus |= r1k->seq_topu & 0xffff;
+		r1k->seq_val_bus |= r1k->seq_topu ^ 0xffff;
 		break;
 	default:
-		r1k->seq_val_bus |= (r1k->seq_code_offset << 4) & 0xffff;
+		// This is a variance from the schematics, which drive
+		// the top three bits of seq_code_offset in all cases.
+		// (See: SEQ.p29)
+		r1k->seq_val_bus |= (r1k->seq_code_offset << 4);
 		r1k->seq_val_bus |= r1k->seq_curr_lex & 0xf;
-		r1k->seq_val_bus ^= 0xffff;	// XXX: Not 0xfffff or 0xffff0 ?!
 		break;
 	}
+	r1k->seq_val_bus = ~r1k->seq_val_bus;
 }
 
 static bool
@@ -2837,8 +2838,7 @@ seq_q4(void)
 				r1k->seq_topu ^= 0xffff;
 				break;
 			case 1:
-				r1k->seq_topu = mp_fiu_bus;
-				r1k->seq_topu &= 0xffff;
+				r1k->seq_topu = mp_fiu_bus & 0xffff;
 				break;
 			case 2:
 				r1k->seq_topu = mp_cur_uadr;
