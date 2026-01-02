@@ -525,7 +525,7 @@ struct r1000_arch_state {
 	uint64_t seq_val_bus;
 	uint64_t seq_output_ob;
 	uint64_t seq_name_bus;
-	uint64_t seq_coff;
+	uint64_t seq_code_offset;
 	unsigned seq_uadr_decode;
 	unsigned seq_display;
 	unsigned seq_decram;
@@ -1932,13 +1932,13 @@ seq_int_reads(void)
 {
 	unsigned internal_reads = UIR_SEQ_IRD;
 	switch (r1k->seq_urand & 3) {
-	case 3:	r1k->seq_coff = r1k->seq_retrn_pc_ofs; break;
-	case 2: r1k->seq_coff = r1k->seq_branch_offset; break;
-	case 1: r1k->seq_coff = r1k->seq_macro_pc_offset; break;
-	case 0: r1k->seq_coff = r1k->seq_branch_offset; break;
+	case 3:	r1k->seq_code_offset = r1k->seq_retrn_pc_ofs; break;
+	case 2: r1k->seq_code_offset = r1k->seq_branch_offset; break;
+	case 1: r1k->seq_code_offset = r1k->seq_macro_pc_offset; break;
+	case 0: r1k->seq_code_offset = r1k->seq_branch_offset; break;
 	default: assert(0);
 	}
-	r1k->seq_coff ^= 0x7fff;
+	r1k->seq_code_offset ^= 0x7fff;
 	if (internal_reads == 0) {
 		r1k->seq_typ_bus = ~mp_typ_bus;
 		r1k->seq_val_bus = ~mp_val_bus;
@@ -1964,7 +1964,7 @@ seq_int_reads(void)
 		r1k->seq_val_bus = r1k->seq_retseg << 32;
 	}
 	r1k->seq_val_bus ^= 0xffffffffULL << 32;
-	r1k->seq_val_bus ^= (r1k->seq_coff >> 12) << 16;
+	r1k->seq_val_bus ^= (r1k->seq_code_offset >> 12) << 16;
 	r1k->seq_val_bus ^= 0xffffULL << 16;
 	switch (internal_reads) {
 	case 1:
@@ -1977,7 +1977,7 @@ seq_int_reads(void)
 		r1k->seq_val_bus |= r1k->seq_topu & 0xffff;
 		break;
 	default:
-		r1k->seq_val_bus |= (r1k->seq_coff << 4) & 0xffff;
+		r1k->seq_val_bus |= (r1k->seq_code_offset << 4) & 0xffff;
 		r1k->seq_val_bus |= r1k->seq_curr_lex & 0xf;
 		r1k->seq_val_bus ^= 0xffff;	// XXX: Not 0xfffff or 0xffff0 ?!
 		break;
@@ -2627,7 +2627,7 @@ seq_q3(void)
 		if (!resolve_drive) {
 			mp_adr_bus = r1k->seq_resolve_offset << 7;
 		} else if (adr_is_code) {
-			mp_adr_bus = (r1k->seq_coff >> 3) << 7;
+			mp_adr_bus = (r1k->seq_code_offset >> 3) << 7;
 		} else {
 			mp_adr_bus = r1k->seq_output_ob << 7;
 		}
