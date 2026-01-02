@@ -556,7 +556,6 @@ struct r1000_arch_state {
 	bool seq_bad_hint_enable;
 	bool seq_ferr;
 	bool seq_late_macro_event;
-	bool seq_sf_stop;
 	bool seq_s_state_stop;
 	bool seq_clock_stop_1;
 	bool seq_clock_stop_5;
@@ -2184,27 +2183,22 @@ seq_q3clockstop(void)
 
 	if (mp_fiu_freeze && !(r1k->seq_diag & 0x2)) {
 		r1k->seq_diag |= 0x02;
-		// output.freze = 1;
 		mp_sync_freeze |= 2;
 	} else if (!mp_fiu_freeze && (r1k->seq_diag & 0x2) && !(r1k->seq_diag & 0x4)) {
 		r1k->seq_diag |= 0x04;
-		// output.sync = 1;
 		mp_sync_freeze |= 4;
 	} else if (!mp_fiu_freeze && (r1k->seq_diag & 0x2) && (r1k->seq_diag & 0x4)) {
 		r1k->seq_diag &= ~0x02;
-		// output.freze = 0;
 		mp_sync_freeze &= ~2;
 		r1k->seq_countdown = 5;
 	} else if (!mp_fiu_freeze && !(r1k->seq_diag & 0x2) && (r1k->seq_diag & 0x4)) {
 		if (--r1k->seq_countdown == 0) {
-			// output.sync = 0;
 			r1k->seq_diag &= ~0x04;
 			mp_sync_freeze &= ~4;
 		}
 	}
 
-	r1k->seq_sf_stop = !(r1k->seq_diag == 0);
-	mp_sf_stop = !(r1k->seq_diag == 0);
+	mp_sf_stop = r1k->seq_diag != 0;
 	mp_freeze = (r1k->seq_diag & 3) != 0;
 
 	unsigned clock_stop = 0;
@@ -2231,7 +2225,7 @@ seq_q3clockstop(void)
 		r1k->seq_s_state_stop = false;
 	}
 
-	if (r1k->seq_sf_stop) {
+	if (mp_sf_stop) {
 		mp_clock_stop = false;
 		mp_state_clk_stop = false;
 		r1k->seq_s_state_stop = false;
@@ -2511,7 +2505,7 @@ seq_q3(void)
 		mp_clock_stop_7 = true;
 	}
 
-	if (!r1k->seq_sf_stop && mp_seq_prepped) {
+	if (!mp_sf_stop && mp_seq_prepped) {
 		mp_nua_bus = nua & 0x3fff;
 	}
 
@@ -2651,11 +2645,8 @@ seq_q3(void)
 static void
 seq_q4(void)
 {
-	bool aclk = !r1k->seq_sf_stop;
 	bool state_clock = r1k->seq_s_state_stop && !r1k->seq_stop;
 
-	//bool bhen = !((r1k->seq_late_macro_event && !r1k->seq_bad_hint) || (!mp_clock_stop_6));
-	//bool bhcke = r1k->seq_s_state_stop && bhen;
 	bool bhcke = r1k->seq_s_state_stop && mp_clock_stop_6 && (!r1k->seq_late_macro_event || r1k->seq_bad_hint);
 	bool dispatch = r1k->seq_wanna_dispatch || r1k->seq_early_macro_pending || (r1k->seq_late_macro_pending != 8);
 
@@ -2689,13 +2680,13 @@ seq_q4(void)
 			r1k->seq_curr_lex ^= 0xf;
 		}
 	}
-	if (aclk) {
-		r1k->seq_late_macro_event = !((!state_clock) || !(r1k->seq_macro_event && !r1k->seq_early_macro_pending));
-		if (!mp_seq_halted) {
-			mp_seq_halted = state_clock && !RNDX(RND_HALT);
-			if (mp_seq_halted)
-				printf("SEQ HALTED\n");
-		}
+	if (!mp_sf_stop) {
+		r1k->seq_late_macro_event = state_clock && r1k->seq_macro_event && !r1k->seq_early_macro_pending;
+
+		mp_seq_halted |= state_clock && !RNDX(RND_HALT);
+		if (mp_seq_halted)
+			printf("SEQ HALTED\n");
+
 		r1k->seq_early_macro_pending = mp_macro_event != 0;
 		r1k->seq_emac = mp_macro_event ^ 0x7f;
 		if (r1k->seq_early_macro_pending) {
@@ -2889,7 +2880,7 @@ seq_q4(void)
 		r1k->seq_fiu &= 0x3fff;
 	}
 
-	if (aclk) {
+	if (!mp_sf_stop) {
 		if (!r1k->seq_maybe_dispatch) {
 			r1k->seq_late_u = 7;
 		} else {
@@ -3043,7 +3034,7 @@ seq_q4(void)
 
 	mp_clock_stop_7 = !r1k->seq_bad_hint && r1k->seq_l_macro_hic;
 	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
-	if (!r1k->seq_sf_stop && mp_seq_prepped) {
+	if (!mp_sf_stop && mp_seq_prepped) {
 		r1k->seq_uir = r1k->seq_wcsram[mp_nua_bus] ^ (0x7fULL << 13);	// Invert condsel
 		mp_nxt_cond_sel = UIR_SEQ_CSEL;
 	}
@@ -3526,7 +3517,7 @@ val_cond(void)
 		r1k->val_thiscond = !r1k->val_coh;
 		break;
 	case 0x09:	// L VAL_ALU_OVERFLOW
-		r1k->val_thiscond = r1k->val_ovren || !(val_ovrsgn() ^ r1k->val_sub_else_add ^ (!r1k->val_coh) ^ r1k->val_cmsb);
+		r1k->val_thiscond = r1k->val_ovren || (val_ovrsgn() ^ r1k->val_sub_else_add ^ r1k->val_coh ^ r1k->val_cmsb);
 		break;
 	case 0x0a:	// L VAL_ALU_LT_ZERO
 		r1k->val_thiscond = r1k->val_cmsb;
