@@ -2658,6 +2658,18 @@ seq_q4(void)
 	//bool bhcke = r1k->seq_s_state_stop && bhen;
 	bool bhcke = r1k->seq_s_state_stop && mp_clock_stop_6 && (!r1k->seq_late_macro_event || r1k->seq_bad_hint);
 	bool dispatch = r1k->seq_wanna_dispatch || r1k->seq_early_macro_pending || (r1k->seq_late_macro_pending != 8);
+
+	if (state_clock && !dispatch) {
+		Trace(trace_macro_prog,
+		    "s %06jx o %05x d = %04x u = %04x c = %08jx",
+		    (uintmax_t)r1k->seq_pcseg,
+		    0x7fff ^ r1k->seq_macro_pc_offset,
+		    0xffff ^ r1k->seq_display,
+		    mp_cur_uadr,
+		    (uintmax_t)(r1k->seq_cur_name ^ 0xffffffff)
+		);
+	}
+
 	bool update_display = false;
 	if (state_clock) {
 		seq_nxt_lex_valid();
