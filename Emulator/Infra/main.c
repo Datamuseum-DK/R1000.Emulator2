@@ -100,7 +100,7 @@ finish(int status, const char *why)
 	if (dt > 0 && dr > dt)
 		printf("  1/%.1f\t\tSystemC Simulation ratio\n", dr / dt);
 	else if (dt > 0)
-		printf("  %.1f\t\tSystemC Simulation ratio\n", dt / dr);
+		printf("  %10.4f\t\tSystemC Simulation ratio\n", dt / dr);
 
 	ds = simclock * 1e-9;
 	printf("  %15.9f s\tIOC simulation\n", ds);
