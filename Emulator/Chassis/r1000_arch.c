@@ -2017,36 +2017,28 @@ seq_cond9(unsigned condsel)
 	switch (condsel) {
 	case 0x4f: // DISP_COND0
 		return ((r1k->seq_decode & 0x7) == 0);
-		break;
 	case 0x4e: // True
 		return (true);
-		break;
 	case 0x4d: // M_IBUFF_MT
 		return (r1k->seq_m_ibuff_mt);
-		break;
 	case 0x4c: // M_BRK_CLASS
 		return (r1k->seq_m_break_class);
-		break;
 	case 0x4b: // M_TOS_INVLD
 		return (r1k->seq_m_tos_invld);
-		break;
 	case 0x4a: // M_RES_REF
 		return (r1k->seq_m_res_ref);
-		break;
 	case 0x49: // M_OVERFLOW
 		{
 		unsigned csa = mp_csa_nve;
 		unsigned dec = r1k->seq_decode >> 3;
 		return (csa <= ((dec >> 3) | 12));
 		}
-		break;
 	case 0x48: // M_UNDERFLOW
 		{
 		unsigned csa = mp_csa_nve;
 		unsigned dec = r1k->seq_decode >> 3;
 		return (csa >= (dec & 7));
 		}
-		break;
 	default:
 		return (false);
 	}
@@ -2059,28 +2051,20 @@ seq_cond8(unsigned condsel)
 	switch (condsel) {
 	case 0x47: // E STACK_SIZE
 		return (r1k->seq_stack_size_zero);
-		break;
 	case 0x46: // E LATCHED_COND
 		return (r1k->seq_latched_cond);
-		break;
 	case 0x45: // L SAVED_LATCHED
 		return (r1k->seq_saved_latched);
-		break;
 	case 0x44: // L TOS_VLD.COND
 		return (r1k->seq_tos_vld_cond);
-		break;
 	case 0x43: // L LEX_VLD.COND
 		return (r1k->seq_lxval);
-		break;
 	case 0x42: // E IMPORT.COND
 		return (r1k->seq_resolve_address != 0xf);
-		break;
 	case 0x41: // E REST_PC_DEC
 		return ((r1k->seq_rq >> 1) & 1);
-		break;
 	case 0x40: // E RESTARTABLE
 		return ((r1k->seq_rq >> 3) & 1);
-		break;
 	default:
 		return (false);
 	}
@@ -2523,50 +2507,54 @@ seq_q3(void)
 
 	seq_q3clockstop();
 
-
-	bool bar8;
-	{
-	unsigned csa = mp_csa_nve;
-	unsigned dec = r1k->seq_decode >> 3;
-
-	if (csa < (dec & 7))
-		r1k->seq_late_macro_pending = 0;
-	else if (csa > ((dec >> 3) | 12))
-		r1k->seq_late_macro_pending = 1;
-	else if (r1k->seq_stop)
-		r1k->seq_late_macro_pending = 2;
-	else if (!r1k->seq_m_res_ref)
-		r1k->seq_late_macro_pending = 3;
-	else if (!r1k->seq_m_tos_invld)
-		r1k->seq_late_macro_pending = 4;
-	else if (!r1k->seq_m_break_class)
-		r1k->seq_late_macro_pending = 6;
-	else if (!r1k->seq_m_ibuff_mt)
-		r1k->seq_late_macro_pending = 7;
-	else
-		r1k->seq_late_macro_pending = 8;
-	}
-
-	r1k->seq_macro_event = (!r1k->seq_wanna_dispatch) && (r1k->seq_early_macro_pending || (r1k->seq_late_macro_pending != 8));
-	if (r1k->seq_macro_event) {
-		bar8 = (r1k->seq_macro_event && !r1k->seq_early_macro_pending) && (r1k->seq_late_macro_pending >= 7);
-	} else {
-		bar8 = !(
-			(((r1k->seq_decode & 0x7) == 4) && !r1k->seq_wanna_dispatch) ||
-			(((r1k->seq_decode & 0x7) == 4) && r1k->seq_maybe_dispatch) ||
-			(r1k->seq_wanna_dispatch && r1k->seq_maybe_dispatch) ||
-			(r1k->seq_stop)
-		);
-	}
-
-	if (!bar8) {
-		mp_mem_abort_e = false;
-	} else if (mp_mem_cond) {
+	if (mp_mem_cond) {
 		mp_mem_abort_e = true;
 	} else if (mp_mem_cond_pol ^ r1k->seq_q3cond) {
 		mp_mem_abort_e = true;
 	} else {
 		mp_mem_abort_e = false;
+	}
+
+
+	if (r1k->seq_wanna_dispatch) {
+		r1k->seq_macro_event = 0;
+		if (r1k->seq_stop || r1k->seq_maybe_dispatch)
+			mp_mem_abort_e = false;
+	} else if (r1k->seq_early_macro_pending) {
+		r1k->seq_macro_event = 1;
+		mp_mem_abort_e = false;
+	} else {
+
+		unsigned csa = mp_csa_nve;
+		unsigned dec = r1k->seq_decode >> 3;
+
+		r1k->seq_macro_event = 1;
+		if (csa < (dec & 7)) {
+			r1k->seq_late_macro_pending = 0;
+			mp_mem_abort_e = false;
+		} else if (csa > ((dec >> 3) | 12)) {
+			r1k->seq_late_macro_pending = 1;
+			mp_mem_abort_e = false;
+		} else if (r1k->seq_stop) {
+			r1k->seq_late_macro_pending = 2;
+			mp_mem_abort_e = false;
+		} else if (!r1k->seq_m_res_ref) {
+			r1k->seq_late_macro_pending = 3;
+			mp_mem_abort_e = false;
+		} else if (!r1k->seq_m_tos_invld) {
+			r1k->seq_late_macro_pending = 4;
+			mp_mem_abort_e = false;
+		} else if (!r1k->seq_m_break_class) {
+			r1k->seq_late_macro_pending = 6;
+			mp_mem_abort_e = false;
+		} else if (!r1k->seq_m_ibuff_mt) {
+			r1k->seq_late_macro_pending = 7;
+		} else {
+			r1k->seq_macro_event = 0;
+			r1k->seq_late_macro_pending = 8;
+			if (((r1k->seq_decode & 0x7) == 4) || r1k->seq_stop)
+				mp_mem_abort_e = false;
+		}
 	}
 
 	if (RNDX(RND_TOS_VLB) && !r1k->seq_stop) {
