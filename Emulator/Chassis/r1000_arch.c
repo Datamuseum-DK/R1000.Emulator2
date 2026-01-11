@@ -534,7 +534,6 @@ struct r1000_arch_state {
 	bool seq_ibuf_fill;
 	bool seq_uses_tos;
 	bool seq_l_macro_hic;
-	bool seq_m_pc_mb;
 	unsigned seq_n_in_csa;
 	unsigned seq_decode;
 	unsigned seq_wanna_dispatch;
@@ -2690,12 +2689,12 @@ seq_q4(void)
 			mode = 0;
 		} else {
 			if (!r1k->seq_bad_hint) {
-				r1k->seq_m_pc_mb = RNDX(RND_M_PC_MD0);
-			} else {
-				r1k->seq_m_pc_mb = !((r1k->seq_bhreg >> 2) & 1);
+				if (RNDX(RND_M_PC_MD0))
+					mode |= 2;
+			} else if (!((r1k->seq_bhreg >> 2) & 1)) {
+				mode |= 2;
 			}
 
-			if (r1k->seq_m_pc_mb) mode |= 2;
 			if (RNDX(RND_M_PC_MD1)) mode |= 1;
 		}
 		if (mode == 3) {
@@ -2776,10 +2775,11 @@ seq_q4(void)
 	}
 
 	if (bhcke) {
-		bool dmdisp = !(!r1k->seq_bad_hint || (r1k->seq_bhreg & 0x04));
-		bool crnor0a = !(crnana || dmdisp);
-		if (!crnor0a)
+		if (crnana) {
 			r1k->seq_topbot = !r1k->seq_topbot;
+		} else if (r1k->seq_bad_hint && !(r1k->seq_bhreg & 0x04)) {
+			r1k->seq_topbot = !r1k->seq_topbot;
+		}
 
 		if (r1k->seq_topbot) {
 			r1k->seq_curins = r1k->seq_cbot;
