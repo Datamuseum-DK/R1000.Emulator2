@@ -2021,7 +2021,7 @@ seq_cond9(unsigned condsel)
 	case 0x4d: // M_IBUFF_MT
 		return (r1k->seq_m_ibuff_mt);
 	case 0x4c: // M_BRK_CLASS
-		return (r1k->seq_m_break_class);
+		return (!r1k->seq_m_break_class);
 	case 0x4b: // M_TOS_INVLD
 		return (r1k->seq_m_tos_invld);
 	case 0x4a: // M_RES_REF
@@ -2543,7 +2543,7 @@ seq_q3(void)
 		} else if (!r1k->seq_m_tos_invld) {
 			r1k->seq_late_macro_pending = 4;
 			mp_mem_abort_e = false;
-		} else if (!r1k->seq_m_break_class) {
+		} else if (r1k->seq_m_break_class) {
 			r1k->seq_late_macro_pending = 6;
 			mp_mem_abort_e = false;
 		} else if (!r1k->seq_m_ibuff_mt) {
@@ -2730,7 +2730,7 @@ seq_q4(void)
 		if (crnana && !r1k->seq_topbot)
 			r1k->seq_cbot = dsp;
 		if (!RNDX(RND_BR_MSK_L)) {
-			r1k->seq_break_mask = (r1k->seq_val_bus >> 16) & 0xffff;
+			r1k->seq_break_mask = (r1k->seq_val_bus >> 16) & 0x7fff;
 		}
 
 		if (!RNDX(RND_NAME_LD)) {
@@ -2795,9 +2795,9 @@ seq_q4(void)
 		}
 
 		if (ccl == 0) {
-			r1k->seq_m_break_class = true;
+			r1k->seq_m_break_class = false;
 		} else {
-			r1k->seq_m_break_class = !((r1k->seq_break_mask >> (15 - ccl)) & 1);
+			r1k->seq_m_break_class = (r1k->seq_break_mask >> (15 - ccl)) & 1;
 		}
 	}
 
