@@ -627,7 +627,7 @@ struct r1000_arch_state {
 	bool typ_coh;
 	bool typ_com;
 	uint32_t typ_ofreg;
-	bool typ_ppriv;
+	bool typ_pass_priv;
 	bool typ_last_cond;
 	bool typ_is_binary;
 	bool typ_sub_else_add;
@@ -3070,10 +3070,10 @@ static bool
 typ_clev(void)
 {
 	return (!(
-		(!(r1k->typ_rand != 0x4) && !(TYP_A_LIT() != UIR_TYP_CLIT)) ||
-		(!(r1k->typ_rand != 0x6) && !(TYP_A_LIT() != TYP_B_LIT())) ||
-		(!(r1k->typ_rand != 0x5) && !(TYP_B_LIT() != UIR_TYP_CLIT)) ||
-		(!(r1k->typ_rand != 0x7) && !(TYP_A_LIT() != TYP_B_LIT()) && !(TYP_B_LIT() != UIR_TYP_CLIT))
+		((r1k->typ_rand == 0x4) && (TYP_A_LIT() == UIR_TYP_CLIT)) ||
+		((r1k->typ_rand == 0x6) && (TYP_A_LIT() == TYP_B_LIT())) ||
+		((r1k->typ_rand == 0x5) && (TYP_B_LIT() == UIR_TYP_CLIT)) ||
+		((r1k->typ_rand == 0x7) && (TYP_A_LIT() == TYP_B_LIT()) && (TYP_B_LIT() == UIR_TYP_CLIT))
 	));
 }
 
@@ -3194,7 +3194,7 @@ typ_cond(void)
 		r1k->typ_cond = (!(typ_bin_op_pass() || typ_priv_path_eq()));
 		break;
 	case 0x34:	// E - PASS_PRIVACY_BIT
-		r1k->typ_cond = (r1k->typ_ppriv);
+		r1k->typ_cond = (r1k->typ_pass_priv);
 		break;
 	case 0x35:	// ML - B_BUS_BIT_32
 		r1k->typ_cond = (TYP_B_BIT(32));
@@ -3329,34 +3329,31 @@ typ_q2(void)
 	mp_clock_stop_3 = true;
 	mp_clock_stop_4 = true;
 	unsigned selcond = 0x00;
-	if (r1k->typ_ppriv) {
+	if (r1k->typ_pass_priv) {
 		selcond = 0x80 >> priv_check;
 	}
 #define TYP_UEV (UEV_CLASS|UEV_BIN_EQ|UEV_BIN_OP|UEV_TOS_OP|UEV_TOS1_OP|UEV_CHK_SYS)
 	mp_seq_uev &= ~TYP_UEV;
 	if (micros_en) {
-		if (selcond == 0x40 && typ_bin_op_pass())
+		if (selcond == 0x40 && typ_bin_op_pass()) {
 			mp_seq_uev |= UEV_BIN_OP;
-		if (selcond == 0x80 && typ_priv_path_eq() && typ_bin_op_pass())
+		}
+		if (selcond == 0x80 && typ_priv_path_eq() && typ_bin_op_pass()) {
 			mp_seq_uev |= UEV_BIN_EQ;
-		if ((0x3 < r1k->typ_rand && r1k->typ_rand < 0x8) && typ_clev())
-			mp_seq_uev |= UEV_CLASS;
-		if ((selcond == 0x10 && typ_a_op_pass()) || (selcond == 0x04 && typ_b_op_pass()))
-			mp_seq_uev |= UEV_TOS1_OP;
-		if ((selcond == 0x20 && typ_a_op_pass()) || (selcond == 0x08 && typ_b_op_pass()))
-			mp_seq_uev |= UEV_TOS_OP;
-		if ((!((r1k->typ_rand != 0xe) || !(TYP_B_LIT() != UIR_TYP_CLIT))))
-			mp_seq_uev |= UEV_CHK_SYS;
-
-		if ((!((r1k->typ_rand != 0xe) || !(TYP_B_LIT() != UIR_TYP_CLIT)))) {
 			mp_clock_stop_3 = false;
 		}
-
 		if ((0x3 < r1k->typ_rand && r1k->typ_rand < 0x8) && typ_clev()) {
+			mp_seq_uev |= UEV_CLASS;
 			mp_clock_stop_3 = false;
 		}
-
-		if (typ_priv_path_eq() && typ_bin_op_pass() && selcond == 0x80) {
+		if ((selcond == 0x10 && typ_a_op_pass()) || (selcond == 0x04 && typ_b_op_pass())) {
+			mp_seq_uev |= UEV_TOS1_OP;
+		}
+		if ((selcond == 0x20 && typ_a_op_pass()) || (selcond == 0x08 && typ_b_op_pass())) {
+			mp_seq_uev |= UEV_TOS_OP;
+		}
+		if ((r1k->typ_rand == 0xe) && (TYP_B_LIT() != UIR_TYP_CLIT)) {
+			mp_seq_uev |= UEV_CHK_SYS;
 			mp_clock_stop_3 = false;
 		}
 	}
@@ -3439,8 +3436,7 @@ typ_q4(void)
 			}
 
 			if (priv_check != 7) {
-				bool set_pass_priv = r1k->typ_rand != 0xd;
-				r1k->typ_ppriv = set_pass_priv;
+				r1k->typ_pass_priv = r1k->typ_rand != 0xd;
 			}
 		}
 	}
