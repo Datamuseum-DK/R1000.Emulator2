@@ -3260,11 +3260,11 @@ typ_q2(void)
 		r1k->typ_b = tv_find_ab(UIR_TYP_B, UIR_TYP_FRM, false, true, r1k->typ_rfram);
 	}
 
-	bool divide = r1k->typ_rand != 0xb;
+	bool divide = r1k->typ_rand == 0xb;
 	bool acond = true;
-	if (divide && r1k->typ_last_cond)
+	if (!divide && r1k->typ_last_cond)
 		acond = false;
-	if (!divide && mp_q_bit)
+	if (divide && mp_q_bit)
 		acond = false;
 	unsigned tmp, idx, alurand, alufunc = UIR_TYP_AFNC;
 
@@ -3621,7 +3621,7 @@ static void
 val_q2(void)
 {
 
-	bool divide = r1k->val_rand != 0xb;
+	bool divide = r1k->val_rand == 0xb;
 	if (mp_fiu_oe != 0x02) {
 		r1k->val_a = tv_find_ab(UIR_VAL_A, UIR_VAL_FRM, true, false, r1k->val_rfram);
 		r1k->val_amsb = r1k->val_a >> 63;
@@ -3631,7 +3631,7 @@ val_q2(void)
 		r1k->val_bmsb = r1k->val_b >> 63;
 	}
 
-	if (r1k->val_rand == 0xc) {
+	if (r1k->val_rand == 0xc) { // START_MULTIPLY
 		r1k->val_malat = ~r1k->val_a;
 		r1k->val_mblat = ~r1k->val_b;
 	}
@@ -3642,7 +3642,7 @@ val_q2(void)
 	} else {
 		proma |= (15 - r1k->val_rand) << 5;
 	}
-	if (!((r1k->val_last_cond && divide) || (mp_q_bit && !divide))) {
+	if (!((r1k->val_last_cond && !divide) || (mp_q_bit && divide))) {
 		proma |= 0x100;
 	}
 
@@ -3676,10 +3676,12 @@ val_q4(void)
 {
 
 	if (mp_ram_stop && !mp_freeze) {
-		uint64_t fiu = 0, mux = 0;
+		uint64_t fiu = 0;
+		uint64_t val_c = 0;
 		bool c_source = UIR_VAL_CSRC;
 		bool split_c_src = r1k->val_rand == 0x4;
-		if (split_c_src || !c_source) {
+
+		if (!c_source || split_c_src) {
 			fiu = ~mp_fiu_bus;
 		}
 		if (!c_source && (r1k->val_rand == 3 || r1k->val_rand == 6)) {
@@ -3690,34 +3692,34 @@ val_q4(void)
 			unsigned sel = UIR_VAL_SEL;
 			switch (sel) {
 			case 0x0:
-				mux = r1k->val_alu << 1;
-				mux |= 1;
+				val_c = r1k->val_alu << 1;
+				val_c |= 1;
 				break;
 			case 0x1:
-				mux = r1k->val_alu >> 16;
-				mux |= 0xffffULL << 48;
+				val_c = r1k->val_alu >> 16;
+				val_c |= 0xffffULL << 48;
 				break;
 			case 0x2:
-				mux = r1k->val_alu;
+				val_c = r1k->val_alu;
 				break;
 			case 0x3:
-				mux = r1k->val_wdr;
+				val_c = r1k->val_wdr;
 				break;
 			default:
 				assert(0);
 			}
 		}
-		uint64_t val_c;
-		if (!split_c_src && !c_source) {
-			val_c = fiu;
-		} else if (!split_c_src) {
-			val_c = mux;
+
+		if (!split_c_src) {
+			if (!c_source) {
+				val_c = fiu;
+			}
 		} else if (c_source) {
-			val_c = fiu & 0xffffffffULL;
-			val_c |= mux & 0xffffffffULL << 32;
+			val_c &= 0xffffffff00000000ULL;
+			val_c |= fiu & 0x00000000ffffffffULL;
 		} else {
-			val_c = mux & 0xffffffffULL;
-			val_c |= fiu & 0xffffffffULL << 32;
+			val_c &= 0x00000000ffffffffULL;
+			val_c |= fiu & 0xffffffff00000000ULL;
 		}
 
 		uint32_t a;
@@ -3743,14 +3745,14 @@ val_q4(void)
 			r1k->val_rfram[cadr] = ~val_c;
 
 		if (mp_clock_stop) {
-			bool divide = r1k->val_rand != 0xb;
+			bool divide = r1k->val_rand == 0xb;
 			if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
 				r1k->val_wdr = ~mp_val_bus;
 			}
 			if (UIR_VAL_C == 0x28) {
 				r1k->val_count = val_c;
 				r1k->val_count &= 0x3ff;
-			} else if (r1k->val_rand == 0x2 || !divide) {
+			} else if (r1k->val_rand == 0x2 || divide) {
 				r1k->val_count += 1;
 				r1k->val_count &= 0x3ff;
 			} else if (r1k->val_rand == 0x1) {
@@ -3758,7 +3760,7 @@ val_q4(void)
 				r1k->val_count &= 0x3ff;
 			}
 
-			mp_nxt_q_bit = !(((!divide) && (mp_q_bit ^ r1k->val_mbit ^ (!r1k->val_coh))) || (divide && r1k->val_coh));
+			mp_nxt_q_bit = !(((divide) && (mp_q_bit ^ r1k->val_mbit ^ (!r1k->val_coh))) || (!divide && r1k->val_coh));
 			r1k->val_mbit = r1k->val_cmsb;
 
 			if (r1k->val_rand == 0x5) {
