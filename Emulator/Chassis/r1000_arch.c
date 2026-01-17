@@ -2058,7 +2058,7 @@ seq_cond8(unsigned condsel)
 	case 0x43: // L LEX_VLD.COND
 		return (r1k->seq_lxval);
 	case 0x42: // E IMPORT.COND
-		return (r1k->seq_resolve_address != 0xf);
+		return (r1k->seq_resolve_address != 0x0);
 	case 0x41: // E REST_PC_DEC
 		return ((r1k->seq_rq >> 1) & 1);
 	case 0x40: // E RESTARTABLE
@@ -2074,13 +2074,13 @@ seq_nxt_lex_valid(void)
 
 	switch((r1k->seq_rndx >> 5) & 0x7) {	// SEQ microarch pdf pg 33
 	case 0:	// Clear Lex Level
-		r1k->seq_lex_valid &= ~(1 << (15 - r1k->seq_resolve_address));
+		r1k->seq_lex_valid &= ~(1 << r1k->seq_resolve_address);
 		break;
 	case 1: // Set Lex Level
-		r1k->seq_lex_valid |= (1 << (15 - r1k->seq_resolve_address));
+		r1k->seq_lex_valid |= (1 << r1k->seq_resolve_address);
 		break;
 	case 4: // Clear Greater Than Lex Level
-		r1k->seq_lex_valid &= ~(0xfffe << (15 - r1k->seq_resolve_address));
+		r1k->seq_lex_valid &= ~(0xfffe << r1k->seq_resolve_address);
 		break;
 	case 7: // Clear all Lex Levels
 		r1k->seq_lex_valid = 0;
@@ -2223,16 +2223,16 @@ static void
 seq_p1(void)
 {
 	if (r1k->seq_maybe_dispatch && !(r1k->seq_display >> 15)) {
-		r1k->seq_resolve_address = r1k->seq_display >> 9;
+		r1k->seq_resolve_address = (~r1k->seq_display) >> 9;
 	} else {
 		switch (UIR_SEQ_LAUIR) {
 		case 0:
-			r1k->seq_resolve_address = ~r1k->seq_curr_lex;
+			r1k->seq_resolve_address = r1k->seq_curr_lex;
 			break;
 		case 1:
 			switch (UIR_SEQ_IRD) {
 			case 0x0:
-				r1k->seq_resolve_address = ~mp_val_bus + 1;
+				r1k->seq_resolve_address = mp_val_bus + 0xf;
 				break;
 			case 0x1:
 			case 0x2:
@@ -2240,12 +2240,12 @@ seq_p1(void)
 				assert(0);
 				break;
 			default:
-				r1k->seq_resolve_address = ~r1k->seq_curr_lex + 1;
+				r1k->seq_resolve_address = r1k->seq_curr_lex + 0xf;
 				break;
 			}
 			break;
-		case 2: r1k->seq_resolve_address = 0xf; break;
-		case 3: r1k->seq_resolve_address = 0xe; break;
+		case 2: r1k->seq_resolve_address = 0x0; break;
+		case 3: r1k->seq_resolve_address = 0x1; break;
 		default: assert(0);
 		}
 	}
@@ -2270,7 +2270,7 @@ seq_p1(void)
 	unsigned sgdisp = r1k->seq_display & 0xff;
 	if (!d7)
 		sgdisp |= 0x100;
-	if (!((r1k->seq_resolve_address <= 0xd) && d7))
+	if (!((r1k->seq_resolve_address >= 0x2) && d7))
 		sgdisp |= 0xffe00;
 
 	bool acin = r1k->seq_mem_start & 1;
@@ -2388,7 +2388,7 @@ static void
 seq_q3(void)
 {
 	// These are necessary for conditions
-	r1k->seq_lxval = !((r1k->seq_lex_valid >> (15 - r1k->seq_resolve_address)) & 1);
+	r1k->seq_lxval = !((r1k->seq_lex_valid >> r1k->seq_resolve_address) & 1);
 	r1k->seq_m_res_ref = !(r1k->seq_lxval && !(r1k->seq_display >> 15));
 	r1k->seq_field_number_error = (((r1k->seq_val_bus >> 39) ^ r1k->seq_curins) & 0x3ff) != 0x3ff;
 	r1k->seq_tos_vld_cond = !(r1k->seq_foo7 || RNDX(RND_TOS_VLB));
@@ -2587,7 +2587,7 @@ seq_q3(void)
 		pa040a |= (r1k->seq_decode & 0x7) << 6;
 		if (r1k->seq_wanna_dispatch) pa040a |= 0x20;
 		if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
-		if (r1k->seq_resolve_address != 0xf) pa040a |= 0x08;
+		if (r1k->seq_resolve_address != 0x0) pa040a |= 0x08;
 		if (r1k->seq_stop) pa040a |= 0x04;
 		if (!r1k->seq_maybe_dispatch) pa040a |= 0x02;
 		if (r1k->seq_bad_hint) pa040a |= 0x01;
