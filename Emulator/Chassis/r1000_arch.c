@@ -655,7 +655,7 @@ struct r1000_arch_state {
 	uint64_t val_malat, val_mblat, val_mprod;
 	uint64_t val_nalu, val_alu;
 	unsigned val_count;
-	bool val_amsb, val_bmsb, val_cmsb, val_mbit, val_last_cond;
+	bool val_mbit, val_last_cond;
 	bool val_isbin, val_sub_else_add, val_ovren, val_carry_middle;
 	bool val_coh;
 	uint64_t *val_wcsram;
@@ -3462,11 +3462,15 @@ typ_q4(void)
 
 // -------------------- VAL --------------------
 
+#define val_a_msb() (r1k->val_a >> 63)
+#define val_b_msb() (r1k->val_b >> 63)
+#define val_c_msb() (r1k->val_alu >> 63)
+
 static bool
 val_ovrsgn(void)
 {
-	bool a0 = r1k->val_amsb;
-	bool b0 = r1k->val_bmsb;
+	bool a0 = val_a_msb();
+	bool b0 = val_b_msb();
 	bool se = r1k->val_isbin;
 	return (!(
 		(se && (a0 ^ b0)) ||
@@ -3489,7 +3493,7 @@ val_cond(void)
 		break;
 	case 0x02:	// L VAL_ALU_A_LT_OR_LE_B
 		r1k->val_thiscond = !(
-			(r1k->val_bmsb && (r1k->val_amsb ^ r1k->val_bmsb)) ||
+			(val_b_msb() && (val_a_msb() ^ val_b_msb())) ||
 			(!r1k->val_coh && (val_ovrsgn() ^ r1k->val_sub_else_add))
 		);
 		break;
@@ -3512,16 +3516,16 @@ val_cond(void)
 		r1k->val_thiscond = !r1k->val_coh;
 		break;
 	case 0x09:	// L VAL_ALU_OVERFLOW
-		r1k->val_thiscond = r1k->val_ovren || (val_ovrsgn() ^ r1k->val_sub_else_add ^ r1k->val_coh ^ r1k->val_cmsb);
+		r1k->val_thiscond = r1k->val_ovren || (val_ovrsgn() ^ r1k->val_sub_else_add ^ r1k->val_coh ^ val_c_msb());
 		break;
 	case 0x0a:	// L VAL_ALU_LT_ZERO
-		r1k->val_thiscond = r1k->val_cmsb;
+		r1k->val_thiscond = val_c_msb();
 		break;
 	case 0x0b:	// L VAL_ALU_LE_ZERO
-		r1k->val_thiscond = !r1k->val_cmsb || (r1k->val_nalu == 0);
+		r1k->val_thiscond = !val_c_msb() || (r1k->val_nalu == 0);
 		break;
 	case 0x0c:	// ML VAL_SIGN_BITS_EQUAL
-		r1k->val_thiscond = (r1k->val_amsb ^ r1k->val_bmsb);
+		r1k->val_thiscond = (val_a_msb() ^ val_b_msb());
 		break;
 	case 0x0d:	// SPARE
 		r1k->val_thiscond = true;
@@ -3575,8 +3579,8 @@ val_fiu_cond(void)
 		fcond = r1k->val_nalu != 0;
 		break;
 	case 0x02:
-		if (r1k->val_amsb ^ r1k->val_bmsb) {
-			fcond = r1k->val_bmsb;
+		if (val_a_msb() ^ val_b_msb()) {
+			fcond = val_b_msb();
 		} else {
 			fcond = !r1k->val_coh;
 		}
@@ -3609,12 +3613,10 @@ val_h1(void)
 	r1k->val_rand = UIR_VAL_RAND;
 	if (mp_fiu_oe == 0x2) {
 		r1k->val_a = tv_find_ab(UIR_VAL_A, UIR_VAL_FRM, true, false, r1k->val_rfram);
-		r1k->val_amsb = r1k->val_a >> 63;
 		mp_fiu_bus = ~r1k->val_a;
 	}
 	if (mp_tv_oe & VAL_V_OE) {
 		r1k->val_b = val_find_b(UIR_VAL_B);
-		r1k->val_bmsb = r1k->val_b >> 63;
 		mp_val_bus = ~r1k->val_b;
 	}
 }
@@ -3626,11 +3628,9 @@ val_q2(void)
 	bool divide = r1k->val_rand == 0xb;
 	if (mp_fiu_oe != 0x02) {
 		r1k->val_a = tv_find_ab(UIR_VAL_A, UIR_VAL_FRM, true, false, r1k->val_rfram);
-		r1k->val_amsb = r1k->val_a >> 63;
 	}
 	if (!(mp_tv_oe & VAL_V_OE)) {
 		r1k->val_b = val_find_b(UIR_VAL_B);
-		r1k->val_bmsb = r1k->val_b >> 63;
 	}
 
 	if (r1k->val_rand == 0xc) { // START_MULTIPLY
@@ -3662,7 +3662,6 @@ val_q2(void)
 	r1k->val_nalu |= o << 32;
 
 	r1k->val_alu = ~r1k->val_nalu;
-	r1k->val_cmsb = r1k->val_alu >> 63;
 	if (mp_adr_oe & 0x2) {
 		uint64_t alu = r1k->val_alu;
 		// XXX: there is a race here, if TYP gets the space from typ_b only in Q2
@@ -3763,7 +3762,7 @@ val_q4(void)
 			}
 
 			mp_nxt_q_bit = !(((divide) && (mp_q_bit ^ r1k->val_mbit ^ (!r1k->val_coh))) || (!divide && r1k->val_coh));
-			r1k->val_mbit = r1k->val_cmsb;
+			r1k->val_mbit = val_c_msb();
 
 			if (r1k->val_rand == 0x5) {
 				uint64_t count2 = 0x40 - flsll(~r1k->val_alu);
