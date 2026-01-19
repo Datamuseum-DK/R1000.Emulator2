@@ -39,6 +39,31 @@ cli iop reset
 cli 'console match expect "Enter option [enter CLI] : "'
 cli 'console << "6"'
 
+if false ; then
+	cli 'console match expect "snapshot is finished"'
+	cli trace +macro_prog
+	cli trace +mailbox
+	cli trace +console
+	cli trace +scsi_cmd
+	cli 'console << "pam"'
+	cli 'console match expect "password:"'
+
+	if true ; then
+		cli 'console << "rachel"'
+		cli 'console match expect "session:"'
+		cli 'console << "s_1"'
+		cli 'console match expect "command:"'
+	else
+		cli 'console << "radhel"'
+		cli 'console match expect "session:"'
+		cli 'console << "s_1"'
+		cli 'console match expect "Invalid User Identity"'
+	fi
+	cli trace -macro_prog
+	cli exit
+fi
+
+
 if $BACKGROUND ; then
 	cli 'console match expect "notevermatching"'
 	nohup ./r1000sim \
