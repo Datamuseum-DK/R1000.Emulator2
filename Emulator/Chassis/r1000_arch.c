@@ -1505,7 +1505,6 @@ fiu_q1(void)
 	}
 
 	if (mp_tv_oe & (FIU_T_OE|FIU_V_OE)) {
-		fiu_do_tivi();
 		if (mp_tv_oe & FIU_T_OE) {
 			mp_typ_bus = ~r1k->fiu_ti_bus;
 		}
