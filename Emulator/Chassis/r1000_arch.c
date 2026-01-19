@@ -3229,8 +3229,6 @@ typ_h1(void)
 {
 	r1k->typ_rand = UIR_TYP_RAND;
 
-	unsigned marctl = UIR_TYP_MCTL;
-
 	if (mp_fiu_oe == 0x4) {
 		r1k->typ_a = tv_find_ab(UIR_TYP_A, UIR_TYP_FRM, true, true, r1k->typ_rfram);
 		mp_fiu_bus = ~r1k->typ_a;
@@ -3241,6 +3239,7 @@ typ_h1(void)
 	}
 
 	if (mp_adr_oe & 0x6) {
+		unsigned marctl = UIR_TYP_MCTL;
 		if (marctl & 0x8) {
 			mp_spc_bus = (marctl & 0x7) ^ 0x7;
 		} else {
@@ -3383,10 +3382,12 @@ typ_q2(void)
 		mp_clock_stop_4 = false;
 	}
 
-	unsigned marctl = UIR_TYP_MCTL;
-	if ((mp_adr_oe & 0x6) && marctl < 0x8) {	// XXX: && ?
-		mp_spc_bus = (r1k->typ_b & 0x7) ^ 0x7;
-		// XXX: when 4, possible race against address bus truncation in TYP or VAL
+	if (mp_adr_oe & 0x6) {
+		unsigned marctl = UIR_TYP_MCTL;
+		if (marctl < 0x8) {	// XXX: && ?
+			mp_spc_bus = (r1k->typ_b & 0x7) ^ 0x7;
+			// XXX: when 4, possible race against address bus truncation in TYP or VAL
+		}
 	}
 }
 
