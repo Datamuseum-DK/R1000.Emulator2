@@ -535,7 +535,6 @@ struct r1000_arch_state {
 	unsigned seq_n_in_csa;
 	unsigned seq_decode;
 	unsigned seq_wanna_dispatch;
-	unsigned seq_branch_offset;
 	bool seq_ibld;
 	bool seq_field_number_error;
 	bool seq_m_break_class;
@@ -1930,9 +1929,9 @@ seq_code_offset(void)
 
 	switch (r1k->seq_urand & 3) {
 	case 3:	retval = r1k->seq_retrn_pc_ofs; break;
-	case 2: retval = r1k->seq_branch_offset; break;
+	case 2: retval = seq_branch_offset(); break;
 	case 1: retval = r1k->seq_macro_pc_offset; break;
-	case 0: retval = r1k->seq_branch_offset; break;
+	case 0: retval = seq_branch_offset(); break;
 	default: assert(0);
 	}
 	retval ^= 0x7fff;
@@ -2360,7 +2359,6 @@ seq_h1(void)
 		mp_fiu_bus = r1k->seq_topu;
 	if (mp_tv_oe & SEQ_TV_OE) {
 		seq_p1();
-		r1k->seq_branch_offset = seq_branch_offset();
 		seq_int_reads();	// Necessary
 		mp_typ_bus = ~r1k->seq_typ_bus;
 		mp_val_bus = ~r1k->seq_val_bus;
@@ -2387,7 +2385,6 @@ seq_q1(void)
 
 	if (!(mp_tv_oe & SEQ_TV_OE)) {
 		seq_p1();
-		r1k->seq_branch_offset = seq_branch_offset();
 		seq_int_reads();
 	}
 }
@@ -2427,7 +2424,6 @@ seq_q3(void)
 		r1k->seq_push_br = false;
 		r1k->seq_push   = !(((rom >> 0) & 1) || !(((rom >> 2) & 1) || !seq_uadr_mux));
 		r1k->seq_wanna_dispatch = !(((rom >> 5) & 1) && !seq_uadr_mux);
-		r1k->seq_branch_offset = seq_branch_offset();
 		r1k->seq_preturn = !(((rom >> 3) & 1) ||  seq_uadr_mux);
 		nua = r1k->seq_other;
 		mp_clock_stop_6 = true;
@@ -2467,7 +2463,6 @@ seq_q3(void)
 		r1k->seq_push_br = BRTYPE(PUSH);
 		r1k->seq_push = !(BRTYPE(PUSH|CASE_CALL) || (BRTYPE(A_CALL) && uadr_mux));
 		r1k->seq_wanna_dispatch = !(BRTYPE(A_DISPATCH) && !uadr_mux);
-		r1k->seq_branch_offset = seq_branch_offset();
 		r1k->seq_preturn = BRTYPE(A_RETURN) && !uadr_mux;
 		unsigned one, two;
 		if (BRTYPE(A_BRANCH|PUSH|A_CALL|CONTINUE)) {
@@ -2619,7 +2614,7 @@ seq_q3(void)
 			mp_adr_bus = r1k->seq_output_ob << 7;
 		}
 
-		uint64_t branch = r1k->seq_branch_offset & 7;
+		uint64_t branch = seq_branch_offset() & 7;
 		branch ^= 0x7;
 		mp_adr_bus |= branch << 4;
 		if (!adr_is_code) {
@@ -2706,7 +2701,7 @@ seq_q4(void)
 			if (!RNDX(RND_M_PC_MUX)) {
 				r1k->seq_macro_pc_offset = r1k->seq_val_bus >> 4;
 			} else {
-				r1k->seq_macro_pc_offset = r1k->seq_branch_offset;
+				r1k->seq_macro_pc_offset = seq_branch_offset();
 			}
 		} else if (mode == 2) {
 			r1k->seq_macro_pc_offset += 1;
