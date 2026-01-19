@@ -524,7 +524,6 @@ struct r1000_arch_state {
 	uint64_t seq_val_bus;
 	uint64_t seq_output_ob;
 	uint64_t seq_name_bus;
-	uint64_t seq_code_offset;
 	unsigned seq_uadr_decode;
 	unsigned seq_display;
 	unsigned seq_decram;
@@ -562,7 +561,7 @@ struct r1000_arch_state {
 
 	uint16_t seq_lex_valid;
 	bool seq_lxval;
-	unsigned seq_resolve_address;
+	unsigned seq_resolve_level;
 	bool seq_m_ibuff_mt;
 	bool seq_foo9;
 	bool seq_q3cond;
@@ -1924,18 +1923,27 @@ fiu_q4(void)
 
 // -------------------- SEQ --------------------
 
+static unsigned
+seq_code_offset(void)
+{
+	unsigned retval;
+
+	switch (r1k->seq_urand & 3) {
+	case 3:	retval = r1k->seq_retrn_pc_ofs; break;
+	case 2: retval = r1k->seq_branch_offset; break;
+	case 1: retval = r1k->seq_macro_pc_offset; break;
+	case 0: retval = r1k->seq_branch_offset; break;
+	default: assert(0);
+	}
+	retval ^= 0x7fff;
+	return (retval);
+}
+
 static void
 seq_int_reads(void)
 {
 	unsigned internal_reads = UIR_SEQ_IRD;
-	switch (r1k->seq_urand & 3) {
-	case 3:	r1k->seq_code_offset = r1k->seq_retrn_pc_ofs; break;
-	case 2: r1k->seq_code_offset = r1k->seq_branch_offset; break;
-	case 1: r1k->seq_code_offset = r1k->seq_macro_pc_offset; break;
-	case 0: r1k->seq_code_offset = r1k->seq_branch_offset; break;
-	default: assert(0);
-	}
-	r1k->seq_code_offset ^= 0x7fff;
+
 	if (internal_reads == 0) {
 		r1k->seq_typ_bus = ~mp_typ_bus;
 		r1k->seq_val_bus = ~mp_val_bus;
@@ -1975,7 +1983,7 @@ seq_int_reads(void)
 		// This is a variance from the schematics, which drive
 		// the top three bits of seq_code_offset in all cases.
 		// (See: SEQ.p29)
-		r1k->seq_val_bus |= (r1k->seq_code_offset << 4);
+		r1k->seq_val_bus |= (seq_code_offset() << 4);
 		r1k->seq_val_bus |= r1k->seq_curr_lex & 0xf;
 		break;
 	}
@@ -2058,7 +2066,7 @@ seq_cond8(unsigned condsel)
 	case 0x43: // L LEX_VLD.COND
 		return (r1k->seq_lxval);
 	case 0x42: // E IMPORT.COND
-		return (r1k->seq_resolve_address != 0x0);
+		return (r1k->seq_resolve_level != 0x0);
 	case 0x41: // E REST_PC_DEC
 		return ((r1k->seq_rq >> 1) & 1);
 	case 0x40: // E RESTARTABLE
@@ -2074,13 +2082,13 @@ seq_nxt_lex_valid(void)
 
 	switch((r1k->seq_rndx >> 5) & 0x7) {	// SEQ microarch pdf pg 33
 	case 0:	// Clear Lex Level
-		r1k->seq_lex_valid &= ~(1 << r1k->seq_resolve_address);
+		r1k->seq_lex_valid &= ~(1 << r1k->seq_resolve_level);
 		break;
 	case 1: // Set Lex Level
-		r1k->seq_lex_valid |= (1 << r1k->seq_resolve_address);
+		r1k->seq_lex_valid |= (1 << r1k->seq_resolve_level);
 		break;
 	case 4: // Clear Greater Than Lex Level
-		r1k->seq_lex_valid &= ~(0xfffe << r1k->seq_resolve_address);
+		r1k->seq_lex_valid &= ~(0xfffe << r1k->seq_resolve_level);
 		break;
 	case 7: // Clear all Lex Levels
 		r1k->seq_lex_valid = 0;
@@ -2223,16 +2231,16 @@ static void
 seq_p1(void)
 {
 	if (r1k->seq_maybe_dispatch && !(r1k->seq_display >> 15)) {
-		r1k->seq_resolve_address = (~r1k->seq_display) >> 9;
+		r1k->seq_resolve_level = (~r1k->seq_display) >> 9;
 	} else {
 		switch (UIR_SEQ_LAUIR) {
 		case 0:
-			r1k->seq_resolve_address = r1k->seq_curr_lex;
+			r1k->seq_resolve_level = r1k->seq_curr_lex;
 			break;
 		case 1:
 			switch (UIR_SEQ_IRD) {
 			case 0x0:
-				r1k->seq_resolve_address = mp_val_bus + 0xf;
+				r1k->seq_resolve_level = mp_val_bus + 0xf;
 				break;
 			case 0x1:
 			case 0x2:
@@ -2240,16 +2248,16 @@ seq_p1(void)
 				assert(0);
 				break;
 			default:
-				r1k->seq_resolve_address = r1k->seq_curr_lex + 0xf;
+				r1k->seq_resolve_level = r1k->seq_curr_lex + 0xf;
 				break;
 			}
 			break;
-		case 2: r1k->seq_resolve_address = 0x0; break;
-		case 3: r1k->seq_resolve_address = 0x1; break;
+		case 2: r1k->seq_resolve_level = 0x0; break;
+		case 3: r1k->seq_resolve_level = 0x1; break;
 		default: assert(0);
 		}
 	}
-	r1k->seq_resolve_address &= 0xf;
+	r1k->seq_resolve_level &= 0xf;
 
 	unsigned offs;
 	if (r1k->seq_maybe_dispatch && r1k->seq_uses_tos) {
@@ -2260,7 +2268,7 @@ seq_p1(void)
 			offs = r1k->seq_tosof;
 		}
 	} else {
-		offs = r1k->seq_tosram[r1k->seq_resolve_address];
+		offs = r1k->seq_tosram[r1k->seq_resolve_level];
 	}
 
 	offs ^= 0xfffff;
@@ -2270,7 +2278,7 @@ seq_p1(void)
 	unsigned sgdisp = r1k->seq_display & 0xff;
 	if (!d7)
 		sgdisp |= 0x100;
-	if (!((r1k->seq_resolve_address >= 0x2) && d7))
+	if (!((r1k->seq_resolve_level >= 0x2) && d7))
 		sgdisp |= 0xffe00;
 
 	bool acin = r1k->seq_mem_start & 1;
@@ -2315,7 +2323,7 @@ seq_p1(void)
 	}
 
 	if (!r1k->seq_maybe_dispatch) {
-		r1k->seq_name_bus = r1k->seq_namram[r1k->seq_resolve_address] ^ 0xffffffff;
+		r1k->seq_name_bus = r1k->seq_namram[r1k->seq_resolve_level] ^ 0xffffffff;
 	} else {
 		r1k->seq_name_bus = 0xffffffff;
 	}
@@ -2388,7 +2396,7 @@ static void
 seq_q3(void)
 {
 	// These are necessary for conditions
-	r1k->seq_lxval = !((r1k->seq_lex_valid >> r1k->seq_resolve_address) & 1);
+	r1k->seq_lxval = !((r1k->seq_lex_valid >> r1k->seq_resolve_level) & 1);
 	r1k->seq_m_res_ref = !(r1k->seq_lxval && !(r1k->seq_display >> 15));
 	r1k->seq_field_number_error = (((r1k->seq_val_bus >> 39) ^ r1k->seq_curins) & 0x3ff) != 0x3ff;
 	r1k->seq_tos_vld_cond = !(r1k->seq_foo7 || RNDX(RND_TOS_VLB));
@@ -2497,8 +2505,6 @@ seq_q3(void)
 
 	r1k->seq_ram[(r1k->seq_adr + 1) & 0xf] = r1k->seq_topu;
 
-	seq_int_reads();
-
 	r1k->seq_q3cond = precond;
 
 	mp_state_clk_en = !(mp_state_clk_stop && mp_clock_stop_7);
@@ -2565,7 +2571,7 @@ seq_q3(void)
 		case 0:
 		case 1:
 		case 2:
-			r1k->seq_name_bus = r1k->seq_namram[r1k->seq_resolve_address] ^ 0xffffffff;
+			r1k->seq_name_bus = r1k->seq_namram[r1k->seq_resolve_level] ^ 0xffffffff;
 			break;
 		case 3:
 		case 7:
@@ -2576,7 +2582,7 @@ seq_q3(void)
 			break;
 		}
 	} else {
-		r1k->seq_name_bus = r1k->seq_namram[r1k->seq_resolve_address] ^ 0xffffffff;
+		r1k->seq_name_bus = r1k->seq_namram[r1k->seq_resolve_level] ^ 0xffffffff;
 	}
 	if (!(r1k->seq_foo9 || mp_clock_stop_6)) {
 		r1k->seq_treg = 0;
@@ -2587,7 +2593,7 @@ seq_q3(void)
 		pa040a |= (r1k->seq_decode & 0x7) << 6;
 		if (r1k->seq_wanna_dispatch) pa040a |= 0x20;
 		if (RNDX(RND_ADR_SEL)) pa040a |= 0x10;
-		if (r1k->seq_resolve_address != 0x0) pa040a |= 0x08;
+		if (r1k->seq_resolve_level != 0x0) pa040a |= 0x08;
 		if (r1k->seq_stop) pa040a |= 0x04;
 		if (!r1k->seq_maybe_dispatch) pa040a |= 0x02;
 		if (r1k->seq_bad_hint) pa040a |= 0x01;
@@ -2608,7 +2614,7 @@ seq_q3(void)
 		if (!resolve_drive) {
 			mp_adr_bus = r1k->seq_resolve_offset << 7;
 		} else if (adr_is_code) {
-			mp_adr_bus = (r1k->seq_code_offset >> 3) << 7;
+			mp_adr_bus = (seq_code_offset() >> 3) << 7;
 		} else {
 			mp_adr_bus = r1k->seq_output_ob << 7;
 		}
@@ -2651,7 +2657,7 @@ seq_q4(void)
 	if (state_clock) {
 		seq_nxt_lex_valid();
 		if (!RNDX(RND_RES_OFFS)) {
-			r1k->seq_tosram[r1k->seq_resolve_address] = (r1k->seq_typ_bus >> 7) & 0xfffff;
+			r1k->seq_tosram[r1k->seq_resolve_level] = (r1k->seq_typ_bus >> 7) & 0xfffff;
 		}
 		if (!r1k->seq_ibld) {
 			r1k->seq_macro_ins_typ = r1k->seq_typ_bus;
@@ -2737,7 +2743,7 @@ seq_q4(void)
 		}
 
 		if (!RNDX(RND_RES_NAME)) {
-			r1k->seq_namram[r1k->seq_resolve_address] = r1k->seq_typ_bus >> 32;
+			r1k->seq_namram[r1k->seq_resolve_level] = r1k->seq_typ_bus >> 32;
 		}
 
 		if (!RNDX(RND_RETRN_LD)) {
