@@ -3421,15 +3421,18 @@ typ_q4(void)
 			}
 		}
 
-		unsigned cadr = tv_cadr(UIR_TYP_C, UIR_TYP_FRM, r1k->typ_count);
-		if (cadr < 0x400)
-			r1k->typ_rfram[cadr] = ~c;
+		unsigned uirc = UIR_TYP_C;
+		if (uirc != 0x29 || mp_csa_write_enable) {
+			unsigned cadr = tv_cadr(uirc, UIR_TYP_FRM, r1k->typ_count);
+			if (cadr < 0x400)
+				r1k->typ_rfram[cadr] = ~c;
+		}
 
 		if (mp_clock_stop) {
 			if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
 				r1k->typ_wdr = ~mp_typ_bus;
 			}
-			if (UIR_TYP_C == 0x28) {
+			if (uirc == 0x28) {
 				r1k->typ_count = c;
 				r1k->typ_count &= 0x3ff;
 			} else if (r1k->typ_rand == 0x2) {
@@ -3740,16 +3743,19 @@ val_q4(void)
 		}
 		r1k->val_mprod = a * b;
 
-		unsigned cadr = tv_cadr(UIR_VAL_C, UIR_VAL_FRM, r1k->val_count);
-		if (cadr < 0x400)
-			r1k->val_rfram[cadr] = ~val_c;
+		unsigned uirc = UIR_VAL_C;
+		if (uirc != 0x29 || mp_csa_write_enable) {
+			unsigned cadr = tv_cadr(uirc, UIR_VAL_FRM, r1k->val_count);
+			if (cadr < 0x400)
+				r1k->val_rfram[cadr] = ~val_c;
+		}
 
 		if (mp_clock_stop) {
 			bool divide = r1k->val_rand == 0xb;
 			if (!(mp_load_wdr || !(mp_clock_stop_6 && mp_clock_stop_7))) {
 				r1k->val_wdr = ~mp_val_bus;
 			}
-			if (UIR_VAL_C == 0x28) {
+			if (uirc == 0x28) {
 				r1k->val_count = val_c;
 				r1k->val_count &= 0x3ff;
 			} else if (r1k->val_rand == 0x2 || divide) {
@@ -3893,9 +3899,6 @@ tv_cadr(unsigned uirc, unsigned frame, unsigned count)
 	// Ordered by frequency of use.
 	// Pay attention to the order of range comparisons when reordering
 
-	if (uirc == 0x29 && !mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled)
-		return(0x400);
-	}
 	if (uirc >= 0x30) {						// 0x30…0x3f	GP[0…F]
 		return(0x10 | (uirc & 0x0f));
 	}
@@ -3911,7 +3914,7 @@ tv_cadr(unsigned uirc, unsigned frame, unsigned count)
 	if (uirc == 0x28) {						// 0x28		LOOP COUNTER (RF write disabled)
 		return(0x400);
 	}
-	if (uirc == 0x29 && mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled)
+	if (uirc == 0x29 && mp_csa_write_enable) {			// 0x29		DEFAULT (RF write disabled, CSA hit)
 		return ((r1k->csa_botreg + mp_csa_offset + 1) & 0xf);
 	}
 	if (uirc <= 0x2b) {						// 0x2a…0x2b	BOT,BOT-1
