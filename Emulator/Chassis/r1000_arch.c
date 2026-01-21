@@ -1021,46 +1021,14 @@ mem_q4(void)
 			// These create at most a single hit
 			unsigned badr = r1k->mem_hash << 3;
 			do {
-				if (mem_is_hit(badr | 4, 4)) {
-					r1k->mem_hits |= BSET_4;
-					r1k->mem_hit_set = 4;
-					break;
-				}
-				if (mem_is_hit(badr | 5, 5)) {
-					r1k->mem_hits |= BSET_5;
-					r1k->mem_hit_set = 5;
-					break;
-				}
-				if (mem_is_hit(badr | 6, 6)) {
-					r1k->mem_hits |= BSET_6;
-					r1k->mem_hit_set = 6;
-					break;
-				}
-				if (mem_is_hit(badr | 7, 7)) {
-					r1k->mem_hits |= BSET_7;
-					r1k->mem_hit_set = 7;
-					break;
-				}
-				if (mem_is_hit(badr | 0, 0)) {
-					r1k->mem_hits |= BSET_0;
-					r1k->mem_hit_set = 0;
-					break;
-				}
-				if (mem_is_hit(badr | 1, 1)) {
-					r1k->mem_hits |= BSET_1;
-					r1k->mem_hit_set = 1;
-					break;
-				}
-				if (mem_is_hit(badr | 2, 2)) {
-					r1k->mem_hits |= BSET_2;
-					r1k->mem_hit_set = 2;
-					break;
-				}
-				if (mem_is_hit(badr | 3, 3)) {
-					r1k->mem_hits |= BSET_3;
-					r1k->mem_hit_set = 3;
-					break;
-				}
+				if (mem_is_hit(badr | 4, 4)) { r1k->mem_hits |= BSET_4; r1k->mem_hit_set = 4; break; }
+				if (mem_is_hit(badr | 5, 5)) { r1k->mem_hits |= BSET_5; r1k->mem_hit_set = 5; break; }
+				if (mem_is_hit(badr | 6, 6)) { r1k->mem_hits |= BSET_6; r1k->mem_hit_set = 6; break; }
+				if (mem_is_hit(badr | 7, 7)) { r1k->mem_hits |= BSET_7; r1k->mem_hit_set = 7; break; }
+				if (mem_is_hit(badr | 0, 0)) { r1k->mem_hits |= BSET_0; r1k->mem_hit_set = 0; break; }
+				if (mem_is_hit(badr | 1, 1)) { r1k->mem_hits |= BSET_1; r1k->mem_hit_set = 1; break; }
+				if (mem_is_hit(badr | 2, 2)) { r1k->mem_hits |= BSET_2; r1k->mem_hit_set = 2; break; }
+				if (mem_is_hit(badr | 3, 3)) { r1k->mem_hits |= BSET_3; r1k->mem_hit_set = 3; break; }
 			} while (0);
 		} else if (CMDS(CMD_PMR|CMD_PMW|CMD_PTW|CMD_PTR)) {
 			if (r1k->mem_mar_set < 8) {
@@ -1517,26 +1485,7 @@ fiu_q1(void)
 static void
 fiu_q2(void)
 {
-	unsigned pa028a = mp_mar_cntl << 5;
-	pa028a |= r1k->fiu_incmplt_mcyc << 4;
-	pa028a |= r1k->fiu_e_abort_dly << 3;
-	pa028a |= r1k->fiu_state1 << 2;
-	pa028a |= r1k->fiu_mctl_is_read << 1;
-	pa028a |= r1k->fiu_dumon;
-	r1k->fiu_prmt = fiu_pa028[pa028a];
-	r1k->fiu_prmt ^= 0x02;
-	r1k->fiu_prmt &= 0x7b;
-
 	fiu_do_tivi();
-	unsigned pa025a = 0;
-	pa025a |= r1k->fiu_mem_start;
-	pa025a |= r1k->fiu_state0 << 8;
-	pa025a |= r1k->fiu_state1 << 7;
-	pa025a |= r1k->fiu_labort << 6;
-	pa025a |= r1k->fiu_e_abort_dly << 5;
-	r1k->fiu_pa025d = fiu_pa025[pa025a];
-	r1k->fiu_memcyc1 = (r1k->fiu_pa025d >> 1) & 1;
-	r1k->fiu_memstart = (r1k->fiu_pa025d >> 0) & 1;
 
 	if (r1k->fiu_memstart) {
 		r1k->fiu_mcntl = r1k->fiu_lcntl;
@@ -1547,8 +1496,7 @@ fiu_q2(void)
 	r1k->fiu_logrwn = !(r1k->fiu_logrw && r1k->fiu_memcyc1);
 	r1k->fiu_logrw = !(r1k->fiu_phys_ref || ((r1k->fiu_mcntl >> 3) & 1));
 
-	unsigned mar_cntl = mp_mar_cntl;
-	bool rmarp = (mar_cntl & 0xe) == 0x4;
+	bool rmarp = (mp_mar_cntl & 0xe) == 0x4;
 
 	r1k->fiu_scav_trap_next = r1k->fiu_scav_trap;
 	if (mp_cond_sel == 0x69) {		// SCAVENGER_HIT
@@ -1700,20 +1648,10 @@ fiu_q4(void)
 {
 	bool sclk = !mp_state_clk_en;
 	bool tcsa_clk = (mp_clock_stop && mp_ram_stop && !mp_freeze);
-	unsigned mar_cntl = mp_mar_cntl;
-	bool rmarp = (mar_cntl & 0xe) == 0x4;
+	bool rmarp = (mp_mar_cntl & 0xe) == 0x4;
 	bool carry, name_match;
 
 	unsigned csa = mp_csa_cntl;
-	unsigned pa028a = mp_mar_cntl << 5;
-	pa028a |= r1k->fiu_incmplt_mcyc << 4;
-	pa028a |= r1k->fiu_e_abort_dly << 3;
-	pa028a |= r1k->fiu_state1 << 2;
-	pa028a |= r1k->fiu_mctl_is_read << 1;
-	pa028a |= r1k->fiu_dumon;
-	r1k->fiu_prmt = fiu_pa028[pa028a];
-	r1k->fiu_prmt ^= 0x02;
-	r1k->fiu_prmt &= 0x7b;
 
 	if (tcsa_clk) {
 		bool invalidate_csa = !(mp_csa_hit && !r1k->fiu_tcsa_tf_pred);
@@ -1736,7 +1674,7 @@ fiu_q4(void)
 			}
 		}
 
-		if (mar_cntl == 5) {
+		if (mp_mar_cntl == 5) {
 			r1k->fiu_refresh_reg = r1k->fiu_ti_bus;
 			r1k->fiu_marh &= 0xffffffffULL;
 			r1k->fiu_marh |= (r1k->fiu_refresh_reg & 0xffffffff00000000ULL);
