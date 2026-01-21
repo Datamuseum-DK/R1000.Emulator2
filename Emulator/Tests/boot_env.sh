@@ -40,7 +40,8 @@ cli 'console match expect "Enter option [enter CLI] : "'
 cli 'console << "6"'
 
 if false ; then
-	cli 'console match expect "snapshot is finished"'
+	cli 'console match expect "Transport_Name.Undefined"'
+	cli 'console match expect "username:"'
 	cli trace +macro_prog
 	cli trace +mailbox
 	cli trace +console
