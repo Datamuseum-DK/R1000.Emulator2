@@ -1,3 +1,7 @@
+# The Rational R1000 Emulator has moved
+
+Find it here now: https://codeberg.org/Datamuseum-dk/R1000.Emulator
+
 # R1000.Emulator2
 
 This is a software emulation of the Rational R1000/400 computer.
